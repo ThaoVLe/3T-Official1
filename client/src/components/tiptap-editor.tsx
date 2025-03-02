@@ -132,8 +132,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             <Italic className="h-4 w-4" />
           </Button>
           <Separator orientation="vertical" className="mx-1 h-6" />
-
-          {/* Heading Dropdown */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -165,10 +163,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               </div>
             </PopoverContent>
           </Popover>
-
           <Separator orientation="vertical" className="mx-1 h-6" />
-
-          {/* Text Color */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -194,8 +189,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               </div>
             </PopoverContent>
           </Popover>
-
-          {/* Highlight Color */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -221,9 +214,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               </div>
             </PopoverContent>
           </Popover>
-
           <Separator orientation="vertical" className="mx-1 h-6" />
-
           <Button
             type="button"
             variant="ghost"
@@ -244,9 +235,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           >
             <ListOrdered className="h-4 w-4" />
           </Button>
-
           <Separator orientation="vertical" className="mx-1 h-6" />
-
           <Button
             type="button"
             variant="ghost"
@@ -262,8 +251,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           >
             <LinkIcon className="h-4 w-4" />
           </Button>
-
-          {/* Emoji Picker */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -299,7 +286,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           </Popover>
         </div>
       </div>
-
       <div className="flex-1">
         <EditorContent editor={editor} className="h-full prose prose-lg max-w-none" />
       </div>

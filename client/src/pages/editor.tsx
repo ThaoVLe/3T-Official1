@@ -26,12 +26,6 @@ export default function Editor() {
   const { data: entry, isLoading: isLoadingEntry } = useQuery<DiaryEntry>({
     queryKey: ['/api/entries', id],
     enabled: !!id,
-    onSuccess: (data) => {
-      console.log('Entry data fetched successfully:', data);
-    },
-    onError: (error) => {
-      console.error('Error fetching entry data:', error);
-    }
   });
 
   const form = useForm<InsertEntry>({
@@ -46,7 +40,6 @@ export default function Editor() {
   // Update form when entry data loads
   useEffect(() => {
     if (entry) {
-      console.log('Setting form data from entry:', entry);
       form.reset({
         title: entry.title || "",
         content: entry.content || "",
@@ -55,10 +48,8 @@ export default function Editor() {
     }
   }, [entry, form]);
 
-
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
-      console.log('Submitting data:', data);
       if (id) {
         await apiRequest("PUT", `/api/entries/${id}`, data);
       } else {
@@ -66,7 +57,6 @@ export default function Editor() {
       }
     },
     onSuccess: () => {
-      console.log('Data submitted successfully');
       queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
       toast({
         title: "Success",
@@ -75,7 +65,6 @@ export default function Editor() {
       navigate("/");
     },
     onError: (error) => {
-      console.error('Error submitting data:', error);
       toast({
         title: "Error",
         description: "Failed to save entry. Please try again.",
@@ -84,81 +73,7 @@ export default function Editor() {
     }
   });
 
-  const onMediaUpload = async (file: File) => {
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    // Create temporary URL for immediate preview
-    const tempUrl = URL.createObjectURL(file);
-    const currentUrls = form.getValues("mediaUrls") || [];
-    const tempUrls = [...currentUrls, tempUrl];
-    setTempMediaUrls(tempUrls);
-    form.setValue("mediaUrls", tempUrls);
-
-    try {
-      const uploadPromise = new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        const formData = new FormData();
-        formData.append("file", file);
-
-        xhr.upload.addEventListener("progress", (e) => {
-          if (e.lengthComputable) {
-            const progress = Math.round((e.loaded * 100) / e.total);
-            setUploadProgress(progress);
-          }
-        });
-
-        xhr.addEventListener("load", () => {
-          if (xhr.status === 200) {
-            const { url } = JSON.parse(xhr.responseText);
-            console.log('Upload successful, URL:', url);
-            // Replace temp URL with actual URL
-            const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
-            form.setValue("mediaUrls", finalUrls);
-            setTempMediaUrls([]);
-            resolve(url);
-          } else {
-            reject(new Error("Upload failed"));
-          }
-        });
-
-        xhr.addEventListener("error", () => {
-          reject(new Error("Upload failed"));
-        });
-
-        xhr.open("POST", "/api/upload");
-        xhr.send(formData);
-      });
-
-      await uploadPromise;
-
-    } catch (error) {
-      console.error('Upload error:', error);
-      // Remove temp URL on error
-      const currentUrls = form.getValues("mediaUrls") || [];
-      const finalUrls = currentUrls.filter(url => url !== tempUrl);
-      form.setValue("mediaUrls", finalUrls);
-      setTempMediaUrls([]);
-
-      toast({
-        title: "Upload Error",
-        description: "Failed to upload media. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      URL.revokeObjectURL(tempUrl);
-      setIsUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const onMediaRemove = (index: number) => {
-    const currentUrls = form.getValues("mediaUrls") || [];
-    const newUrls = [...currentUrls];
-    newUrls.splice(index, 1);
-    form.setValue("mediaUrls", newUrls);
-  };
-
+  // Show loading state while fetching entry data
   if (id && isLoadingEntry) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -204,27 +119,9 @@ export default function Editor() {
           <TipTapEditor 
             value={form.watch("content")} 
             onChange={(value) => {
-              console.log('Editor onChange:', value);
               form.setValue("content", value);
             }} 
           />
-        </div>
-
-        {/* Media Controls */}
-        <div className="border-t bg-white sticky bottom-0">
-          <div className="px-6 py-2">
-            <MediaRecorder onCapture={onMediaUpload} />
-          </div>
-          {form.watch("mediaUrls")?.length > 0 && (
-            <div className="px-6 pt-2 pb-4 overflow-x-auto">
-              <MediaPreview 
-                urls={form.watch("mediaUrls")} 
-                onRemove={onMediaRemove}
-                loading={isUploading}
-                uploadProgress={uploadProgress}
-              />
-            </div>
-          )}
         </div>
       </div>
     </div>

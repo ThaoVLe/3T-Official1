@@ -13,9 +13,10 @@ interface MediaPreviewProps {
 export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewProps) {
   const [selectedIndex, setSelectedIndex] = useState<number>();
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
+  const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
   const mediaUrls = urls || [];
 
-  // Load video thumbnails
+  // Load video thumbnails and rotate frames
   useEffect(() => {
     mediaUrls.forEach((url, index) => {
       if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) && videoRefs.current[index]) {
@@ -23,7 +24,7 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
 
         // Listen for metadata to load before seeking
         const handleLoadedMetadata = () => {
-          video.currentTime = 0.1;
+          video.currentTime = 0; // Start with first frame
         };
 
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -31,6 +32,28 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
       }
     });
   }, [mediaUrls]);
+
+  // Rotate through frames every 2 seconds
+  useEffect(() => {
+    const frames = [0, 1, 2]; // The three keyframe timestamps
+    const interval = setInterval(() => {
+      setFrameIndices(prev => {
+        const newIndices = { ...prev };
+        Object.keys(videoRefs.current).forEach(index => {
+          const video = videoRefs.current[Number(index)];
+          if (video) {
+            const currentFrame = prev[Number(index)] || 0;
+            const nextFrame = (currentFrame + 1) % frames.length;
+            video.currentTime = frames[nextFrame];
+            newIndices[Number(index)] = nextFrame;
+          }
+        });
+        return newIndices;
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   if (!mediaUrls.length && !loading) return null;
 

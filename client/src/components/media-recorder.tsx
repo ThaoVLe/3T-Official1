@@ -15,61 +15,79 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   const { toast } = useToast();
 
   const startRecording = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    // Check if browser supports getUserMedia
+    if (!navigator.mediaDevices?.getUserMedia) {
       toast({
         title: "Error",
-        description: "Audio recording is not supported in this browser",
+        description: "Audio recording is not supported in your browser",
         variant: "destructive"
       });
       return;
     }
 
     try {
-      // Request audio permission
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: false
       });
 
-      // Create new recorder
+      // Initialize recorder with basic configuration
       const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
 
-      // Set up event handlers
+      // Handle data as it becomes available
       recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           chunksRef.current.push(event.data);
         }
       };
 
+      // Handle recording completion
       recorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const audioFile = new File([audioBlob], `audio-${Date.now()}.webm`, { 
-          type: 'audio/webm'
-        });
+        try {
+          const audioBlob = new Blob(chunksRef.current);
+          const audioFile = new File([audioBlob], `audio-${Date.now()}.webm`, {
+            type: "audio/webm"
+          });
 
-        // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
+          // Stop tracks and clean up
+          stream.getTracks().forEach(track => track.stop());
+          onCapture(audioFile);
 
-        // Send file to parent
-        onCapture(audioFile);
+          // Reset state
+          setIsRecording(false);
+          mediaRecorderRef.current = null;
+          chunksRef.current = [];
 
-        // Reset state
-        setIsRecording(false);
-        mediaRecorderRef.current = null;
-        chunksRef.current = [];
+        } catch (error) {
+          console.error('Error creating audio file:', error);
+          toast({
+            title: "Error",
+            description: "Failed to save the recording",
+            variant: "destructive"
+          });
+        }
       };
 
-      // Start recording
-      recorder.start();
+      // Start recording with 1 second timeslices
+      recorder.start(1000);
       setIsRecording(true);
 
     } catch (error) {
       console.error('Recording error:', error);
+      let message = "Failed to start recording. ";
+
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          message = "Please allow microphone access in your browser settings.";
+        }
+      }
+
       toast({
         title: "Recording Error",
-        description: "Please allow microphone access in your browser settings",
+        description: message,
         variant: "destructive"
       });
       setIsRecording(false);
@@ -104,6 +122,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     onCapture(file);
   };
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current && isRecording) {

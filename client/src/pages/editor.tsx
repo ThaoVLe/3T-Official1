@@ -66,10 +66,10 @@ export default function Editor() {
   };
 
   return (
-    <div className="editor-page">
+    <div className="w-full h-screen bg-background">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col">
-          <div className="space-y-4 p-6">
+          <div className="space-y-4 px-8 py-6">
             <FormField
               control={form.control}
               name="title"

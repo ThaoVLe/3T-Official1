@@ -66,7 +66,7 @@ export default function Editor() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
+    <div className="max-w-3xl mx-auto">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -74,9 +74,13 @@ export default function Editor() {
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel className="text-lg font-medium">Title</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input 
+                    {...field} 
+                    className="text-lg p-3 h-12"
+                    placeholder="Give your entry a title..."
+                  />
                 </FormControl>
               </FormItem>
             )}
@@ -87,7 +91,7 @@ export default function Editor() {
             name="content"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Content</FormLabel>
+                <FormLabel className="text-lg font-medium">Content</FormLabel>
                 <FormControl>
                   <TipTapEditor value={field.value} onChange={field.onChange} />
                 </FormControl>
@@ -101,10 +105,20 @@ export default function Editor() {
           </div>
 
           <div className="flex gap-4">
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button 
+              type="submit" 
+              disabled={mutation.isPending}
+              size="lg"
+              className="px-6"
+            >
               {id ? "Update" : "Create"} Entry
             </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate("/")}>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={() => navigate("/")}
+              size="lg"
+            >
               Cancel
             </Button>
           </div>

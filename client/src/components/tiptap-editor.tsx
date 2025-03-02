@@ -103,7 +103,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           <Quote className="h-4 w-4" />
         </Button>
       </div>
-      <EditorContent editor={editor} className="prose dark:prose-invert max-w-none p-4" />
+      <EditorContent 
+        editor={editor} 
+        className="prose dark:prose-invert max-w-none p-4 min-h-[200px]" 
+      />
     </div>
   );
 }

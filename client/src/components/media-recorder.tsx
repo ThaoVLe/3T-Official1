@@ -2,10 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ImageIcon, Mic, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
 
 interface MediaRecorderProps {
   onCapture: (file: File) => void;
@@ -19,10 +15,31 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   const chunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
+  const checkMicrophonePermission = async () => {
+    try {
+      const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+      if (result.state === 'denied') {
+        throw new Error('Microphone permission is denied. Please enable it in your browser settings.');
+      }
+    } catch (err) {
+      // If query isn't supported, we'll try getUserMedia directly
+      console.log('Permission query not supported, trying direct access');
+    }
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      await checkMicrophonePermission();
+
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: true,
+        video: false
+      });
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm'
+      });
+
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -37,23 +54,44 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         const url = URL.createObjectURL(blob);
         setAudioURL(url);
 
-        // Convert to File and capture
-        const file = new File([blob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
+        const file = new File([blob], `recording-${Date.now()}.webm`, { 
+          type: 'audio/webm'
+        });
         onCapture(file);
 
         // Clean up stream
         stream.getTracks().forEach(track => track.stop());
+        toast({
+          title: "Success",
+          description: "Audio recording saved successfully"
+        });
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      toast({
+        title: "Recording Started",
+        description: "Your audio is now being recorded..."
+      });
+
     } catch (err) {
       console.error('Recording error:', err);
+      let errorMessage = "Failed to start recording. ";
+
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          errorMessage += "Please allow microphone access in your browser settings.";
+        } else {
+          errorMessage += err.message;
+        }
+      }
+
       toast({
         title: "Recording Error",
-        description: "Failed to start recording. Please check microphone permissions.",
+        description: errorMessage,
         variant: "destructive"
       });
+      setIsRecording(false);
     }
   };
 

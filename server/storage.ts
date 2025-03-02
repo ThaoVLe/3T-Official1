@@ -27,8 +27,9 @@ export class DatabaseStorage implements IStorage {
     const [newEntry] = await db
       .insert(diaryEntries)
       .values({
-        ...entry,
-        mediaUrls: entry.mediaUrls || [],
+        title: entry.title,
+        content: entry.content,
+        mediaUrls: entry.mediaUrls || []
       })
       .returning();
     return newEntry;
@@ -40,7 +41,7 @@ export class DatabaseStorage implements IStorage {
       .set({
         title: entry.title,
         content: entry.content,
-        mediaUrls: entry.mediaUrls || [],
+        mediaUrls: entry.mediaUrls || []
       })
       .where(eq(diaryEntries.id, id))
       .returning();

@@ -72,11 +72,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       TextStyle,
       Color,
     ],
-    content: value, //Corrected: Removed unnecessary || ""
-    onUpdate: ({ editor }) => {
-      console.log('Editor content updated:', editor.getHTML());
-      onChange(editor.getHTML());
-    },
+    content: value,
     editorProps: {
       attributes: {
         class: 'prose prose-lg max-w-none focus:outline-none min-h-[200px] px-4 text-base leading-relaxed text-gray-900'
@@ -86,8 +82,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   // Update editor content when value prop changes
   useEffect(() => {
-    if (editor) {
-      editor.commands.setContent(value || "");
+    if (editor && value) {
+      console.log('Updating editor content:', value);
+      editor.commands.setContent(value);
     }
   }, [editor, value]);
 
@@ -167,8 +164,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                     key={level}
                     variant="ghost"
                     className="justify-start font-bold"
-                    style={{ 
-                      fontSize: `${1.5 - (level-1)*0.25}rem` 
+                    style={{
+                      fontSize: `${1.5 - (level - 1) * 0.25}rem`
                     }}
                     onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
                     data-active={editor.isActive('heading', { level })}

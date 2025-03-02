@@ -22,8 +22,9 @@ export default function Editor() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
 
+  // Query for fetching entry data
   const { data: entry, isLoading: isLoadingEntry } = useQuery<DiaryEntry>({
-    queryKey: [`/api/entries/${id}`],
+    queryKey: ['/api/entries', id],
     enabled: !!id,
   });
 
@@ -36,10 +37,10 @@ export default function Editor() {
     },
   });
 
-  // Reset form when entry data loads
+  // Update form when entry data loads
   useEffect(() => {
     if (entry) {
-      console.log('Entry loaded:', entry);
+      console.log('Setting form data from entry:', entry);
       form.reset({
         title: entry.title || "",
         content: entry.content || "",
@@ -185,11 +186,14 @@ export default function Editor() {
         <div className="flex-1 p-6">
           <TipTapEditor 
             value={form.watch("content")} 
-            onChange={(value) => form.setValue("content", value)} 
+            onChange={(value) => {
+              console.log('Editor onChange:', value);
+              form.setValue("content", value);
+            }} 
           />
         </div>
 
-        {/* Media Controls - Fixed at bottom */}
+        {/* Media Controls */}
         <div className="border-t bg-white sticky bottom-0">
           <div className="px-6 py-2">
             <MediaRecorder onCapture={onMediaUpload} />

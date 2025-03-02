@@ -25,7 +25,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'prose dark:prose-invert max-w-none p-4 min-h-[200px] focus:outline-none w-full'
+        class: 'prose prose-lg dark:prose-invert max-w-none min-h-[300px] focus:outline-none'
       }
     }
   });
@@ -35,15 +35,15 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   }
 
   return (
-    <div className="border rounded-lg bg-background h-full">
-      <div className="border-b bg-muted/50 p-2 flex gap-1 flex-wrap">
+    <div className="w-full max-w-full">
+      <div className="flex flex-wrap items-center gap-1 mb-4">
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBold().run()}
           data-active={editor.isActive("bold")}
-          className="data-[active=true]:bg-muted"
+          className="data-[active=true]:bg-slate-200 dark:data-[active=true]:bg-slate-800"
         >
           <Bold className="h-4 w-4" />
         </Button>
@@ -53,7 +53,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleItalic().run()}
           data-active={editor.isActive("italic")}
-          className="data-[active=true]:bg-muted"
+          className="data-[active=true]:bg-slate-200 dark:data-[active=true]:bg-slate-800"
         >
           <Italic className="h-4 w-4" />
         </Button>
@@ -63,7 +63,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           data-active={editor.isActive("heading", { level: 1 })}
-          className="data-[active=true]:bg-muted"
+          className="data-[active=true]:bg-slate-200 dark:data-[active=true]:bg-slate-800"
         >
           <Heading1 className="h-4 w-4" />
         </Button>
@@ -73,7 +73,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           data-active={editor.isActive("heading", { level: 2 })}
-          className="data-[active=true]:bg-muted"
+          className="data-[active=true]:bg-slate-200 dark:data-[active=true]:bg-slate-800"
         >
           <Heading2 className="h-4 w-4" />
         </Button>
@@ -83,7 +83,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           data-active={editor.isActive("bulletList")}
-          className="data-[active=true]:bg-muted"
+          className="data-[active=true]:bg-slate-200 dark:data-[active=true]:bg-slate-800"
         >
           <List className="h-4 w-4" />
         </Button>
@@ -93,7 +93,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           data-active={editor.isActive("orderedList")}
-          className="data-[active=true]:bg-muted"
+          className="data-[active=true]:bg-slate-200 dark:data-[active=true]:bg-slate-800"
         >
           <ListOrdered className="h-4 w-4" />
         </Button>
@@ -103,17 +103,12 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           data-active={editor.isActive("blockquote")}
-          className="data-[active=true]:bg-muted"
+          className="data-[active=true]:bg-slate-200 dark:data-[active=true]:bg-slate-800"
         >
           <Quote className="h-4 w-4" />
         </Button>
       </div>
-      <div className="h-full">
-        <EditorContent 
-          editor={editor} 
-          className="h-full"
-        />
-      </div>
+      <EditorContent editor={editor} className="w-full" />
     </div>
   );
 }

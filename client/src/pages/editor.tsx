@@ -11,6 +11,7 @@ import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
+import { ImageIcon, VideoCamera, Save, X } from "lucide-react";
 
 export default function Editor() {
   const { id } = useParams();
@@ -66,69 +67,75 @@ export default function Editor() {
   };
 
   return (
-    <div className="w-full">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col">
-          <div className="space-y-4 px-8 py-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-lg font-medium">Title</FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      className="text-lg p-3 h-12 w-full max-w-full"
-                      placeholder="Give your entry a title..."
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+    <div className="flex flex-col h-screen bg-white">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem className="flex-1 max-w-2xl">
+              <FormControl>
+                <Input 
+                  {...field} 
+                  className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0"
+                  placeholder="Untitled Entry..."
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate("/")}
+          >
+            <X className="h-4 w-4 mr-2" />
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            size="sm"
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={mutation.isPending}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {id ? "Update" : "Create"} Entry
+          </Button>
+        </div>
+      </div>
 
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel className="text-lg font-medium">Content</FormLabel>
-                  <FormControl>
-                    <div className="h-[calc(100vh-280px)]">
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        <Form {...form}>
+          <form className="flex-1 flex flex-col" onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="flex-1 flex flex-col max-w-full px-6 py-4">
+              <FormField
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
                       <TipTapEditor value={field.value} onChange={field.onChange} />
-                    </div>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <div className="flex items-center gap-4">
-              <MediaRecorder onCapture={onMediaUpload} className="flex-1" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <MediaPreview urls={form.watch("mediaUrls")} />
-
-            <div className="flex gap-4">
-              <Button 
-                type="submit" 
-                disabled={mutation.isPending}
-                size="lg"
-                className="px-6"
-              >
-                {id ? "Update" : "Create"} Entry
-              </Button>
-              <Button 
-                type="button" 
-                variant="secondary" 
-                onClick={() => navigate("/")}
-                size="lg"
-              >
-                Cancel
-              </Button>
+            {/* Media Controls */}
+            <div className="border-t bg-slate-50 px-6 py-4">
+              <div className="flex items-center gap-4 max-w-2xl">
+                <MediaRecorder onCapture={onMediaUpload} />
+              </div>
+              <div className="mt-4">
+                <MediaPreview urls={form.watch("mediaUrls")} />
+              </div>
             </div>
-          </div>
-        </form>
-      </Form>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }

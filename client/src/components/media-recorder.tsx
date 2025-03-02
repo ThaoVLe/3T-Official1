@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload, FlipHorizontal, X } from "lucide-react";
+import { Camera, ImageIcon, FlipHorizontal, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -27,14 +27,12 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     }
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopStream();
     };
   }, []);
 
-  // Handle camera effects
   useEffect(() => {
     if (isCameraOpen) {
       startCamera();
@@ -47,25 +45,22 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     try {
       stopStream();
 
-      // Check if getUserMedia is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Camera API is not supported in this browser");
       }
 
-      const constraints = {
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
-      };
+      });
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        // Ensure video plays on mobile devices
         videoRef.current.setAttribute('playsinline', 'true');
         videoRef.current.play().catch(e => console.error("Video play error:", e));
       }
@@ -76,8 +71,6 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       let message = "Failed to access camera. Please check permissions.";
       if (err instanceof Error) {
         message = err.message;
-      } else if (err instanceof DOMException && err.name === 'NotAllowedError') {
-        message = "Camera access denied. Please enable camera permissions in your browser settings.";
       }
 
       toast({
@@ -144,34 +137,33 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   };
 
   return (
-    <div className={`space-y-4 w-full max-w-full ${className}`}>
-      <div className="flex flex-col sm:flex-row gap-2 w-full max-w-full">
-        <input
-          type="file"
-          accept="image/*,video/*,audio/*"
-          className="hidden"
-          id="media-upload"
-          onChange={handleFileUpload}
-        />
+    <div className={`flex items-center gap-2 ${className}`}>
+      <input
+        type="file"
+        accept="image/*,video/*,audio/*"
+        className="hidden"
+        id="media-upload"
+        onChange={handleFileUpload}
+      />
 
-        <label htmlFor="media-upload">
-          <Button type="button" variant="outline" asChild>
-            <span>
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Media
-            </span>
-          </Button>
-        </label>
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setIsCameraOpen(true)}
-        >
-          <Camera className="w-4 h-4 mr-2" />
-          Take Photo
+      <label htmlFor="media-upload">
+        <Button type="button" variant="outline" size="sm" asChild>
+          <span>
+            <ImageIcon className="w-4 h-4 mr-2" />
+            Upload Media
+          </span>
         </Button>
-      </div>
+      </label>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setIsCameraOpen(true)}
+      >
+        <Camera className="w-4 h-4 mr-2" />
+        Take Photo
+      </Button>
 
       <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
         <DialogContent className="max-w-none w-screen h-screen p-0 gap-0">

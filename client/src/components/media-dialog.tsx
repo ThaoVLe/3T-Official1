@@ -22,18 +22,16 @@ export default function MediaDialog({ url, urls, open, onOpenChange }: MediaDial
   const navigateMedia = (direction: 'prev' | 'next') => {
     const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
     if (newIndex >= 0 && newIndex < urls.length) {
-      // We need to pass this event up to the parent to update the selected URL
+      // Custom event handler needed here
+      const nextUrl = urls[newIndex];
       onOpenChange(false);
-      setTimeout(() => {
-        onOpenChange(true);
-        // Custom event handler needed here
-      }, 0);
+      setTimeout(() => onOpenChange(true), 0);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[80%] sm:h-[80vh] p-0 bg-black/90 relative">
+      <DialogContent className="sm:max-w-[80%] max-h-[80vh] p-0 bg-black/90 relative flex items-center justify-center">
         {/* Close button */}
         <Button
           variant="ghost"
@@ -67,13 +65,13 @@ export default function MediaDialog({ url, urls, open, onOpenChange }: MediaDial
         )}
 
         {/* Content */}
-        <div className="w-full h-full flex items-center justify-center">
+        <div className="w-full h-full flex items-center justify-center p-4 overflow-auto">
           {isVideo && (
             <video
               src={url}
               controls
               autoPlay
-              className="max-w-full max-h-[80vh] object-contain"
+              className="max-w-full max-h-[70vh] object-contain"
             />
           )}
           {isAudio && (
@@ -86,7 +84,7 @@ export default function MediaDialog({ url, urls, open, onOpenChange }: MediaDial
             <img
               src={url}
               alt="Media preview"
-              className="max-w-full max-h-[80vh] object-contain"
+              className="max-w-full max-h-[70vh] object-contain"
             />
           )}
         </div>

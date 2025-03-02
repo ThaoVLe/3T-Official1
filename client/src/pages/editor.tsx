@@ -20,6 +20,11 @@ export default function Editor() {
   // Query for fetching entry data
   const { data: entry, isLoading: isLoadingEntry } = useQuery<DiaryEntry>({
     queryKey: ['/api/entries', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const response = await apiRequest("GET", `/api/entries/${id}`);
+      return response;
+    },
     enabled: !!id
   });
 
@@ -35,10 +40,11 @@ export default function Editor() {
   // Update form when entry data loads
   useEffect(() => {
     if (entry) {
+      console.log("Setting form data from entry:", entry);
       form.reset({
         title: entry.title || "",
         content: entry.content || "",
-        mediaUrls: entry.mediaUrls || [],
+        mediaUrls: Array.isArray(entry.mediaUrls) ? entry.mediaUrls : [],
       });
     }
   }, [entry, form]);

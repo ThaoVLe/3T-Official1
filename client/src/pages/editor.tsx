@@ -79,7 +79,7 @@ export default function Editor() {
                   <FormControl>
                     <Input 
                       {...field} 
-                      className="text-lg p-3 h-12 w-full"
+                      className="text-lg p-3 h-12 w-full max-w-full"
                       placeholder="Give your entry a title..."
                     />
                   </FormControl>
@@ -102,10 +102,11 @@ export default function Editor() {
               )}
             />
 
-            <div className="space-y-4">
-              <MediaRecorder onCapture={onMediaUpload} />
-              <MediaPreview urls={form.watch("mediaUrls")} />
+            <div className="flex items-center gap-4">
+              <MediaRecorder onCapture={onMediaUpload} className="flex-1" />
             </div>
+
+            <MediaPreview urls={form.watch("mediaUrls")} />
 
             <div className="flex gap-4">
               <Button 

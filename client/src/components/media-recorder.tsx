@@ -9,9 +9,10 @@ import {
 
 interface MediaRecorderProps {
   onCapture: (file: File) => void;
+  className?: string;
 }
 
-export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
+export default function MediaRecorder({ onCapture, className }: MediaRecorderProps) {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -112,8 +113,6 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
     }, 'image/jpeg', 0.95);
   };
 
-  // No recording functions needed
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -145,7 +144,7 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
   };
 
   return (
-    <div className="space-y-4 w-full max-w-full">
+    <div className={`space-y-4 w-full max-w-full ${className}`}>
       <div className="flex flex-col sm:flex-row gap-2 w-full max-w-full">
         <input
           type="file"

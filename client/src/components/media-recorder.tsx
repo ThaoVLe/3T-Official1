@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, ImageIcon, FlipHorizontal, X } from "lucide-react";
+import { ImageIcon, Mic, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -13,97 +13,55 @@ interface MediaRecorderProps {
 }
 
 export default function MediaRecorder({ onCapture, className }: MediaRecorderProps) {
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioURL, setAudioURL] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
-  // Cleanup function
-  const stopStream = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      stopStream();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isCameraOpen) {
-      startCamera();
-    } else {
-      stopStream();
-    }
-  }, [isCameraOpen, facingMode]);
-
-  const startCamera = async () => {
+  const startRecording = async () => {
     try {
-      stopStream();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
 
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera API is not supported in this browser");
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
         }
-      });
+      };
 
-      streamRef.current = stream;
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        setAudioURL(url);
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.setAttribute('playsinline', 'true');
-        videoRef.current.play().catch(e => console.error("Video play error:", e));
-      }
+        // Convert to File and capture
+        const file = new File([blob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
+        onCapture(file);
+
+        // Clean up stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
     } catch (err) {
-      console.error('Camera access error:', err);
-      setIsCameraOpen(false);
-
-      let message = "Failed to access camera. Please check permissions.";
-      if (err instanceof Error) {
-        message = err.message;
-      }
-
+      console.error('Recording error:', err);
       toast({
-        title: "Camera Error",
-        description: message,
+        title: "Recording Error",
+        description: "Failed to start recording. Please check microphone permissions.",
         variant: "destructive"
       });
     }
   };
 
-  const takePhoto = async () => {
-    if (!videoRef.current) return;
-
-    const video = videoRef.current;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.drawImage(video, 0, 0);
-
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      onCapture(file);
-      setIsCameraOpen(false);
-      toast({
-        title: "Success",
-        description: "Photo captured successfully"
-      });
-    }, 'image/jpeg', 0.95);
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,9 +90,17 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     });
   };
 
-  const toggleCamera = () => {
-    setFacingMode(prev => prev === "user" ? "environment" : "user");
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+      }
+      if (audioURL) {
+        URL.revokeObjectURL(audioURL);
+      }
+    };
+  }, [isRecording, audioURL]);
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -159,58 +125,12 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         type="button"
         variant="outline"
         size="sm"
-        onClick={() => setIsCameraOpen(true)}
+        onClick={isRecording ? stopRecording : startRecording}
+        className={isRecording ? "bg-red-100 hover:bg-red-200" : ""}
       >
-        <Camera className="w-4 h-4 mr-2" />
-        Take Photo
+        <Mic className={`w-4 h-4 mr-2 ${isRecording ? "text-red-500" : ""}`} />
+        {isRecording ? "Stop Recording" : "Record Audio"}
       </Button>
-
-      <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
-        <DialogContent className="max-w-none w-screen h-screen p-0 gap-0">
-          <div className="relative w-full h-full bg-black">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
-
-            <div className="absolute top-4 right-4">
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                className="bg-black/50 hover:bg-black/70 border-white/20"
-                onClick={() => setIsCameraOpen(false)}
-              >
-                <X className="w-6 h-6 text-white" />
-              </Button>
-            </div>
-
-            <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-6">
-              <Button
-                type="button"
-                size="icon"
-                className="w-14 h-14 rounded-full bg-black/50 hover:bg-black/70 border-2 border-white/20"
-                onClick={toggleCamera}
-              >
-                <FlipHorizontal className="w-8 h-8 text-white" />
-              </Button>
-
-              <Button
-                type="button"
-                size="icon"
-                className="w-20 h-20 rounded-full bg-white hover:bg-white/90"
-                onClick={takePhoto}
-              >
-                <div className="w-16 h-16 rounded-full border-4 border-black">
-                  <div className="w-14 h-14 rounded-full bg-black m-[2px]" />
-                </div>
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

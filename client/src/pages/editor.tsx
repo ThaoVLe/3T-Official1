@@ -73,10 +73,17 @@ export default function Editor() {
     form.setValue("mediaUrls", [...currentUrls, url]);
   };
 
+  const onMediaRemove = (index: number) => {
+    const currentUrls = form.getValues("mediaUrls") || [];
+    const newUrls = [...currentUrls];
+    newUrls.splice(index, 1);
+    form.setValue("mediaUrls", newUrls);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b bg-white">
+      <div className="flex items-center justify-between px-6 py-3 border-b bg-white sticky top-0 z-10">
         <Input 
           {...form.register("title")}
           className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 flex-1 max-w-2xl"
@@ -120,7 +127,10 @@ export default function Editor() {
           </div>
           {form.watch("mediaUrls")?.length > 0 && (
             <div className="px-6 pt-2 pb-4 overflow-x-auto">
-              <MediaPreview urls={form.watch("mediaUrls")} />
+              <MediaPreview 
+                urls={form.watch("mediaUrls")} 
+                onRemove={onMediaRemove}
+              />
             </div>
           )}
         </div>

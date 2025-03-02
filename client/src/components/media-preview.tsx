@@ -67,31 +67,6 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
         onOpenChange={(open) => !open && setSelectedIndex(undefined)}
       />
 
-      {/* Show loading card for new upload */}
-      {loading && (
-        <Card className="w-[70px] h-[70px] relative">
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-            <svg
-              className="w-8 h-8"
-              viewBox="0 0 32 32"
-            >
-              <circle
-                cx="16"
-                cy="16"
-                r="14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="4"
-                strokeDasharray={Math.PI * 28}
-                strokeDashoffset={(1 - uploadProgress / 100) * Math.PI * 28}
-                className="text-primary transition-all duration-300"
-                transform="rotate(-90 16 16)"
-              />
-            </svg>
-          </div>
-        </Card>
-      )}
-
       {/* Display media thumbnails */}
       {mediaUrls.map((url, index) => {
         if (!url || typeof url !== 'string') {
@@ -100,6 +75,8 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
         }
 
         const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
+        const isLastItem = index === mediaUrls.length - 1;
+        const isUploading = loading && isLastItem;
 
         return (
           <Card key={url} className="w-[70px] h-[70px] relative">
@@ -135,6 +112,29 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
                   alt={`Media ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
+              )}
+
+              {/* Upload progress overlay */}
+              {isUploading && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                  <svg
+                    className="w-8 h-8"
+                    viewBox="0 0 32 32"
+                  >
+                    <circle
+                      cx="16"
+                      cy="16"
+                      r="14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeDasharray={Math.PI * 28}
+                      strokeDashoffset={(1 - uploadProgress / 100) * Math.PI * 28}
+                      className="text-primary transition-all duration-300"
+                      transform="rotate(-90 16 16)"
+                    />
+                  </svg>
+                </div>
               )}
             </div>
           </Card>

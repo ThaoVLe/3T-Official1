@@ -19,6 +19,7 @@ export default function Editor() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false); // Added state for uploading
+  const [uploadProgress, setUploadProgress] = useState(0); // Added state for upload progress
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -65,15 +66,37 @@ export default function Editor() {
   const onMediaUpload = async (file: File) => {
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      return new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append("file", file);
+
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const progress = Math.round((e.loaded * 100) / e.total);
+            // Update progress in MediaRecorder
+            setUploadProgress(progress);
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status === 200) {
+            const { url } = JSON.parse(xhr.responseText);
+            const currentUrls = form.getValues("mediaUrls") || [];
+            form.setValue("mediaUrls", [...currentUrls, url]);
+            resolve(url);
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed"));
+        });
+
+        xhr.open("POST", "/api/upload");
+        xhr.send(formData);
       });
-      const { url } = await res.json();
-      const currentUrls = form.getValues("mediaUrls") || [];
-      form.setValue("mediaUrls", [...currentUrls, url]);
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -83,6 +106,7 @@ export default function Editor() {
       });
     } finally {
       setIsUploading(false);
+      setUploadProgress(0); // Reset progress after upload
     }
   };
 
@@ -136,14 +160,14 @@ export default function Editor() {
         {/* Media Controls - Fixed at bottom */}
         <div className="border-t bg-white sticky bottom-0">
           <div className="px-6 py-2">
-            <MediaRecorder onCapture={onMediaUpload} />
+            <MediaRecorder onCapture={onMediaUpload} uploadProgress={uploadProgress}/> {/* Pass uploadProgress to MediaRecorder */}
           </div>
           {form.watch("mediaUrls")?.length > 0 && (
             <div className="px-6 pt-2 pb-4 overflow-x-auto">
               <MediaPreview 
                 urls={form.watch("mediaUrls")} 
                 onRemove={onMediaRemove}
-                loading={isUploading} // Added loading prop
+                loading={isUploading} 
               />
             </div>
           )}

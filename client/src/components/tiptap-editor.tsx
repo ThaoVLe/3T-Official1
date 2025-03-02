@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useEffect } from "react";
 
 interface TipTapEditorProps {
   value: string;
@@ -66,7 +67,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       TextStyle,
       Color,
     ],
-    content: value,
+    content: value || "",
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
@@ -76,6 +77,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       }
     }
   });
+
+  // Update editor content when value prop changes
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value || "");
+    }
+  }, [editor, value]);
 
   if (!editor) {
     return null;

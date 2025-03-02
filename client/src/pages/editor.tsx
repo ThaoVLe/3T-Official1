@@ -41,11 +41,11 @@ export default function Editor() {
   // Set form data when entry is loaded
   useEffect(() => {
     if (entry) {
-      console.log("Setting form data from entry:", [entry]);
+      console.log("Setting form data from entry:", entry);
       form.reset({
         title: entry.title || "",
         content: entry.content || "",
-        mediaUrls: entry.mediaUrls || [],
+        mediaUrls: Array.isArray(entry.mediaUrls) ? entry.mediaUrls : [],
       });
     }
   }, [entry, form]);

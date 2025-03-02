@@ -1,5 +1,8 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import CodeBlockLowlight from "@tiptap/extension-code-block";
+import Highlight from "@tiptap/extension-highlight";
+import Link from "@tiptap/extension-link";
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -9,6 +12,9 @@ import {
   Quote,
   Heading1,
   Heading2,
+  Code,
+  Link as LinkIcon,
+  Highlighter,
 } from "lucide-react";
 
 interface TipTapEditorProps {
@@ -18,7 +24,19 @@ interface TipTapEditorProps {
 
 export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit.configure({
+        codeBlock: false, // Disable the basic code block to use the lowlight version
+      }),
+      CodeBlockLowlight,
+      Highlight,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-primary underline',
+        },
+      }),
+    ],
     content: value,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
@@ -34,9 +52,25 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     return null;
   }
 
+  const setLink = () => {
+    const previousUrl = editor.getAttributes('link').href
+    const url = window.prompt('URL', previousUrl)
+
+    if (url === null) {
+      return
+    }
+
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+      return
+    }
+
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+  }
+
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-1 pb-4 border-b">
+      <div className="flex items-center gap-1 pb-4 border-b flex-wrap">
         <Button
           type="button"
           variant="ghost"
@@ -106,6 +140,36 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           className="data-[active=true]:bg-slate-100"
         >
           <Quote className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          data-active={editor.isActive("codeBlock")}
+          className="data-[active=true]:bg-slate-100"
+        >
+          <Code className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={setLink}
+          data-active={editor.isActive("link")}
+          className="data-[active=true]:bg-slate-100"
+        >
+          <LinkIcon className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+          data-active={editor.isActive("highlight")}
+          className="data-[active=true]:bg-slate-100"
+        >
+          <Highlighter className="h-4 w-4" />
         </Button>
       </div>
 

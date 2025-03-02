@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Video, Music, Loader2 } from "lucide-react";
+import { useState } from "react";
+import MediaDialog from "./media-dialog";
 
 interface MediaPreviewProps {
   urls: string[];
@@ -9,12 +11,19 @@ interface MediaPreviewProps {
 }
 
 export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewProps) {
+  const [selectedUrl, setSelectedUrl] = useState<string>();
   const mediaUrls = urls || [];
 
   if (!mediaUrls.length && !loading) return null;
 
   return (
     <div className="flex gap-3 flex-wrap">
+      <MediaDialog 
+        url={selectedUrl}
+        open={!!selectedUrl}
+        onOpenChange={(open) => !open && setSelectedUrl(undefined)}
+      />
+
       {loading && (
         <Card className="w-[70px] h-[70px] relative flex items-center justify-center bg-slate-50">
           <Loader2 className="h-6 w-6 text-slate-400 animate-spin" />
@@ -38,14 +47,17 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 absolute -top-2 -right-2 bg-white shadow-sm rounded-full"
+                  className="h-6 w-6 absolute -top-2 -right-2 bg-white shadow-sm rounded-full z-10"
                   onClick={() => onRemove(index)}
                 >
                   <X className="h-4 w-4" />
                 </Button>
               )}
 
-              <div className="w-full h-full overflow-hidden">
+              <div 
+                className="w-full h-full overflow-hidden cursor-pointer"
+                onClick={() => setSelectedUrl(url)}
+              >
                 {isVideo && (
                   <div className="w-full h-full relative">
                     <video

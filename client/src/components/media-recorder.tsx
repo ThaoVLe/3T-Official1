@@ -15,53 +15,19 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   const chunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
-  const requestMicrophonePermission = async () => {
-    try {
-      // First check if we have permission already
-      const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-
-      switch (result.state) {
-        case 'granted':
-          return true;
-        case 'prompt':
-          // Will show the permission dialog
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          stream.getTracks().forEach(track => track.stop());
-          return true;
-        case 'denied':
-          toast({
-            title: "Permission Required",
-            description: "Please allow microphone access in your browser settings",
-            variant: "destructive"
-          });
-          return false;
-      }
-    } catch (error) {
-      console.error('Permission check failed:', error);
-      return false;
-    }
-  };
-
   const startRecording = async () => {
     try {
-      const hasPermission = await requestMicrophonePermission();
-      if (!hasPermission) return;
-
+      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          sampleRate: 44100
+          autoGainControl: true,
         }
       });
 
-      // Get the supported MIME type
-      const mimeType = 'audio/webm';
-      const recorder = new MediaRecorder(stream, {
-        mimeType,
-        audioBitsPerSecond: 128000
-      });
-
+      // Create recorder with basic configuration
+      const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
 
@@ -72,28 +38,36 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       };
 
       recorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
-        const audioFile = new File([audioBlob], `recording-${Date.now()}.webm`, {
-          type: mimeType
-        });
+        try {
+          const audioBlob = new Blob(chunksRef.current);
+          const audioFile = new File([audioBlob], `recording-${Date.now()}.mp3`, {
+            type: "audio/mp3"
+          });
 
-        // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
+          // Clean up
+          stream.getTracks().forEach(track => track.stop());
+          setIsRecording(false);
+          onCapture(audioFile);
 
-        // Reset state and send file to parent
-        setIsRecording(false);
-        onCapture(audioFile);
+        } catch (error) {
+          console.error('Error creating audio file:', error);
+          toast({
+            title: "Error",
+            description: "Failed to save the recording",
+            variant: "destructive"
+          });
+        }
       };
 
       // Start recording
-      recorder.start(1000); // Record in 1-second chunks
+      recorder.start();
       setIsRecording(true);
 
     } catch (error) {
       console.error('Recording error:', error);
       toast({
-        title: "Recording Error",
-        description: "Failed to start recording. Please try again.",
+        title: "Microphone Required",
+        description: "Please allow microphone access to record audio",
         variant: "destructive"
       });
       setIsRecording(false);

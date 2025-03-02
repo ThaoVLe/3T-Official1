@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 interface TipTapEditorProps {
-  value: string;
+  value: string | undefined;
   onChange: (value: string) => void;
 }
 

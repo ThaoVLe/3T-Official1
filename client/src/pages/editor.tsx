@@ -66,91 +66,68 @@ export default function Editor() {
   };
 
   return (
-    <div className="flex min-h-screen w-full">
-      {/* Main Content Column */}
-      <div className="flex-1 max-w-3xl px-4">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col">
-            <div className="space-y-4 py-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-lg font-medium">Title</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        className="text-lg p-3 h-12 w-full"
-                        placeholder="Give your entry a title..."
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+    <div className="h-full w-full">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col">
+          <div className="space-y-4 p-6">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-lg font-medium">Title</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      className="text-lg p-3 h-12 w-full"
+                      placeholder="Give your entry a title..."
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel className="text-lg font-medium">Content</FormLabel>
-                    <FormControl>
-                      <div className="h-[calc(100vh-280px)]">
-                        <TipTapEditor value={field.value} onChange={field.onChange} />
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel className="text-lg font-medium">Content</FormLabel>
+                  <FormControl>
+                    <div className="h-[calc(100vh-280px)]">
+                      <TipTapEditor value={field.value} onChange={field.onChange} />
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
-              <div className="space-y-4">
-                <MediaRecorder onCapture={onMediaUpload} />
-                <MediaPreview urls={form.watch("mediaUrls")} />
-              </div>
-
-              <div className="flex gap-4">
-                <Button 
-                  type="submit" 
-                  disabled={mutation.isPending}
-                  size="lg"
-                  className="px-6"
-                >
-                  {id ? "Update" : "Create"} Entry
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="secondary" 
-                  onClick={() => navigate("/")}
-                  size="lg"
-                >
-                  Cancel
-                </Button>
-              </div>
+            <div className="space-y-4">
+              <MediaRecorder onCapture={onMediaUpload} />
+              <MediaPreview urls={form.watch("mediaUrls")} />
             </div>
-          </form>
-        </Form>
-      </div>
 
-      {/* Right Sidebar */}
-      <div className="w-80 shrink-0 border-l bg-background p-6 space-y-6 hidden lg:block">
-        <div>
-          <h3 className="font-semibold mb-4">Recent Entries</h3>
-          <div className="space-y-2">
-            {/* We'll implement recent entries list here */}
-            <p className="text-sm text-muted-foreground">No recent entries</p>
+            <div className="flex gap-4">
+              <Button 
+                type="submit" 
+                disabled={mutation.isPending}
+                size="lg"
+                className="px-6"
+              >
+                {id ? "Update" : "Create"} Entry
+              </Button>
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => navigate("/")}
+                size="lg"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
-        </div>
-
-        <div>
-          <h3 className="font-semibold mb-4">Quick Tips</h3>
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p>• Use Markdown for formatting</p>
-            <p>• Add images and videos</p>
-            <p>• Record audio notes</p>
-          </div>
-        </div>
-      </div>
+        </form>
+      </Form>
     </div>
   );
 }

@@ -14,7 +14,6 @@ import {
   List,
   ListOrdered,
   Quote,
-  Code,
   Link as LinkIcon,
   Highlighter,
   Smile,
@@ -49,7 +48,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           }
         },
         heading: {
-          levels: [1, 2, 3]
+          levels: [1, 2, 3],
+          HTMLAttributes: {
+            class: 'font-bold',
+          }
         }
       }),
       CodeBlockLowlight,
@@ -67,18 +69,17 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       TextStyle,
       Color,
     ],
-    content: value || '', // Initialize with empty string if value is undefined
+    content: value || '',
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4'
+        class: 'focus:outline-none min-h-[200px] px-4 prose prose-headings:my-2 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl'
       }
     }
   });
 
-  // Update editor content when value prop changes
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
       editor.commands.setContent(value || '', false);
@@ -160,11 +161,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   <Button
                     key={level}
                     variant="ghost"
-                    className="justify-start"
+                    className="justify-start text-left"
                     onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
                     data-active={editor.isActive('heading', { level })}
                   >
-                    Heading {level}
+                    <span className={`${level === 1 ? 'text-xl' : level === 2 ? 'text-lg' : 'text-base'}`}>
+                      Heading {level}
+                    </span>
                   </Button>
                 ))}
               </div>

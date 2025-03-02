@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,8 @@ import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
-import { ImageIcon, Save, X } from "lucide-react";
+import { Save, X } from "lucide-react";
+import { useEffect } from "react";
 
 export default function Editor() {
   const { id } = useParams();
@@ -26,11 +27,22 @@ export default function Editor() {
   const form = useForm<InsertEntry>({
     resolver: zodResolver(insertEntrySchema),
     defaultValues: {
-      title: entry?.title || "",
-      content: entry?.content || "",
-      mediaUrls: entry?.mediaUrls || [],
+      title: "",
+      content: "",
+      mediaUrls: [],
     },
   });
+
+  // Update form when entry data is loaded
+  useEffect(() => {
+    if (entry) {
+      form.reset({
+        title: entry.title,
+        content: entry.content,
+        mediaUrls: entry.mediaUrls || [],
+      });
+    }
+  }, [entry, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
@@ -132,7 +144,7 @@ export default function Editor() {
               </div>
               {form.watch("mediaUrls")?.length > 0 && (
                 <div className="mt-3">
-                  <MediaPreview urls={form.watch("mediaUrls") || []} />
+                  <MediaPreview urls={form.watch("mediaUrls")} />
                 </div>
               )}
             </div>

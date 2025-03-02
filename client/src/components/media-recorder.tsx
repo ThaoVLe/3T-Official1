@@ -145,8 +145,8 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
+    <div className="space-y-4 w-full">
+      <div className="grid grid-cols-2 gap-2 w-full">
         <input
           type="file"
           accept="image/*,video/*,audio/*"
@@ -155,8 +155,8 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
           onChange={handleFileUpload}
         />
 
-        <label htmlFor="media-upload">
-          <Button type="button" variant="outline" asChild>
+        <label htmlFor="media-upload" className="w-full">
+          <Button type="button" variant="outline" asChild className="w-full">
             <span>
               <Upload className="w-4 h-4 mr-2" />
               Upload Media
@@ -168,6 +168,7 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
           type="button"
           variant="outline"
           onClick={() => setIsCameraOpen(true)}
+          className="w-full"
         >
           <Camera className="w-4 h-4 mr-2" />
           Take Photo

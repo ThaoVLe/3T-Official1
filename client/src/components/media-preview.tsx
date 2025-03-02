@@ -12,15 +12,23 @@ interface MediaPreviewProps {
 
 export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewProps) {
   const [selectedIndex, setSelectedIndex] = useState<number>();
-  const mediaUrls = urls || [];
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
+  const mediaUrls = urls || [];
 
   // Load video thumbnails
   useEffect(() => {
     mediaUrls.forEach((url, index) => {
       if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) && videoRefs.current[index]) {
         const video = videoRefs.current[index];
-        video.currentTime = 1; // Seek to 1 second to get a preview frame
+
+        // Listen for metadata to load before seeking
+        const handleLoadedMetadata = () => {
+          // Seek to a very small time to get the first frame
+          video.currentTime = 0.1;
+        };
+
+        video.addEventListener('loadedmetadata', handleLoadedMetadata);
+        return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       }
     });
   }, [mediaUrls]);
@@ -78,6 +86,7 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
                       className="w-full h-full object-cover"
                       muted
                       playsInline
+                      preload="metadata"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/10">
                       <Video className="h-6 w-6 text-white" />

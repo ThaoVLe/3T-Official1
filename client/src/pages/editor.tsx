@@ -1,10 +1,10 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm, type UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertEntrySchema, type DiaryEntry, type InsertEntry } from "@shared/schema";
 import TipTapEditor from "@/components/tiptap-editor";
@@ -12,7 +12,7 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import { useEffect } from "react";
+import React from 'react';
 
 export default function Editor() {
   const { id } = useParams();
@@ -33,8 +33,8 @@ export default function Editor() {
     },
   });
 
-  // Update form when entry data is loaded
-  useEffect(() => {
+  // Set form values when entry data is loaded
+  React.useEffect(() => {
     if (entry) {
       form.reset({
         title: entry.title,
@@ -62,10 +62,6 @@ export default function Editor() {
     },
   });
 
-  const onSubmit = (data: InsertEntry) => {
-    mutation.mutate(data);
-  };
-
   const onMediaUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -79,23 +75,13 @@ export default function Editor() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 border-b bg-white">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem className="flex-1 max-w-3xl">
-              <FormControl>
-                <Input 
-                  {...field} 
-                  className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0"
-                  placeholder="Untitled Entry..."
-                />
-              </FormControl>
-            </FormItem>
-          )}
+        <Input 
+          {...form.register("title")}
+          className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 flex-1 max-w-2xl"
+          placeholder="Untitled Entry..."
         />
         <div className="flex items-center gap-2">
           <Button 
@@ -107,9 +93,9 @@ export default function Editor() {
             Cancel
           </Button>
           <Button 
-            type="submit"
+            type="button"
             size="sm"
-            onClick={form.handleSubmit(onSubmit)}
+            onClick={form.handleSubmit((data) => mutation.mutate(data))}
             disabled={mutation.isPending}
             className="bg-primary hover:bg-primary/90"
           >
@@ -119,42 +105,26 @@ export default function Editor() {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Content Area */}
       <div className="flex-1 overflow-hidden">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col">
-            <div className="flex-1 p-6">
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem className="h-full">
-                    <FormControl>
-                      <div className="w-full">
-                        <TipTapEditor 
-                          value={field.value} 
-                          onChange={field.onChange} 
-                        />
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+        <div className="h-full flex flex-col">
+          <div className="flex-1 p-6">
+            <TipTapEditor 
+              value={form.watch("content")} 
+              onChange={(value) => form.setValue("content", value)} 
+            />
+          </div>
 
-            {/* Media Controls */}
-            <div className="border-t bg-slate-50/80 px-6 py-3">
-              <div className="flex items-center gap-2">
-                <MediaRecorder onCapture={onMediaUpload} />
+          {/* Media Controls */}
+          <div className="border-t bg-slate-50/80 px-6 py-3">
+            <MediaRecorder onCapture={onMediaUpload} />
+            {form.watch("mediaUrls")?.length > 0 && (
+              <div className="mt-3">
+                <MediaPreview urls={form.watch("mediaUrls")} />
               </div>
-              {form.watch("mediaUrls")?.length > 0 && (
-                <div className="mt-3">
-                  <MediaPreview urls={form.watch("mediaUrls")} />
-                </div>
-              )}
-            </div>
-          </form>
-        </Form>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

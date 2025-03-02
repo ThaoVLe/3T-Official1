@@ -12,22 +12,20 @@ import {
 } from "lucide-react";
 
 interface TipTapEditorProps {
-  value: string | undefined;
+  value: string;
   onChange: (value: string) => void;
 }
 
 export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [StarterKit],
-    content: value || "",
+    content: value,
     onUpdate: ({ editor }) => {
-      if (editor) {
-        onChange(editor.getHTML());
-      }
+      onChange(editor.getHTML());
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-lg max-w-none focus:outline-none min-h-[calc(100vh-250px)]'
+        class: 'prose prose-lg max-w-none focus:outline-none h-full min-h-[calc(100vh-300px)]'
       }
     }
   });
@@ -38,7 +36,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-1 mb-4 pb-3 border-b">
+      <div className="flex items-center gap-1 pb-4 border-b">
         <Button
           type="button"
           variant="ghost"
@@ -110,7 +108,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           <Quote className="h-4 w-4" />
         </Button>
       </div>
-      <div className="flex-1">
+
+      <div className="flex-1 pt-4">
         <EditorContent editor={editor} className="h-full" />
       </div>
     </div>

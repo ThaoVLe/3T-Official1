@@ -42,16 +42,31 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
     }
   };
 
+  const checkMediaRecorderSupport = () => {
+    if (!window.MediaRecorder) {
+      toast({
+        title: "Browser Not Supported",
+        description: "Your browser doesn't support media recording.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  };
+
   const requestMediaPermissions = async (type: 'camera' | 'microphone' | 'both') => {
     try {
       const constraints = {
         audio: type === 'microphone' || type === 'both',
-        video: type === 'camera' || type === 'both'
+        video: type === 'camera' || type === 'both' ? { facingMode } : false
       };
 
-      await navigator.mediaDevices.getUserMedia(constraints);
-      return true;
+      console.log(`Requesting permissions for ${type}`, constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('Got media stream:', stream);
+      return stream;
     } catch (err) {
+      console.error('Permission error:', err);
       if (err instanceof DOMException) {
         if (err.name === 'NotAllowedError') {
           toast({
@@ -67,22 +82,19 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
           });
         }
       }
-      return false;
+      return null;
     }
   };
 
   const startCamera = async () => {
-    if (!(await requestMediaPermissions('camera'))) {
+    const stream = await requestMediaPermissions('camera');
+    if (!stream) {
       setIsCameraOpen(false);
       return;
     }
 
     try {
       stopStream();
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
-        audio: false
-      });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -119,29 +131,29 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
   };
 
   const startRecording = async (type: 'audio' | 'video') => {
-    if (!(await requestMediaPermissions(type === 'audio' ? 'microphone' : 'both'))) {
-      return;
-    }
+    if (!checkMediaRecorderSupport()) return;
 
     try {
+      console.log(`Starting ${type} recording...`);
       stopStream();
       setRecordedChunks([]);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: type === 'video' ? { facingMode: 'user' } : false
-      });
+      const stream = await requestMediaPermissions(type === 'audio' ? 'microphone' : 'both');
+      if (!stream) return;
 
       streamRef.current = stream;
+      console.log('Creating MediaRecorder...');
       const recorder = new MediaRecorder(stream);
 
       recorder.ondataavailable = (e) => {
+        console.log('Data available:', e.data.size);
         if (e.data.size > 0) {
           setRecordedChunks(prev => [...prev, e.data]);
         }
       };
 
       recorder.onstop = () => {
+        console.log('Recording stopped, processing chunks...');
         const mimeType = type === 'audio' ? 'audio/webm' : 'video/webm';
         const blob = new Blob(recordedChunks, { type: mimeType });
         const file = new File([blob], `${type}-${Date.now()}.webm`, { type: mimeType });
@@ -154,6 +166,18 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
         });
       };
 
+      recorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        stopStream();
+        setIsRecording(false);
+        toast({
+          title: "Recording Error",
+          description: "An error occurred while recording",
+          variant: "destructive"
+        });
+      };
+
+      console.log('Starting MediaRecorder...');
       recorder.start(1000);
       setMediaRecorder(recorder);
       setIsRecording(true);
@@ -165,10 +189,16 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
       console.error('Recording failed:', err);
       stopStream();
       setIsRecording(false);
+      toast({
+        title: "Recording Error",
+        description: "Failed to start recording. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
   const stopRecording = () => {
+    console.log('Stopping recording...');
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
       setIsRecording(false);

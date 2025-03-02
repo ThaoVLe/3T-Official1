@@ -25,13 +25,13 @@ export default function MediaPreview({ urls, onRemove }: MediaPreviewProps) {
           const isAudio = url.match(/\.(mp3|wav|ogg|webm)$/i);
 
           return (
-            <Card key={index} className="w-[70px] h-[70px] relative group">
+            <Card key={index} className="w-[70px] h-[70px] relative">
               {onRemove && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 absolute -top-2 -right-2 bg-white shadow-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-6 w-6 absolute -top-2 -right-2 bg-white shadow-sm rounded-full"
                   onClick={() => onRemove(index)}
                 >
                   <X className="h-4 w-4" />

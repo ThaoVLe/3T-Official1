@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Camera, Video, Square, Upload, FlipHorizontal } from "lucide-react";
+import { Mic, Camera, Video, Square, Upload, FlipHorizontal, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 
 interface MediaRecorderProps {
@@ -97,7 +95,7 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
 
   // Helper function to check MediaRecorder MIME type support
   const getSupportedMimeType = (type: 'audio' | 'video'): string | null => {
-    const mimeTypes = type === 'audio' 
+    const mimeTypes = type === 'audio'
       ? ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/ogg']
       : ['video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
 
@@ -243,9 +241,9 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
             </Button>
           </>
         ) : (
-          <Button 
-            type="button" 
-            variant="destructive" 
+          <Button
+            type="button"
+            variant="destructive"
             onClick={stopRecording}
             className="animate-pulse"
           >
@@ -256,34 +254,47 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
       </div>
 
       <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Take Photo</DialogTitle>
-          </DialogHeader>
-          <div className="relative aspect-video">
+        <DialogContent className="max-w-none w-screen h-screen p-0 gap-0">
+          <div className="relative w-full h-full bg-black">
             <video
               ref={videoRef}
               autoPlay
               playsInline
-              className="w-full h-full object-cover rounded-lg"
+              className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+
+            {/* Camera Controls */}
+            <div className="absolute top-4 right-4">
               <Button
                 type="button"
-                size="lg"
+                size="icon"
                 variant="outline"
-                className="bg-white"
+                className="bg-black/50 hover:bg-black/70 border-white/20"
+                onClick={() => setIsCameraOpen(false)}
+              >
+                <X className="w-6 h-6 text-white" />
+              </Button>
+            </div>
+
+            <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-6">
+              <Button
+                type="button"
+                size="icon"
+                className="w-14 h-14 rounded-full bg-black/50 hover:bg-black/70 border-2 border-white/20"
                 onClick={toggleCamera}
               >
-                <FlipHorizontal className="w-6 h-6" />
+                <FlipHorizontal className="w-8 h-8 text-white" />
               </Button>
+
               <Button
                 type="button"
-                size="lg"
+                size="icon"
+                className="w-20 h-20 rounded-full bg-white hover:bg-white/90"
                 onClick={takePhoto}
-                className="bg-white hover:bg-white/90"
               >
-                <Camera className="w-6 h-6" />
+                <div className="w-16 h-16 rounded-full border-4 border-black">
+                  <div className="w-14 h-14 rounded-full bg-black m-[2px]" />
+                </div>
               </Button>
             </div>
           </div>

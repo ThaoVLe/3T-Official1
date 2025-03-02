@@ -26,6 +26,12 @@ export default function Editor() {
   const { data: entry, isLoading: isLoadingEntry } = useQuery<DiaryEntry>({
     queryKey: ['/api/entries', id],
     enabled: !!id,
+    onSuccess: (data) => {
+      console.log('Entry data fetched successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error fetching entry data:', error);
+    }
   });
 
   const form = useForm<InsertEntry>({
@@ -52,6 +58,7 @@ export default function Editor() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
+      console.log('Submitting data:', data);
       if (id) {
         await apiRequest("PUT", `/api/entries/${id}`, data);
       } else {
@@ -59,6 +66,7 @@ export default function Editor() {
       }
     },
     onSuccess: () => {
+      console.log('Data submitted successfully');
       queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
       toast({
         title: "Success",
@@ -66,6 +74,14 @@ export default function Editor() {
       });
       navigate("/");
     },
+    onError: (error) => {
+      console.error('Error submitting data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save entry. Please try again.",
+        variant: "destructive"
+      });
+    }
   });
 
   const onMediaUpload = async (file: File) => {
@@ -95,6 +111,7 @@ export default function Editor() {
         xhr.addEventListener("load", () => {
           if (xhr.status === 200) {
             const { url } = JSON.parse(xhr.responseText);
+            console.log('Upload successful, URL:', url);
             // Replace temp URL with actual URL
             const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
             form.setValue("mediaUrls", finalUrls);

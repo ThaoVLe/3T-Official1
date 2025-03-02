@@ -72,11 +72,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       TextStyle,
       Color,
     ],
-    content: value,
     editorProps: {
       attributes: {
         class: 'prose prose-lg max-w-none focus:outline-none min-h-[200px] px-4 text-base leading-relaxed text-gray-900'
       }
+    },
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
     }
   });
 
@@ -91,19 +93,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   if (!editor) {
     return null;
   }
-
-  const setLink = () => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL', previousUrl);
-
-    if (url === null) return;
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  };
 
   const colors = [
     '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
@@ -262,7 +251,12 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             type="button"
             variant="ghost"
             size="sm"
-            onClick={setLink}
+            onClick={() => {
+              const url = window.prompt('Enter the link URL');
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run();
+              }
+            }}
             data-active={editor.isActive("link")}
             className="h-8 px-2 data-[active=true]:bg-slate-100"
           >

@@ -73,7 +73,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4 ProseMirror'
+        class: 'focus:outline-none min-h-[200px] px-4'
       }
     }
   });

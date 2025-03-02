@@ -13,13 +13,13 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="p-8 space-y-4">
         <div className="flex justify-between items-center mb-8">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-64 w-full" />
           ))}
         </div>
@@ -47,7 +47,7 @@ export default function Home() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
           My Diary
@@ -60,7 +60,7 @@ export default function Home() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {entries.map((entry) => (
           <EntryCard key={entry.id} entry={entry} />
         ))}

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Mic, X } from "lucide-react";
+import { ImageIcon, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MediaRecorderProps {
@@ -22,7 +22,6 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         throw new Error('Microphone permission is denied. Please enable it in your browser settings.');
       }
     } catch (err) {
-      // If query isn't supported, we'll try getUserMedia directly
       console.log('Permission query not supported, trying direct access');
     }
   };
@@ -36,10 +35,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         video: false
       });
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm'
-      });
-
+      const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -59,21 +55,15 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         });
         onCapture(file);
 
-        // Clean up stream
         stream.getTracks().forEach(track => track.stop());
         toast({
           title: "Success",
-          description: "Audio recording saved successfully"
+          description: "Audio recording saved"
         });
       };
 
       mediaRecorder.start();
       setIsRecording(true);
-      toast({
-        title: "Recording Started",
-        description: "Your audio is now being recorded..."
-      });
-
     } catch (err) {
       console.error('Recording error:', err);
       let errorMessage = "Failed to start recording. ";
@@ -128,7 +118,6 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     });
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current && isRecording) {
@@ -141,7 +130,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   }, [isRecording, audioURL]);
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`flex items-center gap-4 ${className}`}>
       <input
         type="file"
         accept="image/*,video/*,audio/*"
@@ -150,25 +139,31 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         onChange={handleFileUpload}
       />
 
-      <label htmlFor="media-upload">
-        <Button type="button" variant="outline" size="sm" asChild>
-          <span>
-            <ImageIcon className="w-4 h-4 mr-2" />
-            Upload Media
-          </span>
-        </Button>
-      </label>
+      <div className="flex gap-4">
+        <label htmlFor="media-upload">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9"
+            asChild
+          >
+            <span>
+              <ImageIcon className="h-5 w-5" />
+            </span>
+          </Button>
+        </label>
 
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={isRecording ? stopRecording : startRecording}
-        className={isRecording ? "bg-red-100 hover:bg-red-200" : ""}
-      >
-        <Mic className={`w-4 h-4 mr-2 ${isRecording ? "text-red-500" : ""}`} />
-        {isRecording ? "Stop Recording" : "Record Audio"}
-      </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={`h-9 w-9 ${isRecording ? "text-red-500" : ""}`}
+          onClick={isRecording ? stopRecording : startRecording}
+        >
+          <Mic className="h-5 w-5" />
+        </Button>
+      </div>
     </div>
   );
 }

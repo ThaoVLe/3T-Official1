@@ -33,7 +33,6 @@ export default function Editor() {
     },
   });
 
-  // Set form values when entry data is loaded
   React.useEffect(() => {
     if (entry) {
       form.reset({
@@ -116,13 +115,15 @@ export default function Editor() {
           </div>
 
           {/* Media Controls */}
-          <div className="border-t bg-slate-50/80 px-6 py-3">
-            <MediaRecorder onCapture={onMediaUpload} />
-            {form.watch("mediaUrls")?.length > 0 && (
-              <div className="mt-3">
-                <MediaPreview urls={form.watch("mediaUrls")} />
-              </div>
-            )}
+          <div className="border-t bg-white px-6 py-2">
+            <div className="flex justify-between items-center">
+              <MediaRecorder onCapture={onMediaUpload} />
+              {form.watch("mediaUrls")?.length > 0 && (
+                <div className="flex-1 ml-4">
+                  <MediaPreview urls={form.watch("mediaUrls")} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

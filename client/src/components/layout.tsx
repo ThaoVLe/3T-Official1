@@ -1,4 +1,3 @@
-import { SidebarNav } from "./sidebar-nav";
 import {
   Sidebar,
   SidebarContent,
@@ -8,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Link } from "wouter";
+import { SidebarNav } from "./sidebar-nav";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -43,7 +43,9 @@ export function Layout({ children }: LayoutProps) {
           </SidebarContent>
         </Sidebar>
         <main className="flex-1 overflow-auto">
-          <div className="h-full">{children}</div>
+          <div className="container mx-auto py-6 px-4">
+            {children}
+          </div>
         </main>
       </div>
     </SidebarProvider>

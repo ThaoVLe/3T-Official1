@@ -25,7 +25,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'prose dark:prose-invert max-w-none p-4 min-h-[200px] focus:outline-none'
+        class: 'prose dark:prose-invert max-w-none p-4 min-h-[200px] focus:outline-none w-full'
       }
     }
   });
@@ -110,7 +110,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       </div>
       <EditorContent 
         editor={editor} 
-        className="flex-1 overflow-auto"
+        className="flex-1 overflow-auto w-full"
       />
     </div>
   );

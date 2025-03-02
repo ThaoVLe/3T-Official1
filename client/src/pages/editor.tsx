@@ -18,8 +18,9 @@ export default function Editor() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false); 
-  const [uploadProgress, setUploadProgress] = useState(0); 
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -65,8 +66,17 @@ export default function Editor() {
 
   const onMediaUpload = async (file: File) => {
     setIsUploading(true);
+    setUploadProgress(0);
+
+    // Create temporary URL for immediate preview
+    const tempUrl = URL.createObjectURL(file);
+    const currentUrls = form.getValues("mediaUrls") || [];
+    const tempUrls = [...currentUrls, tempUrl];
+    setTempMediaUrls(tempUrls);
+    form.setValue("mediaUrls", tempUrls);
+
     try {
-      return new Promise<string>((resolve, reject) => {
+      const uploadPromise = new Promise<string>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         const formData = new FormData();
         formData.append("file", file);
@@ -81,8 +91,10 @@ export default function Editor() {
         xhr.addEventListener("load", () => {
           if (xhr.status === 200) {
             const { url } = JSON.parse(xhr.responseText);
-            const currentUrls = form.getValues("mediaUrls") || [];
-            form.setValue("mediaUrls", [...currentUrls, url]);
+            // Replace temp URL with actual URL
+            const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
+            form.setValue("mediaUrls", finalUrls);
+            setTempMediaUrls([]);
             resolve(url);
           } else {
             reject(new Error("Upload failed"));
@@ -96,14 +108,24 @@ export default function Editor() {
         xhr.open("POST", "/api/upload");
         xhr.send(formData);
       });
+
+      await uploadPromise;
+
     } catch (error) {
       console.error('Upload error:', error);
+      // Remove temp URL on error
+      const currentUrls = form.getValues("mediaUrls") || [];
+      const finalUrls = currentUrls.filter(url => url !== tempUrl);
+      form.setValue("mediaUrls", finalUrls);
+      setTempMediaUrls([]);
+
       toast({
         title: "Upload Error",
         description: "Failed to upload media. Please try again.",
         variant: "destructive"
       });
     } finally {
+      URL.revokeObjectURL(tempUrl);
       setIsUploading(false);
       setUploadProgress(0);
     }

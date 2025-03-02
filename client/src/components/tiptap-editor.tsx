@@ -92,17 +92,17 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   }
 
   const setLink = () => {
-    const previousUrl = editor.getAttributes('link').href
-    const url = window.prompt('URL', previousUrl)
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('URL', previousUrl);
 
     if (url === null) return;
     if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
     }
 
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-  }
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
 
   const colors = [
     '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',

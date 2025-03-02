@@ -48,11 +48,6 @@ export default function Editor() {
     }
   }, [entry, form]);
 
-  // Watch content changes for debugging
-  const content = form.watch("content");
-  useEffect(() => {
-    console.log('Content changed:', content);
-  }, [content]);
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {

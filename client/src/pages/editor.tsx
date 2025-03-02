@@ -66,7 +66,7 @@ export default function Editor() {
   };
 
   return (
-    <div className="h-[calc(100vh-2rem)] w-full max-w-none p-4">
+    <div className="h-screen w-full p-4">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col gap-4">
           <FormField
@@ -93,7 +93,7 @@ export default function Editor() {
               <FormItem className="flex-1">
                 <FormLabel className="text-lg font-medium">Content</FormLabel>
                 <FormControl>
-                  <div className="h-[calc(100%-2rem)]">
+                  <div className="h-full">
                     <TipTapEditor value={field.value} onChange={field.onChange} />
                   </div>
                 </FormControl>

@@ -106,11 +106,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       <EditorContent 
         editor={editor} 
         className="flex-1 overflow-auto"
-      >
-        <div className="prose dark:prose-invert max-w-none p-4 min-h-full">
-          {editor.getHTML()}
-        </div>
-      </EditorContent>
+      />
     </div>
   );
 }

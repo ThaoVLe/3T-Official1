@@ -67,8 +67,9 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
         onOpenChange={(open) => !open && setSelectedIndex(undefined)}
       />
 
+      {/* Show loading card for new upload */}
       {loading && (
-        <Card className="w-[70px] h-[70px] relative flex items-center justify-center bg-slate-50">
+        <Card className="w-[70px] h-[70px] relative">
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
             <svg
               className="w-8 h-8"
@@ -91,6 +92,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
         </Card>
       )}
 
+      {/* Display existing media thumbnails */}
       {mediaUrls.map((url, index) => {
         if (!url || typeof url !== 'string') {
           console.warn("Invalid URL in MediaPreview:", url);
@@ -100,7 +102,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
         const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
 
         return (
-          <Card key={index} className="w-[70px] h-[70px] relative">
+          <Card key={url} className="w-[70px] h-[70px] relative">
             {onRemove && (
               <Button
                 type="button"
@@ -116,7 +118,6 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
             <div 
               className="w-full h-full overflow-hidden cursor-pointer"
               onClick={() => setSelectedIndex(index)}
-              style={{ opacity: loading ? (1 - uploadProgress / 100) : 1 }} // Added opacity based on upload progress
             >
               {isVideo && (
                 <video

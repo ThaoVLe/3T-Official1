@@ -10,29 +10,19 @@ interface MediaRecorderProps {
 
 export default function MediaRecorder({ onCapture, className }: MediaRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioURL, setAudioURL] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
-  const checkMicrophonePermission = async () => {
-    try {
-      const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-      if (result.state === 'denied') {
-        throw new Error('Microphone permission is denied. Please enable it in your browser settings.');
-      }
-    } catch (err) {
-      console.log('Permission query not supported, trying direct access');
-    }
-  };
-
   const startRecording = async () => {
     try {
-      await checkMicrophonePermission();
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Audio recording is not supported in this browser");
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: true,
-        video: false
+        video: false 
       });
 
       const mediaRecorder = new MediaRecorder(stream);
@@ -47,9 +37,6 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-        setAudioURL(url);
-
         const file = new File([blob], `recording-${Date.now()}.webm`, { 
           type: 'audio/webm'
         });
@@ -70,7 +57,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
 
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          errorMessage += "Please allow microphone access in your browser settings.";
+          errorMessage = "Please allow microphone access in your browser settings.";
         } else {
           errorMessage += err.message;
         }
@@ -123,14 +110,11 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       if (mediaRecorderRef.current && isRecording) {
         mediaRecorderRef.current.stop();
       }
-      if (audioURL) {
-        URL.revokeObjectURL(audioURL);
-      }
     };
-  }, [isRecording, audioURL]);
+  }, [isRecording]);
 
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
+    <div className={`flex items-center ${className}`}>
       <input
         type="file"
         accept="image/*,video/*,audio/*"
@@ -139,12 +123,12 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         onChange={handleFileUpload}
       />
 
-      <div className="flex gap-4">
+      <div className="flex gap-2">
         <label htmlFor="media-upload">
           <Button 
             type="button" 
             variant="ghost" 
-            size="icon" 
+            size="icon"
             className="h-9 w-9"
             asChild
           >

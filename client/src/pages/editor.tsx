@@ -115,15 +115,15 @@ export default function Editor() {
           </div>
 
           {/* Media Controls */}
-          <div className="border-t bg-white px-6 py-2">
-            <div className="flex justify-between items-center">
+          <div className="border-t bg-white">
+            <div className="px-6 py-2">
               <MediaRecorder onCapture={onMediaUpload} />
-              {form.watch("mediaUrls")?.length > 0 && (
-                <div className="flex-1 ml-4">
-                  <MediaPreview urls={form.watch("mediaUrls")} />
-                </div>
-              )}
             </div>
+            {form.watch("mediaUrls")?.length > 0 && (
+              <div className="px-6 pt-2 pb-4">
+                <MediaPreview urls={form.watch("mediaUrls")} />
+              </div>
+            )}
           </div>
         </div>
       </div>

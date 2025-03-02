@@ -146,7 +146,7 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
 
   return (
     <div className="space-y-4 w-full">
-      <div className="grid grid-cols-2 gap-2 w-full">
+      <div className="flex flex-col sm:flex-row gap-2 w-full">
         <input
           type="file"
           accept="image/*,video/*,audio/*"

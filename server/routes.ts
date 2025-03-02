@@ -45,18 +45,10 @@ const upload = multer({
       'video/x-matroska'
     ];
 
-    const validAudioTypes = [
-      'audio/mp3',
-      'audio/mpeg',
-      'audio/wav',
-      'audio/webm',
-      'audio/ogg'
-    ];
-
-    const allowedTypes = [...validImageTypes, ...validVideoTypes, ...validAudioTypes];
+    const allowedTypes = [...validImageTypes, ...validVideoTypes];
 
     if (!allowedTypes.includes(file.mimetype)) {
-      cb(new Error('Invalid file type. Please upload an image, video, or audio file.'));
+      cb(new Error('Invalid file type. Please upload an image or video file.'));
       return;
     }
 
@@ -114,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Error uploading file" });
       } else if (err) {
         if (err.message === 'Invalid file type') {
-          return res.status(400).json({ message: "Invalid file type. Please upload an image, video, or audio file." });
+          return res.status(400).json({ message: "Invalid file type. Please upload an image or video file." });
         }
         return res.status(500).json({ message: "Server error while uploading file" });
       }

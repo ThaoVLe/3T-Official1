@@ -3,6 +3,7 @@ import StarterKit from "@tiptap/starter-kit";
 import CodeBlockLowlight from "@tiptap/extension-code-block";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
+import TextAlign from '@tiptap/extension-text-align';
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -11,7 +12,6 @@ import {
   ListOrdered,
   Quote,
   Heading1,
-  Heading2,
   Code,
   Link as LinkIcon,
   Highlighter,
@@ -42,6 +42,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
         HTMLAttributes: {
           class: 'text-primary underline',
         },
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+        alignments: ['left', 'center', 'right'],
       }),
     ],
     content: value,

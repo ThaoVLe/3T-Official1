@@ -4,14 +4,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertEntrySchema, type DiaryEntry, type InsertEntry } from "@shared/schema";
 import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
-import { ImageIcon, VideoCamera, Save, X } from "lucide-react";
+import { ImageIcon, Save, X } from "lucide-react";
 
 export default function Editor() {
   const { id } = useParams();
@@ -69,12 +69,12 @@ export default function Editor() {
   return (
     <div className="flex flex-col h-screen bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
+      <div className="flex items-center justify-between px-6 py-3 border-b bg-white">
         <FormField
           control={form.control}
           name="title"
           render={({ field }) => (
-            <FormItem className="flex-1 max-w-2xl">
+            <FormItem className="flex-1 max-w-3xl">
               <FormControl>
                 <Input 
                   {...field} 
@@ -85,13 +85,13 @@ export default function Editor() {
             </FormItem>
           )}
         />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
             size="sm"
             onClick={() => navigate("/")}
           >
-            <X className="h-4 w-4 mr-2" />
+            <X className="h-4 w-4 mr-1" />
             Cancel
           </Button>
           <Button 
@@ -99,23 +99,24 @@ export default function Editor() {
             size="sm"
             onClick={form.handleSubmit(onSubmit)}
             disabled={mutation.isPending}
+            className="bg-primary hover:bg-primary/90"
           >
-            <Save className="h-4 w-4 mr-2" />
-            {id ? "Update" : "Create"} Entry
+            <Save className="h-4 w-4 mr-1" />
+            {id ? "Update" : "Create"}
           </Button>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 overflow-hidden">
         <Form {...form}>
-          <form className="flex-1 flex flex-col" onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="flex-1 flex flex-col max-w-full px-6 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col">
+            <div className="flex-1 p-6">
               <FormField
                 control={form.control}
                 name="content"
                 render={({ field }) => (
-                  <FormItem className="flex-1">
+                  <FormItem className="h-full">
                     <FormControl>
                       <TipTapEditor value={field.value} onChange={field.onChange} />
                     </FormControl>
@@ -125,13 +126,15 @@ export default function Editor() {
             </div>
 
             {/* Media Controls */}
-            <div className="border-t bg-slate-50 px-6 py-4">
-              <div className="flex items-center gap-4 max-w-2xl">
+            <div className="border-t bg-slate-50/80 px-6 py-3">
+              <div className="flex items-center gap-2">
                 <MediaRecorder onCapture={onMediaUpload} />
               </div>
-              <div className="mt-4">
-                <MediaPreview urls={form.watch("mediaUrls")} />
-              </div>
+              {form.watch("mediaUrls")?.length > 0 && (
+                <div className="mt-3">
+                  <MediaPreview urls={form.watch("mediaUrls") || []} />
+                </div>
+              )}
             </div>
           </form>
         </Form>

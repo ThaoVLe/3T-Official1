@@ -51,9 +51,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
         heading: {
           levels: [1, 2, 3],
           HTMLAttributes: {
-            1: 'text-4xl font-bold mb-4',
-            2: 'text-3xl font-bold mb-3',
-            3: 'text-2xl font-bold mb-2'
+            1: { class: 'text-4xl font-bold mb-4' },
+            2: { class: 'text-3xl font-bold mb-3' },
+            3: { class: 'text-2xl font-bold mb-2' }
           }
         }
       }),
@@ -72,7 +72,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       TextStyle,
       Color,
     ],
-    content: value || "",
+    content: value, //Corrected: Removed unnecessary || ""
     onUpdate: ({ editor }) => {
       console.log('Editor content updated:', editor.getHTML());
       onChange(editor.getHTML());
@@ -86,8 +86,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   // Update editor content when value prop changes
   useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      console.log('Updating editor content:', value);
+    if (editor) {
       editor.commands.setContent(value || "");
     }
   }, [editor, value]);

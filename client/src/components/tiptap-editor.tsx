@@ -12,18 +12,9 @@ import {
   Italic,
   List,
   ListOrdered,
-  Quote,
   Code,
   Link as LinkIcon,
-  Highlighter,
-  Smile,
-  Image,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Heading,
   Type,
-  Palette,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -84,28 +75,14 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   // Update editor content when value prop changes
   useEffect(() => {
-    if (editor && value) {
-      console.log('Updating editor content:', value);
-      editor.commands.setContent(value);
+    if (editor && value !== undefined) {
+      editor.commands.setContent(value || '');
     }
   }, [editor, value]);
 
   if (!editor) {
     return null;
   }
-
-  const colors = [
-    '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
-    '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
-    '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc',
-  ];
-
-  const emojiCategories = {
-    'Smileys': ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '😉', '😌', '😍', '🥰', '😘'],
-    'Gestures': ['👍', '👎', '👌', '✌️', '🤞', '🤝', '👊', '✊', '🤛', '🤜', '🤚', '👋', '🖐️', '✋', '🖖'],
-    'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗'],
-    'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
-  };
 
   return (
     <div className="h-full flex flex-col bg-white rounded-lg">
@@ -121,6 +98,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           >
             <Bold className="h-4 w-4" />
           </Button>
+
           <Button
             type="button"
             variant="ghost"
@@ -131,7 +109,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           >
             <Italic className="h-4 w-4" />
           </Button>
+
           <Separator orientation="vertical" className="mx-1 h-6" />
+
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -154,7 +134,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                     style={{
                       fontSize: `${1.5 - (level - 1) * 0.25}rem`
                     }}
-                    onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
+                    onClick={() => editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run()}
                     data-active={editor.isActive('heading', { level })}
                   >
                     Heading {level}
@@ -163,58 +143,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               </div>
             </PopoverContent>
           </Popover>
+
           <Separator orientation="vertical" className="mx-1 h-6" />
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2"
-              >
-                <Palette className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-2">
-              <div className="grid grid-cols-10 gap-1">
-                {colors.map((color) => (
-                  <Button
-                    key={color}
-                    variant="ghost"
-                    className="h-6 w-6 p-0"
-                    style={{ backgroundColor: color }}
-                    onClick={() => editor.chain().focus().setColor(color).run()}
-                  />
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2"
-              >
-                <Highlighter className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-2">
-              <div className="grid grid-cols-10 gap-1">
-                {colors.map((color) => (
-                  <Button
-                    key={color}
-                    variant="ghost"
-                    className="h-6 w-6 p-0"
-                    style={{ backgroundColor: color }}
-                    onClick={() => editor.chain().focus().toggleHighlight({ color }).run()}
-                  />
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-          <Separator orientation="vertical" className="mx-1 h-6" />
+
           <Button
             type="button"
             variant="ghost"
@@ -225,6 +156,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           >
             <List className="h-4 w-4" />
           </Button>
+
           <Button
             type="button"
             variant="ghost"
@@ -235,7 +167,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           >
             <ListOrdered className="h-4 w-4" />
           </Button>
+
           <Separator orientation="vertical" className="mx-1 h-6" />
+
           <Button
             type="button"
             variant="ghost"
@@ -251,43 +185,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           >
             <LinkIcon className="h-4 w-4" />
           </Button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2"
-              >
-                <Smile className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-2">
-              {Object.entries(emojiCategories).map(([category, emojis]) => (
-                <div key={category} className="mb-2">
-                  <h3 className="text-sm font-medium mb-1">{category}</h3>
-                  <div className="grid grid-cols-8 gap-1">
-                    {emojis.map((emoji) => (
-                      <Button
-                        key={emoji}
-                        variant="ghost"
-                        className="h-8 w-8 p-0"
-                        onClick={() => {
-                          editor.chain().focus().insertContent(emoji).run();
-                        }}
-                      >
-                        {emoji}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </PopoverContent>
-          </Popover>
         </div>
       </div>
       <div className="flex-1">
-        <EditorContent editor={editor} className="h-full prose prose-lg max-w-none" />
+        <EditorContent editor={editor} className="h-full" />
       </div>
     </div>
   );

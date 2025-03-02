@@ -8,24 +8,19 @@ import { Form } from "@/components/ui/form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertEntrySchema, type DiaryEntry, type InsertEntry } from "@shared/schema";
 import TipTapEditor from "@/components/tiptap-editor";
-import MediaRecorder from "@/components/media-recorder";
-import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Editor() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
 
   // Query for fetching entry data
   const { data: entry, isLoading: isLoadingEntry } = useQuery<DiaryEntry>({
     queryKey: ['/api/entries', id],
-    enabled: !!id,
+    enabled: !!id
   });
 
   const form = useForm<InsertEntry>({

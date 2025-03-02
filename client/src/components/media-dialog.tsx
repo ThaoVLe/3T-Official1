@@ -30,7 +30,7 @@ export default function MediaDialog({ url, urls, open, onOpenChange }: MediaDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed inset-5 sm:inset-auto top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[90vw] max-w-[80%] max-h-[90vh] p-0 bg-black/90 relative">
+      <DialogContent className="fixed inset-0 sm:inset-auto top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[90vw] max-w-[80%] max-h-[90vh] p-0 bg-black/90 relative">
         {/* Close button */}
         <Button
           variant="ghost"

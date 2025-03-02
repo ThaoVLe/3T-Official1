@@ -20,6 +20,7 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
     <div className="flex gap-3 flex-wrap">
       <MediaDialog 
         url={selectedUrl}
+        urls={mediaUrls}
         open={!!selectedUrl}
         onOpenChange={(open) => !open && setSelectedUrl(undefined)}
       />

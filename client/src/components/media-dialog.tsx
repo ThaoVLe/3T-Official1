@@ -1,21 +1,72 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Video, Music } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Video, Music, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface MediaDialogProps {
   url?: string;
+  urls: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export default function MediaDialog({ url, open, onOpenChange }: MediaDialogProps) {
+export default function MediaDialog({ url, urls, open, onOpenChange }: MediaDialogProps) {
   if (!url) return null;
+
+  const currentIndex = urls.indexOf(url);
+  const hasPrevious = currentIndex > 0;
+  const hasNext = currentIndex < urls.length - 1;
 
   const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
   const isAudio = url.match(/\.(mp3|wav|ogg|m4a)$/i);
 
+  const navigateMedia = (direction: 'prev' | 'next') => {
+    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex >= 0 && newIndex < urls.length) {
+      // We need to pass this event up to the parent to update the selected URL
+      onOpenChange(false);
+      setTimeout(() => {
+        onOpenChange(true);
+        // Custom event handler needed here
+      }, 0);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[80%] sm:h-[80vh] p-0 bg-black/90">
+      <DialogContent className="sm:max-w-[80%] sm:h-[80vh] p-0 bg-black/90 relative">
+        {/* Close button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 top-2 z-50 text-white hover:bg-white/20"
+          onClick={() => onOpenChange(false)}
+        >
+          <X className="h-6 w-6" />
+        </Button>
+
+        {/* Navigation buttons */}
+        {hasPrevious && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-50 text-white hover:bg-white/20"
+            onClick={() => navigateMedia('prev')}
+          >
+            <ChevronLeft className="h-8 w-8" />
+          </Button>
+        )}
+        {hasNext && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-50 text-white hover:bg-white/20"
+            onClick={() => navigateMedia('next')}
+          >
+            <ChevronRight className="h-8 w-8" />
+          </Button>
+        )}
+
+        {/* Content */}
         <div className="w-full h-full flex items-center justify-center">
           {isVideo && (
             <video

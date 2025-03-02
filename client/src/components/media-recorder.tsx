@@ -73,7 +73,11 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
 
       {isUploading && (
         <div className="w-full max-w-[200px]">
-          <Progress value={uploadProgress} className="h-1" />
+          <Progress 
+            value={uploadProgress} 
+            className="h-1 bg-primary/20" 
+            indicatorClassName="bg-primary transition-all" 
+          />
         </div>
       )}
     </div>

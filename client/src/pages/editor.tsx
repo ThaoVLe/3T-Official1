@@ -18,8 +18,8 @@ export default function Editor() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false); // Added state for uploading
-  const [uploadProgress, setUploadProgress] = useState(0); // Added state for upload progress
+  const [isUploading, setIsUploading] = useState(false); 
+  const [uploadProgress, setUploadProgress] = useState(0); 
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -74,7 +74,6 @@ export default function Editor() {
         xhr.upload.addEventListener("progress", (e) => {
           if (e.lengthComputable) {
             const progress = Math.round((e.loaded * 100) / e.total);
-            // Update progress in MediaRecorder
             setUploadProgress(progress);
           }
         });
@@ -106,7 +105,7 @@ export default function Editor() {
       });
     } finally {
       setIsUploading(false);
-      setUploadProgress(0); // Reset progress after upload
+      setUploadProgress(0);
     }
   };
 
@@ -160,14 +159,15 @@ export default function Editor() {
         {/* Media Controls - Fixed at bottom */}
         <div className="border-t bg-white sticky bottom-0">
           <div className="px-6 py-2">
-            <MediaRecorder onCapture={onMediaUpload} uploadProgress={uploadProgress}/> {/* Pass uploadProgress to MediaRecorder */}
+            <MediaRecorder onCapture={onMediaUpload} />
           </div>
           {form.watch("mediaUrls")?.length > 0 && (
             <div className="px-6 pt-2 pb-4 overflow-x-auto">
               <MediaPreview 
                 urls={form.watch("mediaUrls")} 
                 onRemove={onMediaRemove}
-                loading={isUploading} 
+                loading={isUploading}
+                uploadProgress={uploadProgress}
               />
             </div>
           )}

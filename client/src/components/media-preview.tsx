@@ -8,9 +8,10 @@ interface MediaPreviewProps {
   urls: string[];
   onRemove?: (index: number) => void;
   loading?: boolean;
+  uploadProgress?: number;
 }
 
-export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewProps) {
+export default function MediaPreview({ urls, onRemove, loading, uploadProgress = 0 }: MediaPreviewProps) {
   const [selectedIndex, setSelectedIndex] = useState<number>();
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
   const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
@@ -68,7 +69,25 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
 
       {loading && (
         <Card className="w-[70px] h-[70px] relative flex items-center justify-center bg-slate-50">
-          <Loader2 className="h-6 w-6 text-slate-400 animate-spin" />
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+            <svg
+              className="w-8 h-8"
+              viewBox="0 0 32 32"
+            >
+              <circle
+                cx="16"
+                cy="16"
+                r="14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeDasharray={Math.PI * 28}
+                strokeDashoffset={(1 - uploadProgress / 100) * Math.PI * 28}
+                className="text-primary transition-all duration-300"
+                transform="rotate(-90 16 16)"
+              />
+            </svg>
+          </div>
         </Card>
       )}
 
@@ -97,6 +116,7 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
             <div 
               className="w-full h-full overflow-hidden cursor-pointer"
               onClick={() => setSelectedIndex(index)}
+              style={{ opacity: loading ? (1 - uploadProgress / 100) : 1 }} // Added opacity based on upload progress
             >
               {isVideo && (
                 <video

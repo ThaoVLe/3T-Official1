@@ -13,7 +13,7 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configure multer for file uploads
+// Update multer configuration
 const upload = multer({
   storage: multer.diskStorage({
     destination: uploadsDir,
@@ -28,19 +28,35 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Validate file types
-    const allowedTypes = [
+    const validImageTypes = [
       'image/jpeg',
       'image/png',
       'image/gif',
-      'video/mp4',
-      'video/webm',
-      'audio/mpeg',
-      'audio/wav',
-      'audio/webm'
+      'image/heic',
+      'image/heif'
     ];
 
+    const validVideoTypes = [
+      'video/mp4',
+      'video/quicktime',
+      'video/x-m4v',
+      'video/webm',
+      'video/3gpp',
+      'video/x-matroska'
+    ];
+
+    const validAudioTypes = [
+      'audio/mp3',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/webm',
+      'audio/ogg'
+    ];
+
+    const allowedTypes = [...validImageTypes, ...validVideoTypes, ...validAudioTypes];
+
     if (!allowedTypes.includes(file.mimetype)) {
-      cb(new Error('Invalid file type'));
+      cb(new Error('Invalid file type. Please upload an image, video, or audio file.'));
       return;
     }
 

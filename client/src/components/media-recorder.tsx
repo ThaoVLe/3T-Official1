@@ -17,22 +17,24 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
 
   const requestMicrophonePermission = async () => {
     try {
-      const permissionResult = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+      // First check if we have permission already
+      const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
 
-      if (permissionResult.state === 'granted') {
-        return true;
-      } else if (permissionResult.state === 'prompt') {
-        // This will trigger the browser's permission popup
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
-        return true;
-      } else {
-        toast({
-          title: "Permission Denied",
-          description: "Please allow microphone access in your browser settings",
-          variant: "destructive"
-        });
-        return false;
+      switch (result.state) {
+        case 'granted':
+          return true;
+        case 'prompt':
+          // Will show the permission dialog
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(track => track.stop());
+          return true;
+        case 'denied':
+          toast({
+            title: "Permission Required",
+            description: "Please allow microphone access in your browser settings",
+            variant: "destructive"
+          });
+          return false;
       }
     } catch (error) {
       console.error('Permission check failed:', error);
@@ -45,7 +47,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       const hasPermission = await requestMicrophonePermission();
       if (!hasPermission) return;
 
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
@@ -53,7 +55,13 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         }
       });
 
-      const recorder = new MediaRecorder(stream);
+      // Get the supported MIME type
+      const mimeType = 'audio/webm';
+      const recorder = new MediaRecorder(stream, {
+        mimeType,
+        audioBitsPerSecond: 128000
+      });
+
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
 
@@ -64,17 +72,21 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       };
 
       recorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/mp3' });
-        const audioFile = new File([audioBlob], `audio-${Date.now()}.mp3`, { 
-          type: 'audio/mp3'
+        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
+        const audioFile = new File([audioBlob], `recording-${Date.now()}.webm`, {
+          type: mimeType
         });
 
+        // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
-        onCapture(audioFile);
+
+        // Reset state and send file to parent
         setIsRecording(false);
+        onCapture(audioFile);
       };
 
-      recorder.start(100);
+      // Start recording
+      recorder.start(1000); // Record in 1-second chunks
       setIsRecording(true);
 
     } catch (error) {
@@ -89,7 +101,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
   };
@@ -98,29 +110,11 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     const files = e.target.files;
     if (!files?.length) return;
 
-    const validImageTypes = [
-      'image/jpeg', 'image/png', 'image/gif', 'image/heic', 'image/heif'
-    ];
-
-    const validVideoTypes = [
-      'video/mp4', 'video/quicktime', 'video/x-m4v',  // iOS formats
-      'video/webm', 'video/3gpp', 'video/x-matroska'  // Android formats
-    ];
-
     setIsUploading(true);
-
     try {
       // Process files sequentially to maintain order
       for (const file of Array.from(files)) {
-        if ([...validImageTypes, ...validVideoTypes].includes(file.type)) {
-          await onCapture(file);
-        } else {
-          toast({
-            title: "Invalid File Type",
-            description: "Please upload an image or video file",
-            variant: "destructive"
-          });
-        }
+        await onCapture(file);
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -134,6 +128,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     }
   };
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current && isRecording) {

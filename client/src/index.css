@@ -11,3 +11,13 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@layer components {
+  .container-page {
+    @apply container mx-auto py-6 px-4;
+  }
+
+  .editor-page {
+    @apply w-full h-full py-6;
+  }
+}

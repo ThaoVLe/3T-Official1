@@ -66,7 +66,7 @@ export default function Editor() {
   };
 
   return (
-    <div className="h-full w-full">
+    <div className="editor-page">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col">
           <div className="space-y-4 p-6">

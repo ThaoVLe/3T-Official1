@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Loader2, Grid2x2, LayoutList } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
 
@@ -12,7 +12,6 @@ interface MediaPreviewProps {
 
 export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewProps) {
   const [selectedIndex, setSelectedIndex] = useState<number>();
-  const [isGridView, setIsGridView] = useState(false);
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
   const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
   const mediaUrls = urls || [];
@@ -58,90 +57,68 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
 
   if (!mediaUrls.length && !loading) return null;
 
-  const thumbnailSize = isGridView ? "w-[120px] h-[120px]" : "w-[70px] h-[70px]";
-
   return (
-    <div className="space-y-4">
-      {/* View toggle */}
-      <div className="flex justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsGridView(!isGridView)}
-          className="h-8"
-        >
-          {isGridView ? (
-            <LayoutList className="h-4 w-4 mr-2" />
-          ) : (
-            <Grid2x2 className="h-4 w-4 mr-2" />
-          )}
-          {isGridView ? "List View" : "Grid View"}
-        </Button>
-      </div>
+    <div className="flex gap-3 flex-wrap">
+      <MediaDialog 
+        urls={mediaUrls}
+        initialIndex={selectedIndex}
+        open={selectedIndex !== undefined}
+        onOpenChange={(open) => !open && setSelectedIndex(undefined)}
+      />
 
-      {/* Media grid */}
-      <div className={`flex gap-3 flex-wrap ${isGridView ? 'justify-start' : ''}`}>
-        <MediaDialog 
-          urls={mediaUrls}
-          initialIndex={selectedIndex}
-          open={selectedIndex !== undefined}
-          onOpenChange={(open) => !open && setSelectedIndex(undefined)}
-        />
+      {loading && (
+        <Card className="w-[70px] h-[70px] relative flex items-center justify-center bg-slate-50">
+          <Loader2 className="h-6 w-6 text-slate-400 animate-spin" />
+        </Card>
+      )}
 
-        {loading && (
-          <Card className={`${thumbnailSize} relative flex items-center justify-center bg-slate-50`}>
-            <Loader2 className="h-6 w-6 text-slate-400 animate-spin" />
-          </Card>
-        )}
+      {mediaUrls.map((url, index) => {
+        if (!url || typeof url !== 'string') {
+          console.warn("Invalid URL in MediaPreview:", url);
+          return null;
+        }
 
-        {mediaUrls.map((url, index) => {
-          if (!url || typeof url !== 'string') {
-            console.warn("Invalid URL in MediaPreview:", url);
-            return null;
-          }
+        const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
 
-          const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
-
-          return (
-            <Card key={index} className={`${thumbnailSize} relative`}>
-              {onRemove && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 absolute -top-2 -right-2 bg-white shadow-sm rounded-full z-10"
-                  onClick={() => onRemove(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-
-              <div 
-                className="w-full h-full overflow-hidden cursor-pointer"
-                onClick={() => setSelectedIndex(index)}
+        return (
+          <Card key={index} className="w-[70px] h-[70px] relative">
+            {onRemove && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 absolute -top-2 -right-2 bg-white shadow-sm rounded-full z-10"
+                onClick={() => onRemove(index)}
               >
-                {isVideo && (
-                  <video
-                    ref={el => el && (videoRefs.current[index] = el)}
-                    src={url}
-                    className="w-full h-full object-cover"
-                    muted
-                    playsInline
-                    preload="metadata"
-                  />
-                )}
-                {!isVideo && (
-                  <img
-                    src={url}
-                    alt={`Media ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+
+            <div 
+              className="w-full h-full overflow-hidden cursor-pointer"
+              onClick={() => setSelectedIndex(index)}
+            >
+              {isVideo && (
+                <video
+                  ref={el => el && (videoRefs.current[index] = el)}
+                  src={url}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                  preload="metadata"
+                />
+              )}
+              {!isVideo && (
+                <img
+                  src={url}
+                  alt={`Media ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -48,26 +48,45 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
   const startCamera = async () => {
     try {
       stopStream();
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
-        audio: false
-      });
+
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera API is not supported in this browser");
+      }
+
+      const constraints = {
+        video: { 
+          facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // Ensure video plays on mobile devices
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.play().catch(e => console.error("Video play error:", e));
       }
     } catch (err) {
-      console.error('Failed to start camera:', err);
-      let message = "Please allow camera access to take photos";
-      if (err instanceof DOMException && err.name === 'NotFoundError') {
-        message = "No camera found on your device";
+      console.error('Camera access error:', err);
+      setIsCameraOpen(false);
+
+      let message = "Failed to access camera. Please check permissions.";
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (err instanceof DOMException && err.name === 'NotAllowedError') {
+        message = "Camera access denied. Please enable camera permissions in your browser settings.";
       }
+
       toast({
         title: "Camera Error",
         description: message,
         variant: "destructive"
       });
-      setIsCameraOpen(false);
     }
   };
 
@@ -101,12 +120,10 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
       ? ['audio/webm;codecs=opus', 'audio/webm']
       : ['video/webm;codecs=vp8,opus', 'video/webm'];
 
-    for (const mimeType of mimeTypes) {
-      if (MediaRecorder.isTypeSupported(mimeType)) {
-        return mimeType;
-      }
-    }
-    throw new Error(`${type} recording is not supported in this browser`);
+    //Removed MediaRecorder.isTypeSupported check - it's unreliable across browsers.  The MediaRecorder will throw an error if the mimeType isn't supported.
+
+    return mimeTypes[0]; //Return the first mimeType in the list.
+
   };
 
   const startRecording = async (type: 'audio' | 'video') => {

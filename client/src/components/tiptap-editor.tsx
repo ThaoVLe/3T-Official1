@@ -51,10 +51,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
         heading: {
           levels: [1, 2, 3],
           HTMLAttributes: {
-            class: 'font-bold',
-            1: { class: 'text-4xl mb-4' },
-            2: { class: 'text-3xl mb-3' },
-            3: { class: 'text-2xl mb-2' }
+            1: 'text-4xl font-bold mb-4',
+            2: 'text-3xl font-bold mb-3',
+            3: 'text-2xl font-bold mb-2'
           }
         }
       }),
@@ -80,7 +79,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4 text-base leading-relaxed'
+        class: 'prose prose-lg max-w-none focus:outline-none min-h-[200px] px-4 text-base leading-relaxed text-gray-900'
       }
     }
   });

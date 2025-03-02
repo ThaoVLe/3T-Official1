@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Music, Loader2, Trash2 } from "lucide-react";
+import { X, Loader2, Grid2x2, LayoutList } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
 
@@ -12,7 +12,7 @@ interface MediaPreviewProps {
 
 export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewProps) {
   const [selectedIndex, setSelectedIndex] = useState<number>();
-  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [isGridView, setIsGridView] = useState(false);
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
   const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
   const mediaUrls = urls || [];
@@ -56,48 +56,31 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
     return () => clearInterval(interval);
   }, []);
 
-  const toggleSelection = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the preview dialog
-    setSelectedItems(prev => {
-      const isSelected = prev.includes(index);
-      if (isSelected) {
-        return prev.filter(i => i !== index);
-      } else {
-        return [...prev, index];
-      }
-    });
-  };
-
-  const handleBulkDelete = () => {
-    // Delete in reverse order to maintain correct indices
-    [...selectedItems].sort((a, b) => b - a).forEach(index => {
-      onRemove?.(index);
-    });
-    setSelectedItems([]);
-  };
-
   if (!mediaUrls.length && !loading) return null;
 
-  return (
-    <div className="relative">
-      {selectedItems.length > 0 && (
-        <div className="absolute -top-12 right-0 flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {selectedItems.length} selected
-          </span>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleBulkDelete}
-            className="h-8"
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Delete Selected
-          </Button>
-        </div>
-      )}
+  const thumbnailSize = isGridView ? "w-[120px] h-[120px]" : "w-[70px] h-[70px]";
 
-      <div className="flex gap-3 flex-wrap">
+  return (
+    <div className="space-y-4">
+      {/* View toggle */}
+      <div className="flex justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsGridView(!isGridView)}
+          className="h-8"
+        >
+          {isGridView ? (
+            <LayoutList className="h-4 w-4 mr-2" />
+          ) : (
+            <Grid2x2 className="h-4 w-4 mr-2" />
+          )}
+          {isGridView ? "List View" : "Grid View"}
+        </Button>
+      </div>
+
+      {/* Media grid */}
+      <div className={`flex gap-3 flex-wrap ${isGridView ? 'justify-start' : ''}`}>
         <MediaDialog 
           urls={mediaUrls}
           initialIndex={selectedIndex}
@@ -106,7 +89,7 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
         />
 
         {loading && (
-          <Card className="w-[70px] h-[70px] relative flex items-center justify-center bg-slate-50">
+          <Card className={`${thumbnailSize} relative flex items-center justify-center bg-slate-50`}>
             <Loader2 className="h-6 w-6 text-slate-400 animate-spin" />
           </Card>
         )}
@@ -118,20 +101,16 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
           }
 
           const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
-          const isSelected = selectedItems.includes(index);
 
           return (
-            <Card 
-              key={index} 
-              className={`w-[70px] h-[70px] relative ${isSelected ? 'ring-2 ring-primary' : ''}`}
-            >
+            <Card key={index} className={`${thumbnailSize} relative`}>
               {onRemove && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 absolute -top-2 -right-2 bg-white shadow-sm rounded-full z-10"
-                  onClick={(e) => toggleSelection(index, e)}
+                  onClick={() => onRemove(index)}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -139,7 +118,7 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
 
               <div 
                 className="w-full h-full overflow-hidden cursor-pointer"
-                onClick={() => !isSelected && setSelectedIndex(index)}
+                onClick={() => setSelectedIndex(index)}
               >
                 {isVideo && (
                   <video

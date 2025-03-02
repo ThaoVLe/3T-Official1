@@ -16,9 +16,12 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        }
       });
 
       const recorder = new MediaRecorder(stream);
@@ -32,9 +35,9 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       };
 
       recorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current);
-        const audioFile = new File([audioBlob], `audio-${Date.now()}.mp3`, {
-          type: "audio/mp3"
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/mp3' });
+        const audioFile = new File([audioBlob], `audio-${Date.now()}.mp3`, { 
+          type: 'audio/mp3'
         });
 
         stream.getTracks().forEach(track => track.stop());
@@ -63,8 +66,8 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files?.length) return;
 
     const validImageTypes = [
       'image/jpeg', 'image/png', 'image/gif', 'image/heic', 'image/heif'
@@ -75,15 +78,18 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       'video/webm', 'video/3gpp', 'video/x-matroska'  // Android formats
     ];
 
-    if ([...validImageTypes, ...validVideoTypes].includes(file.type)) {
-      onCapture(file);
-    } else {
-      toast({
-        title: "Invalid File Type",
-        description: "Please upload an image or video file",
-        variant: "destructive"
-      });
-    }
+    // Convert FileList to Array to process multiple files
+    Array.from(files).forEach(file => {
+      if ([...validImageTypes, ...validVideoTypes].includes(file.type)) {
+        onCapture(file);
+      } else {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload an image or video file",
+          variant: "destructive"
+        });
+      }
+    });
   };
 
   useEffect(() => {
@@ -102,6 +108,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         className="hidden"
         id="media-upload"
         onChange={handleFileUpload}
+        multiple // Enable multiple file selection
       />
 
       <div className="flex gap-2">

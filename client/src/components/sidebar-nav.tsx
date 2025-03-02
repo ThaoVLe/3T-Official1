@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Home, List } from "lucide-react";
+import { Calendar, Clock, FileText, Home, Hash } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 const routes = [
@@ -21,7 +21,7 @@ const routes = [
   },
   {
     title: "All Entries",
-    icon: List,
+    icon: FileText,
     href: "/entries",
   },
 ];
@@ -38,8 +38,8 @@ export function SidebarNav() {
             className={cn(
               "w-full justify-start",
               location === route.href
-                ? "bg-muted hover:bg-muted"
-                : "hover:bg-transparent hover:underline"
+                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                : "hover:bg-primary/5"
             )}
           >
             <route.icon className="mr-2 h-4 w-4" />

@@ -35,7 +35,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden h-full flex flex-col bg-background">
+    <div className="border rounded-lg bg-background h-full">
       <div className="border-b bg-muted/50 p-2 flex gap-1 flex-wrap">
         <Button
           type="button"
@@ -108,10 +108,12 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           <Quote className="h-4 w-4" />
         </Button>
       </div>
-      <EditorContent 
-        editor={editor} 
-        className="flex-1 overflow-auto w-full"
-      />
+      <div className="h-full">
+        <EditorContent 
+          editor={editor} 
+          className="h-full"
+        />
+      </div>
     </div>
   );
 }

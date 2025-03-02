@@ -66,7 +66,7 @@ export default function Editor() {
   };
 
   return (
-    <div className="w-full h-screen bg-background">
+    <div className="w-full">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col">
           <div className="space-y-4 px-8 py-6">

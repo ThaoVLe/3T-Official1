@@ -49,7 +49,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           }
         },
         heading: {
-          levels: [1, 2, 3]
+          levels: [1, 2, 3],
+          HTMLAttributes: {
+            class: 'font-bold',
+            1: { class: 'text-4xl' },
+            2: { class: 'text-3xl' },
+            3: { class: 'text-2xl' },
+          }
         }
       }),
       CodeBlockLowlight,
@@ -73,7 +79,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4'
+        class: 'focus:outline-none min-h-[200px] px-4 prose prose-sm sm:prose lg:prose-lg xl:prose-2xl leading-normal'
       }
     }
   });

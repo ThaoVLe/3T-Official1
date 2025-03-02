@@ -29,7 +29,7 @@ export default function MediaPreview({ urls }: MediaPreviewProps) {
                 <video
                   key={index}
                   controls
-                  className="w-full h-40 object-cover rounded-lg"
+                  className="w-full h-auto object-cover rounded-lg"
                   src={url}
                 />
               );
@@ -46,7 +46,7 @@ export default function MediaPreview({ urls }: MediaPreviewProps) {
                 key={index}
                 src={url}
                 alt={`Media ${index + 1}`}
-                className="w-full h-40 object-cover rounded-lg"
+                className="w-full h-auto object-cover rounded-lg"
               />
             );
           } catch (error) {

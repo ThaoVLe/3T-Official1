@@ -6,6 +6,7 @@ import Link from "@tiptap/extension-link";
 import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -66,7 +67,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       TextStyle,
       Color,
     ],
-    content: value,
+    content: value || '', // Initialize with empty string if value is undefined
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
@@ -76,6 +77,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       }
     }
   });
+
+  // Update editor content when value prop changes
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value || '', false);
+    }
+  }, [editor, value]);
 
   if (!editor) {
     return null;

@@ -39,8 +39,8 @@ export default function Editor() {
   React.useEffect(() => {
     if (entry) {
       form.reset({
-        title: entry.title,
-        content: entry.content,
+        title: entry.title || "",
+        content: entry.content || "",
         mediaUrls: entry.mediaUrls || [],
       });
     }

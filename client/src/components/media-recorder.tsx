@@ -17,12 +17,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
 
   const startRecording = async () => {
     try {
-      // First, check if the browser supports the required APIs
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Your browser doesn't support audio recording");
-      }
-
-      // Try to get audio stream - this will trigger the permission prompt
+      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -31,7 +26,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         }
       });
 
-      // Create recorder
+      // Create recorder with basic configuration
       const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
@@ -70,23 +65,11 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
 
     } catch (error) {
       console.error('Recording error:', error);
-
-      // Check for specific permission errors
-      if (error instanceof Error) {
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-          toast({
-            title: "Permission Required",
-            description: "Please click the microphone icon and allow access in your browser to record audio",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Recording Error",
-            description: error.message || "Failed to start recording",
-            variant: "destructive"
-          });
-        }
-      }
+      toast({
+        title: "Microphone Required",
+        description: "Please allow microphone access to record audio",
+        variant: "destructive"
+      });
       setIsRecording(false);
     }
   };

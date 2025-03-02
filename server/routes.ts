@@ -23,7 +23,29 @@ const upload = multer({
       cb(null, uniqueSuffix + path.extname(file.originalname));
     }
   }),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  limits: { 
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Validate file types
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'video/mp4',
+      'video/webm',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/webm'
+    ];
+
+    if (!allowedTypes.includes(file.mimetype)) {
+      cb(new Error('Invalid file type'));
+      return;
+    }
+
+    cb(null, true);
+  }
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -66,15 +88,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(204).send();
   });
 
-  // Media upload endpoint
-  app.post("/api/upload", upload.single("file"), (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
+  // Media upload endpoint with error handling
+  app.post("/api/upload", (req, res) => {
+    upload.single("file")(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: "File is too large. Maximum size is 50MB" });
+        }
+        return res.status(400).json({ message: "Error uploading file" });
+      } else if (err) {
+        if (err.message === 'Invalid file type') {
+          return res.status(400).json({ message: "Invalid file type. Please upload an image, video, or audio file." });
+        }
+        return res.status(500).json({ message: "Server error while uploading file" });
+      }
 
-    // Return the URL that can be used to access the file
-    const fileUrl = `/uploads/${req.file.filename}`;
-    res.json({ url: fileUrl });
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // Return the URL that can be used to access the file
+      const fileUrl = `/uploads/${req.file.filename}`;
+      res.json({ url: fileUrl });
+    });
   });
 
   const httpServer = createServer(app);

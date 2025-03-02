@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
 
@@ -92,7 +92,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
         </Card>
       )}
 
-      {/* Display existing media thumbnails */}
+      {/* Display media thumbnails */}
       {mediaUrls.map((url, index) => {
         if (!url || typeof url !== 'string') {
           console.warn("Invalid URL in MediaPreview:", url);

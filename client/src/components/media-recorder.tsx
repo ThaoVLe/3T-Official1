@@ -16,27 +16,12 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
 
   const startRecording = async () => {
     try {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error("Audio recording is not supported in this browser");
-      }
-
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          channelCount: 1,
-          sampleRate: 44100
-        }
+        audio: true,
+        video: false
       });
 
-      // Try different MIME types based on browser support
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : 'audio/webm';
-
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType,
-        audioBitsPerSecond: 128000
-      });
-
+      const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -47,13 +32,12 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         const file = new File([blob], `recording-${Date.now()}.webm`, { 
-          type: mimeType
+          type: 'audio/webm'
         });
         onCapture(file);
 
-        // Clean up stream
         stream.getTracks().forEach(track => track.stop());
         toast({
           title: "Success",
@@ -65,19 +49,9 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       setIsRecording(true);
     } catch (err) {
       console.error('Recording error:', err);
-      let errorMessage = "Failed to start recording. ";
-
-      if (err instanceof Error) {
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          errorMessage = "Please allow microphone access in your browser settings.";
-        } else {
-          errorMessage += err.message;
-        }
-      }
-
       toast({
         title: "Recording Error",
-        description: errorMessage,
+        description: "Please allow microphone access in your browser settings.",
         variant: "destructive"
       });
       setIsRecording(false);
@@ -111,10 +85,6 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     }
 
     onCapture(file);
-    toast({
-      title: "Success",
-      description: "File uploaded successfully"
-    });
   };
 
   useEffect(() => {

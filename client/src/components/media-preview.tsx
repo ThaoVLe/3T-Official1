@@ -5,56 +5,55 @@ interface MediaPreviewProps {
 }
 
 export default function MediaPreview({ urls }: MediaPreviewProps) {
-  // Ensure urls is always an array
   const mediaUrls = urls || [];
 
   if (!mediaUrls.length) return null;
 
   return (
-    <Card className="p-4 w-full max-w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-full overflow-hidden">
-        {mediaUrls.map((url, index) => {
-          // Make sure url is defined and is a string before calling match
-          if (!url || typeof url !== 'string') {
-            console.warn("Invalid URL in MediaPreview:", url);
-            return null;
+    <div className="flex gap-2 flex-wrap">
+      {mediaUrls.map((url, index) => {
+        if (!url || typeof url !== 'string') {
+          console.warn("Invalid URL in MediaPreview:", url);
+          return null;
+        }
+
+        try {
+          const isVideo = url.match(/\.(mp4|webm)$/i);
+          const isAudio = url.match(/\.(mp3|wav|ogg|webm)$/i);
+
+          if (isVideo) {
+            return (
+              <Card key={index} className="w-[50px] h-[50px] overflow-hidden flex items-center justify-center">
+                <video
+                  src={url}
+                  className="w-full h-full object-cover"
+                />
+              </Card>
+            );
           }
 
-          try {
-            const isVideo = url.match(/\.(mp4|webm)$/i);
-            const isAudio = url.match(/\.(mp3|wav|ogg|webm)$/i);
-
-            if (isVideo) {
-              return (
-                <video
-                  key={index}
-                  controls
-                  className="w-full h-auto object-cover rounded-lg"
-                  src={url}
-                />
-              );
-            }
-
-            if (isAudio) {
-              return (
-                <audio key={index} controls className="w-full" src={url} />
-              );
-            }
-
+          if (isAudio) {
             return (
+              <Card key={index} className="w-[50px] h-[50px] overflow-hidden flex items-center justify-center bg-slate-100">
+                <audio src={url} className="w-6 h-6" />
+              </Card>
+            );
+          }
+
+          return (
+            <Card key={index} className="w-[50px] h-[50px] overflow-hidden">
               <img
-                key={index}
                 src={url}
                 alt={`Media ${index + 1}`}
-                className="w-full h-auto object-cover rounded-lg"
+                className="w-full h-full object-cover"
               />
-            );
-          } catch (error) {
-            console.error("Error handling media URL:", url, error);
-            return null;
-          }
-        })}
-      </div>
-    </Card>
+            </Card>
+          );
+        } catch (error) {
+          console.error("Error handling media URL:", url, error);
+          return null;
+        }
+      })}
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Camera, Video, Square, Upload, FlipHorizontal, X } from "lucide-react";
+import { Camera, Upload, FlipHorizontal, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -12,9 +12,6 @@ interface MediaRecorderProps {
 }
 
 export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -115,103 +112,7 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
     }, 'image/jpeg', 0.95);
   };
 
-  const getSupportedMimeType = (type: 'audio' | 'video'): string => {
-    const mimeTypes = type === 'audio' 
-      ? ['audio/webm;codecs=opus', 'audio/webm']
-      : ['video/webm;codecs=vp8,opus', 'video/webm'];
-
-    //Removed MediaRecorder.isTypeSupported check - it's unreliable across browsers.  The MediaRecorder will throw an error if the mimeType isn't supported.
-
-    return mimeTypes[0]; //Return the first mimeType in the list.
-
-  };
-
-  const startRecording = async (type: 'audio' | 'video') => {
-    try {
-      if (!window.MediaRecorder) {
-        throw new Error("MediaRecorder is not supported in this browser");
-      }
-
-      stopStream();
-      setRecordedChunks([]);
-
-      // Get supported MIME type
-      const mimeType = getSupportedMimeType(type);
-
-      // Request permissions with appropriate constraints
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: type === 'video' ? { facingMode } : false
-      });
-
-      streamRef.current = stream;
-
-      // Create MediaRecorder with supported MIME type
-      const recorder = new MediaRecorder(stream, { mimeType });
-      setMediaRecorder(recorder);
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          setRecordedChunks(prev => [...prev, e.data]);
-        }
-      };
-
-      recorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: mimeType });
-        const extension = 'webm';
-        const file = new File([blob], `${type}-${Date.now()}.${extension}`, { type: mimeType });
-
-        onCapture(file);
-        setRecordedChunks([]);
-        stopStream();
-        setMediaRecorder(null);
-        setIsRecording(false);
-
-        toast({
-          title: "Success",
-          description: `${type} recording completed`
-        });
-      };
-
-      // Start recording with smaller chunks for better handling
-      recorder.start(200);
-      setIsRecording(true);
-
-      toast({
-        title: "Recording Started",
-        description: `${type} recording in progress...`
-      });
-
-    } catch (err) {
-      console.error('Recording failed:', err);
-      stopStream();
-      setMediaRecorder(null);
-      setIsRecording(false);
-
-      let message = "Failed to start recording";
-      if (err instanceof Error) {
-        message = err.message;
-      } else if (err instanceof DOMException) {
-        if (err.name === 'NotAllowedError') {
-          message = `Please allow ${type === 'audio' ? 'microphone' : 'camera/microphone'} access in your browser settings`;
-        } else if (err.name === 'NotFoundError') {
-          message = `No ${type === 'audio' ? 'microphone' : 'camera/microphone'} found`;
-        }
-      }
-
-      toast({
-        title: "Recording Error",
-        description: message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-    }
-  };
+  // No recording functions needed
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -267,42 +168,10 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
           type="button"
           variant="outline"
           onClick={() => setIsCameraOpen(true)}
-          disabled={isRecording}
         >
           <Camera className="w-4 h-4 mr-2" />
           Take Photo
         </Button>
-
-        {!isRecording ? (
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => startRecording('audio')}
-            >
-              <Mic className="w-4 h-4 mr-2" />
-              Record Audio
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => startRecording('video')}
-            >
-              <Video className="w-4 h-4 mr-2" />
-              Record Video
-            </Button>
-          </>
-        ) : (
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={stopRecording}
-            className="animate-pulse"
-          >
-            <Square className="w-4 h-4 mr-2" />
-            Stop Recording
-          </Button>
-        )}
       </div>
 
       <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>

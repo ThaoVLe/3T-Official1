@@ -11,7 +11,6 @@ import {
   List,
   ListOrdered,
   Quote,
-  Heading1,
   Code,
   Link as LinkIcon,
   Highlighter,
@@ -20,9 +19,10 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Type,
+  Heading,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface TipTapEditorProps {
   value: string;
@@ -33,7 +33,19 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        codeBlock: false,
+        bulletList: {
+          HTMLAttributes: {
+            class: 'list-disc pl-4'
+          }
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: 'list-decimal pl-4'
+          }
+        },
+        heading: {
+          levels: [1, 2, 3]
+        }
       }),
       CodeBlockLowlight,
       Highlight,
@@ -79,6 +91,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
   }
 
+  const emojis = ['😀', '😊', '😂', '🥰', '😎', '🤔', '👍', '❤️', '🎉', '✨'];
+
   return (
     <div className="h-full flex flex-col bg-white rounded-lg">
       <div className="flex items-center gap-0.5 p-2 border-b bg-white">
@@ -112,7 +126,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             data-active={editor.isActive("heading", { level: 1 })}
             className="h-8 px-2 data-[active=true]:bg-slate-100"
           >
-            <Type className="h-4 w-4" />
+            <Heading className="h-4 w-4" />
           </Button>
           <Separator orientation="vertical" className="mx-1 h-6" />
           <Button
@@ -187,14 +201,34 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           >
             <Highlighter className="h-4 w-4" />
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2"
-          >
-            <Smile className="h-4 w-4" />
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2"
+              >
+                <Smile className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-60 p-2">
+              <div className="grid grid-cols-5 gap-1">
+                {emojis.map((emoji) => (
+                  <Button
+                    key={emoji}
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      editor.chain().focus().insertContent(emoji).run();
+                    }}
+                  >
+                    {emoji}
+                  </Button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 

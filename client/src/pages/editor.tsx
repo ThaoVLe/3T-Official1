@@ -1,3 +1,4 @@
+
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -37,51 +38,45 @@ export default function Editor() {
     },
   });
 
-  // Update form when entry data loads
+  // Set form data when entry is loaded
   useEffect(() => {
     if (entry) {
-      console.log("Setting form data from entry:", entry);
+      console.log("Setting form data from entry:", [entry]);
       form.reset({
         title: entry.title || "",
         content: entry.content || "",
-        mediaUrls: Array.isArray(entry.mediaUrls) ? entry.mediaUrls : [],
+        mediaUrls: entry.mediaUrls || [],
       });
     }
   }, [entry, form]);
 
+  // Mutation for creating/updating entry
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
       if (id) {
-        await apiRequest("PUT", `/api/entries/${id}`, data);
+        // Update existing entry
+        return await apiRequest("PUT", `/api/entries/${id}`, data);
       } else {
-        await apiRequest("POST", "/api/entries", data);
+        // Create new entry
+        return await apiRequest("POST", "/api/entries", data);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+    onSuccess: (data) => {
       toast({
-        title: "Success",
-        description: id ? "Entry updated" : "Entry created",
+        title: id ? "Entry updated" : "Entry created",
+        description: "Your diary entry has been saved.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/entries'] });
       navigate("/");
     },
     onError: (error) => {
       toast({
         title: "Error",
         description: "Failed to save entry. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
-
-  // Show loading state while fetching entry data
-  if (id && isLoadingEntry) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

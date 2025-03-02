@@ -1,6 +1,6 @@
 import { diaryEntries, type DiaryEntry, type InsertEntry } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getAllEntries(): Promise<DiaryEntry[]>;
@@ -12,7 +12,7 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getAllEntries(): Promise<DiaryEntry[]> {
-    return await db.select().from(diaryEntries).orderBy(diaryEntries.createdAt);
+    return await db.select().from(diaryEntries).orderBy(desc(diaryEntries.createdAt));
   }
 
   async getEntry(id: number): Promise<DiaryEntry | undefined> {

@@ -66,7 +66,7 @@ export default function Editor() {
   };
 
   return (
-    <div className="h-screen w-full p-4">
+    <div className="h-full w-full">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col gap-4">
           <FormField

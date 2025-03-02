@@ -19,10 +19,15 @@ interface TipTapEditorProps {
 export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [StarterKit],
-    content: value,
+    content: value || "<p></p>",
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
+    editorProps: {
+      attributes: {
+        class: 'prose dark:prose-invert max-w-none p-4 min-h-[200px] focus:outline-none'
+      }
+    }
   });
 
   if (!editor) {

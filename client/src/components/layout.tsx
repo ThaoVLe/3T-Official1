@@ -18,8 +18,8 @@ export function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen bg-background">
-        {/* Sidebar */}
-        <Sidebar className="border-r">
+        {/* Left Sidebar */}
+        <Sidebar className="border-r w-64 shrink-0">
           <SidebarHeader className="border-b px-2 py-4">
             <Link href="/">
               <h1 className="font-semibold text-xl cursor-pointer bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
@@ -53,14 +53,16 @@ export function Layout({ children }: LayoutProps) {
           </SidebarContent>
         </Sidebar>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Main Content Area */}
+        <div className="flex-1 flex overflow-hidden">
           <main className="flex-1 overflow-auto bg-slate-50">
             <div className="max-w-[1800px] mx-auto">
               {children}
             </div>
           </main>
         </div>
+        {/* Right Sidebar (Placeholder for future implementation) */}
+        <div className="w-64 shrink-0">{/* Add right sidebar content here */}</div>
       </div>
     </SidebarProvider>
   );

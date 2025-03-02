@@ -12,7 +12,7 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Editor() {
   const { id } = useParams();
@@ -22,7 +22,7 @@ export default function Editor() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
 
-  const { data: entry } = useQuery<DiaryEntry>({
+  const { data: entry, isLoading: isLoadingEntry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
     enabled: !!id,
   });
@@ -36,11 +36,12 @@ export default function Editor() {
     },
   });
 
-  React.useEffect(() => {
+  // Reset form when entry data loads
+  useEffect(() => {
     if (entry) {
       form.reset({
-        title: entry.title,
-        content: entry.content,
+        title: entry.title || "",
+        content: entry.content || "",
         mediaUrls: entry.mediaUrls || [],
       });
     }
@@ -137,6 +138,14 @@ export default function Editor() {
     newUrls.splice(index, 1);
     form.setValue("mediaUrls", newUrls);
   };
+
+  if (id && isLoadingEntry) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

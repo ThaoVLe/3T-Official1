@@ -12,12 +12,13 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function Editor() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false); // Added state for uploading
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -62,15 +63,27 @@ export default function Editor() {
   });
 
   const onMediaUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-    const { url } = await res.json();
-    const currentUrls = form.getValues("mediaUrls") || [];
-    form.setValue("mediaUrls", [...currentUrls, url]);
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const { url } = await res.json();
+      const currentUrls = form.getValues("mediaUrls") || [];
+      form.setValue("mediaUrls", [...currentUrls, url]);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload media. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const onMediaRemove = (index: number) => {
@@ -130,6 +143,7 @@ export default function Editor() {
               <MediaPreview 
                 urls={form.watch("mediaUrls")} 
                 onRemove={onMediaRemove}
+                loading={isUploading} // Added loading prop
               />
             </div>
           )}

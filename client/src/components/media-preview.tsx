@@ -1,19 +1,26 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Video, Music } from "lucide-react";
+import { X, Video, Music, Loader2 } from "lucide-react";
 
 interface MediaPreviewProps {
   urls: string[];
   onRemove?: (index: number) => void;
+  loading?: boolean;
 }
 
-export default function MediaPreview({ urls, onRemove }: MediaPreviewProps) {
+export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewProps) {
   const mediaUrls = urls || [];
 
-  if (!mediaUrls.length) return null;
+  if (!mediaUrls.length && !loading) return null;
 
   return (
     <div className="flex gap-3 flex-wrap">
+      {loading && (
+        <Card className="w-[70px] h-[70px] relative flex items-center justify-center bg-slate-50">
+          <Loader2 className="h-6 w-6 text-slate-400 animate-spin" />
+        </Card>
+      )}
+
       {mediaUrls.map((url, index) => {
         if (!url || typeof url !== 'string') {
           console.warn("Invalid URL in MediaPreview:", url);

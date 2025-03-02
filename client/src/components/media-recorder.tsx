@@ -10,12 +10,41 @@ interface MediaRecorderProps {
 
 export default function MediaRecorder({ onCapture, className }: MediaRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
+  const requestMicrophonePermission = async () => {
+    try {
+      const permissionResult = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+
+      if (permissionResult.state === 'granted') {
+        return true;
+      } else if (permissionResult.state === 'prompt') {
+        // This will trigger the browser's permission popup
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      } else {
+        toast({
+          title: "Permission Denied",
+          description: "Please allow microphone access in your browser settings",
+          variant: "destructive"
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Permission check failed:', error);
+      return false;
+    }
+  };
+
   const startRecording = async () => {
     try {
+      const hasPermission = await requestMicrophonePermission();
+      if (!hasPermission) return;
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -52,7 +81,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       console.error('Recording error:', error);
       toast({
         title: "Recording Error",
-        description: "Please allow microphone access in your browser settings",
+        description: "Failed to start recording. Please try again.",
         variant: "destructive"
       });
       setIsRecording(false);
@@ -65,7 +94,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
 
@@ -78,18 +107,31 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       'video/webm', 'video/3gpp', 'video/x-matroska'  // Android formats
     ];
 
-    // Convert FileList to Array to process multiple files
-    Array.from(files).forEach(file => {
-      if ([...validImageTypes, ...validVideoTypes].includes(file.type)) {
-        onCapture(file);
-      } else {
-        toast({
-          title: "Invalid File Type",
-          description: "Please upload an image or video file",
-          variant: "destructive"
-        });
+    setIsUploading(true);
+
+    try {
+      // Process files sequentially to maintain order
+      for (const file of Array.from(files)) {
+        if ([...validImageTypes, ...validVideoTypes].includes(file.type)) {
+          await onCapture(file);
+        } else {
+          toast({
+            title: "Invalid File Type",
+            description: "Please upload an image or video file",
+            variant: "destructive"
+          });
+        }
       }
-    });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload file. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   useEffect(() => {
@@ -108,7 +150,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         className="hidden"
         id="media-upload"
         onChange={handleFileUpload}
-        multiple // Enable multiple file selection
+        multiple
       />
 
       <div className="flex gap-2">
@@ -118,6 +160,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
             variant="ghost" 
             size="icon"
             className="h-9 w-9"
+            disabled={isUploading}
             asChild
           >
             <span>
@@ -132,6 +175,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
           size="icon"
           className={`h-9 w-9 ${isRecording ? "text-red-500" : ""}`}
           onClick={isRecording ? stopRecording : startRecording}
+          disabled={isUploading}
         >
           <Mic className="h-5 w-5" />
         </Button>

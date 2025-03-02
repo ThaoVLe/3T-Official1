@@ -95,32 +95,40 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
 
   const startRecording = async (type: 'audio' | 'video') => {
     try {
-      // Try different MIME types based on browser support
-      const mimeTypes = type === 'audio' 
-        ? ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav']
-        : ['video/webm', 'video/mp4', 'video/webm;codecs=h264', 'video/webm;codecs=vp8'];
-
-      let mimeType = mimeTypes.find(type => {
-        try {
-          return window.MediaRecorder && MediaRecorder.isTypeSupported(type);
-        } catch {
-          return false;
-        }
-      });
-
-      if (!mimeType) {
-        throw new Error(`${type} recording is not supported in your browser`);
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
+      let constraints = {
         audio: true,
-        video: type === 'video' ? { facingMode: "user" } : false
-      });
+        video: type === 'video' ? true : false
+      };
 
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
-      // Create MediaRecorder with selected MIME type
-      const recorder = new MediaRecorder(stream, { mimeType });
+      let recorder: MediaRecorder;
+      try {
+        // First try without specifying mimeType
+        recorder = new MediaRecorder(stream);
+      } catch (e) {
+        // If that fails, try with specific mimeTypes
+        const mimeTypes = type === 'audio' 
+          ? ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav']
+          : ['video/webm', 'video/mp4'];
+
+        const supportedType = mimeTypes.find(type => {
+          try {
+            return MediaRecorder.isTypeSupported(type);
+          } catch {
+            return false;
+          }
+        });
+
+        if (!supportedType) {
+          throw new Error(`Your browser doesn't support ${type} recording`);
+        }
+
+        recorder = new MediaRecorder(stream, { mimeType: supportedType });
+      }
+
+      setRecordedChunks([]);
 
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -129,12 +137,15 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
       };
 
       recorder.onstop = () => {
-        const extension = mimeType?.includes('webm') ? 'webm' : 
-                        mimeType?.includes('mp4') ? 'mp4' : 
-                        mimeType?.includes('ogg') ? 'ogg' : 'wav';
+        const blob = new Blob(recordedChunks);
+        let extension = recorder.mimeType.includes('webm') ? 'webm' :
+                       recorder.mimeType.includes('mp4') ? 'mp4' :
+                       recorder.mimeType.includes('ogg') ? 'ogg' : 'wav';
 
-        const blob = new Blob(recordedChunks, { type: mimeType });
-        const file = new File([blob], `recording-${Date.now()}.${extension}`, { type: mimeType });
+        const file = new File([blob], `recording-${Date.now()}.${extension}`, { 
+          type: recorder.mimeType 
+        });
+
         onCapture(file);
         setRecordedChunks([]);
         stopCurrentStream();

@@ -49,7 +49,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           }
         },
         heading: {
-          levels: [1, 2, 3]
+          levels: [1, 2, 3],
+          HTMLAttributes: {
+            class: 'font-bold',
+            1: { class: 'text-4xl mb-4' },
+            2: { class: 'text-3xl mb-3' },
+            3: { class: 'text-2xl mb-2' }
+          }
         }
       }),
       CodeBlockLowlight,
@@ -74,7 +80,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4'
+        class: 'focus:outline-none min-h-[200px] px-4 text-base leading-relaxed'
       }
     }
   });
@@ -162,7 +168,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   <Button
                     key={level}
                     variant="ghost"
-                    className="justify-start"
+                    className="justify-start font-bold"
+                    style={{ 
+                      fontSize: `${1.5 - (level-1)*0.25}rem` 
+                    }}
                     onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
                     data-active={editor.isActive('heading', { level })}
                   >
@@ -303,7 +312,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       </div>
 
       <div className="flex-1">
-        <EditorContent editor={editor} className="h-full" />
+        <EditorContent editor={editor} className="h-full prose prose-lg max-w-none" />
       </div>
     </div>
   );

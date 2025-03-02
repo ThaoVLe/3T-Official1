@@ -21,11 +21,22 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true,
-        video: false 
+        audio: {
+          channelCount: 1,
+          sampleRate: 44100
+        }
       });
 
-      const mediaRecorder = new MediaRecorder(stream);
+      // Try different MIME types based on browser support
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm';
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType,
+        audioBitsPerSecond: 128000
+      });
+
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -36,12 +47,13 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const blob = new Blob(chunksRef.current, { type: mimeType });
         const file = new File([blob], `recording-${Date.now()}.webm`, { 
-          type: 'audio/webm'
+          type: mimeType
         });
         onCapture(file);
 
+        // Clean up stream
         stream.getTracks().forEach(track => track.stop());
         toast({
           title: "Success",

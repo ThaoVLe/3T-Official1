@@ -74,7 +74,7 @@ export default function Editor() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 border-b bg-white">
         <Input 
@@ -105,26 +105,24 @@ export default function Editor() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full flex flex-col">
-          <div className="flex-1 p-6">
-            <TipTapEditor 
-              value={form.watch("content")} 
-              onChange={(value) => form.setValue("content", value)} 
-            />
-          </div>
+      <div className="flex-1 flex flex-col overflow-auto">
+        <div className="flex-1 p-6">
+          <TipTapEditor 
+            value={form.watch("content")} 
+            onChange={(value) => form.setValue("content", value)} 
+          />
+        </div>
 
-          {/* Media Controls */}
-          <div className="border-t bg-white">
-            <div className="px-6 py-2">
-              <MediaRecorder onCapture={onMediaUpload} />
-            </div>
-            {form.watch("mediaUrls")?.length > 0 && (
-              <div className="px-6 pt-2 pb-4">
-                <MediaPreview urls={form.watch("mediaUrls")} />
-              </div>
-            )}
+        {/* Media Controls - Fixed at bottom */}
+        <div className="border-t bg-white sticky bottom-0">
+          <div className="px-6 py-2">
+            <MediaRecorder onCapture={onMediaUpload} />
           </div>
+          {form.watch("mediaUrls")?.length > 0 && (
+            <div className="px-6 pt-2 pb-4 overflow-x-auto">
+              <MediaPreview urls={form.watch("mediaUrls")} />
+            </div>
+          )}
         </div>
       </div>
     </div>

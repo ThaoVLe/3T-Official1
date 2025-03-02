@@ -1,7 +1,7 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Camera, Video, Square } from "lucide-react";
+import { Mic, Camera, Video, Square, Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface MediaRecorderProps {
   onCapture: (file: File) => void;
@@ -11,20 +11,61 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [permissionStatus, setPermissionStatus] = useState<string>('');
+  const { toast } = useToast();
 
-  const startRecording = async (type: "audio" | "video") => {
+  const checkPermissions = async (type: 'audio' | 'video') => {
     try {
-      // Reset any previous error message
-      setErrorMessage(null);
-      
-      // Request permissions for audio/video
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: type === "video" ? { facingMode: "user" } : false,
+      const result = await navigator.permissions.query({ 
+        name: type === 'audio' ? 'microphone' as PermissionName : 'camera' as PermissionName 
       });
+      setPermissionStatus(result.state);
+      return result.state === 'granted';
+    } catch (err) {
+      console.error('Permission check failed:', err);
+      return false;
+    }
+  };
 
+  const requestPermissions = async (type: 'audio' | 'video') => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: type === 'audio',
+        video: type === 'video' ? { facingMode: "user" } : false,
+      });
+      return stream;
+    } catch (err) {
+      console.error('Permission request failed:', err);
+      if (err instanceof DOMException) {
+        if (err.name === 'NotAllowedError') {
+          toast({
+            title: "Permission Denied",
+            description: `Please allow access to your ${type === 'audio' ? 'microphone' : 'camera'} in your browser settings.`,
+            variant: "destructive"
+          });
+        } else if (err.name === 'NotFoundError') {
+          toast({
+            title: "Device Not Found",
+            description: `No ${type === 'audio' ? 'microphone' : 'camera'} found on your device.`,
+            variant: "destructive"
+          });
+        }
+      }
+      throw err;
+    }
+  };
+
+  const startRecording = async (type: 'audio' | 'video') => {
+    try {
+      // First check if we have permission
+      await checkPermissions(type);
+
+      // Request permissions and get stream
+      const stream = await requestPermissions(type);
+
+      // Create and configure MediaRecorder
       const recorder = new MediaRecorder(stream);
+
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           setRecordedChunks((chunks) => [...chunks, e.data]);
@@ -32,27 +73,39 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(recordedChunks, {
-          type: type === "audio" ? "audio/webm" : "video/webm",
-        });
-        const file = new File([blob], `recording.${type === "audio" ? "webm" : "webm"}`, {
-          type: blob.type,
+        const mimeType = type === 'audio' ? 'audio/webm' : 'video/webm';
+        const blob = new Blob(recordedChunks, { type: mimeType });
+        const file = new File([blob], `recording.${type === 'audio' ? 'webm' : 'webm'}`, {
+          type: mimeType,
         });
         onCapture(file);
         setRecordedChunks([]);
+
+        // Show success message
+        toast({
+          title: "Recording Complete",
+          description: `Your ${type} has been recorded successfully.`
+        });
       };
 
       setMediaRecorder(recorder);
       recorder.start();
       setIsRecording(true);
+
+      // Show recording started message
+      toast({
+        title: "Recording Started",
+        description: `${type === 'audio' ? 'Audio' : 'Video'} recording in progress...`
+      });
+
     } catch (err) {
-      console.error("Error accessing media devices:", err);
-      setErrorMessage("Could not access camera/microphone. Please check your permissions.");
+      // Error handling is done in requestPermissions
+      setIsRecording(false);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
       mediaRecorder.stream.getTracks().forEach((track) => track.stop());
       setIsRecording(false);
@@ -61,84 +114,94 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
 
   const takePhoto = async () => {
     try {
-      // Reset any previous error message
-      setErrorMessage(null);
-      
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
-      });
-      
-      // Create a video element to capture the frame
+      await checkPermissions('video');
+      const stream = await requestPermissions('video');
+
+      // Create video element to capture the frame
       const video = document.createElement('video');
       video.srcObject = stream;
-      video.play();
-      
-      // Wait for the video to be ready
-      await new Promise(resolve => {
-        video.onloadedmetadata = () => {
-          resolve(null);
-        };
-      });
-      
-      // Create a canvas to draw the video frame
+      await video.play();
+
+      // Create canvas to draw the video frame
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      
-      // Draw the current frame to the canvas
+
+      // Draw the current frame
       const ctx = canvas.getContext('2d');
-      ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Convert canvas to a blob
+      if (!ctx) throw new Error('Could not get canvas context');
+
+      ctx.drawImage(video, 0, 0);
+
+      // Convert to blob
       const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => {
-          resolve(blob as Blob);
-        }, 'image/jpeg', 0.95);
+        canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.95);
       });
-      
-      // Create a file from the blob
+
+      // Create file and capture
       const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      
-      // Stop all tracks
-      stream.getTracks().forEach(track => track.stop());
-      
-      // Send the file to the parent component
       onCapture(file);
-      
+
+      // Cleanup
+      stream.getTracks().forEach(track => track.stop());
+
+      toast({
+        title: "Photo Captured",
+        description: "Your photo has been taken successfully."
+      });
+
     } catch (err) {
-      console.error("Error accessing camera:", err);
-      setErrorMessage("Could not access camera. Please check your permissions.");
+      // Error handling is done in requestPermissions
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      onCapture(file);
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/webm', 'audio/mpeg', 'audio/wav', 'audio/webm'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload an image, video, or audio file.",
+        variant: "destructive"
+      });
+      return;
     }
+
+    // Validate file size (50MB max)
+    if (file.size > 50 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please upload a file smaller than 50MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    onCapture(file);
+    toast({
+      title: "File Uploaded",
+      description: "Your file has been uploaded successfully."
+    });
   };
 
   return (
-    <div className="space-y-2">
-      {errorMessage && (
-        <div className="p-2 text-sm text-red-500 bg-red-50 rounded-md">
-          {errorMessage}
-        </div>
-      )}
-      
+    <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <input
           type="file"
-          accept="image/*,video/*"
+          accept="image/*,video/*,audio/*"
           className="hidden"
           id="media-upload"
-          onChange={handleImageUpload}
+          onChange={handleFileUpload}
         />
-        
+
         <label htmlFor="media-upload">
           <Button type="button" variant="outline" asChild>
             <span>
-              <Camera className="w-4 h-4 mr-2" />
+              <Upload className="w-4 h-4 mr-2" />
               Upload Media
             </span>
           </Button>
@@ -148,6 +211,7 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
           type="button"
           variant="outline"
           onClick={takePhoto}
+          disabled={isRecording}
         >
           <Camera className="w-4 h-4 mr-2" />
           Take Photo
@@ -158,7 +222,7 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => startRecording("audio")}
+              onClick={() => startRecording('audio')}
             >
               <Mic className="w-4 h-4 mr-2" />
               Record Audio
@@ -166,14 +230,19 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => startRecording("video")}
+              onClick={() => startRecording('video')}
             >
               <Video className="w-4 h-4 mr-2" />
               Record Video
             </Button>
           </>
         ) : (
-          <Button type="button" variant="destructive" onClick={stopRecording}>
+          <Button 
+            type="button" 
+            variant="destructive" 
+            onClick={stopRecording}
+            className="animate-pulse"
+          >
             <Square className="w-4 h-4 mr-2" />
             Stop Recording
           </Button>

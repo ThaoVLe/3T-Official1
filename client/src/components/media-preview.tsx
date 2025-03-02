@@ -5,12 +5,18 @@ interface MediaPreviewProps {
 }
 
 export default function MediaPreview({ urls }: MediaPreviewProps) {
-  if (!urls?.length) return null;
+  // Ensure urls is always an array
+  const mediaUrls = urls || [];
+
+  if (!mediaUrls.length) return null;
 
   return (
     <Card className="p-4">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {urls.map((url, index) => {
+        {mediaUrls.map((url, index) => {
+          // Make sure url is defined before calling match
+          if (!url) return null;
+
           const isVideo = url.match(/\.(mp4|webm)$/i);
           const isAudio = url.match(/\.(mp3|wav|ogg|webm)$/i);
 

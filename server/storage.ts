@@ -31,6 +31,7 @@ export class MemStorage implements IStorage {
     const newEntry: DiaryEntry = {
       ...entry,
       id,
+      mediaUrls: entry.mediaUrls || [],
       createdAt: new Date(),
     };
     this.entries.set(id, newEntry);
@@ -43,7 +44,9 @@ export class MemStorage implements IStorage {
 
     const updated: DiaryEntry = {
       ...existing,
-      ...entry,
+      title: entry.title,
+      content: entry.content,
+      mediaUrls: entry.mediaUrls || existing.mediaUrls,
     };
     this.entries.set(id, updated);
     return updated;

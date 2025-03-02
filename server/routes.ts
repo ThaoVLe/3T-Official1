@@ -1,15 +1,35 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { storage } from "./storage";
 import { insertEntrySchema } from "@shared/schema";
+import express from 'express';
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for file uploads
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.diskStorage({
+    destination: uploadsDir,
+    filename: (req, file, cb) => {
+      // Create a unique filename
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+  }),
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve uploaded files
+  app.use('/uploads', express.static(uploadsDir));
+
   app.get("/api/entries", async (req, res) => {
     const entries = await storage.getAllEntries();
     res.json(entries);
@@ -48,10 +68,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Media upload endpoint
   app.post("/api/upload", upload.single("file"), (req, res) => {
-    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
-    // In a real app, we'd store the file and return a URL
-    // For this demo, we'll return a fake URL
-    res.json({ url: `https://fake-storage/${req.file.originalname}` });
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Return the URL that can be used to access the file
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({ url: fileUrl });
   });
 
   const httpServer = createServer(app);

@@ -69,6 +69,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     ],
     content: value || "",
     onUpdate: ({ editor }) => {
+      console.log('Editor content updated:', editor.getHTML());
       onChange(editor.getHTML());
     },
     editorProps: {
@@ -81,6 +82,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   // Update editor content when value prop changes
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
+      console.log('Updating editor content:', value);
       editor.commands.setContent(value || "");
     }
   }, [editor, value]);

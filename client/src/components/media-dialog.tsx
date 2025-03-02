@@ -1,5 +1,5 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Video, Music, X } from "lucide-react";
+import { Music, X } from "lucide-react";
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -57,12 +57,12 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[85%] sm:h-[85vh] p-0 border-0 bg-black/80">
+      <DialogContent className="sm:max-w-[85%] sm:h-[85vh] p-0 border-0 bg-transparent backdrop-blur-sm">
         {/* Close button */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-4 top-4 z-50 bg-black/20 hover:bg-black/40 text-white"
+          className="absolute right-4 top-4 z-50 bg-white/10 hover:bg-white/20 text-white"
           onClick={() => onOpenChange(false)}
         >
           <X className="h-6 w-6" />

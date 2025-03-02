@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Video, Music, Loader2 } from "lucide-react";
+import { X, Music, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
 
@@ -23,7 +23,6 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
 
         // Listen for metadata to load before seeking
         const handleLoadedMetadata = () => {
-          // Seek to a very small time to get the first frame
           video.currentTime = 0.1;
         };
 
@@ -79,19 +78,14 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
                 onClick={() => setSelectedIndex(index)}
               >
                 {isVideo && (
-                  <div className="w-full h-full relative">
-                    <video
-                      ref={el => el && (videoRefs.current[index] = el)}
-                      src={url}
-                      className="w-full h-full object-cover"
-                      muted
-                      playsInline
-                      preload="metadata"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                      <Video className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
+                  <video
+                    ref={el => el && (videoRefs.current[index] = el)}
+                    src={url}
+                    className="w-full h-full object-cover"
+                    muted
+                    playsInline
+                    preload="metadata"
+                  />
                 )}
                 {isAudio && (
                   <div className="w-full h-full flex items-center justify-center bg-slate-100">

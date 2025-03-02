@@ -15,79 +15,41 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   const { toast } = useToast();
 
   const startRecording = async () => {
-    // Check if browser supports getUserMedia
-    if (!navigator.mediaDevices?.getUserMedia) {
-      toast({
-        title: "Error",
-        description: "Audio recording is not supported in your browser",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
-      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: false
       });
 
-      // Initialize recorder with basic configuration
       const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
 
-      // Handle data as it becomes available
       recorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
+        if (event.data.size > 0) {
           chunksRef.current.push(event.data);
         }
       };
 
-      // Handle recording completion
       recorder.onstop = () => {
-        try {
-          const audioBlob = new Blob(chunksRef.current);
-          const audioFile = new File([audioBlob], `audio-${Date.now()}.webm`, {
-            type: "audio/webm"
-          });
+        const audioBlob = new Blob(chunksRef.current);
+        const audioFile = new File([audioBlob], `audio-${Date.now()}.mp3`, {
+          type: "audio/mp3"
+        });
 
-          // Stop tracks and clean up
-          stream.getTracks().forEach(track => track.stop());
-          onCapture(audioFile);
-
-          // Reset state
-          setIsRecording(false);
-          mediaRecorderRef.current = null;
-          chunksRef.current = [];
-
-        } catch (error) {
-          console.error('Error creating audio file:', error);
-          toast({
-            title: "Error",
-            description: "Failed to save the recording",
-            variant: "destructive"
-          });
-        }
+        stream.getTracks().forEach(track => track.stop());
+        onCapture(audioFile);
+        setIsRecording(false);
       };
 
-      // Start recording with 1 second timeslices
-      recorder.start(1000);
+      recorder.start(100);
       setIsRecording(true);
 
     } catch (error) {
       console.error('Recording error:', error);
-      let message = "Failed to start recording. ";
-
-      if (error instanceof Error) {
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-          message = "Please allow microphone access in your browser settings.";
-        }
-      }
-
       toast({
         title: "Recording Error",
-        description: message,
+        description: "Please allow microphone access in your browser settings",
         variant: "destructive"
       });
       setIsRecording(false);
@@ -95,7 +57,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+    if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
   };
@@ -104,25 +66,26 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validTypes = [
-      'image/jpeg', 'image/png', 'image/gif',
-      'video/mp4', 'video/webm',
-      'audio/mpeg', 'audio/wav', 'audio/webm'
+    const validImageTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/heic', 'image/heif'
     ];
 
-    if (!validTypes.includes(file.type)) {
+    const validVideoTypes = [
+      'video/mp4', 'video/quicktime', 'video/x-m4v',  // iOS formats
+      'video/webm', 'video/3gpp', 'video/x-matroska'  // Android formats
+    ];
+
+    if ([...validImageTypes, ...validVideoTypes].includes(file.type)) {
+      onCapture(file);
+    } else {
       toast({
         title: "Invalid File Type",
-        description: "Please upload an image, video, or audio file",
+        description: "Please upload an image or video file",
         variant: "destructive"
       });
-      return;
     }
-
-    onCapture(file);
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current && isRecording) {
@@ -135,7 +98,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
     <div className={`flex items-center ${className}`}>
       <input
         type="file"
-        accept="image/*,video/*,audio/*"
+        accept="image/*,video/*"
         className="hidden"
         id="media-upload"
         onChange={handleFileUpload}

@@ -93,66 +93,142 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
     }, 'image/jpeg', 0.95);
   };
 
+  const getMimeType = (type: 'audio' | 'video'): string => {
+    const options = {
+      audio: ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/ogg'],
+      video: ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp8', 'video/webm']
+    };
+
+    const supported = options[type].find(mimeType => {
+      try {
+        return MediaRecorder.isTypeSupported(mimeType);
+      } catch {
+        return false;
+      }
+    });
+
+    if (!supported) {
+      throw new Error(`No supported ${type} recording MIME type found in this browser`);
+    }
+
+    return supported;
+  };
+
   const startRecording = async (type: 'audio' | 'video') => {
     try {
-      console.log(`Starting ${type} recording...`);
+      // First, stop any existing stream
+      stopCurrentStream();
 
-      // Request appropriate permissions
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: type === 'video'
-      });
-
-      console.log('Got media stream:', stream);
-      streamRef.current = stream;
-
-      // Create a basic MediaRecorder without specifying mimeType
-      const recorder = new MediaRecorder(stream);
-      console.log('Created MediaRecorder:', recorder);
-
+      // Clear any existing recorded chunks
       setRecordedChunks([]);
 
-      recorder.ondataavailable = (e) => {
-        console.log('Data available:', e.data.size);
-        if (e.data.size > 0) {
-          setRecordedChunks(prev => [...prev, e.data]);
-        }
-      };
+      let mimeType: string;
+      let useFallback = false;
 
-      recorder.onstop = () => {
-        console.log('Recording stopped, chunks:', recordedChunks.length);
-        const blob = new Blob(recordedChunks);
-        const extension = type === 'audio' ? 'webm' : 'webm';
-        const file = new File([blob], `recording-${Date.now()}.${extension}`, { 
-          type: type === 'audio' ? 'audio/webm' : 'video/webm'
-        });
+      try {
+        mimeType = getMimeType(type);
+      } catch (err) {
+        console.error("MIME type error:", err);
 
-        onCapture(file);
-        setRecordedChunks([]);
-        stopCurrentStream();
+        // Try with fallback
+        useFallback = true;
+        mimeType = type === 'audio' ? 'audio/webm' : 'video/webm';
 
         toast({
-          title: "Recording Complete",
-          description: `Your ${type} has been recorded successfully.`
+          title: "Recording Warning",
+          description: `Using fallback recording mode. Some features might be limited.`,
+          variant: "warning"
         });
+      }
+
+      const constraints = {
+        audio: true,
+        video: type === 'video' ? { facingMode } : false
       };
 
-      // Start recording in 100ms chunks
-      recorder.start(100);
-      setMediaRecorder(recorder);
-      setIsRecording(true);
+      console.log(`Starting ${type} recording with constraints:`, constraints);
 
-      toast({
-        title: "Recording Started",
-        description: `${type === 'audio' ? 'Audio' : 'Video'} recording in progress...`
-      });
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        streamRef.current = stream;
 
+        // For video recording, show the preview
+        if (type === 'video' && videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+
+        // Create recorder with or without mime type based on browser support
+        const recorderOptions = useFallback ? {} : { mimeType };
+        console.log("Creating MediaRecorder with options:", recorderOptions);
+        const recorder = new MediaRecorder(stream, recorderOptions);
+
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            setRecordedChunks(chunks => [...chunks, e.data]);
+          }
+        };
+
+        recorder.onstop = () => {
+          console.log(`Recording stopped, processing ${recordedChunks.length} chunks`);
+
+          if (recordedChunks.length === 0) {
+            toast({
+              title: "Recording Error",
+              description: "No data was recorded. Please try again.",
+              variant: "destructive"
+            });
+            return;
+          }
+
+          // Determine file extension based on MIME type or recording type
+          const extension = mimeType.includes('webm') ? 'webm' : 
+                           (mimeType.includes('mp4') ? 'mp4' : 
+                           (type === 'audio' ? 'ogg' : 'webm'));
+
+          try {
+            const blob = new Blob(recordedChunks, { type: mimeType });
+            const file = new File([blob], `recording-${Date.now()}.${extension}`, { type: mimeType });
+            onCapture(file);
+          } catch (error) {
+            console.error("Error creating file from recording:", error);
+            toast({
+              title: "Recording Error",
+              description: "Failed to process the recording. Please try again.",
+              variant: "destructive"
+            });
+          }
+
+          setRecordedChunks([]);
+          stopCurrentStream();
+
+          toast({
+            title: "Recording Complete",
+            description: `Your ${type} has been recorded successfully.`
+          });
+        };
+
+        recorder.start(1000); // Record in 1-second chunks
+        setMediaRecorder(recorder);
+        setIsRecording(true);
+
+        toast({
+          title: "Recording Started",
+          description: `${type === 'audio' ? 'Audio' : 'Video'} recording in progress...`
+        });
+      } catch (streamError) {
+        console.error("Error accessing media stream:", streamError);
+        toast({
+          title: "Device Access Error",
+          description: "Could not access your camera/microphone. Please check your permissions.",
+          variant: "destructive"
+        });
+      }
     } catch (err) {
       console.error('Recording failed:', err);
       stopCurrentStream();
       toast({
         title: "Recording Error",
-        description: "Failed to start recording. Please make sure you've granted permission to use your camera/microphone.",
+        description: "Failed to start recording. Please check your camera/microphone permissions.",
         variant: "destructive"
       });
     }

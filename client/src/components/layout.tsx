@@ -56,9 +56,7 @@ export function Layout({ children }: LayoutProps) {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <main className="flex-1 overflow-auto bg-slate-50">
-            <div className="container mx-auto py-6 px-4">
-              {children}
-            </div>
+            {children}
           </main>
         </div>
       </div>

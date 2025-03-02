@@ -68,7 +68,7 @@ export default function Editor() {
   return (
     <div className="h-full w-full">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col gap-4 p-6">
           <FormField
             control={form.control}
             name="title"
@@ -78,7 +78,7 @@ export default function Editor() {
                 <FormControl>
                   <Input 
                     {...field} 
-                    className="text-lg p-3 h-12"
+                    className="text-lg p-3 h-12 w-full"
                     placeholder="Give your entry a title..."
                   />
                 </FormControl>
@@ -93,7 +93,7 @@ export default function Editor() {
               <FormItem className="flex-1">
                 <FormLabel className="text-lg font-medium">Content</FormLabel>
                 <FormControl>
-                  <div className="h-full">
+                  <div className="h-full w-full">
                     <TipTapEditor value={field.value} onChange={field.onChange} />
                   </div>
                 </FormControl>

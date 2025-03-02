@@ -21,12 +21,22 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
   const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
 
+  // Cleanup function
+  const stopStream = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  };
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopStream();
     };
   }, []);
 
+  // Handle camera effects
   useEffect(() => {
     if (isCameraOpen) {
       startCamera();
@@ -35,72 +45,28 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
     }
   }, [isCameraOpen, facingMode]);
 
-  const stopStream = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-  };
-
-  const checkMediaRecorderSupport = () => {
-    if (!window.MediaRecorder) {
-      toast({
-        title: "Browser Not Supported",
-        description: "Your browser doesn't support media recording.",
-        variant: "destructive"
-      });
-      return false;
-    }
-    return true;
-  };
-
-  const requestMediaPermissions = async (type: 'camera' | 'microphone' | 'both') => {
-    try {
-      const constraints = {
-        audio: type === 'microphone' || type === 'both',
-        video: type === 'camera' || type === 'both' ? { facingMode } : false
-      };
-
-      console.log(`Requesting permissions for ${type}`, constraints);
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Got media stream:', stream);
-      return stream;
-    } catch (err) {
-      console.error('Permission error:', err);
-      if (err instanceof DOMException) {
-        if (err.name === 'NotAllowedError') {
-          toast({
-            title: "Permission Denied",
-            description: `Please allow ${type} access in your browser settings.`,
-            variant: "destructive"
-          });
-        } else if (err.name === 'NotFoundError') {
-          toast({
-            title: "Device Not Found",
-            description: `No ${type} found on your device.`,
-            variant: "destructive"
-          });
-        }
-      }
-      return null;
-    }
-  };
-
   const startCamera = async () => {
-    const stream = await requestMediaPermissions('camera');
-    if (!stream) {
-      setIsCameraOpen(false);
-      return;
-    }
-
     try {
       stopStream();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode },
+        audio: false
+      });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
       console.error('Failed to start camera:', err);
+      let message = "Please allow camera access to take photos";
+      if (err instanceof DOMException && err.name === 'NotFoundError') {
+        message = "No camera found on your device";
+      }
+      toast({
+        title: "Camera Error",
+        description: message,
+        variant: "destructive"
+      });
       setIsCameraOpen(false);
     }
   };
@@ -130,79 +96,103 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
     }, 'image/jpeg', 0.95);
   };
 
-  const startRecording = async (type: 'audio' | 'video') => {
-    if (!checkMediaRecorderSupport()) return;
+  const getSupportedMimeType = (type: 'audio' | 'video'): string => {
+    const mimeTypes = type === 'audio' 
+      ? ['audio/webm;codecs=opus', 'audio/webm']
+      : ['video/webm;codecs=vp8,opus', 'video/webm'];
 
+    for (const mimeType of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        return mimeType;
+      }
+    }
+    throw new Error(`${type} recording is not supported in this browser`);
+  };
+
+  const startRecording = async (type: 'audio' | 'video') => {
     try {
-      console.log(`Starting ${type} recording...`);
+      if (!window.MediaRecorder) {
+        throw new Error("MediaRecorder is not supported in this browser");
+      }
+
       stopStream();
       setRecordedChunks([]);
 
-      const stream = await requestMediaPermissions(type === 'audio' ? 'microphone' : 'both');
-      if (!stream) return;
+      // Get supported MIME type
+      const mimeType = getSupportedMimeType(type);
+
+      // Request permissions with appropriate constraints
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: type === 'video' ? { facingMode } : false
+      });
 
       streamRef.current = stream;
-      console.log('Creating MediaRecorder...');
-      const recorder = new MediaRecorder(stream);
+
+      // Create MediaRecorder with supported MIME type
+      const recorder = new MediaRecorder(stream, { mimeType });
+      setMediaRecorder(recorder);
 
       recorder.ondataavailable = (e) => {
-        console.log('Data available:', e.data.size);
         if (e.data.size > 0) {
           setRecordedChunks(prev => [...prev, e.data]);
         }
       };
 
       recorder.onstop = () => {
-        console.log('Recording stopped, processing chunks...');
-        const mimeType = type === 'audio' ? 'audio/webm' : 'video/webm';
         const blob = new Blob(recordedChunks, { type: mimeType });
-        const file = new File([blob], `${type}-${Date.now()}.webm`, { type: mimeType });
+        const extension = 'webm';
+        const file = new File([blob], `${type}-${Date.now()}.${extension}`, { type: mimeType });
+
         onCapture(file);
         setRecordedChunks([]);
         stopStream();
+        setMediaRecorder(null);
+        setIsRecording(false);
+
         toast({
           title: "Success",
           description: `${type} recording completed`
         });
       };
 
-      recorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event);
-        stopStream();
-        setIsRecording(false);
-        toast({
-          title: "Recording Error",
-          description: "An error occurred while recording",
-          variant: "destructive"
-        });
-      };
-
-      console.log('Starting MediaRecorder...');
-      recorder.start(1000);
-      setMediaRecorder(recorder);
+      // Start recording with smaller chunks for better handling
+      recorder.start(200);
       setIsRecording(true);
+
       toast({
         title: "Recording Started",
         description: `${type} recording in progress...`
       });
+
     } catch (err) {
       console.error('Recording failed:', err);
       stopStream();
+      setMediaRecorder(null);
       setIsRecording(false);
+
+      let message = "Failed to start recording";
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (err instanceof DOMException) {
+        if (err.name === 'NotAllowedError') {
+          message = `Please allow ${type === 'audio' ? 'microphone' : 'camera/microphone'} access in your browser settings`;
+        } else if (err.name === 'NotFoundError') {
+          message = `No ${type === 'audio' ? 'microphone' : 'camera/microphone'} found`;
+        }
+      }
+
       toast({
         title: "Recording Error",
-        description: "Failed to start recording. Please try again.",
+        description: message,
         variant: "destructive"
       });
     }
   };
 
   const stopRecording = () => {
-    console.log('Stopping recording...');
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
-      setIsRecording(false);
-      setMediaRecorder(null);
     }
   };
 

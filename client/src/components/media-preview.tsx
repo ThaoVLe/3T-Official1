@@ -11,8 +11,8 @@ export default function MediaPreview({ urls }: MediaPreviewProps) {
   if (!mediaUrls.length) return null;
 
   return (
-    <Card className="p-4 w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
+    <Card className="p-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {mediaUrls.map((url, index) => {
           // Make sure url is defined and is a string before calling match
           if (!url || typeof url !== 'string') {

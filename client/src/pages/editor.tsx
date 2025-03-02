@@ -66,9 +66,9 @@ export default function Editor() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="h-[calc(100vh-2rem)] w-full max-w-none p-4">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col gap-4">
           <FormField
             control={form.control}
             name="title"
@@ -90,10 +90,12 @@ export default function Editor() {
             control={form.control}
             name="content"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1">
                 <FormLabel className="text-lg font-medium">Content</FormLabel>
                 <FormControl>
-                  <TipTapEditor value={field.value} onChange={field.onChange} />
+                  <div className="h-[calc(100%-2rem)]">
+                    <TipTapEditor value={field.value} onChange={field.onChange} />
+                  </div>
                 </FormControl>
               </FormItem>
             )}

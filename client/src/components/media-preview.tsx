@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Video, Music, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
 
 interface MediaPreviewProps {
@@ -11,17 +11,29 @@ interface MediaPreviewProps {
 }
 
 export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewProps) {
-  const [selectedUrl, setSelectedUrl] = useState<string>();
+  const [selectedIndex, setSelectedIndex] = useState<number>();
   const mediaUrls = urls || [];
+  const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
+
+  // Load video thumbnails
+  useEffect(() => {
+    mediaUrls.forEach((url, index) => {
+      if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) && videoRefs.current[index]) {
+        const video = videoRefs.current[index];
+        video.currentTime = 1; // Seek to 1 second to get a preview frame
+      }
+    });
+  }, [mediaUrls]);
 
   if (!mediaUrls.length && !loading) return null;
 
   return (
     <div className="flex gap-3 flex-wrap">
       <MediaDialog 
-        url={selectedUrl}
-        open={!!selectedUrl}
-        onOpenChange={(open) => !open && setSelectedUrl(undefined)}
+        urls={mediaUrls}
+        initialIndex={selectedIndex}
+        open={selectedIndex !== undefined}
+        onOpenChange={(open) => !open && setSelectedIndex(undefined)}
       />
 
       {loading && (
@@ -56,13 +68,16 @@ export default function MediaPreview({ urls, onRemove, loading }: MediaPreviewPr
 
               <div 
                 className="w-full h-full overflow-hidden cursor-pointer"
-                onClick={() => setSelectedUrl(url)}
+                onClick={() => setSelectedIndex(index)}
               >
                 {isVideo && (
                   <div className="w-full h-full relative">
                     <video
+                      ref={el => el && (videoRefs.current[index] = el)}
                       src={url}
                       className="w-full h-full object-cover"
+                      muted
+                      playsInline
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/10">
                       <Video className="h-6 w-6 text-white" />

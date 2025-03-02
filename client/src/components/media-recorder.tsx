@@ -23,9 +23,7 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
 
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+      stopStream();
     };
   }, []);
 
@@ -44,7 +42,41 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
     }
   };
 
+  const requestMediaPermissions = async (type: 'camera' | 'microphone' | 'both') => {
+    try {
+      const constraints = {
+        audio: type === 'microphone' || type === 'both',
+        video: type === 'camera' || type === 'both'
+      };
+
+      await navigator.mediaDevices.getUserMedia(constraints);
+      return true;
+    } catch (err) {
+      if (err instanceof DOMException) {
+        if (err.name === 'NotAllowedError') {
+          toast({
+            title: "Permission Denied",
+            description: `Please allow ${type} access in your browser settings.`,
+            variant: "destructive"
+          });
+        } else if (err.name === 'NotFoundError') {
+          toast({
+            title: "Device Not Found",
+            description: `No ${type} found on your device.`,
+            variant: "destructive"
+          });
+        }
+      }
+      return false;
+    }
+  };
+
   const startCamera = async () => {
+    if (!(await requestMediaPermissions('camera'))) {
+      setIsCameraOpen(false);
+      return;
+    }
+
     try {
       stopStream();
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -57,11 +89,6 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
       }
     } catch (err) {
       console.error('Failed to start camera:', err);
-      toast({
-        title: "Camera Error",
-        description: "Please allow camera access to take photos",
-        variant: "destructive"
-      });
       setIsCameraOpen(false);
     }
   };
@@ -92,13 +119,17 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
   };
 
   const startRecording = async (type: 'audio' | 'video') => {
+    if (!(await requestMediaPermissions(type === 'audio' ? 'microphone' : 'both'))) {
+      return;
+    }
+
     try {
       stopStream();
       setRecordedChunks([]);
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: type === 'video'
+        video: type === 'video' ? { facingMode: 'user' } : false
       });
 
       streamRef.current = stream;
@@ -117,18 +148,21 @@ export default function MediaRecorder({ onCapture }: MediaRecorderProps) {
         onCapture(file);
         setRecordedChunks([]);
         stopStream();
+        toast({
+          title: "Success",
+          description: `${type} recording completed`
+        });
       };
 
-      recorder.start(100);
+      recorder.start(1000);
       setMediaRecorder(recorder);
       setIsRecording(true);
+      toast({
+        title: "Recording Started",
+        description: `${type} recording in progress...`
+      });
     } catch (err) {
       console.error('Recording failed:', err);
-      toast({
-        title: "Recording Error",
-        description: `Please allow ${type === 'audio' ? 'microphone' : 'camera'} access to record`,
-        variant: "destructive"
-      });
       stopStream();
       setIsRecording(false);
     }

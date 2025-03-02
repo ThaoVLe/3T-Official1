@@ -21,7 +21,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     extensions: [StarterKit],
     content: value || "",
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      if (editor) {
+        onChange(editor.getHTML());
+      }
     },
     editorProps: {
       attributes: {

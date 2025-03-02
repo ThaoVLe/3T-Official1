@@ -130,12 +130,12 @@ export default function Editor() {
                 render={({ field }) => (
                   <FormItem className="h-full">
                     <FormControl>
-                      <TipTapEditor 
-                        value={field.value} 
-                        onChange={(val) => {
-                          field.onChange(val);
-                        }} 
-                      />
+                      <div className="w-full">
+                        <TipTapEditor 
+                          value={field.value} 
+                          onChange={field.onChange} 
+                        />
+                      </div>
                     </FormControl>
                   </FormItem>
                 )}

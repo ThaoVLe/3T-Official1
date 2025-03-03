@@ -6,9 +6,11 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
-import { Link } from "wouter";
+import { Link } from "react-router-dom"; // Corrected import for Link
 import { SidebarNav } from "./sidebar-nav";
 import { Input } from "@/components/ui/input";
+import * as React from "react";
+
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,7 +29,7 @@ export function Layout({ children }: LayoutProps) {
         {/* Sidebar */}
         <Sidebar className="border-r">
           <SidebarHeader className="border-b px-2 py-4">
-            <Link href="/">
+            <Link to="/">
               <h1 className="font-semibold text-xl cursor-pointer bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 My Diary
               </h1>
@@ -36,7 +38,7 @@ export function Layout({ children }: LayoutProps) {
           <SidebarContent>
             <div className="space-y-4 py-4">
               <div className="px-3 py-2">
-                <Link href="/new">
+                <Link to="/new">
                   <Button className="w-full justify-start bg-primary hover:bg-primary/90">
                     <Plus className="mr-2 h-4 w-4" />
                     New Entry
@@ -59,30 +61,13 @@ export function Layout({ children }: LayoutProps) {
           </SidebarContent>
         </Sidebar>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <main className="flex-1 overflow-auto bg-slate-50 w-full"> {/* Added w-full */}
+        {/* Main content */}
+        <div className="flex-1 overflow-auto">
+          <main className="pb-safe">
             {children}
           </main>
         </div>
       </div>
     </SidebarProvider>
-  );
-}
-import React from "react";
-import { BottomNavigation } from "./bottom-navigation";
-
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export function Layout({ children }: LayoutProps) {
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 pb-16">
-        {children}
-      </main>
-      <BottomNavigation />
-    </div>
-  );
+  )
 }

@@ -5,6 +5,7 @@ import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+import { Extension } from '@tiptap/core';
 import {
   Bold,
   Italic,
@@ -27,6 +28,23 @@ interface TipTapEditorProps {
   onChange: (value: string) => void;
 }
 
+// Custom extension for fontSize
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addAttributes() {
+    return {
+      size: {
+        default: 'normal',
+        parseHTML: element => element.style.fontSize || 'normal',
+        renderHTML: attributes => {
+          if (attributes.size === 'normal') return {};
+          return { style: `font-size: ${attributes.size}` };
+        },
+      },
+    };
+  },
+});
+
 export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -48,6 +66,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       }),
       TextStyle,
       Color,
+      FontSize,
     ],
     content: value || '',
     onUpdate: ({ editor }) => {
@@ -92,8 +111,17 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
     editor.chain()
       .focus()
-      .setMark('textStyle', { fontSize: sizes[size] })
+      .setMark('fontSize', { size: sizes[size] })
       .run();
+  };
+
+  const isTextSize = (size: 'large' | 'medium' | 'small') => {
+    const sizes = {
+      large: '1.5em',
+      medium: '1.25em',
+      small: '1em'
+    };
+    return editor.isActive('fontSize', { size: sizes[size] });
   };
 
   return (
@@ -140,6 +168,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   variant="ghost"
                   className="justify-start text-left"
                   onClick={() => setTextSize('large')}
+                  data-active={isTextSize('large')}
+                  className="data-[active=true]:bg-slate-100"
                 >
                   <span className="text-xl">Large Text</span>
                 </Button>
@@ -147,6 +177,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   variant="ghost"
                   className="justify-start text-left"
                   onClick={() => setTextSize('medium')}
+                  data-active={isTextSize('medium')}
+                  className="data-[active=true]:bg-slate-100"
                 >
                   <span className="text-lg">Medium Text</span>
                 </Button>
@@ -154,6 +186,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   variant="ghost"
                   className="justify-start text-left"
                   onClick={() => setTextSize('small')}
+                  data-active={isTextSize('small')}
+                  className="data-[active=true]:bg-slate-100"
                 >
                   <span className="text-base">Small Text</span>
                 </Button>
@@ -210,7 +244,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                     variant="ghost"
                     className="h-6 w-6 p-0"
                     style={{ backgroundColor: color }}
-                    onClick={() => editor.chain().focus().setHighlight({ color }).run()}
+                    onClick={() => editor.chain().focus().toggleHighlight({ color }).run()}
                   />
                 ))}
               </div>

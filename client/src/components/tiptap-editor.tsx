@@ -1,8 +1,5 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import CodeBlockLowlight from "@tiptap/extension-code-block";
-import Highlight from "@tiptap/extension-highlight";
-import Link from "@tiptap/extension-link";
 import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
@@ -13,11 +10,9 @@ import {
   Italic,
   List,
   ListOrdered,
-  Quote,
   Link as LinkIcon,
   Highlighter,
   Smile,
-  Image,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -45,21 +40,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           HTMLAttributes: {
             class: 'list-decimal pl-4'
           }
-        },
-        heading: {
-          levels: [1, 2, 3],
-          HTMLAttributes: {
-            class: 'font-bold',
-          }
         }
-      }),
-      CodeBlockLowlight,
-      Highlight.configure({ multicolor: true }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary underline',
-        },
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -74,7 +55,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4 prose prose-headings:my-2 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl'
+        class: 'focus:outline-none min-h-[200px] px-4 prose prose-headings:my-2'
       }
     }
   });
@@ -87,19 +68,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   if (!editor) {
     return null;
-  }
-
-  const setLink = () => {
-    const previousUrl = editor.getAttributes('link').href
-    const url = window.prompt('URL', previousUrl)
-
-    if (url === null) return;
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run()
-      return;
-    }
-
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
   }
 
   const colors = [
@@ -115,16 +83,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
   };
 
-  const setParagraphStyle = (size: 'large' | 'medium' | 'small') => {
-    editor.chain().focus().clearNodes().run();
-
-    if (size === 'large') {
-      editor.chain().focus().setFontSize('24px').run();
-    } else if (size === 'medium') {
-      editor.chain().focus().setFontSize('18px').run();
-    } else {
-      editor.chain().focus().setFontSize('16px').run();
-    }
+  const setTextStyle = (size: 'large' | 'medium' | 'small') => {
+    let fontSize = size === 'large' ? '1.5em' : size === 'medium' ? '1.25em' : '1em';
+    editor.chain().focus().setStyle({ fontSize }).run();
   };
 
   return (
@@ -153,7 +114,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           </Button>
           <Separator orientation="vertical" className="mx-1 h-6" />
 
-          {/* Text Style Dropdown */}
+          {/* Text Size Dropdown */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -170,21 +131,21 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
-                  onClick={() => setParagraphStyle('large')}
+                  onClick={() => setTextStyle('large')}
                 >
                   <span className="text-xl">Large Text</span>
                 </Button>
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
-                  onClick={() => setParagraphStyle('medium')}
+                  onClick={() => setTextStyle('medium')}
                 >
                   <span className="text-lg">Medium Text</span>
                 </Button>
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
-                  onClick={() => setParagraphStyle('small')}
+                  onClick={() => setTextStyle('small')}
                 >
                   <span className="text-base">Small Text</span>
                 </Button>
@@ -241,7 +202,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                     variant="ghost"
                     className="h-6 w-6 p-0"
                     style={{ backgroundColor: color }}
-                    onClick={() => editor.chain().focus().toggleHighlight({ color }).run()}
+                    onClick={() => editor.chain().focus().setHighlight({ color }).run()}
                   />
                 ))}
               </div>
@@ -277,7 +238,12 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             type="button"
             variant="ghost"
             size="sm"
-            onClick={setLink}
+            onClick={() => {
+              const url = window.prompt('URL');
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run();
+              }
+            }}
             data-active={editor.isActive("link")}
             className="h-8 px-2 data-[active=true]:bg-slate-100"
           >

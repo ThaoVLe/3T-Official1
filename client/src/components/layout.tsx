@@ -44,7 +44,7 @@ export function Layout({ children }: LayoutProps) {
     </div>
   ) : (
     // Desktop layout with sidebar
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="grid lg:grid-cols-[280px_1fr] min-h-screen">
         {/* Sidebar */}
         <Sidebar className="border-r">
@@ -82,11 +82,9 @@ export function Layout({ children }: LayoutProps) {
         </Sidebar>
 
         {/* Main content */}
-        <div className="flex-1 overflow-auto">
-          <main className="pb-safe">
-            {children}
-          </main>
-        </div>
+        <main className="p-4 pt-0">
+          {children}
+        </main>
       </div>
     </SidebarProvider>
   );

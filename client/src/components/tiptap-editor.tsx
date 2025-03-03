@@ -60,7 +60,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4 prose prose-h1:text-[24px] prose-h1:font-normal prose-h2:text-[18px] prose-h2:font-normal prose-p:text-[11px] prose-p:font-normal'
+        class: 'focus:outline-none min-h-[200px] px-4 prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal'
       }
     }
   });
@@ -134,7 +134,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                   data-active={editor.isActive('heading', { level: 1 })}
                 >
-                  <span className="text-[30px]">Large Text</span>
+                  <span style={{ fontSize: '30px', fontWeight: 'bold' }}>Large Text</span>
                 </Button>
                 <Button
                   variant="ghost"
@@ -142,7 +142,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                   data-active={editor.isActive('heading', { level: 2 })}
                 >
-                  <span className="text-[20px]">Medium Text</span>
+                  <span style={{ fontSize: '20px', fontWeight: 'semibold' }}>Medium Text</span>
                 </Button>
                 <Button
                   variant="ghost"
@@ -150,7 +150,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   onClick={() => editor.chain().focus().setParagraph().run()}
                   data-active={!editor.isActive('heading')}
                 >
-                  <span className="text-[11px]">Normal Text</span>
+                  <span style={{ fontSize: '16px' }}>Small Text</span>
                 </Button>
               </div>
             </PopoverContent>

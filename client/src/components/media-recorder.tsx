@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 
 interface MediaRecorderProps {
   onCapture: (file: File) => void;
@@ -48,13 +47,13 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
         multiple
       />
 
-      <div className="bottom-toolbar">
+      <div className="flex gap-2">
         <label htmlFor="media-upload">
           <Button 
             type="button" 
             variant="ghost" 
             size="icon"
-            className={cn("h-9 w-9", isUploading && "opacity-50 cursor-not-allowed")}
+            className="h-9 w-9"
             disabled={isUploading}
             asChild
           >

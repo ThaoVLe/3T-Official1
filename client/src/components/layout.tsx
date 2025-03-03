@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
-import { Link } from "react-router-dom"; // Corrected import for Link
+import { Link } from "wouter";
 import { SidebarNav } from "./sidebar-nav";
 import { Input } from "@/components/ui/input";
 import * as React from "react";
@@ -29,7 +29,7 @@ export function Layout({ children }: LayoutProps) {
         {/* Sidebar */}
         <Sidebar className="border-r">
           <SidebarHeader className="border-b px-2 py-4">
-            <Link to="/">
+            <Link href="/">
               <h1 className="font-semibold text-xl cursor-pointer bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 My Diary
               </h1>
@@ -38,7 +38,7 @@ export function Layout({ children }: LayoutProps) {
           <SidebarContent>
             <div className="space-y-4 py-4">
               <div className="px-3 py-2">
-                <Link to="/new">
+                <Link href="/new">
                   <Button className="w-full justify-start bg-primary hover:bg-primary/90">
                     <Plus className="mr-2 h-4 w-4" />
                     New Entry

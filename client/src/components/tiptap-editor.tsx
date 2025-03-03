@@ -176,44 +176,26 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </PopoverTrigger>
             <PopoverContent className="w-40 p-2">
               <div className="flex flex-col gap-1">
-                {/* Headings */}
-                {[1, 2, 3].map((level) => (
-                  <Button
-                    key={level}
-                    variant="ghost"
-                    className="justify-start text-left"
-                    onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
-                    data-active={editor.isActive('heading', { level })}
-                  >
-                    <span className={`${level === 1 ? 'text-3xl' : level === 2 ? 'text-2xl' : 'text-xl'}`}>
-                      <Type className="h-4 w-4" />
-                    </span>
-                  </Button>
-                ))}
-
-                <Separator className="my-2" />
-
-                {/* Paragraph Styles */}
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
                   onClick={() => setParagraphStyle('large')}
                 >
-                  <span className="text-xl">Large Text</span>
+                  <span className="text-xl">Large</span>
                 </Button>
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
                   onClick={() => setParagraphStyle('medium')}
                 >
-                  <span className="text-lg">Medium Text</span>
+                  <span className="text-lg">Medium</span>
                 </Button>
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
                   onClick={() => setParagraphStyle('small')}
                 >
-                  <span className="text-base">Small Text</span>
+                  <span className="text-base">Small</span>
                 </Button>
               </div>
             </PopoverContent>

@@ -62,11 +62,6 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
             </span>
           </Button>
         </label>
-        {/* Placeholder for emotion selector */}
-        <div>
-          <p>How are you feeling?</p>
-          {/* Add emotion dropdown here */}
-        </div>
       </div>
     </div>
   );

@@ -41,7 +41,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           ) : (
             <>
               <SmileIcon className="h-5 w-5 text-slate-600" />
-              <span className="text-sm font-medium">Mood</span>
+              <span className="text-sm font-medium">How are you feeling?</span>
             </>
           )}
         </Button>

@@ -5,7 +5,6 @@ import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Extension } from '@tiptap/core';
 import {
   Bold,
   Italic,
@@ -28,23 +27,6 @@ interface TipTapEditorProps {
   onChange: (value: string) => void;
 }
 
-// Custom extension for fontSize
-const FontSize = Extension.create({
-  name: 'fontSize',
-  addAttributes() {
-    return {
-      size: {
-        default: 'normal',
-        parseHTML: element => element.style.fontSize || 'normal',
-        renderHTML: attributes => {
-          if (attributes.size === 'normal') return {};
-          return { style: `font-size: ${attributes.size}` };
-        },
-      },
-    };
-  },
-});
-
 export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -58,6 +40,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           HTMLAttributes: {
             class: 'list-decimal pl-4'
           }
+        },
+        heading: {
+          levels: [1, 2, 3]
         }
       }),
       TextAlign.configure({
@@ -66,7 +51,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       }),
       TextStyle,
       Color,
-      FontSize,
     ],
     content: value || '',
     onUpdate: ({ editor }) => {
@@ -74,7 +58,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4 prose prose-headings:my-2'
+        class: 'focus:outline-none min-h-[200px] px-4 prose prose-headings:my-2 prose-h1:text-xl prose-h2:text-lg prose-h3:text-base'
       }
     }
   });
@@ -100,28 +84,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     'Gestures': ['👍', '👎', '👌', '✌️', '🤞', '🤝', '👊', '✊', '🤛', '🤜', '🤚', '👋', '🖐️', '✋', '🖖'],
     'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗'],
     'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
-  };
-
-  const setTextSize = (size: 'large' | 'medium' | 'small') => {
-    const sizes = {
-      large: '1.5em',
-      medium: '1.25em',
-      small: '1em'
-    };
-
-    editor.chain()
-      .focus()
-      .setMark('fontSize', { size: sizes[size] })
-      .run();
-  };
-
-  const isTextSize = (size: 'large' | 'medium' | 'small') => {
-    const sizes = {
-      large: '1.5em',
-      medium: '1.25em',
-      small: '1em'
-    };
-    return editor.isActive('fontSize', { size: sizes[size] });
   };
 
   return (
@@ -167,8 +129,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
-                  onClick={() => setTextSize('large')}
-                  data-active={isTextSize('large')}
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                  data-active={editor.isActive('heading', { level: 1 })}
                   className="data-[active=true]:bg-slate-100"
                 >
                   <span className="text-xl">Large Text</span>
@@ -176,8 +138,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
-                  onClick={() => setTextSize('medium')}
-                  data-active={isTextSize('medium')}
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                  data-active={editor.isActive('heading', { level: 2 })}
                   className="data-[active=true]:bg-slate-100"
                 >
                   <span className="text-lg">Medium Text</span>
@@ -185,8 +147,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
-                  onClick={() => setTextSize('small')}
-                  data-active={isTextSize('small')}
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                  data-active={editor.isActive('heading', { level: 3 })}
                   className="data-[active=true]:bg-slate-100"
                 >
                   <span className="text-base">Small Text</span>

@@ -21,7 +21,6 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Heading,
   Type,
   Palette,
 } from "lucide-react";
@@ -51,11 +50,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           levels: [1, 2, 3],
           HTMLAttributes: {
             class: 'font-bold',
-          }
-        },
-        paragraph: {
-          HTMLAttributes: {
-            class: '',
           }
         }
       }),
@@ -121,19 +115,16 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
   };
 
-  const setParagraphStyle = (size: string) => {
-    editor.chain().focus().setParagraph().run();
+  const setParagraphStyle = (size: 'large' | 'medium' | 'small') => {
+    editor.chain().focus().clearNodes().run();
 
-    // Remove existing size classes
-    editor.chain().focus().removeClass('text-xl').removeClass('text-lg').removeClass('text-base').run();
-
-    // Add new size class
     if (size === 'large') {
-      editor.chain().focus().addClass('text-xl').run();
+      editor.chain().focus().setFontSize('24px').run();
     } else if (size === 'medium') {
-      editor.chain().focus().addClass('text-lg').run();
+      editor.chain().focus().setFontSize('18px').run();
+    } else {
+      editor.chain().focus().setFontSize('16px').run();
     }
-    // 'small' is default text-base, no need to add class
   };
 
   return (

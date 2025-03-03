@@ -14,10 +14,16 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+const layoutStyle = {
+  width: '100vw',
+  height: '100vh',
+  overflowX: 'hidden'
+}
+
 export function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen bg-background" style={layoutStyle}>
         {/* Sidebar */}
         <Sidebar className="border-r">
           <SidebarHeader className="border-b px-2 py-4">
@@ -55,7 +61,7 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <main className="flex-1 overflow-auto bg-slate-50">
+          <main className="flex-1 overflow-auto bg-slate-50 w-full"> {/* Added w-full */}
             {children}
           </main>
         </div>

@@ -1,4 +1,15 @@
 @tailwind base;
+
+/* Force full viewport width */
+html, body, #root {
+  width: 100vw;
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 @tailwind components;
 @tailwind utilities;
 
@@ -14,7 +25,7 @@
 
 @layer components {
   .container-page {
-    @apply w-full mx-auto py-8 px-4 sm:px-6 md:container md:max-w-full lg:max-w-7xl;
+    @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
   }
 
   .editor-page {
@@ -78,5 +89,20 @@
   
   .sm-full-width {
     @apply w-full;
+  }
+  
+  .container-page {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  body {
+    width: 100vw;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 }

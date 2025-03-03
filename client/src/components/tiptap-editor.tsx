@@ -134,7 +134,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                   data-active={editor.isActive('heading', { level: 1 })}
                 >
-                  <span className="text-[24px]">Large Text</span>
+                  <span className="text-[30px]">Large Text</span>
                 </Button>
                 <Button
                   variant="ghost"
@@ -142,7 +142,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                   data-active={editor.isActive('heading', { level: 2 })}
                 >
-                  <span className="text-[18px]">Medium Text</span>
+                  <span className="text-[20px]">Medium Text</span>
                 </Button>
                 <Button
                   variant="ghost"

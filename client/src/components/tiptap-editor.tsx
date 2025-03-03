@@ -3,6 +3,7 @@ import StarterKit from "@tiptap/starter-kit";
 import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
 import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -53,6 +54,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       }),
       TextStyle,
       Color,
+      Highlight.configure({ multicolor: true }),
     ],
     content: value || '',
     onUpdate: ({ editor }) => {
@@ -205,10 +207,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 size="sm"
                 className="h-8 w-8 px-0"
               >
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M8 12C8 10.3431 9.34315 9 11 9H13C14.6569 9 16 10.3431 16 12C16 13.6569 14.6569 15 13 15H11C9.34315 15 8 13.6569 8 12Z" fill="currentColor"/>
-                  </svg>
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-[10px]">A</span>
+                  <div className="h-1 w-4 bg-red-500 rounded-sm" />
+                </div>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-2">
@@ -220,6 +222,34 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                     className="h-6 w-6 p-0"
                     style={{ backgroundColor: color }}
                     onClick={() => editor.chain().focus().setColor(color).run()}
+                  />
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 px-0"
+              >
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-[10px] bg-yellow-200 px-1">A</span>
+                </div>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <div className="grid grid-cols-10 gap-1">
+                {colors.map((color) => (
+                  <Button
+                    key={color}
+                    variant="ghost"
+                    className="h-6 w-6 p-0"
+                    style={{ backgroundColor: color }}
+                    onClick={() => editor.chain().focus().setHighlight({ color }).run()}
                   />
                 ))}
               </div>

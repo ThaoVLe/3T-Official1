@@ -13,8 +13,7 @@ import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
 import React, { useState } from 'react';
-
-// Placeholder FeelingSelector component
+import { FeelingSelector } from "@/components/feeling-selector";
 const FeelingSelector = ({ selectedFeeling, onSelect }) => {
   const feelings = ["happy", "sad", "angry", "neutral"];
   return (

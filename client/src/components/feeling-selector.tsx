@@ -30,14 +30,19 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
-          size="icon" 
-          className="h-9 w-9 relative"
+          className="h-9 flex items-center gap-2 px-3"
           aria-label="Select feeling"
         >
           {selectedFeeling ? (
-            <span className="text-lg">{selectedFeeling.emoji}</span>
+            <>
+              <span className="text-lg">{selectedFeeling.emoji}</span>
+              <span className="text-sm">{selectedFeeling.label}</span>
+            </>
           ) : (
-            <SmileIcon className="h-5 w-5" />
+            <>
+              <SmileIcon className="h-5 w-5" />
+              <span className="text-sm">Mood</span>
+            </>
           )}
         </Button>
       </PopoverTrigger>

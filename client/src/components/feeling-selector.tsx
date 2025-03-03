@@ -1,10 +1,10 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ImageIcon, X } from "lucide-react";
+import { X } from "lucide-react";
 
 const feelings = [
   { emoji: "😊", label: "Happy" },
@@ -57,8 +57,8 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
   );
   
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Sheet>
+      <SheetTrigger asChild>
         <Button 
           variant="ghost" 
           className="h-10 px-3 rounded-full flex items-center"
@@ -71,7 +71,10 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           }}
         >
           {selectedFeeling ? (
-            <span className="text-xl">{selectedFeeling.emoji}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xl">{selectedFeeling.emoji}</span>
+              <span className="text-sm font-medium">{selectedFeeling.label}</span>
+            </div>
           ) : (
             <div className="flex items-center gap-1.5">
               <span className="text-xl">😊</span>
@@ -79,66 +82,66 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             </div>
           )}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[320px] p-0">
-        <div className="flex items-center justify-between p-3 border-b">
-          <X className="h-5 w-5" />
-          <h4 className="font-medium text-center">How are you feeling?</h4>
-          <div className="w-5"></div> {/* Spacer for alignment */}
-        </div>
+      </SheetTrigger>
+      <SheetContent side="bottom" className="h-[100dvh] p-0 w-full max-w-none">
+        <SheetHeader className="px-4 py-4 border-b">
+          <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>
+        </SheetHeader>
         
-        <Tabs defaultValue="feelings">
-          <TabsList className="w-full grid grid-cols-2">
+        <Tabs defaultValue="feelings" className="h-[calc(100%-60px)]">
+          <TabsList className="w-full grid grid-cols-2 px-4 py-2">
             <TabsTrigger value="feelings">Feelings</TabsTrigger>
             <TabsTrigger value="activities">Activities</TabsTrigger>
           </TabsList>
           
-          <div className="p-3">
+          <div className="p-4">
             <Input
               placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-2"
+              className="mb-4"
             />
             
-            <TabsContent value="feelings" className="m-0 p-0">
-              <div className="grid grid-cols-2 gap-0">
+            <TabsContent value="feelings" className="m-0 p-0 h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2">
                 {filteredFeelings.map((feeling) => (
                   <Button
                     key={feeling.label}
-                    variant="ghost"
-                    className="flex items-center justify-start gap-2 p-3 h-14"
+                    variant="outline"
+                    className="flex items-center justify-start gap-2 p-4 h-16"
                     onClick={() => {
                       onSelect(feeling);
+                      document.querySelector<HTMLButtonElement>("button[data-state='open']")?.click();
                     }}
                   >
-                    <span className="text-xl">{feeling.emoji}</span>
-                    <span className="text-sm">{feeling.label}</span>
+                    <span className="text-2xl">{feeling.emoji}</span>
+                    <span className="text-base">{feeling.label}</span>
                   </Button>
                 ))}
               </div>
             </TabsContent>
             
-            <TabsContent value="activities" className="m-0 p-0">
-              <div className="grid grid-cols-2 gap-0">
+            <TabsContent value="activities" className="m-0 p-0 h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2">
                 {filteredActivities.map((activity) => (
                   <Button
                     key={activity.label}
-                    variant="ghost"
-                    className="flex items-center justify-start gap-2 p-3 h-14"
+                    variant="outline"
+                    className="flex items-center justify-start gap-2 p-4 h-16"
                     onClick={() => {
                       onSelect(activity);
+                      document.querySelector<HTMLButtonElement>("button[data-state='open']")?.click();
                     }}
                   >
-                    <span className="text-xl">{activity.emoji}</span>
-                    <span className="text-sm">{activity.label}</span>
+                    <span className="text-2xl">{activity.emoji}</span>
+                    <span className="text-base">{activity.label}</span>
                   </Button>
                 ))}
               </div>
             </TabsContent>
           </div>
         </Tabs>
-      </PopoverContent>
-    </Popover>
+      </SheetContent>
+    </Sheet>
   );
 }

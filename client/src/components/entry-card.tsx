@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useState } from 'react'; // Added import for useState
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -28,12 +29,19 @@ export default function EntryCard({ entry }: EntryCardProps) {
     },
   });
 
+  // Added state for feeling display
+  const [feeling, setFeeling] = useState(entry.feeling || null);
+
+
   return (
     <Card className="group hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xl font-semibold line-clamp-1">
-          {entry.title || "Untitled Entry"}
-        </CardTitle>
+        <div className="flex items-center gap-2">
+          {feeling && <span className="text-xl" title={feeling.label}>{feeling.emoji}</span>}
+          <CardTitle className="text-xl font-semibold line-clamp-1">
+            {entry.title || "Untitled Entry"}
+          </CardTitle>
+        </div>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <Link href={`/edit/${entry.id}`}>
             <Button size="icon" variant="ghost" className="hover:bg-muted">

@@ -7,6 +7,7 @@ export const diaryEntries = pgTable("diary_entries", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   mediaUrls: jsonb("media_urls").$type<string[]>().default([]),
+  feeling: jsonb("feeling").$type<{ emoji: string; label: string } | null>().default(null),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -14,6 +14,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
 import React, { useState } from 'react';
 
+// Placeholder FeelingSelector component
+const FeelingSelector = ({ selectedFeeling, onSelect }) => {
+  const feelings = ["happy", "sad", "angry", "neutral"];
+  return (
+    <select value={selectedFeeling} onChange={(e) => onSelect(e.target.value)}>
+      {feelings.map((feeling) => (
+        <option key={feeling} value={feeling}>{feeling}</option>
+      ))}
+    </select>
+  );
+};
+
+
 export default function Editor() {
   const { id } = useParams();
   const [, navigate] = useLocation();
@@ -33,6 +46,7 @@ export default function Editor() {
       title: "",
       content: "",
       mediaUrls: [],
+      feeling: "", // Added feeling field to default values
     },
   });
 
@@ -42,6 +56,7 @@ export default function Editor() {
         title: entry.title || "",
         content: entry.content || "",
         mediaUrls: entry.mediaUrls || [],
+        feeling: entry.feeling || "", // Added feeling field to reset
       });
     }
   }, [entry, form]);
@@ -178,8 +193,12 @@ export default function Editor() {
 
         {/* Media Controls - Fixed at bottom */}
         <div className="border-t bg-white sticky bottom-0 w-full">
-          <div className="px-4 sm:px-6 py-2">
+          <div className="px-4 sm:px-6 py-2 flex items-center gap-4">
             <MediaRecorder onCapture={onMediaUpload} />
+            <FeelingSelector 
+              selectedFeeling={form.getValues("feeling")}
+              onSelect={(feeling) => form.setValue("feeling", feeling)}
+            />
           </div>
           {form.watch("mediaUrls")?.length > 0 && (
             <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">

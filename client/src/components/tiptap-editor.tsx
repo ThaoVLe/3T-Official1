@@ -90,8 +90,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   return (
     <div className="h-full flex flex-col bg-white rounded-lg w-full">
-      <div className="flex items-center gap-0.5 p-2 overflow-x-auto border-b bg-white w-full">
-        <div className="flex items-center flex-nowrap min-w-max">
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-white w-full">
+        <div className="flex flex-wrap items-center gap-1">
           <Button
             type="button"
             variant="ghost"

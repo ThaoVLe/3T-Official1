@@ -162,21 +162,21 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           </Button>
           <Separator orientation="vertical" className="mx-1 h-6" />
 
-          {/* Heading Dropdown */}
+          {/* Text Style Dropdown */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 flex items-center gap-1"
+                className="h-8 px-2"
               >
                 <Type className="h-4 w-4" />
-                <span className="text-xs">Heading</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-40 p-2">
               <div className="flex flex-col gap-1">
+                {/* Headings */}
                 {[1, 2, 3].map((level) => (
                   <Button
                     key={level}
@@ -186,29 +186,14 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                     data-active={editor.isActive('heading', { level })}
                   >
                     <span className={`${level === 1 ? 'text-3xl' : level === 2 ? 'text-2xl' : 'text-xl'}`}>
-                      Heading {level}
+                      <Type className="h-4 w-4" />
                     </span>
                   </Button>
                 ))}
-              </div>
-            </PopoverContent>
-          </Popover>
 
-          {/* Paragraph Styles Dropdown */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 flex items-center gap-1"
-              >
-                <Type className="h-4 w-4" />
-                <span className="text-xs">Paragraph</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-40 p-2">
-              <div className="flex flex-col gap-1">
+                <Separator className="my-2" />
+
+                {/* Paragraph Styles */}
                 <Button
                   variant="ghost"
                   className="justify-start text-left"

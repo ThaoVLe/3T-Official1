@@ -193,7 +193,7 @@ export default function Editor() {
 
         {/* Media Controls - Fixed at bottom */}
         <div className="border-t bg-white sticky bottom-0 w-full">
-          <div className="px-4 sm:px-6 py-2 flex items-center gap-4">
+          <div className="px-4 sm:px-6 py-3 flex items-center gap-4">
             <MediaRecorder onCapture={onMediaUpload} />
             <FeelingSelector 
               selectedFeeling={form.getValues("feeling")}

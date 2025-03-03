@@ -46,19 +46,19 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-2">
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm">How are you feeling?</h4>
-          <div className="grid grid-cols-6 gap-2">
+      <PopoverContent className="w-72 p-3">
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm text-center pb-1 border-b">How are you feeling today?</h4>
+          <div className="grid grid-cols-4 gap-2">
             {feelings.map((feeling) => (
               <Button
                 key={feeling.label}
                 variant="ghost"
-                className="h-9 w-9 p-0"
+                className="h-16 p-1 flex flex-col items-center justify-center gap-1"
                 onClick={() => onSelect(feeling)}
-                title={feeling.label}
               >
-                <span className="text-lg">{feeling.emoji}</span>
+                <span className="text-xl">{feeling.emoji}</span>
+                <span className="text-xs">{feeling.label}</span>
               </Button>
             ))}
           </div>

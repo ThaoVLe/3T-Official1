@@ -53,15 +53,20 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
             type="button" 
             variant="ghost" 
             size="icon"
-            className="h-9 w-9"
+            className="h-10 w-10" // Increased size
             disabled={isUploading}
             asChild
           >
             <span>
-              <ImageIcon className="h-6 w-6" />
+              <ImageIcon className="h-8 w-8" /> {/* Increased size */}
             </span>
           </Button>
         </label>
+        {/* Placeholder for emotion selector */}
+        <div>
+          <p>How are you feeling?</p>
+          {/* Add emotion dropdown here */}
+        </div>
       </div>
     </div>
   );

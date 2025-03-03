@@ -37,15 +37,15 @@ html, body, #root {
   }
   
   .heading-1 {
-    @apply text-3xl font-bold tracking-tight text-foreground mb-4;
+    @apply text-[30px] font-bold tracking-tight text-foreground mb-4;
   }
   
   .heading-2 {
-    @apply text-2xl font-semibold text-foreground mb-3;
+    @apply text-[20px] font-semibold text-foreground mb-3;
   }
   
   .subtitle {
-    @apply text-lg text-muted-foreground mb-6;
+    @apply text-base text-muted-foreground mb-6;
   }
   
   .form-container {

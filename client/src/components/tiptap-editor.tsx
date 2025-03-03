@@ -89,16 +89,16 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg">
-      <div className="flex items-center gap-0.5 p-2 border-b bg-white">
-        <div className="flex items-center">
+    <div className="h-full flex flex-col bg-white rounded-lg w-full">
+      <div className="flex items-center gap-0.5 p-2 overflow-x-auto border-b bg-white w-full">
+        <div className="flex items-center flex-nowrap min-w-max">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBold().run()}
             data-active={editor.isActive("bold")}
-            className="h-8 px-2 data-[active=true]:bg-slate-100"
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
           >
             <Bold className="h-4 w-4" />
           </Button>
@@ -108,21 +108,20 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             size="sm"
             onClick={() => editor.chain().focus().toggleItalic().run()}
             data-active={editor.isActive("italic")}
-            className="h-8 px-2 data-[active=true]:bg-slate-100"
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
           >
             <Italic className="h-4 w-4" />
           </Button>
 
           <Separator orientation="vertical" className="mx-1 h-6" />
 
-          {/* Text Size Dropdown */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2"
+                className="h-8 w-8 px-0"
               >
                 <Type className="h-4 w-4" />
               </Button>
@@ -165,7 +164,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             size="sm"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             data-active={editor.isActive("bulletList")}
-            className="h-8 px-2 data-[active=true]:bg-slate-100"
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
           >
             <List className="h-4 w-4" />
           </Button>
@@ -175,7 +174,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             size="sm"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             data-active={editor.isActive("orderedList")}
-            className="h-8 px-2 data-[active=true]:bg-slate-100"
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
           >
             <ListOrdered className="h-4 w-4" />
           </Button>
@@ -193,19 +192,18 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               }
             }}
             data-active={editor.isActive("link")}
-            className="h-8 px-2 data-[active=true]:bg-slate-100"
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
           >
             <LinkIcon className="h-4 w-4" />
           </Button>
 
-          {/* Color Picker */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2"
+                className="h-8 w-8 px-0"
               >
                 <Palette className="h-4 w-4" />
               </Button>
@@ -225,14 +223,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </PopoverContent>
           </Popover>
 
-          {/* Emoji Picker */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2"
+                className="h-8 w-8 px-0"
               >
                 <Smile className="h-4 w-4" />
               </Button>
@@ -262,8 +259,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
         </div>
       </div>
 
-      <div className="flex-1">
-        <EditorContent editor={editor} className="h-full" />
+      <div className="flex-1 w-full">
+        <EditorContent editor={editor} className="h-full w-full" />
       </div>
     </div>
   );

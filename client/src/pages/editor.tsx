@@ -68,7 +68,6 @@ export default function Editor() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Create temporary URL for immediate preview
     const tempUrl = URL.createObjectURL(file);
     const currentUrls = form.getValues("mediaUrls") || [];
     const tempUrls = [...currentUrls, tempUrl];
@@ -91,7 +90,6 @@ export default function Editor() {
         xhr.addEventListener("load", () => {
           if (xhr.status === 200) {
             const { url } = JSON.parse(xhr.responseText);
-            // Replace temp URL with actual URL
             const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
             form.setValue("mediaUrls", finalUrls);
             setTempMediaUrls([]);
@@ -113,7 +111,6 @@ export default function Editor() {
 
     } catch (error) {
       console.error('Upload error:', error);
-      // Remove temp URL on error
       const currentUrls = form.getValues("mediaUrls") || [];
       const finalUrls = currentUrls.filter(url => url !== tempUrl);
       form.setValue("mediaUrls", finalUrls);
@@ -139,19 +136,20 @@ export default function Editor() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white w-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b bg-white sticky top-0 z-10">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
         <Input 
           {...form.register("title")}
-          className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 flex-1 max-w-2xl"
+          className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 flex-1 max-w-full sm:max-w-2xl"
           placeholder="Untitled Entry..."
         />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-2">
           <Button 
             variant="ghost" 
             size="sm"
             onClick={() => navigate("/")}
+            className="whitespace-nowrap"
           >
             <X className="h-4 w-4 mr-1" />
             Cancel
@@ -161,7 +159,7 @@ export default function Editor() {
             size="sm"
             onClick={form.handleSubmit((data) => mutation.mutate(data))}
             disabled={mutation.isPending}
-            className="bg-primary hover:bg-primary/90"
+            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
           >
             <Save className="h-4 w-4 mr-1" />
             {id ? "Update" : "Create"}
@@ -170,8 +168,8 @@ export default function Editor() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 flex flex-col overflow-auto">
-        <div className="flex-1 p-6">
+      <div className="flex-1 flex flex-col overflow-auto w-full">
+        <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
           <TipTapEditor 
             value={form.watch("content")} 
             onChange={(value) => form.setValue("content", value)} 
@@ -179,12 +177,12 @@ export default function Editor() {
         </div>
 
         {/* Media Controls - Fixed at bottom */}
-        <div className="border-t bg-white sticky bottom-0">
-          <div className="px-6 py-2">
+        <div className="border-t bg-white sticky bottom-0 w-full">
+          <div className="px-4 sm:px-6 py-2">
             <MediaRecorder onCapture={onMediaUpload} />
           </div>
           {form.watch("mediaUrls")?.length > 0 && (
-            <div className="px-6 pt-2 pb-4 overflow-x-auto">
+            <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
               <MediaPreview 
                 urls={form.watch("mediaUrls")} 
                 onRemove={onMediaRemove}

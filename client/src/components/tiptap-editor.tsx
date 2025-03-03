@@ -205,7 +205,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 size="sm"
                 className="h-8 w-8 px-0"
               >
-                <Palette className="h-4 w-4" />
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M8 12C8 10.3431 9.34315 9 11 9H13C14.6569 9 16 10.3431 16 12C16 13.6569 14.6569 15 13 15H11C9.34315 15 8 13.6569 8 12Z" fill="currentColor"/>
+                  </svg>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-2">

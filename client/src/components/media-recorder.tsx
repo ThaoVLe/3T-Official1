@@ -58,7 +58,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
             asChild
           >
             <span>
-              <ImageIcon className="h-5 w-5" />
+              <ImageIcon className="h-6 w-6" />
             </span>
           </Button>
         </label>

@@ -36,16 +36,26 @@ html, body, #root {
     @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
   }
   
+  /* Define consistent text sizes as CSS variables */
+  :root {
+    --large-text-size: 30px;
+    --medium-text-size: 20px;
+    --small-text-size: 16px; /* base text size */
+  }
+
   .heading-1 {
-    @apply text-[30px] font-bold tracking-tight text-foreground mb-4;
+    @apply font-bold tracking-tight text-foreground mb-4;
+    font-size: var(--large-text-size);
   }
   
   .heading-2 {
-    @apply text-[20px] font-semibold text-foreground mb-3;
+    @apply font-semibold text-foreground mb-3;
+    font-size: var(--medium-text-size);
   }
   
   .subtitle {
-    @apply text-base text-muted-foreground mb-6;
+    @apply text-muted-foreground mb-6;
+    font-size: var(--small-text-size);
   }
   
   .form-container {

@@ -1,9 +1,8 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, Tab } from "@/components/ui/tabs"; // Assuming a Tabs component exists
-import { Search } from "@/components/ui/search"; // Assuming a Search component exists
-
+import { SmileIcon } from "lucide-react";
 
 const feelings = [
   { emoji: "😊", label: "Happy" },
@@ -20,64 +19,46 @@ const feelings = [
   { emoji: "😬", label: "Awkward" },
 ];
 
-const activities = [ // Example activities
-  { label: "Walk in the park" },
-  { label: "Read a book" },
-  { label: "Listen to music" },
-];
-
 interface FeelingSelectorProps {
-  onSelect: (item: { emoji?: string; label: string }) => void;
-  selectedFeeling: { emoji?: string; label: string } | null;
+  onSelect: (feeling: { emoji: string; label: string }) => void;
+  selectedFeeling: { emoji: string; label: string } | null;
 }
 
 export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorProps) {
-  const [activeTab, setActiveTab] = useState("feelings");
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredItems = activeTab === "feelings"
-    ? feelings.filter(item => item.label.toLowerCase().includes(searchQuery.toLowerCase()))
-    : activities.filter(item => item.label.toLowerCase().includes(searchQuery.toLowerCase()));
-
-
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <Button 
+          variant="outline" 
           className="h-9 flex items-center gap-2 px-3 border rounded-full bg-slate-50"
           aria-label="Select feeling"
         >
           {selectedFeeling ? (
             <>
-              {selectedFeeling.emoji && <span className="text-lg">{selectedFeeling.emoji}</span>}
+              <span className="text-lg">{selectedFeeling.emoji}</span>
               <span className="text-sm font-medium">{selectedFeeling.label}</span>
             </>
           ) : (
             <>
-              {/* Replace with new icon */}
-              <span className="text-sm font-medium">How are you feeling/doing?</span>
+              <SmileIcon className="h-5 w-5 text-slate-600" />
+              <span className="text-sm font-medium">How are you feeling?</span>
             </>
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-3">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <Tab value="feelings" className="font-medium">Feelings</Tab>
-          <Tab value="activities" className="font-medium">Activities</Tab>
-        </Tabs>
-        <Search value={searchQuery} onChange={setSearchQuery} placeholder="Search..." />
-        <div className="space-y-3 mt-2">
-          <div className="grid grid-cols-1 gap-2"> {/* Adjusted to single column */}
-            {filteredItems.map((item) => (
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm text-center pb-1 border-b">How are you feeling today?</h4>
+          <div className="grid grid-cols-4 gap-2">
+            {feelings.map((feeling) => (
               <Button
-                key={item.label}
+                key={feeling.label}
                 variant="ghost"
                 className="h-16 p-1 flex flex-col items-center justify-center gap-1"
-                onClick={() => onSelect(item)}
+                onClick={() => onSelect(feeling)}
               >
-                {item.emoji && <span className="text-xl">{item.emoji}</span>}
-                <span className="text-xs">{item.label}</span>
+                <span className="text-xl">{feeling.emoji}</span>
+                <span className="text-xs">{feeling.label}</span>
               </Button>
             ))}
           </div>

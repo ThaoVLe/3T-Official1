@@ -42,7 +42,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           }
         },
         heading: {
-          levels: [1, 2, 3]
+          levels: [1, 2, 3],
+          HTMLAttributes: {
+            class: '',
+          }
         }
       }),
       TextAlign.configure({
@@ -58,7 +61,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4 prose prose-headings:my-2 prose-h1:text-xl prose-h2:text-lg prose-h3:text-base'
+        class: 'focus:outline-none min-h-[200px] px-4 prose prose-headings:my-2 prose-h1:text-[20px] prose-h1:font-normal prose-h2:text-[15px] prose-h2:font-normal prose-h3:text-base prose-h3:font-normal'
       }
     }
   });
@@ -128,30 +131,27 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               <div className="flex flex-col gap-1">
                 <Button
                   variant="ghost"
-                  className="justify-start text-left"
+                  className="justify-start text-left data-[active=true]:bg-slate-100"
                   onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                   data-active={editor.isActive('heading', { level: 1 })}
-                  className="data-[active=true]:bg-slate-100"
                 >
-                  <span className="text-xl">Large Text</span>
+                  <span className="text-[20px]">Large Text</span>
                 </Button>
                 <Button
                   variant="ghost"
-                  className="justify-start text-left"
+                  className="justify-start text-left data-[active=true]:bg-slate-100"
                   onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                   data-active={editor.isActive('heading', { level: 2 })}
-                  className="data-[active=true]:bg-slate-100"
                 >
-                  <span className="text-lg">Medium Text</span>
+                  <span className="text-[15px]">Medium Text</span>
                 </Button>
                 <Button
                   variant="ghost"
-                  className="justify-start text-left"
-                  onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                  data-active={editor.isActive('heading', { level: 3 })}
-                  className="data-[active=true]:bg-slate-100"
+                  className="justify-start text-left data-[active=true]:bg-slate-100"
+                  onClick={() => editor.chain().focus().setParagraph().run()}
+                  data-active={!editor.isActive('heading')}
                 >
-                  <span className="text-base">Small Text</span>
+                  <span>Normal Text</span>
                 </Button>
               </div>
             </PopoverContent>

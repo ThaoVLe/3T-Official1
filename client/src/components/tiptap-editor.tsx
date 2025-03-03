@@ -61,22 +61,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     editorProps: {
       attributes: {
         class: 'focus:outline-none min-h-[200px] px-4 prose prose-h1:text-[24px] prose-h1:font-normal prose-h2:text-[18px] prose-h2:font-normal prose-p:text-[11px] prose-p:font-normal'
-
-  // Add custom CSS to the editor to ensure consistent text sizing
-  ".ProseMirror h1": {
-    fontSize: "var(--large-text-size) !important",
-    fontWeight: "bold",
-    marginBottom: "1rem",
-  },
-  ".ProseMirror h2": {
-    fontSize: "var(--medium-text-size) !important",
-    fontWeight: "semibold",
-    marginBottom: "0.75rem",
-  },
-  ".ProseMirror p": {
-    fontSize: "var(--small-text-size) !important",
-  },
-
       }
     }
   });
@@ -150,7 +134,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                   data-active={editor.isActive('heading', { level: 1 })}
                 >
-                  <span style={{ fontSize: 'var(--large-text-size)' }}>Large Text</span>
+                  <span className="text-[30px]">Large Text</span>
                 </Button>
                 <Button
                   variant="ghost"
@@ -158,19 +142,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                   data-active={editor.isActive('heading', { level: 2 })}
                 >
-                  <span style={{ fontSize: 'var(--medium-text-size)' }}>Medium Text</span>
+                  <span className="text-[20px]">Medium Text</span>
                 </Button>
                 <Button
                   variant="ghost"
                   className="justify-start text-left data-[active=true]:bg-slate-100"
                   onClick={() => editor.chain().focus().setParagraph().run()}
                   data-active={!editor.isActive('heading')}
-                >
-                  <span style={{ fontSize: 'var(--small-text-size)' }}>Small Text</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="justify-start text-left data-[active=true]:bg-slate-100"
                 >
                   <span className="text-[11px]">Normal Text</span>
                 </Button>

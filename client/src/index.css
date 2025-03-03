@@ -14,7 +14,7 @@
 
 @layer components {
   .container-page {
-    @apply container mx-auto py-8 px-6 max-w-5xl;
+    @apply w-full mx-auto py-8 px-4 sm:px-6 md:container md:max-w-full lg:max-w-7xl;
   }
 
   .editor-page {
@@ -54,6 +54,29 @@
   }
   
   .drop-zone {
-    @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted;
+    @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted;
+  }
+  
+  .mobile-friendly-button {
+    @apply w-full sm:w-auto;
+  }
+  
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+  
+  .full-width {
+    @apply w-full min-w-0;
+  }
+}
+
+/* Additional responsive fixes */
+@media (max-width: 640px) {
+  .sm-stack {
+    @apply flex flex-col;
+  }
+  
+  .sm-full-width {
+    @apply w-full;
   }
 }

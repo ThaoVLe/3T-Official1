@@ -42,7 +42,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           }
         },
         heading: {
-          levels: [1, 2, 3],
+          levels: [1, 2],
           HTMLAttributes: {
             class: '',
           }
@@ -61,7 +61,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] px-4 prose prose-headings:my-2 prose-h1:text-[20px] prose-h1:font-normal prose-h2:text-[15px] prose-h2:font-normal prose-h3:text-base prose-h3:font-normal'
+        class: 'focus:outline-none min-h-[200px] px-4 prose prose-h1:text-[20px] prose-h1:font-normal prose-h2:text-[15px] prose-h2:font-normal prose-p:text-base'
       }
     }
   });
@@ -180,33 +180,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                     className="h-6 w-6 p-0"
                     style={{ backgroundColor: color }}
                     onClick={() => editor.chain().focus().setColor(color).run()}
-                  />
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          {/* Highlight Color */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2"
-              >
-                <Highlighter className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-2">
-              <div className="grid grid-cols-10 gap-1">
-                {colors.map((color) => (
-                  <Button
-                    key={color}
-                    variant="ghost"
-                    className="h-6 w-6 p-0"
-                    style={{ backgroundColor: color }}
-                    onClick={() => editor.chain().focus().toggleHighlight({ color }).run()}
                   />
                 ))}
               </div>

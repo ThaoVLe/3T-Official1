@@ -1,31 +1,51 @@
+
+import * as React from "react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Plus, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { BottomNavigation } from "./bottom-navigation";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
-import { Link } from "wouter";
-import { SidebarNav } from "./sidebar-nav";
-import { Input } from "@/components/ui/input";
-import * as React from "react";
-
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-const layoutStyle = {
-  width: '100vw',
-  height: '100vh',
-  overflowX: 'hidden'
-}
-
 export function Layout({ children }: LayoutProps) {
-  return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen bg-background" style={layoutStyle}>
+  // Check if the screen is small (mobile)
+  const [isMobile, setIsMobile] = React.useState(false);
+  
+  React.useEffect(() => {
+    // Check initial size
+    setIsMobile(window.innerWidth < 768);
+    
+    // Add resize listener
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile ? (
+    // Mobile layout with bottom navigation
+    <div className="min-h-screen bg-background flex flex-col">
+      <main className="flex-1 pb-16">
+        {children}
+      </main>
+      <BottomNavigation />
+    </div>
+  ) : (
+    // Desktop layout with sidebar
+    <SidebarProvider>
+      <div className="grid lg:grid-cols-[280px_1fr] min-h-screen">
         {/* Sidebar */}
         <Sidebar className="border-r">
           <SidebarHeader className="border-b px-2 py-4">
@@ -35,6 +55,7 @@ export function Layout({ children }: LayoutProps) {
               </h1>
             </Link>
           </SidebarHeader>
+          
           <SidebarContent>
             <div className="space-y-4 py-4">
               <div className="px-3 py-2">
@@ -46,16 +67,15 @@ export function Layout({ children }: LayoutProps) {
                 </Link>
               </div>
               <div className="px-3 py-2">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search entries..." className="pl-8" />
-                </div>
-              </div>
-              <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-                  Navigation
-                </h2>
-                <SidebarNav />
+                <form className="w-full">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search entries..."
+                      className="pl-8"
+                    />
+                  </div>
+                </form>
               </div>
             </div>
           </SidebarContent>
@@ -69,5 +89,5 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </div>
     </SidebarProvider>
-  )
+  );
 }

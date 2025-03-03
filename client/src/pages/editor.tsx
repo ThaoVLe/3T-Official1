@@ -184,10 +184,16 @@ export default function Editor() {
         <div className="border-t bg-white sticky bottom-0 w-full">
           <div className="px-4 sm:px-6 py-3 flex items-center gap-4">
             <MediaRecorder onCapture={onMediaUpload} />
-            <FeelingSelector 
-              selectedFeeling={form.getValues("feeling")}
-              onSelect={(feeling) => form.setValue("feeling", feeling)}
-            />
+            <div className="flex items-center gap-2">
+              <span className="flex items-center text-muted-foreground">
+                <span className="mr-1">😊</span>
+                Feeling
+              </span>
+              <FeelingSelector 
+                selectedFeeling={form.getValues("feeling")}
+                onSelect={(feeling) => form.setValue("feeling", feeling)}
+              />
+            </div>
           </div>
           {form.watch("mediaUrls")?.length > 0 && (
             <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">

@@ -13,7 +13,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="p-8 space-y-4">
+      <div className="container-page space-y-4">
         <div className="flex justify-between items-center mb-8">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />

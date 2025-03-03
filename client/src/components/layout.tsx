@@ -37,7 +37,7 @@ export function Layout({ children }: LayoutProps) {
   return isMobile ? (
     // Mobile layout with bottom navigation
     <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-16 mx-auto w-full max-w-7xl">
         {children}
       </main>
       <BottomNavigation />
@@ -48,7 +48,7 @@ export function Layout({ children }: LayoutProps) {
       <div className="grid lg:grid-cols-[280px_1fr] min-h-screen">
         {/* Sidebar */}
         <Sidebar className="border-r">
-          <SidebarHeader className="border-b px-2 py-4">
+          <SidebarHeader className="border-b px-4 py-4">
             <Link href="/">
               <h1 className="font-semibold text-xl cursor-pointer bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 My Diary

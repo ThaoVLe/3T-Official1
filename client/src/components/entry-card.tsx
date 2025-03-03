@@ -110,3 +110,58 @@ export default function EntryCard({ entry }: EntryCardProps) {
     </Card>
   );
 }
+import React from "react";
+import { Link } from "wouter";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Button } from "@/components/ui/button";
+import type { DiaryEntry } from "@shared/schema";
+import { formatDistanceToNow } from "date-fns";
+
+interface EntryCardProps {
+  entry: DiaryEntry;
+}
+
+export default function EntryCard({ entry }: EntryCardProps) {
+  const hasMedia = entry.mediaUrls && entry.mediaUrls.length > 0;
+  
+  return (
+    <Card className="overflow-hidden flex flex-col h-full transition-all hover:shadow-md">
+      {hasMedia && (
+        <div className="relative">
+          <AspectRatio ratio={16 / 9}>
+            <img
+              src={entry.mediaUrls[0]}
+              alt={entry.title}
+              className="w-full h-full object-cover"
+            />
+          </AspectRatio>
+        </div>
+      )}
+      <CardContent className={`flex-grow p-4 ${hasMedia ? 'pt-4' : 'pt-5'}`}>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-lg line-clamp-1">{entry.title}</h3>
+            {entry.feeling && (
+              <span className="text-xl">{entry.feeling.emoji}</span>
+            )}
+          </div>
+          <div 
+            className="text-muted-foreground text-sm line-clamp-3 h-[4.5em] overflow-hidden"
+            dangerouslySetInnerHTML={{ 
+              __html: entry.content.replace(/<[^>]*>/g, ' ').substring(0, 120) + '...' 
+            }}
+          />
+        </div>
+      </CardContent>
+      <CardFooter className="p-4 pt-0 flex justify-between items-center">
+        <span className="text-xs text-muted-foreground">
+          {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })}
+        </span>
+        <Link href={`/entry/${entry.id}`}>
+          <Button variant="outline" size="sm">View</Button>
+        </Link>
+      </CardFooter>
+    </Card>
+  );
+}

@@ -14,16 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
 import React, { useState } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
-const FeelingSelector = ({ selectedFeeling, onSelect }) => {
-  const feelings = ["happy", "sad", "angry", "neutral"];
-  return (
-    <select value={selectedFeeling} onChange={(e) => onSelect(e.target.value)}>
-      {feelings.map((feeling) => (
-        <option key={feeling} value={feeling}>{feeling}</option>
-      ))}
-    </select>
-  );
-};
 
 
 export default function Editor() {

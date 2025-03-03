@@ -83,9 +83,17 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
   };
 
-  const setTextStyle = (size: 'large' | 'medium' | 'small') => {
-    let fontSize = size === 'large' ? '1.5em' : size === 'medium' ? '1.25em' : '1em';
-    editor.chain().focus().setStyle({ fontSize }).run();
+  const setTextSize = (size: 'large' | 'medium' | 'small') => {
+    const sizes = {
+      large: '1.5em',
+      medium: '1.25em',
+      small: '1em'
+    };
+
+    editor.chain()
+      .focus()
+      .setMark('textStyle', { fontSize: sizes[size] })
+      .run();
   };
 
   return (
@@ -131,21 +139,21 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
-                  onClick={() => setTextStyle('large')}
+                  onClick={() => setTextSize('large')}
                 >
                   <span className="text-xl">Large Text</span>
                 </Button>
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
-                  onClick={() => setTextStyle('medium')}
+                  onClick={() => setTextSize('medium')}
                 >
                   <span className="text-lg">Medium Text</span>
                 </Button>
                 <Button
                   variant="ghost"
                   className="justify-start text-left"
-                  onClick={() => setTextStyle('small')}
+                  onClick={() => setTextSize('small')}
                 >
                   <span className="text-base">Small Text</span>
                 </Button>

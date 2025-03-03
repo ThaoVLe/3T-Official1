@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { SmileIcon, X } from "lucide-react";
+import { ImageIcon, X } from "lucide-react";
 
 const feelings = [
   { emoji: "😊", label: "Happy" },
@@ -68,7 +68,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           {selectedFeeling ? (
             <span className="text-xl">{selectedFeeling.emoji}</span>
           ) : (
-            <SmileIcon className="h-6 w-6" />
+            <ImageIcon className="h-6 w-6" />
           )}
         </Button>
       </PopoverTrigger>

@@ -289,9 +289,15 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               ))}
             </PopoverContent>
           </Popover>
+          <Separator orientation="vertical" className="mx-1 h-6" />
         </div>
       </div>
-
+      <div className="flex items-center p-2 border-b bg-white">
+        <MediaRecorder
+          onCapture={handleMediaUpload}
+          className="flex-grow-0"
+        />
+      </div>
       <div className="flex-1 w-full">
         <EditorContent editor={editor} className="h-full w-full" />
       </div>

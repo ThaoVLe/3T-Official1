@@ -52,6 +52,11 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           HTMLAttributes: {
             class: 'font-bold',
           }
+        },
+        paragraph: {
+          HTMLAttributes: {
+            class: '',
+          }
         }
       }),
       CodeBlockLowlight,
@@ -116,6 +121,21 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
   };
 
+  const setParagraphStyle = (size: string) => {
+    editor.chain().focus().setParagraph().run();
+
+    // Remove existing size classes
+    editor.chain().focus().removeClass('text-xl').removeClass('text-lg').removeClass('text-base').run();
+
+    // Add new size class
+    if (size === 'large') {
+      editor.chain().focus().addClass('text-xl').run();
+    } else if (size === 'medium') {
+      editor.chain().focus().addClass('text-lg').run();
+    }
+    // 'small' is default text-base, no need to add class
+  };
+
   return (
     <div className="h-full flex flex-col bg-white rounded-lg">
       <div className="flex items-center gap-0.5 p-2 border-b bg-white">
@@ -165,11 +185,51 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                     onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
                     data-active={editor.isActive('heading', { level })}
                   >
-                    <span className={`${level === 1 ? 'text-xl' : level === 2 ? 'text-lg' : 'text-base'}`}>
+                    <span className={`${level === 1 ? 'text-3xl' : level === 2 ? 'text-2xl' : 'text-xl'}`}>
                       Heading {level}
                     </span>
                   </Button>
                 ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Paragraph Styles Dropdown */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 flex items-center gap-1"
+              >
+                <Type className="h-4 w-4" />
+                <span className="text-xs">Paragraph</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-2">
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  className="justify-start text-left"
+                  onClick={() => setParagraphStyle('large')}
+                >
+                  <span className="text-xl">Large Text</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="justify-start text-left"
+                  onClick={() => setParagraphStyle('medium')}
+                >
+                  <span className="text-lg">Medium Text</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="justify-start text-left"
+                  onClick={() => setParagraphStyle('small')}
+                >
+                  <span className="text-base">Small Text</span>
+                </Button>
               </div>
             </PopoverContent>
           </Popover>

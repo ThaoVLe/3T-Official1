@@ -289,7 +289,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               ))}
             </PopoverContent>
           </Popover>
-          <Separator orientation="vertical" className="mx-1 h-6" />
         </div>
       </div>
 

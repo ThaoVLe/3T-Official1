@@ -36,7 +36,7 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
   };
 
   return (
-    <div className={`flex items-center ${className || ''}`}>
+    <div className="flex items-center">
       <input
         ref={fileInputRef}
         type="file"

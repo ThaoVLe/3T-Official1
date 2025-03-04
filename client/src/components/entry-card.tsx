@@ -1,11 +1,11 @@
 import { Link } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share } from "lucide-react";
+import { Edit2, Trash2, Share2 } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState } from 'react';
 
@@ -110,7 +110,11 @@ export default function EntryCard({ entry }: EntryCardProps) {
             }}
             className="hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30"
           >
-            <Share className="h-4 w-4"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
             <span className="sr-only">Share</span>
           </Button>
           <Link href={`/edit/${entry.id}`}>

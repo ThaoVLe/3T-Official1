@@ -78,7 +78,8 @@ export default function EntryCard({ entry }: EntryCardProps) {
                 <>
                   <span className="mx-4"></span> {/* 4 blank spaces */}
                   <span>-</span>
-                  <span className="ml-1">at {entry.location}</span>
+                  <span className="ml-1">at</span>
+                  <span className="ml-1">{entry.location}</span>
                   <span className="ml-1">📍</span>
                 </>
               )}

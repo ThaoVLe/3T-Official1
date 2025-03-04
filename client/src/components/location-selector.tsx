@@ -14,9 +14,43 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
   const getLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const location = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-          onSelect(location);
+        async (position) => {
+          try {
+            // Try to reverse geocode the coordinates to get a human-readable location
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1`
+            );
+            
+            if (response.ok) {
+              const data = await response.json();
+              // Get a simplified location like "City, Country" or fallback to coordinates
+              let locationText = "Unknown location";
+              
+              if (data.address) {
+                const city = data.address.city || data.address.town || data.address.village || data.address.hamlet;
+                const country = data.address.country;
+                
+                if (city && country) {
+                  locationText = `${city}, ${country}`;
+                } else if (city) {
+                  locationText = city;
+                } else if (country) {
+                  locationText = country;
+                }
+              }
+              
+              onSelect(locationText);
+            } else {
+              // Fallback to coordinates if reverse geocoding fails
+              const location = `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+              onSelect(location);
+            }
+          } catch (error) {
+            console.error("Error reverse geocoding location:", error);
+            // Fallback to coordinates
+            const location = `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+            onSelect(location);
+          }
         },
         (error) => {
           console.error("Error getting location:", error);

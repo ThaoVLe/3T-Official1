@@ -25,10 +25,22 @@ export default function Editor() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: entry } = useQuery<DiaryEntry>({
+  const { data: entry, isLoading: isLoadingEntry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
     enabled: !!id,
+    onSuccess: (data) => {
+      console.log("Successfully loaded entry:", data);
+    },
+    onError: (error) => {
+      console.error("Error loading entry:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load entry. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   const form = useForm<InsertEntry>({
@@ -44,32 +56,49 @@ export default function Editor() {
 
   React.useEffect(() => {
     if (entry) {
+      console.log("Resetting form with entry:", entry);
       form.reset({
-        title: entry.title,
-        content: entry.content,
+        title: entry.title || "",
+        content: entry.content || "",
         mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling, 
-        location: entry.location, // Added location to reset
+        feeling: entry.feeling || null, 
+        location: entry.location || null,
       });
     }
   }, [entry, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
-      if (id) {
-        await apiRequest("PUT", `/api/entries/${id}`, data);
-      } else {
-        await apiRequest("POST", "/api/entries", data);
+      setIsSubmitting(true);
+      try {
+        if (id) {
+          return await apiRequest("PUT", `/api/entries/${id}`, data);
+        } else {
+          return await apiRequest("POST", "/api/entries", data);
+        }
+      } finally {
+        setIsSubmitting(false);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/entries/${id}`] });
+      }
       toast({
         title: "Success",
         description: id ? "Entry updated" : "Entry created",
       });
       navigate("/");
     },
+    onError: (error) => {
+      console.error("Error saving entry:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save entry. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   const onMediaUpload = async (file: File) => {

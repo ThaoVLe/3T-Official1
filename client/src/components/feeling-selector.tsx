@@ -70,7 +70,9 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           variant="ghost" 
           className="h-10 px-3 rounded-full flex items-center"
           aria-label="Select feeling"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             // Dismiss keyboard when feeling selector is opened
             if (document.activeElement instanceof HTMLElement) {
               document.activeElement.blur();

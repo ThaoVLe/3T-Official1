@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
-import { Dialog, DialogContent, DialogTitle, DialogHeader } from './ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from './ui/dialog';
 import { Input } from './ui/input';
 import { Loader2, MapPin, Search } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 interface Location {
   lat: number;
@@ -270,6 +271,10 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
     });
   };
 
+  const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
+    updateLocationFromPlace(place);
+  };
+
   // Initialize map
   useEffect(() => {
     if (window.google?.maps && mapRef.current && showMap) {
@@ -376,7 +381,8 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
       <Dialog open={showMap} onOpenChange={setShowMap}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="sr-only">Select Location</DialogTitle>
+            <DialogTitle>Select Location on Map</DialogTitle>
+            <DialogDescription>Search for a location or click on the map to select a point</DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-2 mb-4">
             <Input

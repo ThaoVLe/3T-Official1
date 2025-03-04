@@ -27,8 +27,8 @@ interface TipTapEditorProps {
   value: string;
   onChange: (value: string) => void;
   onMediaButtonClick?: () => void; // Added callback for media button
-  onEmotionButtonClick?: () => void; // Added callback for emotion button
-  onLocationButtonClick?: () => void; // Added callback for location button
+  onEmotionButtonClick?: (e: React.MouseEvent) => void; // Added callback for emotion button
+  onLocationButtonClick?: (e: React.MouseEvent) => void; // Added callback for location button
 }
 
 export default function TipTapEditor({ value, onChange, onMediaButtonClick, onEmotionButtonClick, onLocationButtonClick }: TipTapEditorProps) {

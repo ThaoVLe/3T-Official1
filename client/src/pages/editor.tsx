@@ -203,8 +203,18 @@ export default function Editor() {
             value={form.watch("content")}
             onChange={(value) => form.setValue("content", value)}
             onMediaButtonClick={() => fileInputRef.current?.click()}
-            onEmotionButtonClick={() => setShowEmotionSelector(true)}
-            onLocationButtonClick={() => setShowLocationSelector(true)}
+            onEmotionButtonClick={(e) => {
+              e?.preventDefault();
+              e?.stopPropagation();
+              setShowEmotionSelector(true);
+              setShowLocationSelector(false);
+            }}
+            onLocationButtonClick={(e) => {
+              e?.preventDefault();
+              e?.stopPropagation();
+              setShowLocationSelector(true);
+              setShowEmotionSelector(false);
+            }}
           />
         </div>
 

@@ -25,6 +25,8 @@ export default function Editor() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
+  const [isEmotionSheetOpen, setIsEmotionSheetOpen] = useState<boolean>(false);
+  const [isLocationSheetOpen, setIsLocationSheetOpen] = useState<boolean>(false);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -38,7 +40,7 @@ export default function Editor() {
       content: "",
       mediaUrls: [],
       feeling: null, 
-      location: null, // Added location to default values
+      location: null, 
     },
   });
 
@@ -49,7 +51,7 @@ export default function Editor() {
         content: entry.content,
         mediaUrls: entry.mediaUrls || [],
         feeling: entry.feeling, 
-        location: entry.location, // Added location to reset
+        location: entry.location, 
       });
     }
   }, [entry, form]);
@@ -190,6 +192,9 @@ export default function Editor() {
           <TipTapEditor 
             value={form.watch("content")} 
             onChange={(value) => form.setValue("content", value)} 
+            onMediaButtonClick={() => document.getElementById('fileUpload')?.click()}
+            onEmotionButtonClick={() => setIsEmotionSheetOpen(true)}
+            onLocationButtonClick={() => setIsLocationSheetOpen(true)}
           />
         </div>
 

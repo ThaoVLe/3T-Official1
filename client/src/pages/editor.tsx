@@ -15,7 +15,6 @@ import { Save, X } from "lucide-react";
 import React, { useState, useRef } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
-import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 
 
 export default function Editor() {
@@ -29,7 +28,7 @@ export default function Editor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
-  
+
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -215,7 +214,7 @@ export default function Editor() {
             <MediaRecorder onCapture={onMediaUpload} />
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2 items-center">
-                
+
               </div>
             </div>
           </div>
@@ -229,48 +228,38 @@ export default function Editor() {
               />
             </div>
           )}
-          
-          {/* Emotion Selector Dialog */}
-          <Dialog open={showEmotionSelector} onOpenChange={setShowEmotionSelector}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Choose an emotion</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <FeelingSelector 
-                  selectedFeeling={form.watch("feeling")} 
-                  onSelect={(feeling) => {
-                    form.setValue("feeling", feeling);
-                    setShowEmotionSelector(false);
-                  }} 
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+
+          {/* Emotion Selector */}
+          {showEmotionSelector && (
+            <div className="absolute right-0 top-full z-50 mt-1 bg-white rounded-md shadow-md p-4 border border-gray-200">
+              <FeelingSelector
+                onSelect={(feeling) => {
+                  form.setValue("feeling", feeling);
+                  setShowEmotionSelector(false);
+                }}
+                selectedFeeling={form.watch("feeling")}
+              />
+            </div>
+          )}
 
           {/* Location Selector */}
-          <Dialog open={showLocationSelector} onOpenChange={setShowLocationSelector}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Choose a location</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <LocationSelector
-                  onLocationSelect={(location) => {
-                    if (location?.address) {
-                      form.setValue("location", location.address);
-                    }
-                    setShowLocationSelector(false);
-                  }}
-                  defaultLocation={form.watch("location") ? { 
-                    lat: 0, 
-                    lng: 0, 
-                    address: form.watch("location") 
-                  } : undefined}
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+          {showLocationSelector && (
+            <div className="absolute right-0 top-full z-50 mt-1 bg-white rounded-md shadow-md p-4 border border-gray-200">
+              <LocationSelector
+                onLocationSelect={(location) => {
+                  if (location?.address) {
+                    form.setValue("location", location.address);
+                  }
+                  setShowLocationSelector(false);
+                }}
+                defaultLocation={form.watch("location") ? { 
+                  lat: 0, 
+                  lng: 0, 
+                  address: form.watch("location") 
+                } : undefined}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

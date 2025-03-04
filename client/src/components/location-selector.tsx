@@ -22,111 +22,160 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<{lat: number, lng: number} | null>(null);
-  const mapRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const googleMapsLoaded = useRef(false);
   
+  // Initialize map when the container is available and Google Maps is loaded
+  const initializeMap = useCallback(() => {
+    if (!mapContainerRef.current || !window.google || !position) return;
+    
+    try {
+      // Create map instance
+      const mapOptions: google.maps.MapOptions = {
+        center: position,
+        zoom: 15,
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: true,
+      };
+      
+      const map = new window.google.maps.Map(mapContainerRef.current, mapOptions);
+      mapRef.current = map;
+      
+      // Add marker at the current position
+      const marker = new window.google.maps.Marker({
+        position: position,
+        map: map,
+        draggable: true,
+        animation: window.google.maps.Animation.DROP,
+      });
+      markerRef.current = marker;
+      
+      // Update position when marker is dragged
+      marker.addListener("dragend", () => {
+        if (marker.getPosition()) {
+          const newPos = marker.getPosition();
+          if (newPos) {
+            setPosition({
+              lat: newPos.lat(),
+              lng: newPos.lng()
+            });
+          }
+        }
+      });
+      
+      // Add click listener to map to allow position selection
+      map.addListener("click", (e: google.maps.MapMouseEvent) => {
+        if (!e.latLng) return;
+        
+        // Update marker position
+        if (markerRef.current) {
+          markerRef.current.setPosition(e.latLng);
+        } else {
+          // Create marker if it doesn't exist
+          const marker = new window.google.maps.Marker({
+            position: e.latLng,
+            map: map,
+            draggable: true,
+          });
+          markerRef.current = marker;
+          
+          // Update position when marker is dragged
+          marker.addListener("dragend", () => {
+            if (marker.getPosition()) {
+              const newPos = marker.getPosition();
+              if (newPos) {
+                setPosition({
+                  lat: newPos.lat(),
+                  lng: newPos.lng()
+                });
+              }
+            }
+          });
+        }
+        
+        // Update position state
+        setPosition({
+          lat: e.latLng.lat(),
+          lng: e.latLng.lng()
+        });
+      });
+      
+      console.log("Google Maps initialized successfully");
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      toast.error("Failed to initialize map");
+    }
+  }, [position]);
+
+  // Handle Get Location button click
+  const getLocation = useCallback(() => {
+    setIsLoading(true);
+    setIsOpen(true);
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const newPosition = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          };
+          setPosition(newPosition);
+          console.log("Got position:", newPosition);
+          setIsLoading(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("Failed to get your location. Please try again or select manually.");
+          // Default to a random position (New York) if geolocation fails
+          setPosition({ lat: 40.7128, lng: -74.0060 });
+          setIsLoading(false);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      toast.error("Geolocation is not supported by your browser");
+      // Default to a fallback position
+      setPosition({ lat: 40.7128, lng: -74.0060 });
+      setIsLoading(false);
+    }
+  }, []);
+
   // Load Google Maps script
   useEffect(() => {
-    if (isOpen && !googleMapsLoaded.current) {
+    if (isOpen && !googleMapsLoaded.current && !window.google) {
+      console.log("Loading Google Maps script...");
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = () => {
+        console.log("Google Maps script loaded");
         googleMapsLoaded.current = true;
-        initializeMap();
+        if (position) {
+          initializeMap();
+        }
       };
-      document.body.appendChild(script);
+      document.head.appendChild(script);
       
       return () => {
         // Clean up script if component unmounts before script loads
         if (!googleMapsLoaded.current) {
-          document.body.removeChild(script);
+          document.head.removeChild(script);
         }
       };
     }
-  }, [isOpen]);
+  }, [isOpen, initializeMap]);
   
   // Initialize map when position is available and Google Maps is loaded
   useEffect(() => {
-    if (isOpen && position && googleMapsLoaded.current) {
+    if (isOpen && position && window.google) {
+      console.log("Initializing map with position:", position);
       initializeMap();
     }
-  }, [position, isOpen]);
-
-  const initializeMap = () => {
-    if (!position || !mapContainerRef.current || !window.google) return;
-    
-    // Create map
-    const map = new window.google.maps.Map(mapContainerRef.current, {
-      center: position,
-      zoom: 14,
-    });
-    
-    // Create marker
-    const marker = new window.google.maps.Marker({
-      position: position,
-      map: map,
-      draggable: true,
-    });
-    
-    // Set refs
-    mapRef.current = map;
-    markerRef.current = marker;
-    
-    // Add event listeners
-    map.addListener('click', (e: any) => {
-      if (e.latLng) {
-        const newPos = {
-          lat: e.latLng.lat(),
-          lng: e.latLng.lng()
-        };
-        setPosition(newPos);
-        marker.setPosition(newPos);
-      }
-    });
-    
-    marker.addListener('dragend', () => {
-      if (marker.getPosition()) {
-        setPosition({
-          lat: marker.getPosition().lat(),
-          lng: marker.getPosition().lng()
-        });
-      }
-    });
-  };
-  
-  // Handle getting current location
-  const getLocation = () => {
-    setIsLoading(true);
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setPosition({ lat: latitude, lng: longitude });
-          setIsOpen(true);
-          setIsLoading(false);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          toast.error("Failed to get your location. Using default location.");
-          // Set a default position if geolocation fails
-          setPosition({ lat: 40.7128, lng: -74.006 }); // New York as default
-          setIsOpen(true);
-          setIsLoading(false);
-        }
-      );
-    } else {
-      toast.error("Geolocation is not supported by your browser");
-      // Set a default position if geolocation is not supported
-      setPosition({ lat: 40.7128, lng: -74.006 }); // New York as default
-      setIsOpen(true);
-      setIsLoading(false);
-    }
-  };
+  }, [position, isOpen, initializeMap]);
 
   const reverseGeocode = async () => {
     if (!position || !window.google) return;
@@ -167,6 +216,14 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
     }
   };
 
+  // Close dialog and clean up
+  const handleCloseDialog = () => {
+    setIsOpen(false);
+    // Reset map and marker references when dialog closes
+    mapRef.current = null;
+    markerRef.current = null;
+  };
+
   return (
     <>
       <Button 
@@ -185,51 +242,50 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
         </div>
       </Button>
 
-      {isOpen && (
-        <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-            <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg z-50 w-[90vw] max-w-2xl max-h-[85vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <Dialog.Title className="text-xl font-semibold">
-                  Select Location
-                </Dialog.Title>
-                <Dialog.Close asChild>
-                  <button className="rounded-full p-1 hover:bg-gray-100">
-                    <X className="h-5 w-5" />
-                  </button>
-                </Dialog.Close>
-              </div>
+      {/* Modal dialog for map */}
+      <Dialog.Root open={isOpen} onOpenChange={handleCloseDialog}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg z-50 w-[90vw] max-w-2xl max-h-[85vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <Dialog.Title className="text-xl font-semibold">
+                Select Location
+              </Dialog.Title>
+              <Dialog.Close asChild>
+                <button className="rounded-full p-1 hover:bg-gray-100">
+                  <X className="h-5 w-5" />
+                </button>
+              </Dialog.Close>
+            </div>
 
-              <div className="mb-4">
-                <p className="text-gray-600 text-sm mb-4">
-                  Click on the map to select a location or drag the marker to adjust the position.
-                </p>
+            <div className="mb-4">
+              <p className="text-gray-600 text-sm mb-4">
+                Click on the map to select a location or drag the marker to adjust the position.
+              </p>
 
-                <div 
-                  ref={mapContainerRef}
-                  className="w-full h-[400px] relative border rounded-md overflow-hidden"
-                ></div>
-              </div>
+              <div 
+                ref={mapContainerRef}
+                className="w-full h-[400px] relative border rounded-md overflow-hidden"
+              ></div>
+            </div>
 
-              <div className="flex justify-end gap-2 mt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={confirmLocation}
-                  disabled={isLoading || !position}
-                >
-                  {isLoading ? "Confirming..." : "Confirm Location"}
-                </Button>
-              </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
-      )}
+            <div className="flex justify-end gap-2 mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={confirmLocation}
+                disabled={isLoading || !position}
+              >
+                {isLoading ? "Confirming..." : "Confirm Location"}
+              </Button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }

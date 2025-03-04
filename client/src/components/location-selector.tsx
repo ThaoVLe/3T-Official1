@@ -17,7 +17,7 @@ interface LocationSelectorProps {
 }
 
 export function LocationSelector({ onLocationSelect, defaultLocation }: LocationSelectorProps) {
-  const [showMap, setShowMap] = useState(false);
+  const [showMap, setShowMap] = useState(true);
   const [location, setLocation] = useState<Location | null>(defaultLocation || null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

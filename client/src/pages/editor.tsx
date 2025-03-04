@@ -12,10 +12,10 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
-// Placeholder import - replace with actual component import
 import { LocationSelector } from "@/components/location-selector";
+import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@/components/ui/dialog";
 
 
 export default function Editor() {
@@ -23,10 +23,13 @@ export default function Editor() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [expandedMedia, setExpandedMedia] = useState<string | null>(null);
+  const [showLocationSelector, setShowLocationSelector] = useState(false);
+  const [showEmotionSelector, setShowEmotionSelector] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
-  const [isEmotionSheetOpen, setIsEmotionSheetOpen] = useState<boolean>(false);
-  const [isLocationSheetOpen, setIsLocationSheetOpen] = useState<boolean>(false);
+  
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -145,6 +148,8 @@ export default function Editor() {
     form.setValue("mediaUrls", newUrls);
   };
 
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   return (
     <div className="min-h-screen flex flex-col bg-white w-full">
       {/* Header */}
@@ -189,12 +194,18 @@ export default function Editor() {
       {/* Content Area */}
       <div className="flex-1 flex flex-col overflow-auto w-full">
         <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
-          <TipTapEditor 
-            value={form.watch("content")} 
-            onChange={(value) => form.setValue("content", value)} 
-            onMediaButtonClick={() => document.getElementById('fileUpload')?.click()}
-            onEmotionButtonClick={() => setIsEmotionSheetOpen(true)}
-            onLocationButtonClick={() => setIsLocationSheetOpen(true)}
+          <input type="file" id="fileUpload" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              onMediaUpload(file);
+            }
+          }} />
+          <TipTapEditor
+            value={form.watch("content")}
+            onChange={(value) => form.setValue("content", value)}
+            onMediaButtonClick={() => fileInputRef.current?.click()}
+            onEmotionButtonClick={() => setShowEmotionSelector(true)}
+            onLocationButtonClick={() => setShowLocationSelector(true)}
           />
         </div>
 
@@ -204,17 +215,7 @@ export default function Editor() {
             <MediaRecorder onCapture={onMediaUpload} />
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2 items-center">
-                <FeelingSelector
-                  selectedFeeling={form.getValues("feeling")}
-                  onSelect={(feeling) => form.setValue("feeling", feeling)}
-                />
-                <LocationSelector
-                  selectedLocation={form.getValues("location")}
-                  onSelect={(location) => {
-                    console.log("Location selected:", location);
-                    form.setValue("location", location);
-                  }}
-                />
+                
               </div>
             </div>
           </div>
@@ -228,6 +229,48 @@ export default function Editor() {
               />
             </div>
           )}
+          
+          {/* Emotion Selector Dialog */}
+          <Dialog open={showEmotionSelector} onOpenChange={setShowEmotionSelector}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Choose an emotion</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <FeelingSelector 
+                  selectedFeeling={form.watch("feeling")} 
+                  onSelect={(feeling) => {
+                    form.setValue("feeling", feeling);
+                    setShowEmotionSelector(false);
+                  }} 
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Location Selector */}
+          <Dialog open={showLocationSelector} onOpenChange={setShowLocationSelector}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Choose a location</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <LocationSelector
+                  onLocationSelect={(location) => {
+                    if (location?.address) {
+                      form.setValue("location", location.address);
+                    }
+                    setShowLocationSelector(false);
+                  }}
+                  defaultLocation={form.watch("location") ? { 
+                    lat: 0, 
+                    lng: 0, 
+                    address: form.watch("location") 
+                  } : undefined}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

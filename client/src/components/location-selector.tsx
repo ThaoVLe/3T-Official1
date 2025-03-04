@@ -1,33 +1,40 @@
-
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Map as MapIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import * as Dialog from '@radix-ui/react-dialog';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
 interface LocationSelectorProps {
   onSelect: (location: string) => void;
   selectedLocation: string | null;
 }
 
+const containerStyle = {
+  width: '100%',
+  height: '400px'
+};
+
+// You need to replace this with your own Google Maps API key
+// This is a placeholder that won't work
+const GOOGLE_MAPS_API_KEY = "AIzaSyC9dQtU2hMMBb-xZ_KlScDODn3A";
+
 export function LocationSelector({ onSelect, selectedLocation }: LocationSelectorProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState<[number, number] | null>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<any>(null);
-  const markerRef = useRef<any>(null);
-  
+  const [position, setPosition] = useState<google.maps.LatLngLiteral | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
+
   // Handle getting current location
   const getLocation = () => {
     setIsLoading(true);
-    
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setPosition([latitude, longitude]);
+          setPosition({ lat: latitude, lng: longitude });
           setIsOpen(true);
           setIsLoading(false);
         },
@@ -36,7 +43,7 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
           toast.error("Failed to get your location. Please try again.");
           setIsLoading(false);
           // Set a default position if geolocation fails
-          setPosition([51.505, -0.09]); // London as default
+          setPosition({ lat: 40.7128, lng: -74.006 }); // New York as default
           setIsOpen(true);
         }
       );
@@ -44,123 +51,50 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
       toast.error("Geolocation is not supported by your browser");
       setIsLoading(false);
       // Set a default position if geolocation is not supported
-      setPosition([51.505, -0.09]); // London as default
+      setPosition({ lat: 40.7128, lng: -74.006 }); // New York as default
       setIsOpen(true);
     }
   };
 
-  // Load Leaflet when dialog opens
-  useEffect(() => {
-    if (!isOpen || !position) return;
-    
-    const loadLeaflet = async () => {
-      try {
-        // Add CSS if not already added
-        if (!document.getElementById('leaflet-css')) {
-          const link = document.createElement('link');
-          link.id = 'leaflet-css';
-          link.rel = 'stylesheet';
-          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-          document.head.appendChild(link);
-        }
-        
-        // Add script if Leaflet is not already loaded
-        if (!window.L) {
-          await new Promise<void>((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = () => resolve();
-            script.onerror = () => {
-              console.error("Failed to load Leaflet script");
-              reject(new Error("Failed to load Leaflet"));
-            };
-            document.head.appendChild(script);
-          });
-        }
-        
-        setMapLoaded(true);
-      } catch (error) {
-        console.error("Error loading Leaflet:", error);
-        toast.error("Failed to load map. Please try again.");
-      }
-    };
-    
-    loadLeaflet();
-  }, [isOpen, position]);
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+  }, []);
 
-  // Initialize map after Leaflet is loaded
-  useEffect(() => {
-    if (!isOpen || !position || !mapLoaded || !mapRef.current || !window.L) return;
-    
-    // Clear previous instances
-    if (mapInstance.current) {
-      mapInstance.current.remove();
-      mapInstance.current = null;
-    }
-    
-    try {
-      console.log("Initializing map with position:", position);
-      
-      // Create map
-      mapInstance.current = window.L.map(mapRef.current).setView(position, 13);
-      
-      // Add tile layer
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(mapInstance.current);
-      
-      // Add marker
-      markerRef.current = window.L.marker(position, {
-        draggable: true
-      }).addTo(mapInstance.current);
-      
-      // Update position when marker is dragged
-      markerRef.current.on('dragend', (event: any) => {
-        const marker = event.target;
-        const pos = marker.getLatLng();
-        setPosition([pos.lat, pos.lng]);
-      });
-      
-      // Update position when map is clicked
-      mapInstance.current.on('click', (e: any) => {
-        const { lat, lng } = e.latlng;
-        setPosition([lat, lng]);
-        markerRef.current.setLatLng([lat, lng]);
-      });
-    } catch (error) {
-      console.error("Error initializing map:", error);
-      toast.error("Failed to initialize map. Please try again.");
-    }
-  }, [isOpen, position, mapLoaded]);
+  const onMarkerLoad = useCallback((marker: google.maps.Marker) => {
+    markerRef.current = marker;
+  }, []);
 
-  // Update marker position when position changes
-  useEffect(() => {
-    if (!mapInstance.current || !markerRef.current || !position) return;
-    markerRef.current.setLatLng(position);
-  }, [position]);
+  const onMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      setPosition({
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng()
+      });
+    }
+  }, []);
 
   const reverseGeocode = async () => {
     if (!position) return;
-    
+
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position[0]}&lon=${position[1]}&zoom=18&addressdetails=1`
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Geocoding response:", data);
-        
-        if (data && data.display_name) {
-          onSelect(data.display_name);
-          setIsOpen(false);
-          toast.success("Location added successfully");
-        } else {
-          toast.error("Could not find address for this location");
-        }
+      const geocoder = new google.maps.Geocoder();
+      const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
+        geocoder.geocode({ location: position }, (results, status) => {
+          if (status === 'OK' && results && results.length > 0) {
+            resolve(results);
+          } else {
+            reject(new Error(`Geocoding failed: ${status}`));
+          }
+        });
+      });
+
+      if (result && result[0] && result[0].formatted_address) {
+        onSelect(result[0].formatted_address);
+        setIsOpen(false);
+        toast.success("Location added successfully");
       } else {
-        toast.error("Failed to get address information");
+        toast.error("Could not find address for this location");
       }
     } catch (error) {
       console.error("Error getting address:", error);
@@ -199,20 +133,43 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
       <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg z-50 p-4 w-[90vw] max-w-[500px] max-h-[85vh] overflow-hidden">
-            <Dialog.Title className="text-lg font-semibold mb-2">Select your location</Dialog.Title>
-            <Dialog.Description className="text-sm text-gray-600 mb-4">
-              Click on the map to select a specific location, or drag the marker to adjust.
-            </Dialog.Description>
-            
-            <div className="w-full h-[300px] mb-4 relative rounded overflow-hidden border border-gray-200">
-              {/* Loading indicator */}
-              {(!window.L || !mapLoaded) && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                </div>
-              )}
-              <div ref={mapRef} className="w-full h-full"></div>
+          <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg z-50 w-[90vw] max-w-2xl max-h-[85vh] overflow-y-auto">
+            <Dialog.Title className="text-xl font-semibold mb-4">
+              Select Location
+            </Dialog.Title>
+
+            <div className="mb-4">
+              <p className="text-gray-600 text-sm mb-4">
+                Click on the map to select a location or drag the marker to adjust the position.
+              </p>
+
+              <div className="w-full h-[400px] relative border rounded-md overflow-hidden">
+                {position && (
+                  <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+                    <GoogleMap
+                      mapContainerStyle={containerStyle}
+                      center={position}
+                      zoom={14}
+                      onClick={onMapClick}
+                      onLoad={onMapLoad}
+                    >
+                      <Marker
+                        position={position}
+                        draggable={true}
+                        onLoad={onMarkerLoad}
+                        onDragEnd={(e) => {
+                          if (e.latLng) {
+                            setPosition({
+                              lat: e.latLng.lat(),
+                              lng: e.latLng.lng()
+                            });
+                          }
+                        }}
+                      />
+                    </GoogleMap>
+                  </LoadScript>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end gap-2">
@@ -224,11 +181,12 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
               </Button>
               <Button 
                 onClick={confirmLocation}
+                disabled={isLoading}
               >
-                Confirm Location
+                {isLoading ? "Processing..." : "Confirm Location"}
               </Button>
             </div>
-            
+
             <Dialog.Close asChild>
               <button 
                 className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100"
@@ -242,11 +200,4 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
       </Dialog.Root>
     </>
   );
-}
-
-// Add this to the window global to fix typescript error
-declare global {
-  interface Window {
-    L: any;
-  }
 }

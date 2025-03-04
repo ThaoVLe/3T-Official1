@@ -63,15 +63,19 @@ export default function EntryCard({ entry }: EntryCardProps) {
           <CardTitle className="text-xl font-semibold line-clamp-1">
             <span>{entry.title || "Untitled Entry"}</span>
           </CardTitle>
-          {feeling && (
-            <div className="flex items-center text-sm mt-1">
-              <span>-</span>
-              <span className="mx-1">{feeling.label}</span>
-              <span>{feeling.emoji}</span>
+          <div className="flex items-center justify-between text-sm mt-1 w-full">
+            <div className="flex items-center">
+              {feeling && (
+                <>
+                  <span>-</span>
+                  <span className="mx-1">{feeling.label}</span>
+                  <span>{feeling.emoji}</span>
+                </>
+              )}
             </div>
-          )}
-          <div className="text-sm text-muted-foreground mt-1">
-            <span>{formatTimeAgo(entry.createdAt)}</span>
+            <div className="text-muted-foreground">
+              <span>{formatTimeAgo(entry.createdAt)}</span>
+            </div>
           </div>
         </div>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

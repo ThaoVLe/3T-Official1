@@ -12,7 +12,7 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 // Placeholder import - replace with actual component import
 import { LocationSelector } from "@/components/location-selector";
@@ -82,7 +82,7 @@ export default function Editor() {
           location: data.location || null,
           mediaUrls: data.mediaUrls || []
         };
-        
+
         if (id) {
           return await apiRequest("PUT", `/api/entries/${id}`, payload);
         } else {
@@ -183,6 +183,19 @@ export default function Editor() {
     newUrls.splice(index, 1);
     form.setValue("mediaUrls", newUrls);
   };
+
+  useEffect(() => {
+    if (id && entry) {
+      form.reset({
+        title: entry.title || "",
+        content: entry.content || "",
+        mediaUrls: entry.mediaUrls || [],
+        feeling: entry.feeling || null,
+        location: entry.location || null
+      });
+      console.log("Resetting form with entry:", entry);
+    }
+  }, [entry, id, form.reset]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white w-full">

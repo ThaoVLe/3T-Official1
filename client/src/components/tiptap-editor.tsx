@@ -68,8 +68,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   });
 
   useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value || '', false);
+    if (editor && value !== undefined && value !== editor.getHTML()) {
+      try {
+        editor.commands.setContent(value || '', false);
+      } catch (error) {
+        console.error("Error setting editor content:", error);
+        editor.commands.setContent('', false);
+      }
     }
   }, [editor, value]);
 

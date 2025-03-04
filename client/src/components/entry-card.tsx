@@ -58,7 +58,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
   return (
     <Card className="group hover:shadow-lg transition-shadow duration-200">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-[15px] relative">
+      <CardHeader className="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0 md:space-x-4 pb-2 pt-[15px] relative">
         <div className="flex flex-col">
           <CardTitle className="text-xl font-semibold line-clamp-1">
             <span>{entry.title || "Untitled Entry"}</span>
@@ -86,7 +86,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
             </div>
           </div>
         </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-6 right-4">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3">
           <Button
             size="icon"
             variant="ghost"

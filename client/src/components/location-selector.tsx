@@ -22,6 +22,7 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<google.maps.places.PlaceResult[]>([]);
+  const [mapError, setMapError] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
@@ -31,10 +32,22 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
   // Load Google Maps API
   useEffect(() => {
     if (typeof window !== 'undefined' && !window.google?.maps) {
+      // Load using secrets instead of hardcoded key
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places`; // Replace YOUR_API_KEY with your actual key.  This removes reliance on process.env
+      // You need to get a valid Google Maps API key and add it to your project
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''; 
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
       script.async = true;
       script.defer = true;
+      
+      // Define initMap globally so the callback can find it
+      window.initMap = () => {
+        console.log('Google Maps initialized');
+        if (showMap && mapRef.current && !mapInstanceRef.current) {
+          initMap();
+        }
+      };
+      
       script.onload = () => console.log('Google Maps script loaded');
       document.head.appendChild(script);
     }
@@ -42,31 +55,70 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
 
   // Function to initialize the map
   const initMap = () => {
-    if (!mapRef.current || mapInstanceRef.current || !window.google?.maps) return;
+    if (!mapRef.current || !window.google?.maps) {
+      setMapError("Google Maps API not loaded yet");
+      return;
+    }
+    
+    if (mapInstanceRef.current) return; // Map already initialized
+    
+    try {
+      setMapError(null);
+      setLoading(true);
+      
+      // Default to a central location if none provided
+      const initialPosition = { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
 
-    // Default to a central location if none provided
-    const initialPosition = { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
+      const mapOptions: google.maps.MapOptions = {
+        center: initialPosition,
+        zoom: 15,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+      };
 
-    const mapOptions: google.maps.MapOptions = {
-      center: initialPosition,
-      zoom: 15,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-    };
+      const map = new google.maps.Map(mapRef.current, mapOptions);
+      mapInstanceRef.current = map;
 
-    const map = new google.maps.Map(mapRef.current, mapOptions);
-    mapInstanceRef.current = map;
+      // Initialize marker
+      markerRef.current = new google.maps.Marker({
+        map,
+        position: initialPosition,
+        draggable: true,
+      });
 
-    // Initialize marker
-    markerRef.current = new google.maps.Marker({
-      map,
-      position: initialPosition,
-      draggable: true,
-    });
-
-    // Initialize PlacesService
-    placesServiceRef.current = new google.maps.places.PlacesService(map);
+      // Initialize PlacesService
+      placesServiceRef.current = new google.maps.places.PlacesService(map);
+      
+      // Set up search box
+      const input = document.getElementById('map-search-input') as HTMLInputElement;
+      if (input && window.google.maps.places) {
+        searchBoxRef.current = new google.maps.places.SearchBox(input);
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+        
+        // Bias the SearchBox results towards current map viewport
+        map.addListener('bounds_changed', () => {
+          if (searchBoxRef.current) {
+            searchBoxRef.current.setBounds(map.getBounds() as google.maps.LatLngBounds);
+          }
+        });
+        
+        // Listen for the event fired when the user selects a prediction
+        searchBoxRef.current.addListener('places_changed', () => {
+          if (!searchBoxRef.current) return;
+          const places = searchBoxRef.current.getPlaces();
+          if (places && places.length > 0) {
+            const place = places[0];
+            if (place.geometry && place.geometry.location) {
+              map.setCenter(place.geometry.location);
+              if (markerRef.current) {
+                markerRef.current.setPosition(place.geometry.location);
+              }
+              handlePlaceSelected(place);
+            }
+          }
+        });
+      }
 
     // Update location on marker drag
     if (markerRef.current) {
@@ -338,6 +390,26 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
           {loading ? (
             <div className="h-[400px] w-full flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : mapError ? (
+            <div className="h-[400px] w-full flex flex-col items-center justify-center bg-gray-100 rounded-md border p-4">
+              <div className="bg-gray-200 rounded-full p-3 mb-4">
+                <AlertCircle className="h-6 w-6 text-gray-500" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Oops! Something went wrong.</h3>
+              <p className="text-sm text-gray-500 text-center max-w-md">
+                {mapError || "This page didn't load Google Maps correctly. See the JavaScript console for technical details."}
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => {
+                  setMapError(null);
+                  setTimeout(initMap, 100);
+                }}
+              >
+                Retry
+              </Button>
             </div>
           ) : (
             <div 

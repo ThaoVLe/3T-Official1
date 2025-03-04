@@ -158,18 +158,32 @@ export default function Editor() {
       document.activeElement.blur();
     }
 
-    // iOS specific fix - create and remove an input to force keyboard dismissal
+    // More aggressive iOS keyboard dismissal
+    // Create an offscreen input and force it to focus and blur
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
-    temporaryInput.style.position = 'absolute';
+    temporaryInput.style.position = 'fixed';
+    temporaryInput.style.top = '-100px';
+    temporaryInput.style.left = '0';
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
-    temporaryInput.style.fontSize = '16px';
+    temporaryInput.style.width = '100%';
+    temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
 
+    // Append to body, focus, then blur and remove
     document.body.appendChild(temporaryInput);
-    temporaryInput.focus();
-    temporaryInput.blur();
-    document.body.removeChild(temporaryInput);
+    
+    // Force focus then immediately blur
+    setTimeout(() => {
+      temporaryInput.focus();
+      setTimeout(() => {
+        temporaryInput.blur();
+        document.body.removeChild(temporaryInput);
+      }, 50);
+    }, 50);
+    
+    // Additional fix - add a slight delay before showing sheet
+    return new Promise(resolve => setTimeout(resolve, 100));
   }, [isMobile]);
 
   return (
@@ -229,8 +243,8 @@ export default function Editor() {
               <span className="text-sm font-medium">How are you feeling today?</span>
               <FeelingSelector
                 selectedFeeling={form.getValues("feeling")}
-                onSelect={(feeling) => {
-                  hideKeyboard();
+                onSelect={async (feeling) => {
+                  await hideKeyboard();
                   form.setValue("feeling", feeling);
                 }}
               />

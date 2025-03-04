@@ -67,7 +67,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    
+
     // iOS specific fix - create and remove an input to force keyboard dismissal
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
@@ -75,19 +75,35 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
     temporaryInput.style.fontSize = '16px'; // iOS won't zoom in on inputs with font size >= 16px
-    
+
     document.body.appendChild(temporaryInput);
-    temporaryInput.focus();
-    temporaryInput.blur();
-    document.body.removeChild(temporaryInput);
+
+    // Adding timeout to ensure focus happens after DOM update
+    setTimeout(() => {
+      temporaryInput.focus();
+      setTimeout(() => {
+        temporaryInput.blur();
+        document.body.removeChild(temporaryInput);
+      }, 50);
+    }, 50);
+
+    // Return a promise to allow awaiting keyboard dismissal
+    return new Promise(resolve => setTimeout(resolve, 100));
   };
 
   // Handle sheet open state change
-  const handleOpenChange = (newOpen: boolean) => {
+  const handleOpenChange = async (newOpen: boolean) => {
     if (newOpen) {
-      hideKeyboard();
+      // Ensure keyboard is fully dismissed before opening the sheet
+      await hideKeyboard();
+
+      // Short delay before opening sheet to ensure keyboard is gone
+      setTimeout(() => {
+        setOpen(true);
+      }, 50);
+    } else {
+      setOpen(false);
     }
-    setOpen(newOpen);
   };
 
   return (

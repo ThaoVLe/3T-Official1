@@ -147,25 +147,24 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
   };
 
   const handleSearch = () => {
-    if (!searchQuery || !placesServiceRef.current || !mapInstanceRef.current || !markerRef.current) return;
-
-    // First try with the search box
-    if (searchBoxRef.current) {
-      const input = document.getElementById('map-search-input') as HTMLInputElement;
-      if (input) {
-        // Simulate the user typing and pressing enter
-        input.focus();
-        return;
-      }
+    if (!searchQuery.trim()) {
+      return;
     }
 
-    // Fallback to Places Service
-    const request = {
-      query: searchQuery,
-      fields: ['name', 'geometry', 'formatted_address']
-    };
+    setLoading(true);
 
-    placesServiceRef.current.findPlaceFromQuery(request, (results, status) => {
+    if (!window.google?.maps || !placesServiceRef.current) {
+      console.error("Google Maps Places service is not available");
+      setLoading(false);
+      return;
+    }
+
+    placesServiceRef.current.findPlaceFromQuery({
+      query: searchQuery,
+      fields: ['name', 'geometry', 'formatted_address', 'place_id']
+    }, (results, status) => {
+      setLoading(false);
+
       if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
         const place = results[0];
         const location = place.geometry?.location;

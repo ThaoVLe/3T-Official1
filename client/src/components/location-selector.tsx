@@ -1,10 +1,12 @@
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Map as MapIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import * as Dialog from '@radix-ui/react-dialog';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+
+// Google Maps API key
+const GOOGLE_MAPS_API_KEY = "AIzaSyCxV0vVB-klj97_MauL0xWjPRfcsdKJIJI";
 
 interface LocationSelectorProps {
   onSelect: (location: string) => void;
@@ -16,15 +18,85 @@ const containerStyle = {
   height: '400px'
 };
 
-// Get a proper API key from https://console.cloud.google.com/
-const GOOGLE_MAPS_API_KEY = "AIzaSyCxV0vVB-klj97_MauL0xWjPRfcsdKJIJI";
-
 export function LocationSelector({ onSelect, selectedLocation }: LocationSelectorProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState<google.maps.LatLngLiteral | null>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
+  const [position, setPosition] = useState<{lat: number, lng: number} | null>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const googleMapsLoaded = useRef(false);
+  
+  // Load Google Maps script
+  useEffect(() => {
+    if (isOpen && !googleMapsLoaded.current) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        googleMapsLoaded.current = true;
+        initializeMap();
+      };
+      document.body.appendChild(script);
+      
+      return () => {
+        // Clean up script if component unmounts before script loads
+        if (!googleMapsLoaded.current) {
+          document.body.removeChild(script);
+        }
+      };
+    }
+  }, [isOpen]);
+  
+  // Initialize map when position is available and Google Maps is loaded
+  useEffect(() => {
+    if (isOpen && position && googleMapsLoaded.current) {
+      initializeMap();
+    }
+  }, [position, isOpen]);
+
+  const initializeMap = () => {
+    if (!position || !mapContainerRef.current || !window.google) return;
+    
+    // Create map
+    const map = new window.google.maps.Map(mapContainerRef.current, {
+      center: position,
+      zoom: 14,
+    });
+    
+    // Create marker
+    const marker = new window.google.maps.Marker({
+      position: position,
+      map: map,
+      draggable: true,
+    });
+    
+    // Set refs
+    mapRef.current = map;
+    markerRef.current = marker;
+    
+    // Add event listeners
+    map.addListener('click', (e: any) => {
+      if (e.latLng) {
+        const newPos = {
+          lat: e.latLng.lat(),
+          lng: e.latLng.lng()
+        };
+        setPosition(newPos);
+        marker.setPosition(newPos);
+      }
+    });
+    
+    marker.addListener('dragend', () => {
+      if (marker.getPosition()) {
+        setPosition({
+          lat: marker.getPosition().lat(),
+          lng: marker.getPosition().lng()
+        });
+      }
+    });
+  };
   
   // Handle getting current location
   const getLocation = () => {
@@ -41,46 +113,27 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
         (error) => {
           console.error("Error getting location:", error);
           toast.error("Failed to get your location. Using default location.");
-          setIsLoading(false);
           // Set a default position if geolocation fails
           setPosition({ lat: 40.7128, lng: -74.006 }); // New York as default
           setIsOpen(true);
+          setIsLoading(false);
         }
       );
     } else {
       toast.error("Geolocation is not supported by your browser");
-      setIsLoading(false);
       // Set a default position if geolocation is not supported
       setPosition({ lat: 40.7128, lng: -74.006 }); // New York as default
       setIsOpen(true);
+      setIsLoading(false);
     }
   };
 
-  const onMapLoad = useCallback((map: google.maps.Map) => {
-    console.log("Map loaded successfully");
-    mapRef.current = map;
-  }, []);
-
-  const onMarkerLoad = useCallback((marker: google.maps.Marker) => {
-    console.log("Marker loaded successfully");
-    markerRef.current = marker;
-  }, []);
-
-  const onMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
-      setPosition({
-        lat: e.latLng.lat(),
-        lng: e.latLng.lng()
-      });
-    }
-  }, []);
-
   const reverseGeocode = async () => {
-    if (!position) return;
+    if (!position || !window.google) return;
 
     setIsLoading(true);
     try {
-      const geocoder = new google.maps.Geocoder();
+      const geocoder = new window.google.maps.Geocoder();
       const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
         geocoder.geocode({ location: position }, (results, status) => {
           if (status === 'OK' && results && results.length > 0) {
@@ -137,66 +190,42 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
             <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg z-50 w-[90vw] max-w-2xl max-h-[85vh] overflow-y-auto">
-              <Dialog.Title className="text-xl font-semibold mb-4">
-                Select Location
-              </Dialog.Title>
+              <div className="flex justify-between items-center mb-4">
+                <Dialog.Title className="text-xl font-semibold">
+                  Select Location
+                </Dialog.Title>
+                <Dialog.Close asChild>
+                  <button className="rounded-full p-1 hover:bg-gray-100">
+                    <X className="h-5 w-5" />
+                  </button>
+                </Dialog.Close>
+              </div>
 
               <div className="mb-4">
                 <p className="text-gray-600 text-sm mb-4">
                   Click on the map to select a location or drag the marker to adjust the position.
                 </p>
 
-                <div className="w-full h-[400px] relative border rounded-md overflow-hidden">
-                  {position && (
-                    <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} loadingElement={<div>Loading...</div>}>
-                      <GoogleMap
-                        mapContainerStyle={containerStyle}
-                        center={position}
-                        zoom={14}
-                        onClick={onMapClick}
-                        onLoad={onMapLoad}
-                      >
-                        <Marker
-                          position={position}
-                          draggable={true}
-                          onLoad={onMarkerLoad}
-                          onDragEnd={(e) => {
-                            if (e.latLng) {
-                              setPosition({
-                                lat: e.latLng.lat(),
-                                lng: e.latLng.lng()
-                              });
-                            }
-                          }}
-                        />
-                      </GoogleMap>
-                    </LoadScript>
-                  )}
-                </div>
+                <div 
+                  ref={mapContainerRef}
+                  className="w-full h-[400px] relative border rounded-md overflow-hidden"
+                ></div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 mt-4">
                 <Button 
-                  onClick={() => setIsOpen(false)} 
-                  variant="outline"
+                  variant="outline" 
+                  onClick={() => setIsOpen(false)}
                 >
                   Cancel
                 </Button>
                 <Button 
                   onClick={confirmLocation}
-                  disabled={isLoading}
+                  disabled={isLoading || !position}
                 >
-                  {isLoading ? "Processing..." : "Confirm Location"}
+                  {isLoading ? "Confirming..." : "Confirm Location"}
                 </Button>
               </div>
-
-              <button 
-                className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100"
-                aria-label="Close"
-                onClick={() => setIsOpen(false)}
-              >
-                <X size={18} />
-              </button>
             </Dialog.Content>
           </Dialog.Portal>
         </Dialog.Root>

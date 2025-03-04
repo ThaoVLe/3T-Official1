@@ -147,33 +147,43 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
   };
 
   const handleSearch = () => {
-    if (!placesServiceRef.current || !searchQuery) return;
+    if (!searchQuery || !placesServiceRef.current || !mapInstanceRef.current || !markerRef.current) return;
 
-    setLoading(true);
+    // First try with the search box
+    if (searchBoxRef.current) {
+      const input = document.getElementById('map-search-input') as HTMLInputElement;
+      if (input) {
+        // Simulate the user typing and pressing enter
+        input.focus();
+        return;
+      }
+    }
 
+    // Fallback to Places Service
     const request = {
       query: searchQuery,
       fields: ['name', 'geometry', 'formatted_address']
     };
 
-    placesServiceRef.current.textSearch({ query: searchQuery }, (results, status) => {
-      setLoading(false);
+    placesServiceRef.current.findPlaceFromQuery(request, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+        const place = results[0];
+        const location = place.geometry?.location;
 
-      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-        setSearchResults(results);
-
-        if (results.length > 0 && results[0].geometry?.location) {
-          const location = results[0].geometry.location;
+        if (location) {
           mapInstanceRef.current?.setCenter(location);
+          mapInstanceRef.current?.setZoom(15);
           markerRef.current?.setPosition(location);
 
           setLocation({
             lat: location.lat(),
             lng: location.lng(),
-            address: results[0].formatted_address,
-            name: results[0].name
+            address: place.formatted_address || '',
+            name: place.name || ''
           });
         }
+      } else {
+        console.error("Place search failed with status:", status);
       }
     });
   };
@@ -184,6 +194,116 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
       setShowMap(false);
     }
   };
+
+  const reverseGeocode = (latLng: google.maps.LatLng) => {
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ location: latLng }, (results, status) => {
+      if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+        setLocation({
+          lat: latLng.lat(),
+          lng: latLng.lng(),
+          address: results[0].formatted_address,
+        });
+      } else {
+        setLocation({
+          lat: latLng.lat(),
+          lng: latLng.lng(),
+        });
+      }
+    });
+  };
+
+  // Initialize map
+  useEffect(() => {
+    if (window.google?.maps && mapRef.current && showMap) {
+      setLoading(true);
+      try {
+        const defaultLatLng = { lat: 40.7128, lng: -74.006 }; // New York
+        const mapOptions = {
+          center: defaultLatLng,
+          zoom: 13,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        };
+
+        const map = new google.maps.Map(mapRef.current, mapOptions);
+        mapInstanceRef.current = map;
+
+        // Initialize marker
+        const marker = new google.maps.Marker({
+          position: defaultLatLng,
+          map,
+          draggable: true,
+          animation: google.maps.Animation.DROP,
+        });
+        markerRef.current = marker;
+
+        // Initialize Places service
+        if (window.google?.maps?.places) {
+          placesServiceRef.current = new google.maps.places.PlacesService(map);
+        }
+
+        // Initialize search box
+        const searchInput = document.getElementById('map-search-input') as HTMLInputElement;
+        if (searchInput && window.google?.maps?.places) {
+          const searchBox = new google.maps.places.SearchBox(searchInput);
+          searchBoxRef.current = searchBox;
+
+          // Bias the SearchBox results towards current map's viewport
+          map.addListener('bounds_changed', () => {
+            if (searchBox.getBounds) {
+              searchBox.setBounds(map.getBounds()!);
+            }
+          });
+
+          // Listen for search events
+          searchBox.addListener('places_changed', () => {
+            const places = searchBox.getPlaces();
+            if (!places || places.length === 0) return;
+
+            const place = places[0];
+            if (!place.geometry?.location) return;
+
+            // Center map on the selected place
+            map.setCenter(place.geometry.location);
+            map.setZoom(15);
+
+            // Update marker
+            marker.setPosition(place.geometry.location);
+
+            // Update location state
+            const newLocation: Location = {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+              address: place.formatted_address,
+              name: place.name
+            };
+            setLocation(newLocation);
+          });
+        }
+
+        // Handle marker drag end
+        marker.addListener('dragend', () => {
+          const latLng = marker.getPosition();
+          if (latLng) {
+            reverseGeocode(latLng);
+          }
+        });
+
+        // If we have a default location, set it
+        if (defaultLocation) {
+          const latLng = new google.maps.LatLng(defaultLocation.lat, defaultLocation.lng);
+          marker.setPosition(latLng);
+          map.setCenter(latLng);
+        }
+      } catch (error) {
+        console.error("Error initializing Google Maps:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [showMap, defaultLocation]);
 
   return (
     <>

@@ -89,7 +89,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[100dvh] pt-6">
+      <SheetContent side="bottom" className="h-[100dvh] w-[100dvw] pt-6 max-w-full">
         <Tabs defaultValue="feelings" className="h-[calc(100%-30px)] flex flex-col">
           <TabsList className="w-full grid grid-cols-2 mb-4">
             <TabsTrigger value="feelings">Feelings</TabsTrigger>

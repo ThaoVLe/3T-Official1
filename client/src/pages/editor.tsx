@@ -206,7 +206,8 @@ export default function Editor() {
             onEmotionButtonClick={(e) => {
               e?.preventDefault();
               e?.stopPropagation();
-              setShowEmotionSelector(true);
+              console.log("Emotion button clicked");
+              setShowEmotionSelector(!showEmotionSelector);
               setShowLocationSelector(false);
             }}
             onLocationButtonClick={(e) => {
@@ -241,11 +242,13 @@ export default function Editor() {
 
           {/* Emotion Selector */}
           {showEmotionSelector && (
-            <div className="absolute right-0 top-full z-50 mt-1 bg-white rounded-md shadow-md p-4 border border-gray-200">
+            <div className="fixed inset-0 z-50 overflow-y-auto">
               <FeelingSelector
                 onSelect={(feeling) => {
-                  form.setValue("feeling", feeling);
-                  setShowEmotionSelector(false);
+                  if (form && feeling) {
+                    form.setValue("feeling", feeling);
+                    setShowEmotionSelector(false);
+                  }
                 }}
                 selectedFeeling={form.watch("feeling")}
               />

@@ -313,9 +313,14 @@ export default function TipTapEditor({ value, onChange, onMediaButtonClick, onEm
               type="button"
               variant="ghost"
               size="sm"
-              onClick={onEmotionButtonClick}
-              className="h-8 w-8 px-0"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onEmotionButtonClick) onEmotionButtonClick(e);
+              }}
+              className="h-8 flex items-center gap-1.5 px-2"
             >
+              <span className="text-sm font-medium">Feeling</span>
               <Smile className="h-4 w-4" />
             </Button>
           )}

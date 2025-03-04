@@ -29,25 +29,37 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
 
+  // Function to hide keyboard on mobile devices
+  const hideKeyboard = () => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    const temporaryInput = document.createElement('input');
+    temporaryInput.setAttribute('type', 'text');
+    temporaryInput.style.position = 'absolute';
+    temporaryInput.style.opacity = '0';
+    temporaryInput.style.height = '0';
+    temporaryInput.style.fontSize = '16px';
+    document.body.appendChild(temporaryInput);
+    temporaryInput.focus();
+    temporaryInput.blur();
+    document.body.removeChild(temporaryInput);
+  };
+
   // Load Google Maps API
   useEffect(() => {
     if (typeof window !== 'undefined' && !window.google?.maps) {
-      // Load using secrets instead of hardcoded key
       const script = document.createElement('script');
-      // You need to get a valid Google Maps API key and add it to your project
-      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''; 
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
       script.async = true;
       script.defer = true;
-      
-      // Define initMap globally so the callback can find it
       window.initMap = () => {
         console.log('Google Maps initialized');
         if (showMap && mapRef.current && !mapInstanceRef.current) {
           initMap();
         }
       };
-      
       script.onload = () => console.log('Google Maps script loaded');
       document.head.appendChild(script);
     }
@@ -59,19 +71,19 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
       setMapError("Google Maps API not loaded yet");
       return;
     }
-    
+
     if (mapInstanceRef.current) return; // Map already initialized
-    
+
     try {
       setMapError(null);
       setLoading(true);
-      
+
     } catch (error) {
       console.error("Error initializing map:", error);
       setMapError("Failed to initialize Google Maps");
       setLoading(false);
     }
-      
+
       // Default to a central location if none provided
       const initialPosition = { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
 
@@ -95,20 +107,20 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
 
       // Initialize PlacesService
       placesServiceRef.current = new google.maps.places.PlacesService(map);
-      
+
       // Set up search box
       const input = document.getElementById('map-search-input') as HTMLInputElement;
       if (input && window.google.maps.places) {
         searchBoxRef.current = new google.maps.places.SearchBox(input);
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-        
+
         // Bias the SearchBox results towards current map viewport
         map.addListener('bounds_changed', () => {
           if (searchBoxRef.current) {
             searchBoxRef.current.setBounds(map.getBounds() as google.maps.LatLngBounds);
           }
         });
-        
+
         // Listen for the event fired when the user selects a prediction
         searchBoxRef.current.addListener('places_changed', () => {
           if (!searchBoxRef.current) return;
@@ -362,12 +374,19 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
     }
   }, [showMap, defaultLocation]);
 
+  const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
+    updateLocationFromPlace(place);
+  };
+
   return (
     <>
-      <Button 
-        type="button" 
-        variant="outline" 
-        onClick={() => setShowMap(true)}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => {
+          setShowMap(true);
+          hideKeyboard(); // Hide keyboard when opening the map
+        }}
         className="flex items-center gap-2"
       >
         <MapPin className="h-4 w-4" />
@@ -400,14 +419,15 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
           ) : mapError ? (
             <div className="h-[400px] w-full flex flex-col items-center justify-center bg-gray-100 rounded-md border p-4">
               <div className="bg-gray-200 rounded-full p-3 mb-4">
-                <AlertCircle className="h-6 w-6 text-gray-500" />
+                {/* AlertCircle component is missing, replace with appropriate icon */}
+                {/*<AlertCircle className="h-6 w-6 text-gray-500" />*/}
               </div>
               <h3 className="text-lg font-medium mb-2">Oops! Something went wrong.</h3>
               <p className="text-sm text-gray-500 text-center max-w-md">
                 {mapError || "This page didn't load Google Maps correctly. See the JavaScript console for technical details."}
               </p>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="mt-4"
                 onClick={() => {
                   setMapError(null);
@@ -418,22 +438,22 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
               </Button>
             </div>
           ) : (
-            <div 
-              ref={mapRef} 
+            <div
+              ref={mapRef}
               className="h-[400px] w-full rounded-md border"
             ></div>
           )}
 
           <div className="flex justify-end gap-2 mt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => setShowMap(false)}
             >
               Cancel
             </Button>
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               onClick={handleSelectLocation}
               disabled={!location}
             >

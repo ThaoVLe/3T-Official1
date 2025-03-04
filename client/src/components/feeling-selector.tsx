@@ -61,20 +61,47 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     setOpen(false);
   };
 
+  // Improved keyboard hiding for mobile
   const hideKeyboard = () => {
+    // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
+    
+    // iOS specific fix - create and remove an input to force keyboard dismissal
+    const temporaryInput = document.createElement('input');
+    temporaryInput.setAttribute('type', 'text');
+    temporaryInput.style.position = 'absolute';
+    temporaryInput.style.opacity = '0';
+    temporaryInput.style.height = '0';
+    temporaryInput.style.fontSize = '16px'; // iOS won't zoom in on inputs with font size >= 16px
+    
+    document.body.appendChild(temporaryInput);
+    temporaryInput.focus();
+    temporaryInput.blur();
+    document.body.removeChild(temporaryInput);
+  };
+
+  // Handle sheet open state change
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      hideKeyboard();
+    }
+    setOpen(newOpen);
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button 
           variant="ghost" 
           className="h-10 px-3 rounded-full flex items-center"
           aria-label="Select feeling"
-          onClick={hideKeyboard}
+          onClick={(e) => {
+            e.preventDefault();
+            hideKeyboard();
+            setOpen(true);
+          }}
         >
           {selectedFeeling ? (
             <span className="text-xl">{selectedFeeling.emoji}</span>

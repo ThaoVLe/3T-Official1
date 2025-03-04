@@ -12,10 +12,15 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
-// Placeholder import - replace with actual component import
 import { LocationSelector } from "@/components/location-selector";
+
+// Simulate useIsMobile hook - replace with actual implementation
+const useIsMobile = () => {
+  // Replace with actual mobile detection logic
+  return window.innerWidth < 768;
+};
 
 
 export default function Editor() {
@@ -25,6 +30,7 @@ export default function Editor() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
+  const isMobile = useIsMobile();
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -37,8 +43,8 @@ export default function Editor() {
       title: "",
       content: "",
       mediaUrls: [],
-      feeling: null, 
-      location: null, // Added location to default values
+      feeling: null,
+      location: null,
     },
   });
 
@@ -48,8 +54,8 @@ export default function Editor() {
         title: entry.title,
         content: entry.content,
         mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling, 
-        location: entry.location, // Added location to reset
+        feeling: entry.feeling,
+        location: entry.location,
       });
     }
   }, [entry, form]);
@@ -143,12 +149,35 @@ export default function Editor() {
     form.setValue("mediaUrls", newUrls);
   };
 
+  // Function to hide keyboard on mobile devices
+  const hideKeyboard = useCallback(() => {
+    if (!isMobile) return;
+
+    // Force any active element to lose focus
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    // iOS specific fix - create and remove an input to force keyboard dismissal
+    const temporaryInput = document.createElement('input');
+    temporaryInput.setAttribute('type', 'text');
+    temporaryInput.style.position = 'absolute';
+    temporaryInput.style.opacity = '0';
+    temporaryInput.style.height = '0';
+    temporaryInput.style.fontSize = '16px';
+
+    document.body.appendChild(temporaryInput);
+    temporaryInput.focus();
+    temporaryInput.blur();
+    document.body.removeChild(temporaryInput);
+  }, [isMobile]);
+
   return (
     <div className="min-h-screen flex flex-col bg-white w-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
         <div className="flex-1 max-w-full sm:max-w-2xl">
-          <Input 
+          <Input
             {...form.register("title")}
             className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
             placeholder="Untitled Entry..."
@@ -162,8 +191,8 @@ export default function Editor() {
           )}
         </div>
         <div className="flex items-center gap-2 ml-2">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => navigate("/")}
             className="whitespace-nowrap"
@@ -171,7 +200,7 @@ export default function Editor() {
             <X className="h-4 w-4 mr-1" />
             Cancel
           </Button>
-          <Button 
+          <Button
             type="button"
             size="sm"
             onClick={form.handleSubmit((data) => mutation.mutate(data))}
@@ -187,9 +216,9 @@ export default function Editor() {
       {/* Content Area */}
       <div className="flex-1 flex flex-col overflow-auto w-full">
         <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
-          <TipTapEditor 
-            value={form.watch("content")} 
-            onChange={(value) => form.setValue("content", value)} 
+          <TipTapEditor
+            value={form.watch("content")}
+            onChange={(value) => form.setValue("content", value)}
           />
         </div>
 
@@ -200,21 +229,24 @@ export default function Editor() {
               <span className="text-sm font-medium">How are you feeling today?</span>
               <FeelingSelector
                 selectedFeeling={form.getValues("feeling")}
-                onSelect={(feeling) => form.setValue("feeling", feeling)}
+                onSelect={(feeling) => {
+                  hideKeyboard();
+                  form.setValue("feeling", feeling);
+                }}
               />
             </div>
-            
+
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Checking in at:</span>
               <LocationSelector
                 selectedLocation={form.getValues("location")}
                 onSelect={(location) => {
-                  console.log("Location selected:", location);
+                  hideKeyboard();
                   form.setValue("location", location);
                 }}
               />
             </div>
-            
+
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Add media:</span>
               <MediaRecorder onCapture={onMediaUpload} />
@@ -222,8 +254,8 @@ export default function Editor() {
           </div>
           {form.watch("mediaUrls")?.length > 0 && (
             <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
-              <MediaPreview 
-                urls={form.watch("mediaUrls")} 
+              <MediaPreview
+                urls={form.watch("mediaUrls")}
                 onRemove={onMediaRemove}
                 loading={isUploading}
                 uploadProgress={uploadProgress}

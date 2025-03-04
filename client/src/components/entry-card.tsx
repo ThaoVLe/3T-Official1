@@ -36,11 +36,17 @@ export default function EntryCard({ entry }: EntryCardProps) {
   return (
     <Card className="group hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className="flex items-center gap-2">
-          {feeling && <span className="text-xl" title={feeling.label}>{feeling.emoji}</span>}
+        <div className="flex flex-col">
           <CardTitle className="text-xl font-semibold line-clamp-1">
             {entry.title || "Untitled Entry"}
           </CardTitle>
+          {feeling && (
+            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+              <span>is feeling</span>
+              <span className="font-medium">{feeling.label}</span>
+              <span className="text-lg">{feeling.emoji}</span>
+            </div>
+          )}
         </div>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <Link href={`/edit/${entry.id}`}>

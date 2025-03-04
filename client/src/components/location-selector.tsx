@@ -375,6 +375,9 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
 
       <Dialog open={showMap} onOpenChange={setShowMap}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Select Location</DialogTitle>
+          </DialogHeader>
           <div className="flex items-center gap-2 mb-4">
             <Input
               id="map-search-input"

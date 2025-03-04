@@ -13,7 +13,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="container-page space-y-4">
+      <div className="p-8 space-y-4">
         <div className="flex justify-between items-center mb-8">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />
@@ -47,7 +47,7 @@ export default function Home() {
   }
 
   return (
-    <div className="container-page">
+    <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
           My Diary

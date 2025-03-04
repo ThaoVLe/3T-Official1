@@ -23,8 +23,6 @@ export default function Editor() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
-  const [selectedFeeling, setSelectedFeeling] = useState(null); // Added state for selected feeling
-
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -49,7 +47,6 @@ export default function Editor() {
         mediaUrls: entry.mediaUrls || [],
         feeling: entry.feeling || "", // Added feeling field to reset
       });
-      setSelectedFeeling(entry.feeling); // Set selectedFeeling from entry data
     }
   }, [entry, form]);
 
@@ -146,18 +143,11 @@ export default function Editor() {
     <div className="min-h-screen flex flex-col bg-white w-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
-        <div className="flex items-center gap-2 flex-1">
-              {form.watch("feeling") && (
-                <span className="text-2xl" title={form.watch("feeling").label}>
-                  {form.watch("feeling").emoji}
-                </span>
-              )}
-              <Input 
-                {...form.register("title")}
-                className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 flex-1 max-w-full sm:max-w-2xl"
-                placeholder="Untitled Entry..."
-              />
-            </div>
+        <Input 
+          {...form.register("title")}
+          className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 flex-1 max-w-full sm:max-w-2xl"
+          placeholder="Untitled Entry..."
+        />
         <div className="flex items-center gap-2 ml-2">
           <Button 
             variant="ghost" 

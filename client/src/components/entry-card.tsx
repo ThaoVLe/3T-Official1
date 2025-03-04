@@ -86,7 +86,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
             </div>
           </div>
         </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-6 right-4">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-[4px] right-4">
           <Button
             size="icon"
             variant="ghost"

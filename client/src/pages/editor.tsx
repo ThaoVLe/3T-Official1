@@ -12,8 +12,9 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
+// Placeholder import - replace with actual component import
 import { LocationSelector } from "@/components/location-selector";
 
 
@@ -22,13 +23,8 @@ export default function Editor() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
-  const [expandedMedia, setExpandedMedia] = useState<string | null>(null);
-  const [showLocationSelector, setShowLocationSelector] = useState(false);
-  const [showEmotionSelector, setShowEmotionSelector] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
-
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -42,7 +38,7 @@ export default function Editor() {
       content: "",
       mediaUrls: [],
       feeling: null, 
-      location: null, 
+      location: null, // Added location to default values
     },
   });
 
@@ -53,7 +49,7 @@ export default function Editor() {
         content: entry.content,
         mediaUrls: entry.mediaUrls || [],
         feeling: entry.feeling, 
-        location: entry.location, 
+        location: entry.location, // Added location to reset
       });
     }
   }, [entry, form]);
@@ -147,8 +143,6 @@ export default function Editor() {
     form.setValue("mediaUrls", newUrls);
   };
 
-  const [uploadProgress, setUploadProgress] = useState(0);
-
   return (
     <div className="min-h-screen flex flex-col bg-white w-full">
       {/* Header */}
@@ -193,18 +187,9 @@ export default function Editor() {
       {/* Content Area */}
       <div className="flex-1 flex flex-col overflow-auto w-full">
         <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
-          <input type="file" id="fileUpload" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              onMediaUpload(file);
-            }
-          }} />
-          <TipTapEditor
-            value={form.watch("content")}
-            onChange={(value) => form.setValue("content", value)}
-            onMediaButtonClick={() => fileInputRef.current?.click()}
-            onEmotionButtonClick={() => setShowEmotionSelector(true)}
-            onLocationButtonClick={() => setShowLocationSelector(true)}
+          <TipTapEditor 
+            value={form.watch("content")} 
+            onChange={(value) => form.setValue("content", value)} 
           />
         </div>
 
@@ -214,7 +199,17 @@ export default function Editor() {
             <MediaRecorder onCapture={onMediaUpload} />
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2 items-center">
-
+                <FeelingSelector
+                  selectedFeeling={form.getValues("feeling")}
+                  onSelect={(feeling) => form.setValue("feeling", feeling)}
+                />
+                <LocationSelector
+                  selectedLocation={form.getValues("location")}
+                  onSelect={(location) => {
+                    console.log("Location selected:", location);
+                    form.setValue("location", location);
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -225,38 +220,6 @@ export default function Editor() {
                 onRemove={onMediaRemove}
                 loading={isUploading}
                 uploadProgress={uploadProgress}
-              />
-            </div>
-          )}
-
-          {/* Emotion Selector */}
-          {showEmotionSelector && (
-            <div className="absolute right-0 top-full z-50 mt-1 bg-white rounded-md shadow-md p-4 border border-gray-200">
-              <FeelingSelector
-                onSelect={(feeling) => {
-                  form.setValue("feeling", feeling);
-                  setShowEmotionSelector(false);
-                }}
-                selectedFeeling={form.watch("feeling")}
-              />
-            </div>
-          )}
-
-          {/* Location Selector */}
-          {showLocationSelector && (
-            <div className="absolute right-0 top-full z-50 mt-1 bg-white rounded-md shadow-md p-4 border border-gray-200">
-              <LocationSelector
-                onLocationSelect={(location) => {
-                  if (location?.address) {
-                    form.setValue("location", location.address);
-                  }
-                  setShowLocationSelector(false);
-                }}
-                defaultLocation={form.watch("location") ? { 
-                  lat: 0, 
-                  lng: 0, 
-                  address: form.watch("location") 
-                } : undefined}
               />
             </div>
           )}

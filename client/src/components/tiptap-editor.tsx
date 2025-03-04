@@ -18,7 +18,6 @@ import {
   AlignRight,
   Type,
   Palette,
-  Upload,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -26,12 +25,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 interface TipTapEditorProps {
   value: string;
   onChange: (value: string) => void;
-  onMediaButtonClick?: () => void; // Added callback for media button
-  onEmotionButtonClick?: () => void; // Added callback for emotion button
-  onLocationButtonClick?: () => void; // Added callback for location button
 }
 
-export default function TipTapEditor({ value, onChange, onMediaButtonClick, onEmotionButtonClick, onLocationButtonClick }: TipTapEditorProps) {
+export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -293,46 +289,6 @@ export default function TipTapEditor({ value, onChange, onMediaButtonClick, onEm
               ))}
             </PopoverContent>
           </Popover>
-
-          <Separator orientation="vertical" className="mx-1 h-6" />
-
-
-          {onMediaButtonClick && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onMediaButtonClick}
-              className="h-8 w-8 px-0"
-            >
-              <Upload className="h-4 w-4" />
-            </Button>
-          )}
-          {onEmotionButtonClick && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onEmotionButtonClick}
-              className="h-8 w-8 px-0"
-            >
-              <Smile className="h-4 w-4" />
-            </Button>
-          )}
-          {onLocationButtonClick && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onLocationButtonClick}
-              className="h-8 w-8 px-0"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-            </Button>
-          )}
         </div>
       </div>
 

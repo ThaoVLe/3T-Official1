@@ -17,7 +17,7 @@ interface LocationSelectorProps {
 }
 
 export function LocationSelector({ onLocationSelect, defaultLocation }: LocationSelectorProps) {
-  const [showMap, setShowMap] = useState(true);
+  const [showMap, setShowMap] = useState(false);
   const [location, setLocation] = useState<Location | null>(defaultLocation || null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,7 +39,7 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
       script.async = true;
       script.defer = true;
-
+      
       // Define initMap globally so the callback can find it
       window.initMap = () => {
         console.log('Google Maps initialized');
@@ -47,7 +47,7 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
           initMap();
         }
       };
-
+      
       script.onload = () => console.log('Google Maps script loaded');
       document.head.appendChild(script);
     }
@@ -59,19 +59,19 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
       setMapError("Google Maps API not loaded yet");
       return;
     }
-
+    
     if (mapInstanceRef.current) return; // Map already initialized
-
+    
     try {
       setMapError(null);
       setLoading(true);
-
+      
     } catch (error) {
       console.error("Error initializing map:", error);
       setMapError("Failed to initialize Google Maps");
       setLoading(false);
     }
-
+      
       // Default to a central location if none provided
       const initialPosition = { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
 
@@ -95,20 +95,20 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
 
       // Initialize PlacesService
       placesServiceRef.current = new google.maps.places.PlacesService(map);
-
+      
       // Set up search box
       const input = document.getElementById('map-search-input') as HTMLInputElement;
       if (input && window.google.maps.places) {
         searchBoxRef.current = new google.maps.places.SearchBox(input);
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-
+        
         // Bias the SearchBox results towards current map viewport
         map.addListener('bounds_changed', () => {
           if (searchBoxRef.current) {
             searchBoxRef.current.setBounds(map.getBounds() as google.maps.LatLngBounds);
           }
         });
-
+        
         // Listen for the event fired when the user selects a prediction
         searchBoxRef.current.addListener('places_changed', () => {
           if (!searchBoxRef.current) return;
@@ -371,13 +371,15 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
         className="flex items-center gap-2"
       >
         <MapPin className="h-4 w-4" />
+        {location ? (location.name || location.address || 'Selected location') : 'Select location'}
       </Button>
 
       <Dialog open={showMap} onOpenChange={setShowMap}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="sr-only">Select Location</DialogTitle>
+            <DialogTitle>Select Location</DialogTitle>
           </DialogHeader>
+
           <div className="flex items-center gap-2 mb-4">
             <Input
               id="map-search-input"

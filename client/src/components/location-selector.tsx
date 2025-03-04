@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Map } from "lucide-react";
@@ -20,16 +19,16 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1`
             );
-            
+
             if (response.ok) {
               const data = await response.json();
               // Get a simplified location like "City, Country" or fallback to coordinates
               let locationText = "Unknown location";
-              
+
               if (data.address) {
                 const city = data.address.city || data.address.town || data.address.village || data.address.hamlet;
                 const country = data.address.country;
-                
+
                 if (city && country) {
                   locationText = `${city}, ${country}`;
                 } else if (city) {
@@ -38,7 +37,7 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
                   locationText = country;
                 }
               }
-              
+
               onSelect(locationText);
             } else {
               // Fallback to coordinates if reverse geocoding fails
@@ -46,19 +45,25 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
               onSelect(location);
             }
           } catch (error) {
-            console.error("Error reverse geocoding location:", error);
-            // Fallback to coordinates
+            console.error("Error in reverse geocoding:", error);
             const location = `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
             onSelect(location);
           }
         },
         (error) => {
-          console.error("Error getting location:", error);
-          onSelect("Location unavailable");
+          console.error("Error getting user's location:", error);
+          // Show the error to the user
+          alert(`Could not get your location: ${error.message}`);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
         }
       );
     } else {
-      onSelect("Geolocation not supported");
+      console.error("Geolocation is not supported by this browser.");
+      alert("Geolocation is not supported by your browser.");
     }
   };
 

@@ -205,7 +205,10 @@ export default function Editor() {
                 />
                 <LocationSelector
                   selectedLocation={form.getValues("location")}
-                  onSelect={(location) => form.setValue("location", location)}
+                  onSelect={(location) => {
+                    console.log("Location selected:", location);
+                    form.setValue("location", location);
+                  }}
                 />
               </div>
             </div>

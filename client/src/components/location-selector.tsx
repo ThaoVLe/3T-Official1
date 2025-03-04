@@ -32,7 +32,7 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
   useEffect(() => {
     if (typeof window !== 'undefined' && !window.google?.maps) {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyBWvKzazUWU_EUVqbuNcQNYZX4O5xpPz7o'}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places`; // Replace YOUR_API_KEY with your actual key.  This removes reliance on process.env
       script.async = true;
       script.defer = true;
       script.onload = () => console.log('Google Maps script loaded');
@@ -40,99 +40,67 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
     }
   }, []);
 
-  // Initialize map when dialog is opened
-  useEffect(() => {
-    if (showMap && mapRef.current && window.google?.maps) {
-      initializeMap();
-    }
-  }, [showMap]);
+  // Function to initialize the map
+  const initMap = () => {
+    if (!mapRef.current || mapInstanceRef.current || !window.google?.maps) return;
 
-  const initializeMap = async () => {
-    if (!mapRef.current || !window.google?.maps) return;
+    // Default to a central location if none provided
+    const initialPosition = { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
 
-    setLoading(true);
+    const mapOptions: google.maps.MapOptions = {
+      center: initialPosition,
+      zoom: 15,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    };
 
-    try {
-      // Use browser geolocation if available
-      let initialPosition = { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
+    const map = new google.maps.Map(mapRef.current, mapOptions);
+    mapInstanceRef.current = map;
 
-      if (location) {
-        initialPosition = { lat: location.lat, lng: location.lng };
-      } else {
-        try {
-          const position = await getCurrentPosition();
-          initialPosition = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-        } catch (error) {
-          console.error('Error getting current location:', error);
-        }
-      }
+    // Initialize marker
+    markerRef.current = new google.maps.Marker({
+      map,
+      position: initialPosition,
+      draggable: true,
+    });
 
-      // Create map
-      const mapOptions: google.maps.MapOptions = {
-        center: initialPosition,
-        zoom: 15,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false
-      };
+    // Initialize PlacesService
+    placesServiceRef.current = new google.maps.places.PlacesService(map);
 
-      const map = new google.maps.Map(mapRef.current, mapOptions);
-      mapInstanceRef.current = map;
+    // Update location on marker drag
+    if (markerRef.current) {
+      markerRef.current.addListener('dragend', () => {
+        if (markerRef.current && markerRef.current.getPosition()) {
+          const position = markerRef.current.getPosition() as google.maps.LatLng;
 
-      // Create marker
-      const marker = new google.maps.Marker({
-        position: initialPosition,
-        map: map,
-        draggable: true,
-        animation: google.maps.Animation.DROP
-      });
-      markerRef.current = marker;
-
-      // Create search box
-      const input = document.getElementById('map-search-input') as HTMLInputElement;
-      const searchBox = new google.maps.places.SearchBox(input);
-      searchBoxRef.current = searchBox;
-
-      // Create places service
-      placesServiceRef.current = new google.maps.places.PlacesService(map);
-
-      // Set initial location if available
-      if (location) {
-        updateLocationFromLatLng(location.lat, location.lng);
-      } else {
-        updateLocationFromLatLng(initialPosition.lat, initialPosition.lng);
-      }
-
-      // Listen for marker drag events
-      marker.addListener('dragend', () => {
-        const position = marker.getPosition();
-        if (position) {
-          updateLocationFromLatLng(position.lat(), position.lng());
+          // Reverse geocode to get address for the new position
+          const geocoder = new google.maps.Geocoder();
+          geocoder.geocode({ location: position }, (results, status) => {
+            if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+              setLocation({
+                lat: position.lat(),
+                lng: position.lng(),
+                address: results[0].formatted_address,
+              });
+            } else {
+              setLocation({
+                lat: position.lat(),
+                lng: position.lng(),
+              });
+            }
+          });
         }
       });
-
-      // Listen for searchbox events
-      searchBox.addListener('places_changed', () => {
-        const places = searchBox.getPlaces();
-        if (places && places.length > 0) {
-          const place = places[0];
-          if (place.geometry && place.geometry.location) {
-            map.setCenter(place.geometry.location);
-            marker.setPosition(place.geometry.location);
-            updateLocationFromPlace(place);
-          }
-        }
-      });
-
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    } finally {
-      setLoading(false);
     }
   };
+
+  // Initialize the map when it becomes visible
+  useEffect(() => {
+    if (showMap) {
+      setTimeout(initMap, 100); // Short delay to ensure DOM is ready
+    }
+  }, [showMap]);
 
   const getCurrentPosition = (): Promise<GeolocationPosition> => {
     return new Promise((resolve, reject) => {
@@ -179,14 +147,18 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
   };
 
   const handleSearch = () => {
-    if (!searchQuery.trim() || !placesServiceRef.current || !mapInstanceRef.current) return;
+    if (!placesServiceRef.current || !searchQuery) return;
+
+    setLoading(true);
 
     const request = {
       query: searchQuery,
       fields: ['name', 'geometry', 'formatted_address']
     };
 
-    placesServiceRef.current.findPlaceFromQuery(request, (results, status) => {
+    placesServiceRef.current.textSearch({ query: searchQuery }, (results, status) => {
+      setLoading(false);
+
       if (status === google.maps.places.PlacesServiceStatus.OK && results) {
         setSearchResults(results);
 
@@ -194,7 +166,13 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
           const location = results[0].geometry.location;
           mapInstanceRef.current?.setCenter(location);
           markerRef.current?.setPosition(location);
-          updateLocationFromPlace(results[0]);
+
+          setLocation({
+            lat: location.lat(),
+            lng: location.lng(),
+            address: results[0].formatted_address,
+            name: results[0].name
+          });
         }
       }
     });

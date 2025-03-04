@@ -1,3 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// This makes TypeScript recognize the global google object
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
 
 declare namespace google.maps {
   class Map {

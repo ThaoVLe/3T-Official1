@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
 import React, { useState } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
+// Placeholder import - replace with actual component import
+import { LocationSelector } from "@/components/location-selector";
 
 
 export default function Editor() {
@@ -36,6 +38,7 @@ export default function Editor() {
       content: "",
       mediaUrls: [],
       feeling: null, 
+      location: null, // Added location to default values
     },
   });
 
@@ -46,6 +49,7 @@ export default function Editor() {
         content: entry.content,
         mediaUrls: entry.mediaUrls || [],
         feeling: entry.feeling, 
+        location: entry.location, // Added location to reset
       });
     }
   }, [entry, form]);
@@ -193,10 +197,18 @@ export default function Editor() {
         <div className="border-t bg-white sticky bottom-0 w-full">
           <div className="px-4 sm:px-6 py-3 flex items-center gap-4">
             <MediaRecorder onCapture={onMediaUpload} />
-            <FeelingSelector 
-              selectedFeeling={form.getValues("feeling")}
-              onSelect={(feeling) => form.setValue("feeling", feeling)}
-            />
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2 items-center">
+                <FeelingSelector
+                  selectedFeeling={form.getValues("feeling")}
+                  onSelect={(feeling) => form.setValue("feeling", feeling)}
+                />
+                <LocationSelector
+                  selectedLocation={form.getValues("location")}
+                  onSelect={(location) => form.setValue("location", location)}
+                />
+              </div>
+            </div>
           </div>
           {form.watch("mediaUrls")?.length > 0 && (
             <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">

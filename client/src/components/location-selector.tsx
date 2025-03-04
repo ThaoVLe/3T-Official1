@@ -15,170 +15,171 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<[number, number] | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
-  const leafletMapRef = useRef<any>(null);
+  const mapInstance = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  
+  // Handle getting current location
+  const getLocation = () => {
+    setIsLoading(true);
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setPosition([latitude, longitude]);
+          setIsOpen(true);
+          setIsLoading(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("Failed to get your location. Please try again.");
+          setIsLoading(false);
+          // Set a default position if geolocation fails
+          setPosition([51.505, -0.09]); // London as default
+          setIsOpen(true);
+        }
+      );
+    } else {
+      toast.error("Geolocation is not supported by your browser");
+      setIsLoading(false);
+      // Set a default position if geolocation is not supported
+      setPosition([51.505, -0.09]); // London as default
+      setIsOpen(true);
+    }
+  };
 
-  // Initialize map when dialog opens
+  // Load Leaflet when dialog opens
   useEffect(() => {
-    if (isOpen && position && mapRef.current) {
-      // Load Leaflet CSS
+    if (!isOpen || !position) return;
+    
+    const loadLeaflet = async () => {
+      // Add CSS if not already added
       if (!document.getElementById('leaflet-css')) {
         const link = document.createElement('link');
         link.id = 'leaflet-css';
         link.rel = 'stylesheet';
         link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-        link.crossOrigin = '';
         document.head.appendChild(link);
       }
-
-      // Load Leaflet JS
-      const loadLeaflet = async () => {
-        if (window.L) return window.L;
-        
-        return new Promise<any>((resolve) => {
+      
+      // Add script if Leaflet is not already loaded
+      if (!window.L) {
+        return new Promise<void>((resolve, reject) => {
           const script = document.createElement('script');
           script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-          script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-          script.crossOrigin = '';
-          script.onload = () => resolve(window.L);
+          script.onload = () => resolve();
+          script.onerror = () => {
+            console.error("Failed to load Leaflet script");
+            reject(new Error("Failed to load Leaflet"));
+          };
           document.head.appendChild(script);
         });
-      };
+      }
+    };
 
-      // Initialize map
-      const initMap = async () => {
-        const L = await loadLeaflet();
-        
-        if (leafletMapRef.current) {
-          leafletMapRef.current.remove();
-        }
-        
-        // Create map
-        leafletMapRef.current = L.map(mapRef.current).setView(position, 13);
-        
-        // Add tile layer (map image source)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(leafletMapRef.current);
-        
-        // Add marker
-        markerRef.current = L.marker(position, { draggable: true })
-          .addTo(leafletMapRef.current)
-          .bindPopup('Your selected location')
-          .openPopup();
-        
-        // Update position when marker is dragged
-        markerRef.current.on('dragend', function() {
-          const newPos = markerRef.current.getLatLng();
-          setPosition([newPos.lat, newPos.lng]);
-        });
-        
-        // Add click handler to map
-        leafletMapRef.current.on('click', function(e: any) {
-          const { lat, lng } = e.latlng;
-          setPosition([lat, lng]);
-          
-          if (markerRef.current) {
-            markerRef.current.setLatLng([lat, lng]);
-          }
-        });
-      };
+    loadLeaflet()
+      .then(() => {
+        // Wait a moment to ensure DOM is ready
+        setTimeout(initializeMap, 100);
+      })
+      .catch(error => {
+        console.error("Error loading Leaflet:", error);
+        toast.error("Failed to load map. Please try again.");
+      });
       
-      initMap();
-      
-      // Cleanup
-      return () => {
-        if (leafletMapRef.current) {
-          leafletMapRef.current.remove();
-          leafletMapRef.current = null;
-        }
-      };
-    }
+    return () => {
+      // Cleanup when dialog closes
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
   }, [isOpen, position]);
-
-  const getLocation = () => {
-    setIsLoading(true);
-    toast.info("Fetching your location...");
+  
+  // Initialize the map
+  const initializeMap = () => {
+    if (!mapRef.current || !window.L || !position) return;
     
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setPosition([position.coords.latitude, position.coords.longitude]);
-          setIsOpen(true);
-          setIsLoading(false);
-        },
-        (error) => {
-          console.error("Error getting user's location:", error);
-          // If we can't get user location, still open the map at a default location
-          setPosition([40.7128, -74.0060]); // Default to NYC
-          setIsOpen(true);
-          setIsLoading(false);
-          toast.error(`Could not get your location: ${error.message}`);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    } else {
-      console.error("Geolocation is not supported by this browser.");
-      toast.error("Geolocation is not supported by your browser.");
-      setIsLoading(false);
+    // Clean up existing map instance
+    if (mapInstance.current) {
+      mapInstance.current.remove();
+    }
+    
+    try {
+      console.log("Initializing map with position:", position);
+      
+      // Create map
+      const map = window.L.map(mapRef.current).setView(position, 13);
+      
+      // Add tile layer
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      
+      // Add marker
+      const marker = window.L.marker(position, { draggable: true }).addTo(map);
+      
+      // Update position when marker is dragged
+      marker.on('dragend', () => {
+        const newPos = marker.getLatLng();
+        setPosition([newPos.lat, newPos.lng]);
+      });
+      
+      // Update position when map is clicked
+      map.on('click', (e: any) => {
+        const { lat, lng } = e.latlng;
+        setPosition([lat, lng]);
+        marker.setLatLng([lat, lng]);
+      });
+      
+      // Store references
+      mapInstance.current = map;
+      markerRef.current = marker;
+      
+      // Make sure map renders correctly by forcing a resize
+      map.invalidateSize();
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      toast.error("Failed to initialize map");
     }
   };
 
-  const confirmLocation = async () => {
-    if (!position) {
-      toast.error("Please select a location on the map");
-      return;
-    }
-
+  const reverseGeocode = async () => {
+    if (!position) return;
+    
+    setIsLoading(true);
     try {
-      toast.info("Getting location name...");
-      // Try to reverse geocode the coordinates to get a human-readable location
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position[0]}&lon=${position[1]}&zoom=18&addressdetails=1`
       );
-
+      
       if (response.ok) {
         const data = await response.json();
         console.log("Geocoding response:", data);
         
-        // Get a simplified location like "City, Country" or fallback to coordinates
-        let locationText = "Unknown location";
-
-        if (data.address) {
-          const city = data.address.city || data.address.town || data.address.village || data.address.hamlet;
-          const country = data.address.country;
-          
-          if (city && country) {
-            locationText = `${city}, ${country}`;
-          } else if (city) {
-            locationText = city;
-          } else if (country) {
-            locationText = country;
-          }
+        if (data && data.display_name) {
+          onSelect(data.display_name);
+          setIsOpen(false);
+        } else {
+          toast.error("Could not find address for this location");
         }
-
-        onSelect(locationText);
-        toast.success(`Location added: ${locationText}`);
       } else {
-        console.error("Error response from geocoding service:", await response.text());
-        // Fallback to coordinates if reverse geocoding fails
-        const location = `${position[0].toFixed(4)}, ${position[1].toFixed(4)}`;
-        onSelect(location);
-        toast.success(`Location added: ${location}`);
+        toast.error("Failed to get address information");
       }
     } catch (error) {
-      console.error("Error in reverse geocoding:", error);
-      const location = `${position[0].toFixed(4)}, ${position[1].toFixed(4)}`;
-      onSelect(location);
-      toast.success(`Location added: ${location}`);
+      console.error("Error getting address:", error);
+      toast.error("Failed to get address information");
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsOpen(false);
+  };
+
+  const confirmLocation = () => {
+    if (position) {
+      reverseGeocode();
+    } else {
+      toast.error("Please select a location first");
+    }
   };
 
   return (
@@ -209,6 +210,12 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
             </Dialog.Description>
 
             <div className="w-full h-[300px] mb-4 relative rounded overflow-hidden border border-gray-200">
+              {/* Loading indicator */}
+              {!window.L && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                </div>
+              )}
               <div ref={mapRef} className="w-full h-full"></div>
             </div>
 

@@ -35,7 +35,7 @@ export default function Editor() {
       title: "",
       content: "",
       mediaUrls: [],
-      feeling: null, // Initialize feeling as null to match the DB schema
+      feeling: null, 
     },
   });
 
@@ -45,7 +45,7 @@ export default function Editor() {
         title: entry.title,
         content: entry.content,
         mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling, // Ensure feeling is loaded from entry data
+        feeling: entry.feeling, 
       });
     }
   }, [entry, form]);

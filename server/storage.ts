@@ -29,7 +29,8 @@ export class DatabaseStorage implements IStorage {
       .values({
         title: entry.title,
         content: entry.content,
-        mediaUrls: entry.mediaUrls || []
+        mediaUrls: entry.mediaUrls || [],
+        feeling: entry.feeling // Add feeling to the database insert
       })
       .returning();
     return newEntry;
@@ -41,7 +42,8 @@ export class DatabaseStorage implements IStorage {
       .set({
         title: entry.title,
         content: entry.content,
-        mediaUrls: entry.mediaUrls || []
+        mediaUrls: entry.mediaUrls || [],
+        feeling: entry.feeling // Add feeling to the database update
       })
       .where(eq(diaryEntries.id, id))
       .returning();

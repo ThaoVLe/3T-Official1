@@ -29,8 +29,14 @@ export default function EntryCard({ entry }: EntryCardProps) {
     },
   });
 
-  // Use entry.feeling directly without local state to ensure consistency
-  const feeling = entry.feeling;
+  // Get feeling from entry and ensure it's properly typed
+  const feeling = entry.feeling ? {
+    emoji: entry.feeling.emoji || "",
+    label: entry.feeling.label || ""
+  } : null;
+
+  // Debug log to check feeling data
+  console.log(`Entry ${entry.id} feeling:`, feeling);
 
 
   return (

@@ -66,6 +66,12 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
       setMapError(null);
       setLoading(true);
       
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      setMapError("Failed to initialize Google Maps");
+      setLoading(false);
+    }
+      
       // Default to a central location if none provided
       const initialPosition = { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
 

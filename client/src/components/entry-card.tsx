@@ -63,7 +63,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
           <CardTitle className="text-xl font-semibold line-clamp-1">
             <span>{entry.title || "Untitled Entry"}</span>
           </CardTitle>
-          <div className="flex items-center justify-between text-sm mt-1 w-full">
+          <div className="flex items-center text-sm mt-1 w-full">
             <div className="flex items-center">
               {feeling && (
                 <>
@@ -72,9 +72,8 @@ export default function EntryCard({ entry }: EntryCardProps) {
                   <span>{feeling.emoji}</span>
                 </>
               )}
-            </div>
-            <div className="text-muted-foreground">
-              <span>{formatTimeAgo(entry.createdAt)}</span>
+              <span className="ml-10"></span> {/* 10 blank spaces */}
+              <span className="text-muted-foreground">{formatTimeAgo(entry.createdAt)}</span>
             </div>
           </div>
         </div>

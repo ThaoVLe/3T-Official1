@@ -1,36 +1,50 @@
+
 import { useParams, useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form } from "@/components/ui/form";
-import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertEntrySchema, type DiaryEntry, type InsertEntry } from "@shared/schema";
 import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 // Placeholder import - replace with actual component import
 import { LocationSelector } from "@/components/location-selector";
-
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Editor() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Always declare all hooks at the top level, regardless of conditions
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: entry, isLoading: isLoadingEntry } = useQuery<DiaryEntry>({
+  const form = useForm<InsertEntry>({
+    resolver: zodResolver(insertEntrySchema),
+    defaultValues: {
+      title: "",
+      content: "",
+      mediaUrls: [],
+      feeling: null, 
+      location: null,
+    },
+  });
+
+  // Use the useQuery hook regardless of whether id exists
+  const { data: entry, isLoading: isLoadingEntry } = useQuery({
     queryKey: [`/api/entries/${id}`],
-    enabled: !!id,
-    onSuccess: (data) => {
+    enabled: !!id, // Only enable the query if id exists
+    onSuccess: (data: DiaryEntry) => {
       console.log("Successfully loaded entry:", data);
       if (data) {
         form.reset({
@@ -51,26 +65,6 @@ export default function Editor() {
       });
     }
   });
-
-  const form = useForm<InsertEntry>({
-    resolver: zodResolver(insertEntrySchema),
-    defaultValues: {
-      title: "",
-      content: "",
-      mediaUrls: [],
-      feeling: null, 
-      location: null, // Added location to default values
-    },
-  });
-
-  // Loading indicator for when entry is being fetched
-  if (id && isLoadingEntry) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
@@ -184,6 +178,7 @@ export default function Editor() {
     form.setValue("mediaUrls", newUrls);
   };
 
+  // Effects should be declared after all hooks
   useEffect(() => {
     if (id && entry) {
       form.reset({
@@ -196,6 +191,15 @@ export default function Editor() {
       console.log("Resetting form with entry:", entry);
     }
   }, [entry, id, form]);
+
+  // Loading indicator for when entry is being fetched
+  if (id && isLoadingEntry) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white w-full">
@@ -238,6 +242,50 @@ export default function Editor() {
         </div>
       </div>
 
+      {/* Feeling & Location Selectors */}
+      <div className="border-b bg-white w-full">
+        <div className="flex items-center gap-2 px-4 sm:px-6 py-2 overflow-x-auto">
+          <FeelingSelector 
+            value={form.watch("feeling")} 
+            onChange={(feeling) => form.setValue("feeling", feeling)} 
+          />
+          <LocationSelector 
+            value={form.watch("location")} 
+            onChange={(location) => form.setValue("location", location)} 
+          />
+        </div>
+      </div>
+
+      {/* Media Attachment */}
+      <div className="border-b bg-white w-full">
+        <div className="px-4 sm:px-6 py-2">
+          <MediaRecorder onCapture={onMediaUpload} />
+        </div>
+        {(form.watch("mediaUrls")?.length > 0 || tempMediaUrls.length > 0) && (
+          <div className="px-4 sm:px-6 pb-3">
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-2">
+              {form.watch("mediaUrls")?.map((url, index) => (
+                <div key={index} className="relative flex-shrink-0">
+                  <MediaPreview 
+                    url={url} 
+                    onRemove={() => onMediaRemove(index)} 
+                  />
+                </div>
+              ))}
+              {isUploading && (
+                <div className="relative h-24 w-24 flex-shrink-0 bg-muted rounded overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-full w-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-xs font-medium">{uploadProgress}%</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Content Area */}
       <div className="flex-1 flex flex-col overflow-auto w-full">
         <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
@@ -245,38 +293,6 @@ export default function Editor() {
             value={form.watch("content")} 
             onChange={(value) => form.setValue("content", value)} 
           />
-        </div>
-
-        {/* Media Controls - Fixed at bottom */}
-        <div className="border-t bg-white sticky bottom-0 w-full">
-          <div className="px-4 sm:px-6 py-3 flex items-center gap-4">
-            <MediaRecorder onCapture={onMediaUpload} />
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2 items-center">
-                <FeelingSelector
-                  selectedFeeling={form.getValues("feeling")}
-                  onSelect={(feeling) => form.setValue("feeling", feeling)}
-                />
-                <LocationSelector
-                  selectedLocation={form.getValues("location")}
-                  onSelect={(location) => {
-                    console.log("Location selected:", location);
-                    form.setValue("location", location);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          {form.watch("mediaUrls")?.length > 0 && (
-            <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
-              <MediaPreview 
-                urls={form.watch("mediaUrls")} 
-                onRemove={onMediaRemove}
-                loading={isUploading}
-                uploadProgress={uploadProgress}
-              />
-            </div>
-          )}
         </div>
       </div>
     </div>

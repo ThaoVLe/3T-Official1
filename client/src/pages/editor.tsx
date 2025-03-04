@@ -195,22 +195,29 @@ export default function Editor() {
 
         {/* Media Controls - Fixed at bottom */}
         <div className="border-t bg-white sticky bottom-0 w-full">
-          <div className="px-4 sm:px-6 py-3 flex items-center gap-4">
-            <MediaRecorder onCapture={onMediaUpload} />
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2 items-center">
-                <FeelingSelector
-                  selectedFeeling={form.getValues("feeling")}
-                  onSelect={(feeling) => form.setValue("feeling", feeling)}
-                />
-                <LocationSelector
-                  selectedLocation={form.getValues("location")}
-                  onSelect={(location) => {
-                    console.log("Location selected:", location);
-                    form.setValue("location", location);
-                  }}
-                />
-              </div>
+          <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">How are you feeling today?</span>
+              <FeelingSelector
+                selectedFeeling={form.getValues("feeling")}
+                onSelect={(feeling) => form.setValue("feeling", feeling)}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Checking in at:</span>
+              <LocationSelector
+                selectedLocation={form.getValues("location")}
+                onSelect={(location) => {
+                  console.log("Location selected:", location);
+                  form.setValue("location", location);
+                }}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Add media:</span>
+              <MediaRecorder onCapture={onMediaUpload} />
             </div>
           </div>
           {form.watch("mediaUrls")?.length > 0 && (

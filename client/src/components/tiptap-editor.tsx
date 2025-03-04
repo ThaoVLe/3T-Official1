@@ -68,12 +68,23 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   });
 
   useEffect(() => {
-    if (editor && value !== undefined && value !== editor.getHTML()) {
+    if (!editor) return;
+    
+    try {
+      const currentContent = editor.getHTML();
+      const newContent = value || '';
+      
+      // Only update if content is different to prevent unnecessary re-renders
+      if (currentContent !== newContent) {
+        editor.commands.setContent(newContent, false);
+      }
+    } catch (error) {
+      console.error("Error setting editor content:", error);
+      // Safely reset to empty content if there's an error
       try {
-        editor.commands.setContent(value || '', false);
-      } catch (error) {
-        console.error("Error setting editor content:", error);
         editor.commands.setContent('', false);
+      } catch (fallbackError) {
+        console.error("Failed to reset editor content:", fallbackError);
       }
     }
   }, [editor, value]);

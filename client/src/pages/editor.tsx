@@ -12,7 +12,7 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 // Placeholder import - replace with actual component import
 import { LocationSelector } from "@/components/location-selector";
@@ -195,7 +195,7 @@ export default function Editor() {
       });
       console.log("Resetting form with entry:", entry);
     }
-  }, [entry, id, form.reset]);
+  }, [entry, id, form]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white w-full">

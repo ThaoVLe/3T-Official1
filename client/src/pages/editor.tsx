@@ -32,6 +32,15 @@ export default function Editor() {
     enabled: !!id,
     onSuccess: (data) => {
       console.log("Successfully loaded entry:", data);
+      if (data) {
+        form.reset({
+          title: data.title || "",
+          content: data.content || "",
+          mediaUrls: data.mediaUrls || [],
+          feeling: data.feeling || null,
+          location: data.location || null,
+        });
+      }
     },
     onError: (error) => {
       console.error("Error loading entry:", error);
@@ -54,27 +63,30 @@ export default function Editor() {
     },
   });
 
-  React.useEffect(() => {
-    if (entry) {
-      console.log("Resetting form with entry:", entry);
-      form.reset({
-        title: entry.title || "",
-        content: entry.content || "",
-        mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling || null, 
-        location: entry.location || null,
-      });
-    }
-  }, [entry, form]);
+  // Loading indicator for when entry is being fetched
+  if (id && isLoadingEntry) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
       setIsSubmitting(true);
       try {
+        const payload = {
+          ...data,
+          feeling: data.feeling || null,
+          location: data.location || null,
+          mediaUrls: data.mediaUrls || []
+        };
+        
         if (id) {
-          return await apiRequest("PUT", `/api/entries/${id}`, data);
+          return await apiRequest("PUT", `/api/entries/${id}`, payload);
         } else {
-          return await apiRequest("POST", "/api/entries", data);
+          return await apiRequest("POST", "/api/entries", payload);
         }
       } finally {
         setIsSubmitting(false);

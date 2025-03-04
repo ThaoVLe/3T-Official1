@@ -64,13 +64,18 @@ export default function EntryCard({ entry }: EntryCardProps) {
             {entry.title || "Untitled Entry"}
           </CardTitle>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>{formatTimeAgo(entry.createdAt)}</span>
-            {feeling && (
-              <span className="flex items-center">
-                <span className="mr-1">{feeling.emoji}</span>
-                <span>{feeling.label}</span>
-              </span>
-            )}
+            <div className="flex items-center">
+              {feeling && (
+                <span className="flex items-center">
+                  <span className="text-muted-foreground">is feeling</span>
+                  <span className="mx-1">{feeling.emoji}</span>
+                  <span>{feeling.label}</span>
+                </span>
+              )}
+            </div>
+            <div className="text-right">
+              <span>{formatTimeAgo(entry.createdAt)}</span>
+            </div>
           </div>
         </div>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

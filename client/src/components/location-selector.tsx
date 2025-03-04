@@ -14,6 +14,7 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<[number, number] | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -53,96 +54,90 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
     if (!isOpen || !position) return;
     
     const loadLeaflet = async () => {
-      // Add CSS if not already added
-      if (!document.getElementById('leaflet-css')) {
-        const link = document.createElement('link');
-        link.id = 'leaflet-css';
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-      }
-      
-      // Add script if Leaflet is not already loaded
-      if (!window.L) {
-        return new Promise<void>((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-          script.onload = () => resolve();
-          script.onerror = () => {
-            console.error("Failed to load Leaflet script");
-            reject(new Error("Failed to load Leaflet"));
-          };
-          document.head.appendChild(script);
-        });
-      }
-    };
-
-    loadLeaflet()
-      .then(() => {
-        // Wait a moment to ensure DOM is ready
-        setTimeout(initializeMap, 100);
-      })
-      .catch(error => {
+      try {
+        // Add CSS if not already added
+        if (!document.getElementById('leaflet-css')) {
+          const link = document.createElement('link');
+          link.id = 'leaflet-css';
+          link.rel = 'stylesheet';
+          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+          document.head.appendChild(link);
+        }
+        
+        // Add script if Leaflet is not already loaded
+        if (!window.L) {
+          await new Promise<void>((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            script.onload = () => resolve();
+            script.onerror = () => {
+              console.error("Failed to load Leaflet script");
+              reject(new Error("Failed to load Leaflet"));
+            };
+            document.head.appendChild(script);
+          });
+        }
+        
+        setMapLoaded(true);
+      } catch (error) {
         console.error("Error loading Leaflet:", error);
         toast.error("Failed to load map. Please try again.");
-      });
-      
-    return () => {
-      // Cleanup when dialog closes
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
       }
     };
-  }, [isOpen, position]);
-  
-  // Initialize the map
-  const initializeMap = () => {
-    if (!mapRef.current || !window.L || !position) return;
     
-    // Clean up existing map instance
+    loadLeaflet();
+  }, [isOpen, position]);
+
+  // Initialize map after Leaflet is loaded
+  useEffect(() => {
+    if (!isOpen || !position || !mapLoaded || !mapRef.current || !window.L) return;
+    
+    // Clear previous instances
     if (mapInstance.current) {
       mapInstance.current.remove();
+      mapInstance.current = null;
     }
     
     try {
       console.log("Initializing map with position:", position);
       
       // Create map
-      const map = window.L.map(mapRef.current).setView(position, 13);
+      mapInstance.current = window.L.map(mapRef.current).setView(position, 13);
       
       // Add tile layer
       window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
+      }).addTo(mapInstance.current);
       
       // Add marker
-      const marker = window.L.marker(position, { draggable: true }).addTo(map);
+      markerRef.current = window.L.marker(position, {
+        draggable: true
+      }).addTo(mapInstance.current);
       
       // Update position when marker is dragged
-      marker.on('dragend', () => {
-        const newPos = marker.getLatLng();
-        setPosition([newPos.lat, newPos.lng]);
+      markerRef.current.on('dragend', (event: any) => {
+        const marker = event.target;
+        const pos = marker.getLatLng();
+        setPosition([pos.lat, pos.lng]);
       });
       
       // Update position when map is clicked
-      map.on('click', (e: any) => {
+      mapInstance.current.on('click', (e: any) => {
         const { lat, lng } = e.latlng;
         setPosition([lat, lng]);
-        marker.setLatLng([lat, lng]);
+        markerRef.current.setLatLng([lat, lng]);
       });
-      
-      // Store references
-      mapInstance.current = map;
-      markerRef.current = marker;
-      
-      // Make sure map renders correctly by forcing a resize
-      map.invalidateSize();
     } catch (error) {
       console.error("Error initializing map:", error);
-      toast.error("Failed to initialize map");
+      toast.error("Failed to initialize map. Please try again.");
     }
-  };
+  }, [isOpen, position, mapLoaded]);
+
+  // Update marker position when position changes
+  useEffect(() => {
+    if (!mapInstance.current || !markerRef.current || !position) return;
+    markerRef.current.setLatLng(position);
+  }, [position]);
 
   const reverseGeocode = async () => {
     if (!position) return;
@@ -160,6 +155,7 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
         if (data && data.display_name) {
           onSelect(data.display_name);
           setIsOpen(false);
+          toast.success("Location added successfully");
         } else {
           toast.error("Could not find address for this location");
         }
@@ -208,10 +204,10 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
             <Dialog.Description className="text-sm text-gray-600 mb-4">
               Click on the map to select a specific location, or drag the marker to adjust.
             </Dialog.Description>
-
+            
             <div className="w-full h-[300px] mb-4 relative rounded overflow-hidden border border-gray-200">
               {/* Loading indicator */}
-              {!window.L && (
+              {(!window.L || !mapLoaded) && (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                 </div>

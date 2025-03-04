@@ -92,15 +92,16 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
   };
 
   // Handle sheet open state change
-  const handleOpenChange = async (newOpen: boolean) => {
+  const handleOpenChange = (newOpen: boolean) => {
     if (newOpen) {
-      // Ensure keyboard is fully dismissed before opening the sheet
-      await hideKeyboard();
-
-      // Short delay before opening sheet to ensure keyboard is gone
-      setTimeout(() => {
-        setOpen(true);
-      }, 50);
+      // For programmatic sheet opening, we'll handle keyboard dismissal
+      // in the button click handler instead for more direct control
+      setOpen(true);
+      
+      // Additional safety measure: ensure any active text input loses focus
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
     } else {
       setOpen(false);
     }
@@ -115,8 +116,33 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           aria-label="Select feeling"
           onClick={(e) => {
             e.preventDefault();
-            hideKeyboard();
-            setOpen(true);
+            
+            // Aggressive keyboard dismissal on button click
+            if (document.activeElement instanceof HTMLElement) {
+              document.activeElement.blur();
+            }
+            
+            // Create an invisible input field, focus and blur it to force keyboard dismissal
+            const tempInput = document.createElement('input');
+            tempInput.style.position = 'fixed';
+            tempInput.style.opacity = '0';
+            tempInput.style.top = '-1000px';
+            tempInput.style.left = '0';
+            document.body.appendChild(tempInput);
+            
+            // Focus and immediately blur with a small delay
+            tempInput.focus();
+            
+            // On iOS we need to wait before removing the element
+            setTimeout(() => {
+              tempInput.blur();
+              document.body.removeChild(tempInput);
+              
+              // Now open the sheet after ensuring keyboard is dismissed
+              setTimeout(() => {
+                setOpen(true);
+              }, 50);
+            }, 50);
           }}
         >
           {selectedFeeling ? (
@@ -129,7 +155,10 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[100dvh] pt-6">
+      <SheetContent side="bottom" className="h-[100dvh] pt-6" onOpenAutoFocus={(e) => {
+        // Prevent default auto focus behavior to avoid keyboard popup
+        e.preventDefault();
+      }}>
         <SheetHeader className="mb-4">
           <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>
         </SheetHeader>
@@ -146,6 +175,10 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="mb-2"
+              onFocus={(e) => {
+                // If we need to allow search but want to prevent keyboard initially
+                // we can add specific handling here if needed
+              }}
             />
           </div>
 

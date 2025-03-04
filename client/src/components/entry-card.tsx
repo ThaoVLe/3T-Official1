@@ -63,8 +63,8 @@ export default function EntryCard({ entry }: EntryCardProps) {
           <CardTitle className="text-xl font-semibold line-clamp-1">
             {entry.title || "Untitled Entry"}
           </CardTitle>
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center">
+          <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
+            <div className="flex-1 flex items-center">
               {feeling && (
                 <span className="flex items-center">
                   <span className="text-muted-foreground">is feeling</span>
@@ -73,7 +73,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
                 </span>
               )}
             </div>
-            <div className="text-right">
+            <div className="flex-shrink-0 text-right ml-2">
               <span>{formatTimeAgo(entry.createdAt)}</span>
             </div>
           </div>

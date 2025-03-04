@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState } from 'react'; // Added import for useState
+import { useState } from 'react';
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -35,9 +35,26 @@ export default function EntryCard({ entry }: EntryCardProps) {
     label: entry.feeling.label || ""
   } : null;
 
-  // Debug log to check feeling data
-  console.log(`Entry ${entry.id} feeling:`, feeling);
+  // Function to format time display
+  const formatTimeAgo = (date: string | number | Date) => {
+    const now = new Date();
+    const entryDate = new Date(date);
+    const diffInDays = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
 
+    if (diffInDays > 30) {
+      return format(entryDate, "MMMM d, yyyy");
+    } else if (diffInDays > 0) {
+      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+    } else {
+      const diffInHours = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60));
+      if (diffInHours > 0) {
+        return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+      } else {
+        const diffInMinutes = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60));
+        return diffInMinutes <= 0 ? 'Just now' : `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+      }
+    }
+  };
 
   return (
     <Card className="group hover:shadow-lg transition-shadow duration-200">
@@ -46,13 +63,15 @@ export default function EntryCard({ entry }: EntryCardProps) {
           <CardTitle className="text-xl font-semibold line-clamp-1">
             {entry.title || "Untitled Entry"}
           </CardTitle>
-          {feeling && (
-            <div className="text-sm mt-1 flex items-center gap-1.5">
-              <span className="text-muted-foreground">is feeling</span>
-              <span>{feeling.label}</span>
-              <span>{feeling.emoji}</span>
-            </div>
-          )}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{formatTimeAgo(entry.createdAt)}</span>
+            {feeling && (
+              <span className="flex items-center">
+                <span className="mr-1">{feeling.emoji}</span>
+                <span>{feeling.label}</span>
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <Link href={`/edit/${entry.id}`}>
@@ -74,9 +93,6 @@ export default function EntryCard({ entry }: EntryCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-sm text-muted-foreground mb-2">
-          {format(new Date(entry.createdAt), "EEEE, MMMM d, yyyy 'at' h:mm a")}
-        </div>
         <div
           className="prose prose-sm dark:prose-invert max-w-none line-clamp-3 mb-4"
           dangerouslySetInnerHTML={{ __html: entry.content }}

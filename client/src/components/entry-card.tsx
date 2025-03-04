@@ -29,8 +29,8 @@ export default function EntryCard({ entry }: EntryCardProps) {
     },
   });
 
-  // Added state for feeling display
-  const [feeling, setFeeling] = useState(entry.feeling || null);
+  // Use entry.feeling directly without local state to ensure consistency
+  const feeling = entry.feeling;
 
 
   return (

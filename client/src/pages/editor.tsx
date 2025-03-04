@@ -35,7 +35,7 @@ export default function Editor() {
       title: "",
       content: "",
       mediaUrls: [],
-      feeling: "", // Added feeling field to default values
+      feeling: null, // Initialize feeling as null to match the DB schema
     },
   });
 

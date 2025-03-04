@@ -58,7 +58,8 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
   );
   
   const handleSelect = (feeling: { emoji: string; label: string }) => {
-    onSelect(feeling);
+    // Make sure we pass a properly structured feeling object with both emoji and label
+    onSelect({ emoji: feeling.emoji, label: feeling.label });
     setOpen(false);
   };
   

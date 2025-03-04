@@ -72,18 +72,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/entries", async (req, res) => {
+    console.log("Creating entry with data:", req.body);
     const result = insertEntrySchema.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ message: "Invalid entry data" });
+      console.error("Validation error:", result.error);
+      return res.status(400).json({ message: "Invalid entry data", errors: result.error.errors });
     }
     const entry = await storage.createEntry(result.data);
     res.status(201).json(entry);
   });
 
   app.put("/api/entries/:id", async (req, res) => {
+    console.log("Updating entry with data:", req.body);
     const result = insertEntrySchema.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ message: "Invalid entry data" });
+      console.error("Validation error:", result.error);
+      return res.status(400).json({ message: "Invalid entry data", errors: result.error.errors });
     }
     const entry = await storage.updateEntry(parseInt(req.params.id), result.data);
     if (!entry) return res.status(404).json({ message: "Entry not found" });

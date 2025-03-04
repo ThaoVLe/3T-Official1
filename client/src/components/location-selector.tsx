@@ -20,95 +20,9 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [mapScriptLoaded, setMapScriptLoaded] = useState(false);
-
-  // Load Google Maps script
-  useEffect(() => {
-    if (isOpen && !mapScriptLoaded) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      
-      script.onload = () => {
-        console.log("Google Maps script loaded");
-        setMapScriptLoaded(true);
-      };
-      
-      script.onerror = () => {
-        console.error("Error loading Google Maps script");
-        toast.error("Failed to load map. Please try again later.");
-        setIsOpen(false);
-        setIsLoading(false);
-      };
-      
-      document.head.appendChild(script);
-      
-      return () => {
-        // Cleanup function to remove script if component unmounts before script loads
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-      };
-    }
-  }, [isOpen, mapScriptLoaded]);
-  
-  // Initialize map when position is available and script is loaded
-  useEffect(() => {
-    if (isOpen && mapScriptLoaded && position && mapContainerRef.current) {
-      console.log("Initializing map with position:", position);
-      
-      try {
-        // Create map instance
-        const mapOptions: google.maps.MapOptions = {
-          center: position,
-          zoom: 15,
-          mapTypeControl: true,
-          streetViewControl: false,
-          fullscreenControl: true,
-        };
-        
-        const map = new window.google.maps.Map(mapContainerRef.current, mapOptions);
-        mapRef.current = map;
-        
-        // Add marker at the current position
-        const marker = new window.google.maps.Marker({
-          position: position,
-          map: map,
-          draggable: true,
-          animation: window.google.maps.Animation.DROP,
-        });
-        markerRef.current = marker;
-        
-        // Update position when marker is dragged
-        marker.addListener("dragend", () => {
-          if (marker.getPosition()) {
-            const newPos = marker.getPosition();
-            if (newPos) {
-              setPosition({
-                lat: newPos.lat(),
-                lng: newPos.lng()
-              });
-            }
-          }
-        });
-        
-        // Click on map to update marker position
-        map.addListener("click", (e: google.maps.MapMouseEvent) => {
-          if (e.latLng && markerRef.current) {
-            markerRef.current.setPosition(e.latLng);
-            setPosition({
-              lat: e.latLng.lat(),
-              lng: e.latLng.lng()
-            });
-          }
-        });
-      } catch (error) {
-        console.error("Error initializing map:", error);
-        toast.error("Failed to initialize map. Please try again.");
-      }
-    }
-  }, [isOpen, position, mapScriptLoaded]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Handle Get Location button click
   const getLocation = useCallback(() => {
@@ -142,6 +56,146 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
       setIsLoading(false);
     }
   }, []);
+
+  // Load Google Maps script
+  useEffect(() => {
+    // Only load the script once, and only when needed
+    if (!window.google && !document.getElementById('google-maps-script') && isOpen) {
+      const script = document.createElement('script');
+      script.id = 'google-maps-script';
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        console.log("Google Maps script loaded");
+        setMapScriptLoaded(true);
+      };
+      
+      script.onerror = () => {
+        console.error("Error loading Google Maps script");
+        toast.error("Failed to load map. Please try again later.");
+        setIsOpen(false);
+        setIsLoading(false);
+      };
+      
+      document.head.appendChild(script);
+    } else if (window.google && isOpen) {
+      // If already loaded, just set the flag
+      setMapScriptLoaded(true);
+    }
+  }, [isOpen]);
+  
+  // Initialize map when position is available and script is loaded
+  useEffect(() => {
+    if (isOpen && mapScriptLoaded && position && mapContainerRef.current) {
+      console.log("Initializing map with position:", position);
+      
+      try {
+        // Create map instance
+        const mapOptions: google.maps.MapOptions = {
+          center: position,
+          zoom: 15,
+          mapTypeControl: true,
+          streetViewControl: false,
+          fullscreenControl: true,
+        };
+        
+        // Create a new map
+        const map = new window.google.maps.Map(mapContainerRef.current, mapOptions);
+        mapRef.current = map;
+        
+        // Create a marker for the current position
+        const marker = new window.google.maps.Marker({
+          position: position,
+          map: map,
+          draggable: true,
+          title: "Your location"
+        });
+        markerRef.current = marker;
+        
+        // Add event listener for marker drag
+        marker.addListener('dragend', () => {
+          const newPos = marker.getPosition();
+          if (newPos) {
+            setPosition({
+              lat: newPos.lat(),
+              lng: newPos.lng()
+            });
+          }
+        });
+        
+        // Add event listener for map click
+        map.addListener('click', (e: google.maps.MapMouseEvent) => {
+          if (e.latLng) {
+            const clickPos = e.latLng;
+            marker.setPosition(clickPos);
+            setPosition({
+              lat: clickPos.lat(),
+              lng: clickPos.lng()
+            });
+          }
+        });
+        
+        // Setup search box
+        if (searchInputRef.current) {
+          const searchBox = new window.google.maps.places.SearchBox(searchInputRef.current);
+          
+          // Bias the SearchBox results towards current map's viewport
+          map.addListener('bounds_changed', () => {
+            searchBox.setBounds(map.getBounds() as google.maps.LatLngBounds);
+          });
+          
+          // Listen for the event fired when the user selects a prediction
+          searchBox.addListener('places_changed', () => {
+            const places = searchBox.getPlaces();
+            
+            if (!places || places.length === 0) {
+              return;
+            }
+            
+            // For each place, get the icon, name and location.
+            const bounds = new window.google.maps.LatLngBounds();
+            
+            places.forEach((place) => {
+              if (!place.geometry || !place.geometry.location) {
+                console.log("Returned place contains no geometry");
+                return;
+              }
+              
+              // Update marker position
+              marker.setPosition(place.geometry.location);
+              setPosition({
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
+              });
+              
+              if (place.geometry.viewport) {
+                // Only geocodes have viewport.
+                bounds.union(place.geometry.viewport);
+              } else {
+                bounds.extend(place.geometry.location);
+              }
+            });
+            
+            map.fitBounds(bounds);
+          });
+        }
+        
+      } catch (error) {
+        console.error("Error initializing map:", error);
+        toast.error("Failed to initialize map");
+      }
+    }
+    
+    // Cleanup function to remove map when dialog closes
+    return () => {
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+        markerRef.current = null;
+      }
+    };
+  }, [isOpen, mapScriptLoaded, position]);
 
   // Reverse geocode to get address from location
   const reverseGeocode = async () => {
@@ -190,6 +244,10 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
       // Don't reset map and marker references here, they'll be recreated when needed
     }
   };
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   return (
     <>
@@ -226,9 +284,21 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
             </div>
 
             <div className="mb-4">
-              <p className="text-gray-600 text-sm mb-4">
-                Click on the map to select a location or drag the marker to adjust the position.
+              <p className="text-gray-600 text-sm mb-2">
+                Search for a location or click on the map to select a point
               </p>
+              
+              {/* Search box */}
+              <div className="relative mb-4">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search for restaurants, addresses, or places..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
+              </div>
 
               <div 
                 ref={mapContainerRef}
@@ -241,6 +311,11 @@ export function LocationSelector({ onSelect, selectedLocation }: LocationSelecto
                   </div>
                 )}
               </div>
+              
+              {/* Instructions */}
+              <p className="text-gray-500 text-xs mt-2">
+                Click on the map to select a location or drag the marker to adjust the position.
+              </p>
             </div>
 
             <div className="flex justify-end gap-2 mt-4">

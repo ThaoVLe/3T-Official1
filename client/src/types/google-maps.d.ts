@@ -1,3 +1,4 @@
+
 // Type definitions for Google Maps
 declare namespace google {
   namespace maps {
@@ -8,6 +9,8 @@ declare namespace google {
       setZoom(zoom: number): void;
       getCenter(): LatLng;
       getZoom(): number;
+      getBounds(): LatLngBounds | undefined;
+      fitBounds(bounds: LatLngBounds, padding?: number | Padding): void;
     }
 
     class Marker {
@@ -109,8 +112,10 @@ declare namespace google {
       getCenter(): LatLng;
       getNorthEast(): LatLng;
       getSouthWest(): LatLng;
+      intersects(other: LatLngBounds | LatLngBoundsLiteral): boolean;
       isEmpty(): boolean;
       toJSON(): LatLngBoundsLiteral;
+      toSpan(): LatLng;
       toString(): string;
       toUrlValue(precision?: number): string;
       union(other: LatLngBounds | LatLngBoundsLiteral): LatLngBounds;
@@ -123,50 +128,70 @@ declare namespace google {
       west: number;
     }
 
+    interface Padding {
+      bottom: number;
+      left: number;
+      right: number;
+      top: number;
+    }
+
     interface MapsEventListener {
       remove(): void;
     }
 
-    interface MapMouseEvent {
-      latLng: LatLng;
-    }
+    type MapMouseEvent = {
+      latLng?: LatLng;
+    };
 
     interface Icon {
       url: string;
-      size?: Size;
       scaledSize?: Size;
+      size?: Size;
       origin?: Point;
       anchor?: Point;
-      labelOrigin?: Point;
     }
 
     interface Size {
       width: number;
       height: number;
-      equals(other: Size): boolean;
-      toString(): string;
     }
 
     interface Point {
       x: number;
       y: number;
-      equals(other: Point): boolean;
-      toString(): string;
-    }
-
-    interface Symbol {
-      path: string | number;
-      fillColor?: string;
-      fillOpacity?: number;
-      scale?: number;
-      strokeColor?: string;
-      strokeOpacity?: number;
-      strokeWeight?: number;
     }
 
     enum Animation {
-      BOUNCE = 1,
-      DROP = 2
+      BOUNCE,
+      DROP,
+    }
+
+    namespace places {
+      class SearchBox {
+        constructor(inputField: HTMLInputElement, opts?: SearchBoxOptions);
+        getBounds(): LatLngBounds | undefined;
+        getPlaces(): PlaceResult[] | undefined;
+        setBounds(bounds: LatLngBounds): void;
+        addListener(eventName: string, handler: Function): MapsEventListener;
+      }
+
+      interface SearchBoxOptions {
+        bounds?: LatLngBounds;
+      }
+
+      interface PlaceResult {
+        address_components?: GeocoderAddressComponent[];
+        formatted_address?: string;
+        geometry?: {
+          location: LatLng;
+          viewport?: LatLngBounds;
+        };
+        icon?: string;
+        name?: string;
+        place_id?: string;
+        types?: string[];
+        vicinity?: string;
+      }
     }
   }
 }

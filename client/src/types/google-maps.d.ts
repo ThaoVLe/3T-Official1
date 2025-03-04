@@ -1,44 +1,91 @@
 
-// Type definitions for Google Maps
+// Google Maps type definitions
 declare namespace google {
   namespace maps {
     class Map {
-      constructor(mapDiv: HTMLElement, opts?: MapOptions);
-      addListener(eventName: string, handler: Function): MapsEventListener;
+      constructor(element: HTMLElement, options?: MapOptions);
       setCenter(latLng: LatLng | LatLngLiteral): void;
       setZoom(zoom: number): void;
-      getCenter(): LatLng;
-      getZoom(): number;
-      getBounds(): LatLngBounds | undefined;
+      setOptions(options: MapOptions): void;
+      panTo(latLng: LatLng | LatLngLiteral): void;
+      getBounds(): LatLngBounds;
       fitBounds(bounds: LatLngBounds, padding?: number | Padding): void;
+      addListener(eventName: string, handler: Function): MapsEventListener;
+    }
+
+    class LatLng {
+      constructor(lat: number, lng: number, noWrap?: boolean);
+      lat(): number;
+      lng(): number;
+      toString(): string;
+      toJSON(): LatLngLiteral;
+    }
+
+    class LatLngBounds {
+      constructor(sw?: LatLng | LatLngLiteral, ne?: LatLng | LatLngLiteral);
+      extend(point: LatLng | LatLngLiteral): LatLngBounds;
+      getCenter(): LatLng;
+      getNorthEast(): LatLng;
+      getSouthWest(): LatLng;
+      isEmpty(): boolean;
+      union(other: LatLngBounds): LatLngBounds;
     }
 
     class Marker {
       constructor(opts?: MarkerOptions);
-      addListener(eventName: string, handler: Function): MapsEventListener;
-      getPosition(): LatLng | null;
-      setPosition(latLng: LatLng | LatLngLiteral): void;
       setMap(map: Map | null): void;
-      setTitle(title: string): void;
-      setDraggable(draggable: boolean): void;
+      setPosition(latLng: LatLng | LatLngLiteral): void;
+      getPosition(): LatLng | null;
+      addListener(eventName: string, handler: Function): MapsEventListener;
+      setVisible(visible: boolean): void;
+      setAnimation(animation: Animation | null): void;
     }
 
     class Geocoder {
-      constructor();
       geocode(request: GeocoderRequest, callback: (results: GeocoderResult[], status: GeocoderStatus) => void): void;
+    }
+
+    class MapsEventListener {
+      remove(): void;
     }
 
     interface MapOptions {
       center?: LatLng | LatLngLiteral;
       zoom?: number;
-      mapTypeId?: string;
+      mapTypeId?: MapTypeId;
+      minZoom?: number;
+      maxZoom?: number;
       disableDefaultUI?: boolean;
       draggable?: boolean;
-      scrollwheel?: boolean;
-      disableDoubleClickZoom?: boolean;
       mapTypeControl?: boolean;
+      scaleControl?: boolean;
+      scrollwheel?: boolean;
       streetViewControl?: boolean;
+      zoomControl?: boolean;
       fullscreenControl?: boolean;
+      gestureHandling?: 'cooperative' | 'greedy' | 'none' | 'auto';
+      styles?: MapTypeStyle[];
+      mapId?: string;
+    }
+
+    type MapTypeId = 'roadmap' | 'satellite' | 'hybrid' | 'terrain';
+
+    interface MapTypeStyle {
+      elementType?: string;
+      featureType?: string;
+      stylers: any[];
+    }
+
+    interface LatLngLiteral {
+      lat: number;
+      lng: number;
+    }
+
+    interface Padding {
+      top: number;
+      right: number;
+      bottom: number;
+      left: number;
     }
 
     interface MarkerOptions {
@@ -92,85 +139,60 @@ declare namespace google {
       country?: string;
     }
 
-    interface LatLng {
-      lat(): number;
-      lng(): number;
-      toString(): string;
-      toUrlValue(precision?: number): string;
-      toJSON(): LatLngLiteral;
+    enum Animation {
+      BOUNCE = 1,
+      DROP = 2
     }
-
-    interface LatLngLiteral {
-      lat: number;
-      lng: number;
-    }
-
-    interface LatLngBounds {
-      contains(latLng: LatLng | LatLngLiteral): boolean;
-      equals(other: LatLngBounds | LatLngBoundsLiteral): boolean;
-      extend(latLng: LatLng | LatLngLiteral): LatLngBounds;
-      getCenter(): LatLng;
-      getNorthEast(): LatLng;
-      getSouthWest(): LatLng;
-      intersects(other: LatLngBounds | LatLngBoundsLiteral): boolean;
-      isEmpty(): boolean;
-      toJSON(): LatLngBoundsLiteral;
-      toSpan(): LatLng;
-      toString(): string;
-      toUrlValue(precision?: number): string;
-      union(other: LatLngBounds | LatLngBoundsLiteral): LatLngBounds;
-    }
-
-    interface LatLngBoundsLiteral {
-      east: number;
-      north: number;
-      south: number;
-      west: number;
-    }
-
-    interface Padding {
-      bottom: number;
-      left: number;
-      right: number;
-      top: number;
-    }
-
-    interface MapsEventListener {
-      remove(): void;
-    }
-
-    type MapMouseEvent = {
-      latLng?: LatLng;
-    };
 
     interface Icon {
       url: string;
-      scaledSize?: Size;
       size?: Size;
+      scaledSize?: Size;
       origin?: Point;
       anchor?: Point;
+      labelOrigin?: Point;
     }
 
-    interface Size {
+    interface Symbol {
+      path: SymbolPath | string;
+      fillColor?: string;
+      fillOpacity?: number;
+      scale?: number;
+      strokeColor?: string;
+      strokeOpacity?: number;
+      strokeWeight?: number;
+    }
+
+    enum SymbolPath {
+      BACKWARD_CLOSED_ARROW = 3,
+      BACKWARD_OPEN_ARROW = 4,
+      CIRCLE = 0,
+      FORWARD_CLOSED_ARROW = 1,
+      FORWARD_OPEN_ARROW = 2
+    }
+
+    class Size {
+      constructor(width: number, height: number, widthUnit?: string, heightUnit?: string);
       width: number;
       height: number;
+      equals(other: Size): boolean;
+      toString(): string;
     }
 
-    interface Point {
+    class Point {
+      constructor(x: number, y: number);
       x: number;
       y: number;
+      equals(other: Point): boolean;
+      toString(): string;
     }
 
-    enum Animation {
-      BOUNCE,
-      DROP,
-    }
-
+    // Places API
     namespace places {
       class SearchBox {
-        constructor(inputField: HTMLInputElement, opts?: SearchBoxOptions);
-        getBounds(): LatLngBounds | undefined;
-        getPlaces(): PlaceResult[] | undefined;
+        constructor(input: HTMLInputElement, options?: SearchBoxOptions);
+        getBounds(): LatLngBounds;
+        getPlaces(): PlaceResult[];
         setBounds(bounds: LatLngBounds): void;
         addListener(eventName: string, handler: Function): MapsEventListener;
       }
@@ -181,6 +203,8 @@ declare namespace google {
 
       interface PlaceResult {
         address_components?: GeocoderAddressComponent[];
+        adr_address?: string;
+        business_status?: string;
         formatted_address?: string;
         geometry?: {
           location: LatLng;
@@ -188,9 +212,31 @@ declare namespace google {
         };
         icon?: string;
         name?: string;
+        photos?: PlacePhoto[];
         place_id?: string;
+        plus_code?: PlusCode;
+        price_level?: number;
+        rating?: number;
         types?: string[];
+        user_ratings_total?: number;
         vicinity?: string;
+      }
+
+      interface PlacePhoto {
+        height: number;
+        width: number;
+        html_attributions: string[];
+        getUrl(opts: PhotoOptions): string;
+      }
+
+      interface PhotoOptions {
+        maxWidth?: number;
+        maxHeight?: number;
+      }
+
+      interface PlusCode {
+        compound_code: string;
+        global_code: string;
       }
     }
   }

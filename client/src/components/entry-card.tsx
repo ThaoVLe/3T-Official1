@@ -74,6 +74,14 @@ export default function EntryCard({ entry }: EntryCardProps) {
                   <span className="ml-1">{feeling.emoji}</span>
                 </>
               )}
+              {entry.location && (
+                <>
+                  <span className="mx-4"></span> {/* 4 blank spaces */}
+                  <span>-</span>
+                  <span className="ml-1">at {entry.location}</span>
+                  <span className="ml-1">📍</span>
+                </>
+              )}
             </div>
           </div>
         </div>

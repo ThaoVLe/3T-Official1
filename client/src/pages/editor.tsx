@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
 import React, { useState, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
+// Placeholder import - replace with actual component import
 import { LocationSelector } from "@/components/location-selector";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -22,265 +23,277 @@ export default function Editor() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Always declare all hooks at the top level
+  // Always declare all hooks at the top level, regardless of conditions
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form
   const form = useForm<InsertEntry>({
     resolver: zodResolver(insertEntrySchema),
     defaultValues: {
       title: "",
       content: "",
       mediaUrls: [],
-      feeling: null,
+      feeling: null, 
       location: null,
     },
   });
 
-  // Fetch entry data if editing an existing entry
-  const { data: entry, isLoading: isLoadingEntry } = useQuery<DiaryEntry>({
-    queryKey: ['entries', id],
-    queryFn: () => apiRequest(`/api/entries/${id}`),
-    enabled: !!id,
-  });
-
-  // Create entry mutation
-  const createEntry = useMutation({
-    mutationFn: (data: InsertEntry) => apiRequest('/api/entries', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['entries'] });
-      toast({
-        title: "Entry created",
-        description: "Your diary entry has been saved.",
-      });
-      navigate('/');
+  // Use the useQuery hook regardless of whether id exists
+  const { data: entry, isLoading: isLoadingEntry } = useQuery({
+    queryKey: [`/api/entries/${id}`],
+    enabled: !!id, // Only enable the query if id exists
+    onSuccess: (data: DiaryEntry) => {
+      console.log("Successfully loaded entry:", data);
+      if (data) {
+        form.reset({
+          title: data.title || "",
+          content: data.content || "",
+          mediaUrls: data.mediaUrls || [],
+          feeling: data.feeling || null,
+          location: data.location || null,
+        });
+      }
     },
     onError: (error) => {
-      console.error("Error creating entry:", error);
+      console.error("Error loading entry:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load entry. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: InsertEntry) => {
+      setIsSubmitting(true);
+      try {
+        const payload = {
+          ...data,
+          feeling: data.feeling || null,
+          location: data.location || null,
+          mediaUrls: data.mediaUrls || []
+        };
+
+        if (id) {
+          return await apiRequest("PUT", `/api/entries/${id}`, payload);
+        } else {
+          return await apiRequest("POST", "/api/entries", payload);
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/entries/${id}`] });
+      }
+      toast({
+        title: "Success",
+        description: id ? "Entry updated" : "Entry created",
+      });
+      navigate("/");
+    },
+    onError: (error) => {
+      console.error("Error saving entry:", error);
       toast({
         title: "Error",
         description: "Failed to save entry. Please try again.",
         variant: "destructive",
       });
-      setIsSubmitting(false);
-    },
+    }
   });
 
-  // Update entry mutation
-  const updateEntry = useMutation({
-    mutationFn: (data: InsertEntry) => apiRequest(`/api/entries/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['entries'] });
-      toast({
-        title: "Entry updated",
-        description: "Your diary entry has been updated.",
-      });
-      navigate('/');
-    },
-    onError: (error) => {
-      console.error("Error updating entry:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update entry. Please try again.",
-        variant: "destructive",
-      });
-      setIsSubmitting(false);
-    },
-  });
-
-  // Reset form with entry data when editing
-  useEffect(() => {
-    if (entry && !isLoadingEntry) {
-      console.log("Resetting form with entry:", entry);
-      form.reset({
-        title: entry.title,
-        content: entry.content,
-        mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling,
-        location: entry.location,
-      });
-    }
-  }, [entry, isLoadingEntry, form]);
-
-  // Handle form submission
-  const onSubmit = async (data: InsertEntry) => {
-    setIsSubmitting(true);
-    
-    try {
-      // Include any temporary media URLs that were uploaded during this session
-      const allMediaUrls = [...(data.mediaUrls || []), ...tempMediaUrls];
-      const formData = { ...data, mediaUrls: allMediaUrls };
-      
-      if (id) {
-        await updateEntry.mutateAsync(formData);
-      } else {
-        await createEntry.mutateAsync(formData);
-      }
-    } catch (error) {
-      console.error("Error submitting entry:", error);
-      setIsSubmitting(false);
-    }
-  };
-
-  // Handle media upload for the diary entry
-  const handleMediaUpload = async (files: File[]) => {
-    if (!files.length) return;
-    
+  const onMediaUpload = async (file: File) => {
     setIsUploading(true);
     setUploadProgress(0);
-    
-    const formData = new FormData();
-    files.forEach(file => formData.append('media', file));
-    
+
+    const tempUrl = URL.createObjectURL(file);
+    const currentUrls = form.getValues("mediaUrls") || [];
+    const tempUrls = [...currentUrls, tempUrl];
+    setTempMediaUrls(tempUrls);
+    form.setValue("mediaUrls", tempUrls);
+
     try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-        // This would ideally include upload progress tracking
+      const uploadPromise = new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append("file", file);
+
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const progress = Math.round((e.loaded * 100) / e.total);
+            setUploadProgress(progress);
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status === 200) {
+            const { url } = JSON.parse(xhr.responseText);
+            const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
+            form.setValue("mediaUrls", finalUrls);
+            setTempMediaUrls([]);
+            resolve(url);
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed"));
+        });
+
+        xhr.open("POST", "/api/upload");
+        xhr.send(formData);
       });
-      
-      if (!response.ok) throw new Error('Upload failed');
-      
-      const result = await response.json();
-      setTempMediaUrls(prev => [...prev, ...result.urls]);
-      
-      // Add the media URLs to the form
-      const currentUrls = form.getValues('mediaUrls') || [];
-      form.setValue('mediaUrls', [...currentUrls, ...result.urls]);
-      
-      toast({
-        title: "Upload complete",
-        description: `${files.length} file(s) uploaded successfully.`,
-      });
+
+      await uploadPromise;
+
     } catch (error) {
-      console.error("Error uploading media:", error);
+      console.error('Upload error:', error);
+      const currentUrls = form.getValues("mediaUrls") || [];
+      const finalUrls = currentUrls.filter(url => url !== tempUrl);
+      form.setValue("mediaUrls", finalUrls);
+      setTempMediaUrls([]);
+
       toast({
-        title: "Upload failed",
+        title: "Upload Error",
         description: "Failed to upload media. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
+      URL.revokeObjectURL(tempUrl);
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
-  // Handle media removal
-  const handleRemoveMedia = (urlToRemove: string) => {
-    const currentUrls = form.getValues('mediaUrls') || [];
-    form.setValue(
-      'mediaUrls', 
-      currentUrls.filter(url => url !== urlToRemove)
-    );
-    
-    // Also remove from temporary URLs if it exists there
-    setTempMediaUrls(prev => prev.filter(url => url !== urlToRemove));
+  const onMediaRemove = (index: number) => {
+    const currentUrls = form.getValues("mediaUrls") || [];
+    const newUrls = [...currentUrls];
+    newUrls.splice(index, 1);
+    form.setValue("mediaUrls", newUrls);
   };
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b p-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Button 
-            type="button" 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/')}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl font-semibold">{id ? 'Edit Entry' : 'New Entry'}</h1>
-        </div>
-        <Button 
-          type="submit" 
-          onClick={form.handleSubmit(onSubmit)}
-          disabled={isSubmitting}
-          className="flex items-center gap-2"
-        >
-          <Save className="h-4 w-4" />
-          Save
-        </Button>
+  // Effects should be declared after all hooks
+  useEffect(() => {
+    if (id && entry) {
+      form.reset({
+        title: entry.title || "",
+        content: entry.content || "",
+        mediaUrls: entry.mediaUrls || [],
+        feeling: entry.feeling || null,
+        location: entry.location || null
+      });
+      console.log("Resetting form with entry:", entry);
+    }
+  }, [entry, id, form]);
+
+  // Loading indicator for when entry is being fetched
+  if (id && isLoadingEntry) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
-      
-      {/* Main content */}
-      <div className="flex-1 overflow-auto">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="h-full">
-          <div className="p-4 grid grid-cols-1 md:grid-cols-[1fr_300px] gap-4">
-            {/* Left column: Title and content */}
-            <div className="space-y-4">
-              <Input
-                placeholder="Title (optional)"
-                {...form.register("title")}
-                className="text-xl font-medium"
-              />
-              
-              {/* Content Editor */}
-              <TipTapEditor 
-                value={form.watch("content")} 
-                onChange={(value) => form.setValue("content", value)} 
-              />
-              
-              {/* Media Preview */}
-              {form.watch("mediaUrls")?.length > 0 && (
-                <div className="mt-4">
-                  <h2 className="text-lg font-medium mb-2">Media</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {form.watch("mediaUrls")?.map((url, index) => (
-                      <MediaPreview 
-                        key={index} 
-                        url={url} 
-                        onRemove={() => handleRemoveMedia(url)} 
-                      />
-                    ))}
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-white w-full">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
+        <div className="flex-1 max-w-full sm:max-w-2xl">
+          <Input 
+            {...form.register("title")}
+            className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+            placeholder="Untitled Entry..."
+          />
+          {form.watch("feeling") && (
+            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+              <span>is feeling</span>
+              <span className="font-medium">{form.watch("feeling").label}</span>
+              <span className="text-lg">{form.watch("feeling").emoji}</span>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 ml-2">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate("/")}
+            className="whitespace-nowrap"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Cancel
+          </Button>
+          <Button 
+            type="button"
+            size="sm"
+            onClick={form.handleSubmit((data) => mutation.mutate(data))}
+            disabled={mutation.isPending}
+            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            {id ? "Update" : "Create"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Feeling & Location Selectors */}
+      <div className="border-b bg-white w-full">
+        <div className="flex items-center gap-2 px-4 sm:px-6 py-2 overflow-x-auto">
+          <FeelingSelector 
+            value={form.watch("feeling")} 
+            onChange={(feeling) => form.setValue("feeling", feeling)} 
+          />
+          <LocationSelector 
+            value={form.watch("location")} 
+            onChange={(location) => form.setValue("location", location)} 
+          />
+        </div>
+      </div>
+
+      {/* Media Attachment */}
+      <div className="border-b bg-white w-full">
+        <div className="px-4 sm:px-6 py-2">
+          <MediaRecorder onCapture={onMediaUpload} />
+        </div>
+        {(form.watch("mediaUrls")?.length > 0 || tempMediaUrls.length > 0) && (
+          <div className="px-4 sm:px-6 pb-3">
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-2">
+              {form.watch("mediaUrls")?.map((url, index) => (
+                <div key={index} className="relative flex-shrink-0">
+                  <MediaPreview 
+                    url={url} 
+                    onRemove={() => onMediaRemove(index)} 
+                  />
+                </div>
+              ))}
+              {isUploading && (
+                <div className="relative h-24 w-24 flex-shrink-0 bg-muted rounded overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-full w-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-xs font-medium">{uploadProgress}%</span>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-            
-            {/* Right column: Media upload, feeling, location */}
-            <div className="space-y-4">
-              <div className="border rounded-lg p-4">
-                <h2 className="text-lg font-medium mb-2">Add to entry</h2>
-                
-                {/* Media Recorder */}
-                <div className="mb-4">
-                  <MediaRecorder 
-                    onCapture={handleMediaUpload} 
-                    isUploading={isUploading} 
-                    progress={uploadProgress} 
-                  />
-                </div>
-                
-                {/* Feeling Selector */}
-                <div className="mb-4">
-                  <h3 className="text-sm font-medium mb-2">How are you feeling?</h3>
-                  <FeelingSelector
-                    value={form.watch("feeling")}
-                    onChange={(feeling) => form.setValue("feeling", feeling)}
-                  />
-                </div>
-                
-                {/* Location Selector */}
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Add location</h3>
-                  <LocationSelector
-                    value={form.watch("location")}
-                    onChange={(location) => form.setValue("location", location)}
-                  />
-                </div>
-              </div>
-            </div>
           </div>
-        </form>
+        )}
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 flex flex-col overflow-auto w-full">
+        <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+          <TipTapEditor 
+            value={form.watch("content")} 
+            onChange={(value) => form.setValue("content", value)} 
+          />
+        </div>
       </div>
     </div>
   );

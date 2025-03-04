@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,21 +47,26 @@ interface FeelingSelectorProps {
 export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
-  
+
   const filteredFeelings = feelings.filter(feeling => 
     feeling.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   const filteredActivities = activities.filter(activity => 
     activity.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   const handleSelect = (feeling: { emoji: string; label: string }) => {
-    // Make sure we pass a properly structured feeling object with both emoji and label
-    onSelect({ emoji: feeling.emoji, label: feeling.label });
+    onSelect(feeling);
     setOpen(false);
   };
-  
+
+  const hideKeyboard = () => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -70,12 +74,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           variant="ghost" 
           className="h-10 px-3 rounded-full flex items-center"
           aria-label="Select feeling"
-          onClick={() => {
-            // Dismiss keyboard when feeling selector is opened
-            if (document.activeElement instanceof HTMLElement) {
-              document.activeElement.blur();
-            }
-          }}
+          onClick={hideKeyboard}
         >
           {selectedFeeling ? (
             <span className="text-xl">{selectedFeeling.emoji}</span>
@@ -91,13 +90,13 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
         <SheetHeader className="mb-4">
           <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>
         </SheetHeader>
-        
+
         <Tabs defaultValue="feelings" className="h-[calc(100%-60px)] flex flex-col">
           <TabsList className="w-full grid grid-cols-2 mb-4">
             <TabsTrigger value="feelings">Feelings</TabsTrigger>
             <TabsTrigger value="activities">Activities</TabsTrigger>
           </TabsList>
-          
+
           <div className="px-2 mb-4">
             <Input
               placeholder="Search"
@@ -106,7 +105,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               className="mb-2"
             />
           </div>
-            
+
           <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
             <div className="grid grid-cols-2 gap-1">
               {filteredFeelings.map((feeling) => (
@@ -122,7 +121,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               ))}
             </div>
           </TabsContent>
-            
+
           <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
             <div className="grid grid-cols-2 gap-1">
               {filteredActivities.map((activity) => (

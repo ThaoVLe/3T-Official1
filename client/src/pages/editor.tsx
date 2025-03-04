@@ -139,6 +139,15 @@ export default function Editor() {
     form.setValue("mediaUrls", newUrls);
   };
 
+  // Display feeling with title
+  const displayTitle = form.watch("feeling")
+    ? <div className="flex items-center gap-2">
+        <span>{form.watch("title") || "Untitled"}</span>
+        <span className="text-xl">{form.watch("feeling").emoji}</span>
+      </div>
+    : form.watch("title") || "Untitled";
+
+
   return (
     <div className="min-h-screen flex flex-col bg-white w-full">
       {/* Header */}

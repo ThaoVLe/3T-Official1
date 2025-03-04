@@ -1,10 +1,10 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ImageIcon, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { X } from "lucide-react";
 
 const feelings = [
   { emoji: "😊", label: "Happy" },
@@ -47,6 +47,7 @@ interface FeelingSelectorProps {
 
 export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [open, setOpen] = useState(false);
   
   const filteredFeelings = feelings.filter(feeling => 
     feeling.label.toLowerCase().includes(searchQuery.toLowerCase())
@@ -56,9 +57,14 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     activity.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
+  const handleSelect = (feeling: { emoji: string; label: string }) => {
+    onSelect(feeling);
+    setOpen(false);
+  };
+  
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button 
           variant="ghost" 
           className="h-10 px-3 rounded-full flex items-center"
@@ -79,66 +85,60 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             </div>
           )}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[320px] p-0">
-        <div className="flex items-center justify-between p-3 border-b">
-          <X className="h-5 w-5" />
-          <h4 className="font-medium text-center">How are you feeling?</h4>
-          <div className="w-5"></div> {/* Spacer for alignment */}
-        </div>
+      </SheetTrigger>
+      <SheetContent side="bottom" className="h-[100dvh] pt-6">
+        <SheetHeader className="mb-4">
+          <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>
+        </SheetHeader>
         
-        <Tabs defaultValue="feelings">
-          <TabsList className="w-full grid grid-cols-2">
+        <Tabs defaultValue="feelings" className="h-[calc(100%-60px)] flex flex-col">
+          <TabsList className="w-full grid grid-cols-2 mb-4">
             <TabsTrigger value="feelings">Feelings</TabsTrigger>
             <TabsTrigger value="activities">Activities</TabsTrigger>
           </TabsList>
           
-          <div className="p-3">
+          <div className="px-2 mb-4">
             <Input
               placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="mb-2"
             />
-            
-            <TabsContent value="feelings" className="m-0 p-0">
-              <div className="grid grid-cols-2 gap-0">
-                {filteredFeelings.map((feeling) => (
-                  <Button
-                    key={feeling.label}
-                    variant="ghost"
-                    className="flex items-center justify-start gap-2 p-3 h-14"
-                    onClick={() => {
-                      onSelect(feeling);
-                    }}
-                  >
-                    <span className="text-xl">{feeling.emoji}</span>
-                    <span className="text-sm">{feeling.label}</span>
-                  </Button>
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="activities" className="m-0 p-0">
-              <div className="grid grid-cols-2 gap-0">
-                {filteredActivities.map((activity) => (
-                  <Button
-                    key={activity.label}
-                    variant="ghost"
-                    className="flex items-center justify-start gap-2 p-3 h-14"
-                    onClick={() => {
-                      onSelect(activity);
-                    }}
-                  >
-                    <span className="text-xl">{activity.emoji}</span>
-                    <span className="text-sm">{activity.label}</span>
-                  </Button>
-                ))}
-              </div>
-            </TabsContent>
           </div>
+            
+          <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
+            <div className="grid grid-cols-2 gap-1">
+              {filteredFeelings.map((feeling) => (
+                <Button
+                  key={feeling.label}
+                  variant="ghost"
+                  className="flex items-center justify-start gap-2 p-3 h-14"
+                  onClick={() => handleSelect(feeling)}
+                >
+                  <span className="text-xl">{feeling.emoji}</span>
+                  <span className="text-sm">{feeling.label}</span>
+                </Button>
+              ))}
+            </div>
+          </TabsContent>
+            
+          <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
+            <div className="grid grid-cols-2 gap-1">
+              {filteredActivities.map((activity) => (
+                <Button
+                  key={activity.label}
+                  variant="ghost"
+                  className="flex items-center justify-start gap-2 p-3 h-14"
+                  onClick={() => handleSelect(activity)}
+                >
+                  <span className="text-xl">{activity.emoji}</span>
+                  <span className="text-sm">{activity.label}</span>
+                </Button>
+              ))}
+            </div>
+          </TabsContent>
         </Tabs>
-      </PopoverContent>
-    </Popover>
+      </SheetContent>
+    </Sheet>
   );
 }

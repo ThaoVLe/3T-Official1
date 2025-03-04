@@ -65,15 +65,15 @@ export default function EntryCard({ entry }: EntryCardProps) {
           </CardTitle>
           <div className="flex items-center text-sm mt-1 w-full">
             <div className="flex items-center">
+              <span className="text-muted-foreground">{formatTimeAgo(entry.createdAt)}</span>
+              <span className="mx-4"></span> {/* 4 blank spaces */}
               {feeling && (
                 <>
                   <span>-</span>
-                  <span className="mx-1">{feeling.label}</span>
-                  <span>{feeling.emoji}</span>
+                  <span className="ml-1">feeling {feeling.label}</span>
+                  <span className="ml-1">{feeling.emoji}</span>
                 </>
               )}
-              <span className="ml-10"></span> {/* 10 blank spaces */}
-              <span className="text-muted-foreground">{formatTimeAgo(entry.createdAt)}</span>
             </div>
           </div>
         </div>

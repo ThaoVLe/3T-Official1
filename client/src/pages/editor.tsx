@@ -42,10 +42,10 @@ export default function Editor() {
   React.useEffect(() => {
     if (entry) {
       form.reset({
-        title: entry.title || "",
-        content: entry.content || "",
+        title: entry.title,
+        content: entry.content,
         mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling || "", // Added feeling field to reset
+        feeling: entry.feeling, // Ensure feeling is loaded from entry data
       });
     }
   }, [entry, form]);

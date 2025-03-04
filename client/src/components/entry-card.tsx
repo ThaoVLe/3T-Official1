@@ -41,10 +41,10 @@ export default function EntryCard({ entry }: EntryCardProps) {
             {entry.title || "Untitled Entry"}
           </CardTitle>
           {feeling && (
-            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-              <span>is feeling</span>
-              <span className="font-medium">{feeling.label}</span>
-              <span className="text-lg">{feeling.emoji}</span>
+            <div className="text-sm mt-1 flex items-center gap-1.5">
+              <span className="text-muted-foreground">is feeling</span>
+              <span>{feeling.label}</span>
+              <span>{feeling.emoji}</span>
             </div>
           )}
         </div>

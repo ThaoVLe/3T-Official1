@@ -60,22 +60,18 @@ export default function EntryCard({ entry }: EntryCardProps) {
     <Card className="group hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex flex-col">
-          <CardTitle className="text-xl font-semibold line-clamp-1">
-            {entry.title || "Untitled Entry"}
+          <CardTitle className="text-xl font-semibold line-clamp-1 flex items-center">
+            <span>{entry.title || "Untitled Entry"}</span>
+            {feeling && (
+              <span className="flex items-center ml-4">
+                <span>-</span>
+                <span className="mx-1">{feeling.label}</span>
+                <span>{feeling.emoji}</span>
+              </span>
+            )}
           </CardTitle>
-          <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
-            <div className="flex-1 flex items-center">
-              {feeling && (
-                <span className="flex items-center">
-                  <span className="text-muted-foreground">is feeling</span>
-                  <span className="mx-1">{feeling.emoji}</span>
-                  <span>{feeling.label}</span>
-                </span>
-              )}
-            </div>
-            <div className="flex-shrink-0 text-right ml-2">
-              <span>{formatTimeAgo(entry.createdAt)}</span>
-            </div>
+          <div className="text-sm text-muted-foreground mt-1">
+            <span>{formatTimeAgo(entry.createdAt)}</span>
           </div>
         </div>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

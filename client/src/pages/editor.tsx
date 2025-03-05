@@ -187,7 +187,7 @@ export default function Editor() {
   }, [isMobile]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white w-full pb-16"> {/*Added paddingBottom for safe area*/}
+    <div className="min-h-screen flex flex-col bg-white w-full">
       {/* Header */}
       <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
         <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
@@ -246,7 +246,7 @@ export default function Editor() {
         </div>
 
         {/* Media Controls - Fixed at bottom */}
-        <div className="border-t bg-white sticky bottom-0 w-full"> {/*Added paddingBottom for safe area*/}
+        <div className="border-t bg-white sticky bottom-0 w-full" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}> {/*Added paddingBottom for safe area*/}
           <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">How are you feeling today?</span>

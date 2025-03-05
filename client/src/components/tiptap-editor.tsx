@@ -4,7 +4,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -28,7 +28,6 @@ interface TipTapEditorProps {
 }
 
 export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -92,7 +91,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg w-full tiptap-container" ref={containerRef}>
+    <div className="h-full flex flex-col bg-white rounded-lg w-full tiptap-container">
       <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-white w-full">
         <div className="flex flex-wrap items-center gap-1">
           <Button

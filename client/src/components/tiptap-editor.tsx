@@ -318,45 +318,11 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </PopoverTrigger>
             <PopoverContent className="w-72 p-2">
               <div className="mb-3">
-                {/* Emotion selector content goes here */}
-
-                          // Save to localStorage (keeping both for backward compatibility)
-                          const savedEmotions = JSON.parse(localStorage.getItem('customEmotions') || '[]');
-                          if (!savedEmotions.includes(value)) {
-                            savedEmotions.push(value);
-                            localStorage.setItem('customEmotions', JSON.stringify(savedEmotions));
-                          }
-                          input.value = '';
-                        }
-                      }
-                    }}
-                  />
-                  <Button 
-                    variant="outline" 
-                    className="shrink-0"
-                    onClick={() => {
-                      const input = document.getElementById('customEmotion') as HTMLInputElement;
-                      const value = input.value.trim();
-                      if (value) {
-                        // Insert the custom emotion with dark red color
-                        editor.chain().focus().setColor('#880000').insertContent(value).setColor('default').run();
-
-                        // Save to localStorage
-                        const savedEmotions = JSON.parse(localStorage.getItem('customEmotions') || '[]');
-                        if (!savedEmotions.includes(value)) {
-                          savedEmotions.push(value);
-                          localStorage.setItem('customEmotions', JSON.stringify(savedEmotions));
-                        }
-                        input.value = '';
-                      }
-                    }}
-                  >
-                    Add
-                  </Button>
+                {/* Emotion selector content */}
+                <div className="grid grid-cols-3 gap-1">
+                  {/* Emotion buttons will go here */}
                 </div>
               </div>
-
-              {/* Saved feelings section removed */}
 
               {/* Standard emoji categories */}
               {Object.entries(emojiCategories).map(([category, emojis]) => (

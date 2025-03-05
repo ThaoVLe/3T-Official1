@@ -38,16 +38,6 @@ html, body, #root {
   
   .heading-1 {
     @apply text-[30px] font-bold tracking-tight text-foreground mb-4;
-
-/* Entry card responsive styles */
-@media (max-width: 640px) {
-  .card {
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-}
-
   }
   
   .heading-2 {

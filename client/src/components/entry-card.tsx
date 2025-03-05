@@ -57,7 +57,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-shadow duration-200 card">
+    <Card className="group hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-[15px] relative">
         <div className="flex flex-col">
           <CardTitle className="text-xl font-semibold line-clamp-1">

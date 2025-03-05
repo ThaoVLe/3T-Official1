@@ -50,6 +50,8 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
   const [open, setOpen] = useState(false);
   const [selectedEmotion, setSelectedEmotion] = useState<{ emoji: string; label: string } | null>(selectedFeeling);
   const [selectedActivity, setSelectedActivity] = useState<{ emoji: string; label: string } | null>(null);
+  const [customEmotion, setCustomEmotion] = useState('');
+  const [customActivity, setCustomActivity] = useState('');
 
   const filteredFeelings = feelingsData.filter(feeling =>
     feeling.label.toLowerCase().includes(searchQuery.toLowerCase())
@@ -90,6 +92,19 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
   };
 
   const handleDone = () => {
+    // Save custom emotion and activity if provided
+    if (customEmotion) {
+      const flowerEmojis = ["🌸", "🌺", "🌹", "🌷", "🌻", "🌼", "🌞", "🌱", "🍀", "🪴", "🌿", "🌵"];
+      const randomFlower = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
+      const customFeeling = { emoji: randomFlower, label: customEmotion };
+      handleSelectEmotion(customFeeling);
+    }
+    if (customActivity) {
+      const animalEmojis = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", "🐧", "🐦", "🦆", "🦅", "🦉"];
+      const randomAnimal = animalEmojis[Math.floor(Math.random() * animalEmojis.length)];
+      const customActivityObj = { emoji: randomAnimal, label: customActivity };
+      handleSelectActivity(customActivityObj);
+    }
     setOpen(false);
   };
 
@@ -254,46 +269,13 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
 
           <div className="px-2 mb-4">
             <label className="block text-sm font-medium mb-1">Your current feeling:</label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter your feeling"
-                className="mb-2"
-                id="customFeelingInput"
-              />
-              <Button 
-                variant="outline" 
-                className="shrink-0 mb-2"
-                onClick={() => {
-                  const input = document.getElementById('customFeelingInput') as HTMLInputElement;
-                  const value = input.value.trim();
-                  if (value) {
-                    // Flower emojis to choose from randomly
-                    const flowerEmojis = ["🌸", "🌺", "🌹", "🌷", "🌻", "🌼", "💐", "🌿", "🍀"];
-                    const randomFlower = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
-                    
-                    // Create custom feeling object
-                    const customFeeling = {
-                      emoji: randomFlower,
-                      label: value
-                    };
-                    
-                    // Save to localStorage for future use
-                    const savedCustomFeelings = JSON.parse(localStorage.getItem('customFeelings') || '[]');
-                    if (!savedCustomFeelings.some((f: any) => f.label === value)) {
-                      savedCustomFeelings.push(customFeeling);
-                      localStorage.setItem('customFeelings', JSON.stringify(savedCustomFeelings));
-                    }
-                    
-                    // Select the custom feeling
-                    onSelect(customFeeling);
-                    setOpen(false);
-                    input.value = '';
-                  }
-                }}
-              >
-                Save
-              </Button>
-            </div>
+            <Input
+              placeholder="Enter your feeling"
+              className="mb-2"
+              id="customFeeling"
+              value={customEmotion}
+              onChange={(e) => setCustomEmotion(e.target.value)}
+            />
           </div>
 
           <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
@@ -325,7 +307,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
                 </div>
               ) : null;
             })()}
-            
+
             {/* Default Feelings */}
             <h3 className="text-sm font-medium px-2 mb-2">Suggested Feelings</h3>
             <div className="grid grid-cols-3 gap-1">
@@ -346,47 +328,13 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
             <div className="px-2 mb-4">
               <label className="block text-sm font-medium mb-1">What are you doing today?</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Enter your activity"
-                  className="mb-2"
-                  id="customActivityInput"
-                />
-                <Button 
-                  variant="outline" 
-                  className="shrink-0 mb-2"
-                  onClick={() => {
-                    const input = document.getElementById('customActivityInput') as HTMLInputElement;
-                    const value = input.value.trim();
-                    if (value) {
-                      // Animal emojis to choose from randomly
-                      const animalEmojis = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", "🐧", "🐦", "🦆", "🦅", "🦉"];
-                      const randomAnimal = animalEmojis[Math.floor(Math.random() * animalEmojis.length)];
-                      
-                      // Create custom activity object
-                      const customActivity = {
-                        emoji: randomAnimal,
-                        label: value
-                      };
-                      
-                      // Save to localStorage for future use
-                      const savedCustomActivities = JSON.parse(localStorage.getItem('customActivities') || '[]');
-                      if (!savedCustomActivities.includes(value)) {
-                        savedCustomActivities.push(value);
-                        localStorage.setItem('customActivities', JSON.stringify(savedCustomActivities));
-                      }
-                      
-                      // Select the custom activity
-                      handleSelectActivity(customActivity);
-                      
-                      // Clear input
-                      input.value = '';
-                    }
-                  }}
-                >
-                  Add
-                </Button>
-              </div>
+              <Input
+                placeholder="Enter your activity"
+                className="mb-2"
+                id="customActivity"
+                value={customActivity}
+                onChange={(e) => setCustomActivity(e.target.value)}
+              />
             </div>
             <div className="grid grid-cols-3 gap-1">
               {filteredActivities.map((activity) => (
@@ -408,7 +356,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           <Button
             onClick={handleDone}
             className="w-1/2 bg-primary text-primary-foreground"
-            disabled={!selectedEmotion && !selectedActivity}
+            disabled={!selectedEmotion && !selectedActivity && !customEmotion && !customActivity}
           >
             Done
           </Button>

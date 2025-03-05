@@ -332,7 +332,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </TabsContent>
         </Tabs>
 
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+        <div className="mt-8 pb-4 left-0 right-0 flex justify-center">
           <Button
             onClick={handleDone}
             className="w-1/2 bg-primary text-primary-foreground"

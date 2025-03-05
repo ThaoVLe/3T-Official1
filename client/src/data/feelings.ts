@@ -1,4 +1,9 @@
 
+export interface FeelingData {
+  emoji: string;
+  label: string;
+}
+
 // Emotion data
 export const emotions = [
   { emoji: "😊", label: "Happy" },
@@ -37,8 +42,8 @@ export const activities = [
   { emoji: "🧑‍🤝‍🧑", label: "Socializing" }
 ];
 
-// Types
-export interface FeelingData {
-  emoji: string;
-  label: string;
-}
+// Default export for compatibility
+export default {
+  emotions,
+  activities
+};

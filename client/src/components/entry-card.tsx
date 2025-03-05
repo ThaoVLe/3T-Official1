@@ -36,13 +36,13 @@ export default function EntryCard({ entry }: EntryCardProps) {
   } : null;
 
   // Function to format time display
-  const formatTimeAgo = (date: string | number | Date) => {
+  const formatTimeAgo = (createdAt: string | Date) => {
     const now = new Date();
-    const entryDate = new Date(date);
+    const entryDate = new Date(createdAt);
     const diffInDays = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffInDays > 30) {
-      return format(entryDate, "MMMM d, yyyy");
+      return format(entryDate, "MMM dd, yyyy");
     } else if (diffInDays > 0) {
       return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
     } else {
@@ -66,7 +66,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
           <div className="flex items-center text-sm mt-1 w-full">
             <div className="flex items-center">
               <span className="text-muted-foreground">
-                {new Date(entry.createdAt).toLocaleDateString()} {new Date(entry.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                {formatTimeAgo(entry.createdAt)}
               </span>
               <span className="mx-2"></span> {/* 2 blank spaces */}
               {feeling && (

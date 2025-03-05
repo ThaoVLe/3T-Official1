@@ -5,8 +5,8 @@ import { Edit2, Trash2, Share } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { apiRequest } from "@/lib/apiClient";
-import { useToast } from "@/components/ui/use-toast";
+import { apiRequest } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState } from 'react';
 

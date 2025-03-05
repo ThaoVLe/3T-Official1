@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,7 @@ export function FeelingSelector({
       emoji: `${feeling.emoji} ${selectedActivity.emoji}`,
       label: `${feeling.label}, ${selectedActivity.label}`
     } : feeling);
-    
+
     // Close the keyboard when emotion is selected
     const activeElement = document.activeElement as HTMLElement;
     if (activeElement && activeElement.blur) {
@@ -63,7 +62,7 @@ export function FeelingSelector({
       setSelectedFeeling(combined);
       onSelect(combined);
     }
-    
+
     // Close the keyboard when activity is selected
     const activeElement = document.activeElement as HTMLElement;
     if (activeElement && activeElement.blur) {

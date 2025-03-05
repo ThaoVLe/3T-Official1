@@ -86,8 +86,13 @@ export default function EntryCard({ entry }: EntryCardProps) {
             )}
               {entry.location && (
                 <>
-                  <span className="mx-4"></span> {/* 4 blank spaces */}
                   <span>-</span>
+                  <span className="ml-1">{entry.location}</span>
+                </>
+              )}
+            </div>
+          </CardHeader>
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-[4px] right-4">
                   <span className="ml-1">at</span>
                   <span className="ml-1">{entry.location}</span>
                   <span className="ml-1">📍</span>

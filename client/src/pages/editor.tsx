@@ -219,7 +219,6 @@ export default function Editor() {
           />
           {form.watch("feeling") && (
             <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-              <span>is feeling</span>
               <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
                 {form.watch("feeling").label.includes(',') ? (
                   <>

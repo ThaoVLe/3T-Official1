@@ -70,19 +70,18 @@ export default function EntryCard({ entry }: EntryCardProps) {
               {feeling && (
                 <>
                   <span>-</span>
-                  {feeling.label.includes(',') ? (
-                    <>
-                      <span className="ml-1">feeling {feeling.label.split(',')[0].trim()}</span>
-                      <span className="ml-1">{feeling.emoji.split(' ')[0]}</span>
-                      <span className="ml-1">  while {feeling.label.split(',')[1].trim()}</span>
-                      <span className="ml-1">{feeling.emoji.split(' ')[1]}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="ml-1">feeling {feeling.label}</span>
-                      <span className="ml-1">{feeling.emoji}</span>
-                    </>
-                  )}
+                  <div className="inline-flex items-center gap-1 ml-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                    {feeling.label.includes(',') ? (
+                      <>
+                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}
+                        {'  '}while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                      </>
+                    ) : (
+                      <>
+                        feeling {feeling.label} {feeling.emoji}
+                      </>
+                    )}
+                  </div>
                 </>
               )}
               {entry.location && (

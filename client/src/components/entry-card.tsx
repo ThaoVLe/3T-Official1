@@ -1,10 +1,9 @@
 
 import { format } from "date-fns";
-import Link from "next/link";
-import { DiaryEntry } from "#/shared/schema";
+import { Link } from "wouter";
+import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient } from "#/lib/query";
-import { apiRequest } from "#/lib/axios";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { useToast } from "#/components/ui/use-toast";
@@ -101,8 +100,9 @@ export default function EntryCard({ entry }: EntryCardProps) {
                 <>
                   <span>-</span>
                   <div className="inline-flex items-center gap-1 ml-1">
-                    <MapPin className="h-3 w-3 text-primary" />
-                    <span className="text-xs">{entry.location.name}</span>
+                    <span className="ml-1">at</span>
+                    <span className="ml-1">{entry.location}</span>
+                    <span className="ml-1">📍</span>
                   </div>
                 </>
               )}

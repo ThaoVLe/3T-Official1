@@ -1,15 +1,13 @@
-
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Trash2, Edit2, Share, MapPin } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { queryClient } from "@/lib/react-query";
-import { useToast } from "@/components/ui/use-toast";
-import { apiRequest } from "@/lib/request";
-import { DiaryEntry } from "@/shared/schema";
+import { Edit2, Trash2, Share } from "lucide-react";
+import type { DiaryEntry } from "@shared/schema";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { useState } from 'react';
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -17,7 +15,6 @@ interface EntryCardProps {
 
 export default function EntryCard({ entry }: EntryCardProps) {
   const { toast } = useToast();
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -43,22 +40,19 @@ export default function EntryCard({ entry }: EntryCardProps) {
     const now = new Date();
     const entryDate = new Date(createdAt);
     const diffInDays = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (diffInDays === 0) {
-      return "Today";
-    } else if (diffInDays === 1) {
-      return "Yesterday";
-    } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
-    } else if (diffInDays < 30) {
-      const weeks = Math.floor(diffInDays / 7);
-      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
-    } else if (diffInDays < 365) {
-      const months = Math.floor(diffInDays / 30);
-      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+
+    if (diffInDays > 30) {
+      return format(entryDate, "MMM dd, yyyy");
+    } else if (diffInDays > 0) {
+      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
     } else {
-      const years = Math.floor(diffInDays / 365);
-      return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+      const diffInHours = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60));
+      if (diffInHours > 0) {
+        return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+      } else {
+        const diffInMinutes = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60));
+        return diffInMinutes <= 0 ? 'Just now' : `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+      }
     }
   };
 
@@ -94,20 +88,38 @@ export default function EntryCard({ entry }: EntryCardProps) {
               )}
               {entry.location && (
                 <>
-                  <span className="mx-1">-</span>
-                  <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-                    <MapPin className="h-3 w-3" />
-                    <span>{entry.location}</span>
-                  </div>
+                  <span className="mx-4"></span> {/* 4 blank spaces */}
+                  <span>-</span>
+                  <span className="ml-1">at</span>
+                  <span className="ml-1">{entry.location}</span>
+                  <span className="ml-1">📍</span>
                 </>
               )}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-[4px] right-4">
           <Button
             size="icon"
             variant="ghost"
+            onClick={() => {
+              // Share functionality can be expanded later
+              if (navigator.share) {
+                navigator.share({
+                  title: entry.title || "My Diary Entry",
+                  text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                  url: window.location.origin + `/entry/${entry.id}`,
+                }).catch(err => console.log('Error sharing:', err));
+              } else {
+                // Fallback for browsers that don't support navigator.share
+                navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
+                  .then(() => toast({
+                    title: "Link copied",
+                    description: "Entry link copied to clipboard"
+                  }))
+                  .catch(err => console.error('Could not copy text:', err));
+              }
+            }}
             className="hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30"
           >
             <Share className="h-4 w-4"/>
@@ -132,25 +144,13 @@ export default function EntryCard({ entry }: EntryCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Text content with expand/collapse */}
         <div
-          className={`prose prose-sm dark:prose-invert max-w-none ${isExpanded ? '' : 'line-clamp-3'} mb-2`}
+          className="prose prose-sm dark:prose-invert max-w-none line-clamp-3 mb-4"
           dangerouslySetInnerHTML={{ __html: entry.content }}
         />
-        
-        {/* Show more/less button */}
-        <button 
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-primary text-xs font-medium hover:underline mb-4"
-        >
-          {isExpanded ? 'Show less' : 'Show more'}
-        </button>
-        
-        {/* Media display */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
-            {/* Show only first 3 media items when collapsed */}
-            {(isExpanded ? entry.mediaUrls : entry.mediaUrls.slice(0, 3)).map((url, i) => {
+            {entry.mediaUrls.map((url, i) => {
               const isVideo = url.match(/\.(mp4|webm)$/i);
               const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
 
@@ -183,15 +183,6 @@ export default function EntryCard({ entry }: EntryCardProps) {
                 />
               );
             })}
-            
-            {/* Show indicator for additional media when collapsed */}
-            {!isExpanded && entry.mediaUrls.length > 3 && (
-              <div className="flex items-center justify-center bg-muted rounded-md aspect-square h-32">
-                <span className="text-muted-foreground text-sm font-medium">
-                  +{entry.mediaUrls.length - 3} more
-                </span>
-              </div>
-            )}
           </div>
         )}
       </CardContent>

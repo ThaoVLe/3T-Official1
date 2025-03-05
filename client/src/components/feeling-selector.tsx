@@ -1,33 +1,41 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { X } from "lucide-react";
+import { emotions, activities } from "@/data/feelings";
 
 const feelingsData = [
   { emoji: "😊", label: "Happy" },
-  { emoji: "😢", label: "Sad" },
-  { emoji: "😡", label: "Angry" },
-  { emoji: "😌", label: "Relaxed" },
-  { emoji: "🥰", label: "Loved" },
-  { emoji: "😏", label: "Smug" },
-  { emoji: "😐", label: "Neutral" },
-  { emoji: "🤔", label: "Thoughtful" },
-  { emoji: "😴", label: "Sleepy" },
-  { emoji: "😳", label: "Surprised" },
+  { emoji: "😇", label: "Blessed" },
+  { emoji: "😍", label: "Loved" },
+  { emoji: "😔", label: "Sad" },
+  { emoji: "😋", label: "Lovely" },
+  { emoji: "😃", label: "Thankful" },
+  { emoji: "😄", label: "Excited" },
+  { emoji: "😘", label: "In love" },
+  { emoji: "🤪", label: "Crazy" },
+  { emoji: "😁", label: "Grateful" },
+  { emoji: "😌", label: "Blissful" },
+  { emoji: "🤩", label: "Fantastic" },
+  { emoji: "🙃", label: "Silly" },
+  { emoji: "🎉", label: "Festive" },
+  { emoji: "😀", label: "Wonderful" },
   { emoji: "😎", label: "Cool" },
-  { emoji: "🤗", label: "Grateful" },
+  { emoji: "😏", label: "Amused" },
+  { emoji: "😴", label: "Relaxed" },
+  { emoji: "😊", label: "Positive" },
+  { emoji: "😌", label: "Chill" },
 ];
 
 const activitiesData = [
-  { emoji: "🏃‍♂️", label: "Running" },
+  { emoji: "🏃", label: "Running" },
   { emoji: "🍽️", label: "Eating" },
   { emoji: "📚", label: "Reading" },
-  { emoji: "💻", label: "Working" },
+  { emoji: "💤", label: "Sleeping" },
   { emoji: "🎮", label: "Gaming" },
-  { emoji: "🎵", label: "Listening" },
-  { emoji: "🧘‍♀️", label: "Meditating" },
-  { emoji: "🎨", label: "Creating" },
+  { emoji: "🎧", label: "Listening" },
   { emoji: "✈️", label: "Traveling" },
   { emoji: "🎬", label: "Watching" },
 ];
@@ -75,7 +83,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     if (selectedEmotion) {
       const combined = {
         emoji: `${selectedEmotion.emoji} ${activity.emoji}`,
-        label: `${selectedEmotion.label}, ${activity.label}`,
+        label: `${selectedEmotion.label}, ${activity.label}`
       };
       onSelect(combined);
     } else {
@@ -83,115 +91,169 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     }
   };
 
-  const handleCustomEmotion = () => {
-    if (customEmotion.trim()) {
-      const newEmotion = {
-        emoji: "🌸", // Random flower emoji
-        label: customEmotion.trim(),
-      };
-      handleSelectEmotion(newEmotion);
-      setCustomEmotion('');
-    }
-  };
-
-  const handleCustomActivity = () => {
-    if (customActivity.trim()) {
-      const newActivity = {
-        emoji: "🔄",
-        label: customActivity.trim(),
-      };
-      handleSelectActivity(newActivity);
-      setCustomActivity('');
-    }
-  };
-
   const handleDone = () => {
+    // Save custom emotion and activity if provided
+    if (customEmotion) {
+      const flowerEmojis = ["🌸", "🌺", "🌹", "🌷", "🌻", "🌼", "🌞", "🌱", "🍀", "🪴", "🌿", "🌵"];
+      const randomFlower = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
+      const customFeeling = { emoji: randomFlower, label: customEmotion };
+      handleSelectEmotion(customFeeling);
+    }
+    if (customActivity) {
+      const animalEmojis = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", "🐧", "🐦", "🦆", "🦅", "🦉"];
+      const randomAnimal = animalEmojis[Math.floor(Math.random() * animalEmojis.length)];
+      const customActivityObj = { emoji: randomAnimal, label: customActivity };
+      handleSelectActivity(customActivityObj);
+    }
     setOpen(false);
   };
 
+  // Improved keyboard hiding for mobile
+  const hideKeyboard = () => {
+    // Force any active element to lose focus
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    // iOS specific fix - create and remove an input to force keyboard dismissal
+    const temporaryInput = document.createElement('input');
+    temporaryInput.setAttribute('type', 'text');
+    temporaryInput.style.position = 'absolute';
+    temporaryInput.style.opacity = '0';
+    temporaryInput.style.height = '0';
+    temporaryInput.style.fontSize = '16px'; // iOS won't zoom in on inputs with font size >= 16px
+
+    document.body.appendChild(temporaryInput);
+
+    // Adding timeout to ensure focus happens after DOM update
+    setTimeout(() => {
+      temporaryInput.focus();
+      setTimeout(() => {
+        temporaryInput.blur();
+        document.body.removeChild(temporaryInput);
+      }, 50);
+    }, 50);
+
+    // Return a promise to allow awaiting keyboard dismissal
+    return new Promise(resolve => setTimeout(resolve, 100));
+  };
+
+  // Handle sheet open state change
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      // For programmatic sheet opening, we'll handle keyboard dismissal
+      // in the button click handler instead for more direct control
+      setOpen(true);
+
+      // Additional safety measure: ensure any active text input loses focus
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    } else {
+      setOpen(false);
+    }
+  };
+
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1 px-2 text-xs"
+          variant="ghost"
+          className="h-10 px-3 rounded-full flex items-center"
+          aria-label="Select feeling"
           onClick={(e) => {
             e.preventDefault();
 
-            // Create a temporary input element to steal focus from any potential keyboard
+            // Aggressive keyboard dismissal on button click
+            if (document.activeElement instanceof HTMLElement) {
+              document.activeElement.blur();
+            }
+
+            // Create an invisible input field, focus and blur it to force keyboard dismissal
             const tempInput = document.createElement('input');
+            tempInput.style.position = 'fixed';
+            tempInput.style.opacity = '0';
+            tempInput.style.top = '-1000px';
+            tempInput.style.left = '0';
             document.body.appendChild(tempInput);
+
+            // Focus and immediately blur with a small delay
             tempInput.focus();
-            document.body.removeChild(tempInput);
 
-            // Now open the sheet after ensuring keyboard is dismissed
+            // On iOS we need to wait before removing the element
             setTimeout(() => {
-              setOpen(true);
+              tempInput.blur();
+              document.body.removeChild(tempInput);
 
-              // Set initial states from current selection
-              if (selectedFeeling) {
-                // Check if it's a combined selection
-                if (selectedFeeling.label.includes(', ')) {
-                  const parts = selectedFeeling.label.split(', ');
-                  const emojis = selectedFeeling.emoji.split(' ');
+              // Now open the sheet after ensuring keyboard is dismissed
+              setTimeout(() => {
+                setOpen(true);
 
-                  // Find the matching feelings and activities
-                  const emotion = feelingsData.find(f => f.label === parts[0]) || null;
-                  const activity = activitiesData.find(a => a.label === parts[1]) || null;
+                // Set initial states from current selection
+                if (selectedFeeling) {
+                  // Check if it's a combined selection
+                  if (selectedFeeling.label.includes(', ')) {
+                    const parts = selectedFeeling.label.split(', ');
+                    const emojis = selectedFeeling.emoji.split(' ');
 
-                  setSelectedEmotion(emotion);
-                  setSelectedActivity(activity);
-                } else {
-                  // Check if it's an emotion or activity
-                  const emotion = feelingsData.find(f => f.label === selectedFeeling.label) || null;
-                  const activity = activitiesData.find(a => a.label === selectedFeeling.label) || null;
+                    // Find the matching feelings and activities
+                    const emotion = feelingsData.find(f => f.label === parts[0]) || null;
+                    const activity = activitiesData.find(a => a.label === parts[1]) || null;
 
-                  if (emotion) {
                     setSelectedEmotion(emotion);
-                    setSelectedActivity(null);
-                  } else if (activity) {
-                    setSelectedEmotion(null);
                     setSelectedActivity(activity);
                   } else {
-                    // It's custom
-                    if (selectedFeeling.emoji === "🌸") {
-                      setSelectedEmotion(selectedFeeling);
-                      setSelectedActivity(null);
-                    } else {
-                      setSelectedEmotion(null);
-                      setSelectedActivity(selectedFeeling);
-                    }
+                    // Check if it's an emotion or activity
+                    const emotion = feelingsData.find(f => f.label === selectedFeeling.label);
+                    const activity = activitiesData.find(a => a.label === selectedFeeling.label);
+
+                    setSelectedEmotion(emotion || null);
+                    setSelectedActivity(activity || null);
                   }
                 }
-              }
+              }, 50);
             }, 50);
           }}
         >
           {selectedFeeling ? (
-            <span className="flex items-center gap-1">
-              <span className="text-xs">{selectedFeeling.label}</span>
-              <span>{selectedFeeling.emoji}</span>
-            </span>
+            <div className="flex items-center gap-1.5">
+              {selectedFeeling.emoji.includes(' ') ? (
+                // Combined emotion and activity
+                <>
+                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
+                  <span className="text-xl">{selectedFeeling.emoji}</span>
+                </>
+              ) : (
+                // Just emotion
+                <>
+                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
+                  <span className="text-xl">{selectedFeeling.emoji}</span>
+                </>
+              )}
+            </div>
           ) : (
-            <span className="flex items-center gap-1">
-              <span className="text-xs">Add feeling</span>
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xl">😊</span>
+              <span className="text-sm font-medium">Feeling</span>
+            </div>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[80vh] px-0">
-        <SheetHeader className="mb-2 px-4 text-left">
-          <SheetTitle>How are you feeling?</SheetTitle>
-          <div className="flex flex-wrap gap-1 mt-2">
+      <SheetContent side="bottom" className="h-[100dvh] pt-6" onOpenAutoFocus={(e) => {
+        // Prevent default auto focus behavior to avoid keyboard popup
+        e.preventDefault();
+      }}>
+        <SheetHeader className="mb-4">
+          <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>
+          <div className="flex justify-center mt-2">
             {selectedEmotion && (
-              <div className="bg-muted text-muted-foreground px-2 py-1 rounded-md flex items-center gap-1">
+              <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
                 <span className="text-xs">{selectedEmotion.label}</span>
                 <span>{selectedEmotion.emoji}</span>
               </div>
             )}
             {selectedActivity && (
-              <div className="bg-muted text-muted-foreground px-2 py-1 rounded-md flex items-center gap-1">
+              <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
                 <span className="text-xs">{selectedActivity.label}</span>
                 <span>{selectedActivity.emoji}</span>
               </div>
@@ -205,33 +267,21 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             <TabsTrigger value="activities">Activities</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
-            <div className="px-2 mb-4">
-              <Input
-                placeholder="How are you feeling?"
-                className="mb-2"
-                id="customFeeling"
-                value={customEmotion}
-                onChange={(e) => setCustomEmotion(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleCustomEmotion();
-                  }
-                }}
-              />
-              <Button 
-                onClick={handleCustomEmotion}
-                size="sm"
-                className="w-full"
-              >
-                Add Custom Feeling
-              </Button>
-            </div>
+          <div className="px-2 mb-4">
+            <Input
+              placeholder="What are you doing today?"
+              className="mb-2"
+              id="customFeeling"
+              value={customEmotion}
+              onChange={(e) => setCustomEmotion(e.target.value)}
+            />
+          </div>
 
+          <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
             {/* Default Feelings */}
             <h3 className="text-sm font-medium px-2 mb-2">Suggested Feelings</h3>
             <div className="grid grid-cols-3 gap-1">
-              {filteredFeelings.map((feeling) => (
+              {feelingsData.map((feeling) => (
                 <Button
                   key={feeling.label}
                   variant={selectedEmotion?.label === feeling.label ? "default" : "ghost"}
@@ -253,19 +303,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
                 id="customActivity"
                 value={customActivity}
                 onChange={(e) => setCustomActivity(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleCustomActivity();
-                  }
-                }}
               />
-              <Button 
-                onClick={handleCustomActivity}
-                size="sm"
-                className="w-full"
-              >
-                Add Custom Activity
-              </Button>
             </div>
             <div className="grid grid-cols-3 gap-1">
               {filteredActivities.map((activity) => (
@@ -287,7 +325,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           <Button
             onClick={handleDone}
             className="w-1/2 bg-primary text-primary-foreground"
-            disabled={!selectedEmotion && !selectedActivity}
+            disabled={!selectedEmotion && !selectedActivity && !customEmotion && !customActivity}
           >
             Done
           </Button>

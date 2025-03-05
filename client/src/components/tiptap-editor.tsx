@@ -304,20 +304,21 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </PopoverContent>
           </Popover>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 flex items-center justify-center"
-              >
-                <Smile className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-2">
-              <div className="mb-3">
-                {/* Emotion selector content */}
+          <div className="flex w-full justify-center">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 flex items-center justify-center"
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-2">
+                <div className="mb-3">
+                  {/* Emotion selector content */}
                 <div className="grid grid-cols-3 gap-1">
                   {/* Emotion buttons will go here */}
                 </div>

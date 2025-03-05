@@ -75,12 +75,12 @@ export default function EntryCard({ entry }: EntryCardProps) {
                   <div className="inline-flex items-center gap-1 ml-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
                     {feeling.label.includes(',') ? (
                       <>
-                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}
-                        {'  '}while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                        {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}
+                        {' - '}{feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
                       </>
                     ) : (
                       <>
-                        feeling {feeling.label} {feeling.emoji}
+                        {feeling.label} {feeling.emoji}
                       </>
                     )}
                   </div>

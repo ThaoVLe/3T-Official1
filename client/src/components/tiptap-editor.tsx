@@ -142,47 +142,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     <div className="h-full flex flex-col bg-white rounded-lg w-full tiptap-container">
       <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-white w-full">
         <div className="flex flex-wrap items-center gap-1">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 flex items-center justify-center"
-              >
-                <Smile className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-2">
-              <div className="mb-3">
-                {/* Emotion selector content */}
-                <div className="grid grid-cols-3 gap-1">
-                  {/* Emotion buttons will go here */}
-                </div>
-              </div>
-
-              {/* Standard emoji categories */}
-              {Object.entries(emojiCategories).map(([category, emojis]) => (
-                <div key={category} className="mb-2">
-                  <h3 className="text-sm font-medium mb-1">{category}</h3>
-                  <div className="grid grid-cols-6 gap-1">
-                    {emojis.map((emoji) => (
-                      <Button
-                        key={emoji}
-                        variant="ghost"
-                        className="h-8 w-8 p-0"
-                        onClick={() => {
-                          editor.chain().focus().insertContent(emoji).run();
-                        }}
-                      >
-                        {emoji}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </PopoverContent>
-          </Popover>
           <Button
             type="button"
             variant="ghost"
@@ -342,6 +301,48 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                   />
                 ))}
               </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 flex items-center gap-1 px-2"
+              >
+                <Smile className="h-4 w-4 mr-1" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-2">
+              <div className="mb-3">
+                {/* Emotion selector content */}
+                <div className="grid grid-cols-3 gap-1">
+                  {/* Emotion buttons will go here */}
+                </div>
+              </div>
+
+              {/* Standard emoji categories */}
+              {Object.entries(emojiCategories).map(([category, emojis]) => (
+                <div key={category} className="mb-2">
+                  <h3 className="text-sm font-medium mb-1">{category}</h3>
+                  <div className="grid grid-cols-6 gap-1">
+                    {emojis.map((emoji) => (
+                      <Button
+                        key={emoji}
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          editor.chain().focus().insertContent(emoji).run();
+                        }}
+                      >
+                        {emoji}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </PopoverContent>
           </Popover>
         </div>

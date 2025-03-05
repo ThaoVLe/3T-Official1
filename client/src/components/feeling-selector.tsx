@@ -31,13 +31,41 @@ const feelingsData = [
 
 const activitiesData = [
   { emoji: "🏃", label: "Running" },
-  { emoji: "🍽️", label: "Eating" },
-  { emoji: "📚", label: "Reading" },
-  { emoji: "💤", label: "Sleeping" },
+  { emoji: "🍳", label: "Cooking" },
+  { emoji: "📖", label: "Reading" },
   { emoji: "🎮", label: "Gaming" },
-  { emoji: "🎧", label: "Listening" },
+  { emoji: "🎵", label: "Listening" },
+  { emoji: "🌱", label: "Learning" },
+  { emoji: "💤", label: "Relaxing" },
+  { emoji: "🧘", label: "Meditating" },
+  { emoji: "🎨", label: "Creating" },
+  { emoji: "💻", label: "Working" },
+  { emoji: "🛒", label: "Shopping" },
+  { emoji: "✏️", label: "Writing" },
   { emoji: "✈️", label: "Traveling" },
   { emoji: "🎬", label: "Watching" },
+  { emoji: "🎉", label: "Celebrating" },
+  { emoji: "🍽️", label: "Eating" },
+  { emoji: "🥂", label: "Drinking" },
+  { emoji: "👋", label: "Greeting" },
+  { emoji: "🎂", label: "Birthday" },
+  { emoji: "💼", label: "Meeting" },
+  { emoji: "🏋️", label: "Working out" },
+  { emoji: "🎭", label: "Performing" },
+  { emoji: "🛌", label: "Sleeping" },
+  { emoji: "🎁", label: "Gifting" },
+  { emoji: "👨‍👩‍👧‍👦", label: "Family time" },
+  { emoji: "🎯", label: "Planning" },
+  { emoji: "🧠", label: "Thinking" },
+  { emoji: "🚗", label: "Driving" },
+  { emoji: "🏠", label: "At home" },
+  { emoji: "☕", label: "Coffee break" },
+  { emoji: "📱", label: "Scrolling" },
+  { emoji: "👥", label: "Hanging out" },
+  { emoji: "🗣️", label: "Talking" },
+  { emoji: "💃", label: "Dancing" },
+  { emoji: "📸", label: "Taking photos" },
+  { emoji: "🎤", label: "Singing" },
 ];
 
 interface FeelingSelectorProps {
@@ -267,7 +295,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             <TabsTrigger value="activities">Activities</TabsTrigger>
           </TabsList>
 
-          
+
 
           <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
             {/* Default Feelings */}

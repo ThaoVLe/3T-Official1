@@ -220,22 +220,8 @@ export default function Editor() {
           {form.watch("feeling") && (
             <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
               <span>is feeling</span>
-              {form.watch("feeling").emoji.includes(' ') ? (
-                // Combined emotion and activity
-                <>
-                  <span className="font-medium">{form.watch("feeling").label.split(',')[0]}</span>
-                  <span className="text-lg">{form.watch("feeling").emoji.split(' ')[0]}</span>
-                  <span>,</span>
-                  <span className="font-medium">{form.watch("feeling").label.split(',')[1].trim()}</span>
-                  <span className="text-lg">{form.watch("feeling").emoji.split(' ')[1]}</span>
-                </>
-              ) : (
-                // Just emotion
-                <>
-                  <span className="font-medium">{form.watch("feeling").label}</span>
-                  <span className="text-lg">{form.watch("feeling").emoji}</span>
-                </>
-              )}
+              <span className="font-medium">{form.watch("feeling").label}</span>
+              <span className="text-lg">{form.watch("feeling").emoji}</span>
             </div>
           )}
         </div>

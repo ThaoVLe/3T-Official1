@@ -279,35 +279,6 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </div>
 
           <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
-            {/* Custom Feelings Section */}
-            {(() => {
-              // Get saved custom feelings
-              const savedCustomFeelings = JSON.parse(localStorage.getItem('customFeelings') || '[]');
-              return savedCustomFeelings.length > 0 ? (
-                <div className="mb-4">
-                  <h3 className="text-sm font-medium px-2 mb-2">Your Saved Feelings</h3>
-                  <div className="grid grid-cols-3 gap-1 mb-4">
-                    {savedCustomFeelings.map((feeling: any) => (
-                      <Button
-                        key={`custom-${feeling.label}`}
-                        variant={selectedEmotion?.label === feeling.label ? "default" : "ghost"}
-                        className="flex items-center justify-start gap-2 p-3 h-14"
-                        onClick={() => {
-                          onSelect(feeling);
-                          setSelectedEmotion(feeling);
-                          setOpen(false);
-                        }}
-                      >
-                        <span className="text-xl">{feeling.emoji}</span>
-                        <span className="text-sm">{feeling.label}</span>
-                      </Button>
-                    ))}
-                  </div>
-                  <div className="border-t border-gray-200 my-3"></div>
-                </div>
-              ) : null;
-            })()}
-
             {/* Default Feelings */}
             <h3 className="text-sm font-medium px-2 mb-2">Suggested Feelings</h3>
             <div className="grid grid-cols-3 gap-1">

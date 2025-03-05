@@ -364,30 +364,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 </div>
               </div>
 
-              {/* Display saved custom emotions from feelings */}
-              {(() => {
-                const savedCustomFeelings = JSON.parse(localStorage.getItem('customFeelings') || '[]');
-                return savedCustomFeelings.length > 0 ? (
-                  <div className="mb-3">
-                    <h3 className="text-sm font-medium mb-1">Your Saved Feelings</h3>
-                    <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
-                      {savedCustomFeelings.map((feeling: any, index: number) => (
-                        <Button
-                          key={`editor-feeling-${index}`}
-                          variant="outline"
-                          size="sm"
-                          className="text-xs py-1 px-2"
-                          onClick={() => {
-                            editor.chain().focus().setColor('#880000').insertContent(feeling.label).setColor('default').run();
-                          }}
-                        >
-                          {feeling.emoji} {feeling.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null;
-              })()}
+              {/* Saved feelings section removed */}
 
               {/* Standard emoji categories */}
               {Object.entries(emojiCategories).map(([category, emojis]) => (

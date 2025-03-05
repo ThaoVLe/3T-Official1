@@ -144,10 +144,12 @@ export default function EntryCard({ entry }: EntryCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div
-          className="prose prose-sm dark:prose-invert max-w-none line-clamp-3 mb-4"
-          dangerouslySetInnerHTML={{ __html: entry.content }}
-        />
+        <Link href={`/entry/${entry.id}`}>
+          <div
+            className="prose prose-sm dark:prose-invert max-w-none line-clamp-3 mb-4 cursor-pointer hover:text-primary transition-colors"
+            dangerouslySetInnerHTML={{ __html: entry.content }}
+          />
+        </Link>
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
             {entry.mediaUrls.map((url, i) => {

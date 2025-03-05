@@ -29,30 +29,7 @@ html, body, #root {
   }
 
   .editor-page {
-    @apply w-full py-6 flex flex-col bg-background;
-    height: 100vh; 
-    height: calc(100vh - 56px); /* Adjust for bottom nav */
-    overflow: hidden;
-    position: relative;
-  }
-
-  .editor-content {
-    @apply flex-1 relative;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 70px; /* Reduced space for bottom menu - matches screenshot */
-  }
-
-  /* Mobile bottom navigation - fixed at bottom */
-  .mobile-bottom-menu {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    background-color: #f3f4f6;
-    border-top: 1px solid #e5e7eb;
-    padding: 8px 0;
+    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
   }
 
   .ProseMirror {
@@ -60,13 +37,12 @@ html, body, #root {
   }
   
   .tiptap-container {
-    @apply flex flex-col h-full;
+    @apply flex flex-col;
   }
   
   /* Fix for bottom menu bar */
   .mobile-bottom-menu {
-    @apply sticky bottom-0 left-0 right-0 bg-white border-t border-border z-50;
-    margin-top: auto;
+    @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
   }
   
   .card {

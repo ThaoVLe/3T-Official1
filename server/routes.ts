@@ -57,6 +57,11 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add a simple test endpoint
+  app.get('/api/test', (req, res) => {
+    res.json({ message: 'API is working!' });
+  });
+
   // Serve uploaded files
   app.use('/uploads', express.static(uploadsDir));
 

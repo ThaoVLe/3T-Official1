@@ -29,7 +29,17 @@ html, body, #root {
   }
 
   .editor-page {
-    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
+    @apply w-full py-6 flex flex-col bg-background;
+    height: 100vh;
+    height: calc(100vh - 56px); /* Adjust for bottom nav */
+    overflow: hidden;
+  }
+
+  .editor-content {
+    @apply flex-1 relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 140px; /* Space for the bottom menu */
   }
 
   .ProseMirror {
@@ -37,12 +47,13 @@ html, body, #root {
   }
   
   .tiptap-container {
-    @apply flex flex-col;
+    @apply flex flex-col h-full;
   }
   
   /* Fix for bottom menu bar */
   .mobile-bottom-menu {
-    @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
+    @apply sticky bottom-0 left-0 right-0 bg-white border-t border-border z-50;
+    margin-top: auto;
   }
   
   .card {

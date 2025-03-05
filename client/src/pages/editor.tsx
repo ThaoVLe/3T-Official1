@@ -237,16 +237,17 @@ export default function Editor() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 flex flex-col overflow-auto w-full">
-        <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+      <div className="editor-content w-full">
+        <div className="p-4 sm:p-6 w-full max-w-full">
           <TipTapEditor
             value={form.watch("content")}
             onChange={(value) => form.setValue("content", value)}
           />
         </div>
+      </div>
 
-        {/* Media Controls - Fixed at bottom */}
-        <div className="border-t bg-white sticky bottom-0 w-full" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}> {/*Added paddingBottom for safe area*/}
+      {/* Media Controls - Fixed at bottom */}
+      <div className="mobile-bottom-menu w-full" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}> {/*Added paddingBottom for safe area*/}
           <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">How are you feeling today?</span>

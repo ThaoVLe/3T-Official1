@@ -6,7 +6,7 @@ import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Import Input component
+import { Input } from "@/components/ui/input";
 import {
   Bold,
   Italic,
@@ -22,7 +22,22 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Placeholder from '@tiptap/extension-placeholder'; //Import Placeholder extension
+import Placeholder from '@tiptap/extension-placeholder';
+
+// Sample emoticon categories for our emoji picker
+const emojiCategories = {
+  "Smileys & Emotion": ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😌"],
+  "Activities": ["⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🏉", "🎱", "🎮", "🎲", "🧩", "🎭"],
+  "Travel & Places": ["🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚"],
+  "Objects": ["⌚", "📱", "💻", "⌨️", "🖥️", "🖱️", "🖨️", "📷", "🎥", "🔋", "🔌", "💡"],
+};
+
+// Sample colors for text and highlighting
+const colors = [
+  "#FF0000", "#FF7F00", "#FFFF00", "#00FF00", "#0000FF", "#4B0082", "#9400D3",
+  "#FF1493", "#FF69B4", "#FFB6C1", "#FFA07A", "#FA8072", "#E9967A", "#F08080",
+  "#CD5C5C", "#DC143C", "#B22222", "#8B0000", "#800000", "#A52A2A", "#000000",
+];
 
 interface TipTapEditorProps {
   value: string;
@@ -78,37 +93,17 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     }
   }, [editor, value]);
 
-  if (!editor) {
-    return null;
-  }
-
-  const colors = [
-    '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
-    '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
-    '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc',
-  ];
-
-  const emojiCategories = {
-    'Smileys': ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '😉', '😌', '😍', '🥰', '😘'],
-    'Gestures': ['👍', '👎', '👌', '✌️', '🤞', '🤝', '👊', '✊', '🤛', '🤜', '🤚', '👋', '🖐️', '✋', '🖖'],
-    'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗'],
-    'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
-  };
-
   const editorRef = useRef<HTMLDivElement>(null);
-  const contentHeight = useRef<number>(200); // Initial minimum height
 
   useEffect(() => {
     if (!editor || !editorRef.current) return;
 
-    // Function to adjust editor height based on content
+    const contentHeight = { current: 200 }; // Initial min height
+
     const adjustHeight = () => {
       if (!editorRef.current) return;
 
-      // Reset height first to get proper scrollHeight
-      editorRef.current.style.height = 'auto';
-
-      // Get the actual content height
+      // Get the scrollHeight of the editor content
       const scrollHeight = editorRef.current.querySelector('.ProseMirror')?.scrollHeight || 200;
 
       // Only grow, never shrink below the minimum or current height
@@ -136,7 +131,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     return () => observer.disconnect();
   }, [editor]);
 
-
+  if (!editor) {
+    return null;
+  }
 
   return (
     <div className="h-full flex flex-col bg-white rounded-lg w-full tiptap-container">
@@ -319,37 +316,37 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               <PopoverContent className="w-72 p-2">
                 <div className="mb-3">
                   {/* Emotion selector content */}
-                <div className="grid grid-cols-3 gap-1">
-                  {/* Emotion buttons will go here */}
-                </div>
-              </div>
-
-              {/* Standard emoji categories */}
-              {Object.entries(emojiCategories).map(([category, emojis]) => (
-                <div key={category} className="mb-2">
-                  <h3 className="text-sm font-medium mb-1">{category}</h3>
-                  <div className="grid grid-cols-6 gap-1">
-                    {emojis.map((emoji) => (
-                      <Button
-                        key={emoji}
-                        variant="ghost"
-                        className="h-8 w-8 p-0"
-                        onClick={() => {
-                          editor.chain().focus().insertContent(emoji).run();
-                        }}
-                      >
-                        {emoji}
-                      </Button>
-                    ))}
+                  <div className="grid grid-cols-3 gap-1">
+                    {/* Emotion buttons will go here */}
                   </div>
                 </div>
-              ))}
-            </PopoverContent>
-          </Popover>
+
+                {/* Standard emoji categories */}
+                {Object.entries(emojiCategories).map(([category, emojis]) => (
+                  <div key={category} className="mb-2">
+                    <h3 className="text-sm font-medium mb-1">{category}</h3>
+                    <div className="grid grid-cols-6 gap-1">
+                      {emojis.map((emoji) => (
+                        <Button
+                          key={emoji}
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            editor.chain().focus().insertContent(emoji).run();
+                          }}
+                        >
+                          {emoji}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
-
-      <div className="flex-1 w-full">
+      <div className="flex-1 p-2 overflow-y-auto">
         <EditorContent ref={editorRef} editor={editor} className="h-full w-full" />
       </div>
     </div>

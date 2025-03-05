@@ -279,7 +279,6 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
         e.preventDefault();
       }}>
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>
           <div className="flex justify-center mt-2">
             {selectedEmotion && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">

@@ -222,12 +222,12 @@ export default function Editor() {
               <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
                 {form.watch("feeling").label.includes(',') ? (
                   <>
-                    feeling {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
-                    {'  '}while {form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
+                    {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
+                    {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
                   </>
                 ) : (
                   <>
-                    feeling {form.watch("feeling").label} {form.watch("feeling").emoji}
+                    {form.watch("feeling").label} {form.watch("feeling").emoji}
                   </>
                 )}
               </div>

@@ -318,16 +318,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </PopoverTrigger>
             <PopoverContent className="w-72 p-2">
               <div className="mb-3">
-                <div className="flex gap-2">
-                  <Input 
-                    id="customEmotion"
-                    placeholder="What are you doing today?"
-                    className="text-sm"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const input = e.currentTarget;
-                        const value = input.value.trim();
-                        if (value) {
                           // Insert the custom emotion with dark red color
                           editor.chain().focus().setColor('#880000').insertContent(value).setColor('default').run();
 

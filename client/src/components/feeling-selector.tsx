@@ -267,15 +267,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             <TabsTrigger value="activities">Activities</TabsTrigger>
           </TabsList>
 
-          <div className="px-2 mb-4">
-            <Input
-              placeholder="How are you feeling today?"
-              className="mb-2"
-              id="customFeeling"
-              value={customEmotion}
-              onChange={(e) => setCustomEmotion(e.target.value)}
-            />
-          </div>
+          
 
           <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
             {/* Default Feelings */}
@@ -296,15 +288,6 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </TabsContent>
 
           <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
-            <div className="px-2 mb-4">
-              <Input
-                placeholder="What are you doing today?"
-                className="mb-2"
-                id="customActivity"
-                value={customActivity}
-                onChange={(e) => setCustomActivity(e.target.value)}
-              />
-            </div>
             <div className="grid grid-cols-3 gap-1">
               {filteredActivities.map((activity) => (
                 <Button

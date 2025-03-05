@@ -1,11 +1,9 @@
-
-import { useState } from "react";
+import React, { useState } from "react";
+import { format } from "date-fns";
 import { Link } from "wouter";
-import { Trash2, Edit2, Share } from "lucide-react";
+import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
-import { DiaryEntry } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
-import { apiRequest } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -14,179 +12,157 @@ interface EntryCardProps {
   entry: DiaryEntry;
 }
 
-export default function EntryCard({ entry }: EntryCardProps) {
-  const { toast } = useToast();
+export function EntryCard({ entry }: EntryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { toast } = useToast();
 
-  const deleteMutation = useMutation({
+  // Function to handle delete
+  const { mutate: deleteEntry } = useMutation({
     mutationFn: async () => {
-      await apiRequest("DELETE", `/api/entries/${entry.id}`);
+      const response = await fetch(`/api/entries/${entry.id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete entry");
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+      queryClient.invalidateQueries({ queryKey: ["entries"] });
       toast({
-        title: "Success",
-        description: "Entry deleted",
+        title: "Entry deleted",
+        description: "Your diary entry has been deleted",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete entry",
+        variant: "destructive",
       });
     },
   });
 
-  // Get feeling from entry and ensure it's properly typed
-  const feeling = entry.feeling ? {
-    emoji: entry.feeling.emoji || "",
-    label: entry.feeling.label || ""
-  } : null;
-
-  // Function to truncate text content for preview
-  const truncateContent = (content: string) => {
-    const lines = content.split('\n').slice(0, 3);
-    return lines.join('\n');
+  // Function to truncate text
+  const truncateText = (text: string, maxLines: number) => {
+    const lines = text.split('\n');
+    if (lines.length <= maxLines) return text;
+    return lines.slice(0, maxLines).join('\n') + '...';
   };
 
+  // Extract the first 3 lines for preview
+  const previewText = !isExpanded && entry.content 
+    ? truncateText(entry.content, 3) 
+    : entry.content;
+
   return (
-    <Card className="mb-4 overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
+    <Card className="mb-4">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
           <div>
-            <CardTitle className="text-xl font-bold">{entry.title}</CardTitle>
-            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-              <span>{format(new Date(entry.date), "MMM d, yyyy")}</span>
+            <CardTitle className="text-lg">
+              {format(new Date(entry.createdAt), "MMMM d, yyyy")}
+            </CardTitle>
+            <div className="text-sm text-muted-foreground flex">
+              <span>{format(new Date(entry.createdAt), "h:mm a")}</span>
               {entry.location && (
                 <>
                   <span>-</span>
                   <div className="inline-flex items-center gap-1 ml-1">
-                    <span className="text-xs">{entry.location}</span>
-                    <span className="text-xs">📍</span>
-                  </div>
-                </>
-              )}
-              {feeling && (
-                <>
-                  <span>-</span>
-                  <div className="inline-flex items-center gap-1 ml-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-                    <span>{feeling.emoji}</span>
-                    <span>{feeling.label}</span>
+                    <span className="ml-1">at</span>
+                    <span className="ml-1">{entry.location}</span>
+                    <span className="ml-1">📍</span>
                   </div>
                 </>
               )}
             </div>
           </div>
-          <div className="flex gap-1.5">
-            <Link href={`/edit/${entry.id}`}>
-              <Button size="icon" variant="ghost" className="h-8 w-8">
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 className="h-4 w-4" />
+          <div className="flex space-x-2">
+            <Button size="sm" variant="ghost" asChild>
+              <Link href={`/editor/${entry.id}`}>Edit</Link>
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8">
-              <Share className="h-4 w-4" />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive"
+              onClick={() => deleteEntry()}
+            >
+              Delete
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pb-4">
-        <div className="space-y-4">
-          {/* Facebook-style post content with expand/collapse */}
-          <div className="entry-content">
-            {entry.content && (
-              <div className="text-content">
-                {isExpanded ? (
-                  <div dangerouslySetInnerHTML={{ __html: entry.content }} />
-                ) : (
-                  <>
-                    <div 
-                      className="truncated-content" 
-                      dangerouslySetInnerHTML={{ 
-                        __html: truncateContent(entry.content.replace(/<[^>]*>/g, ''))
-                      }} 
-                    />
-                    {entry.content.length > 200 && (
-                      <button 
-                        className="text-primary text-sm font-medium mt-1 hover:underline"
-                        onClick={() => setIsExpanded(true)}
-                      >
-                        See more
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
+      <CardContent>
+        <div>
+          {/* Content with "See more" functionality */}
+          <div className="whitespace-pre-wrap mb-4">
+            {previewText}
+            {entry.content && entry.content.split('\n').length > 3 && !isExpanded && (
+              <button
+                onClick={() => setIsExpanded(true)}
+                className="text-primary font-medium block mt-2"
+              >
+                See more
+              </button>
+            )}
+            {isExpanded && (
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="text-primary font-medium block mt-2"
+              >
+                See less
+              </button>
             )}
           </div>
 
-          {/* Media Gallery */}
+          {/* Media display (Facebook-style) */}
           {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-            <div className="media-gallery">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
-                {(isExpanded ? entry.mediaUrls : entry.mediaUrls.slice(0, 3)).map((url, i) => {
-                  const isVideo = url.match(/\.(mp4|webm|mov|MOV)$/i);
-                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
-                  
-                  if (isVideo) {
-                    return (
-                      <video
-                        key={i}
-                        src={url}
-                        controls
-                        className="rounded-md w-full h-auto object-cover aspect-square"
-                      />
-                    );
-                  }
-                  
-                  if (isAudio) {
-                    return (
-                      <audio
-                        key={i}
-                        src={url}
-                        controls
-                        className="rounded-md w-full"
-                      />
-                    );
-                  }
-                  
+            <div className="media-container mt-4">
+              {/* Show only first 3 media items when collapsed */}
+              {(isExpanded ? entry.mediaUrls : entry.mediaUrls.slice(0, 3)).map((url, i) => {
+                const isVideo = url.match(/\.(mp4|webm)$/i);
+                const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+
+                if (isVideo) {
+                  return (
+                    <video
+                      key={i}
+                      src={url}
+                      controls
+                      className="rounded-md max-h-96 mb-2 w-full object-cover"
+                    />
+                  );
+                } else if (isAudio) {
+                  return (
+                    <audio
+                      key={i}
+                      src={url}
+                      controls
+                      className="rounded-md mb-2 w-full"
+                    />
+                  );
+                } else {
                   return (
                     <img
                       key={i}
                       src={url}
                       alt={`Media ${i + 1}`}
-                      className="rounded-md w-full h-auto object-cover aspect-square"
+                      className="rounded-md max-h-96 mb-2 w-full object-cover"
                     />
                   );
-                })}
-              </div>
-              
-              {/* Show "See more" for media when collapsed */}
+                }
+              })}
+
+              {/* Show indicator for additional media when collapsed */}
               {!isExpanded && entry.mediaUrls.length > 3 && (
                 <div 
-                  className="relative mt-2 rounded-md bg-muted cursor-pointer"
+                  className="relative rounded-md bg-muted/50 flex items-center justify-center h-48 cursor-pointer"
                   onClick={() => setIsExpanded(true)}
                 >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-medium">
-                      +{entry.mediaUrls.length - 3} more
-                    </span>
-                  </div>
+                  <span className="text-lg font-medium">
+                    +{entry.mediaUrls.length - 3} more
+                  </span>
                 </div>
               )}
             </div>
-          )}
-          
-          {/* Toggle expand/collapse button */}
-          {isExpanded && (
-            <button 
-              className="text-primary text-sm font-medium mt-2 hover:underline"
-              onClick={() => setIsExpanded(false)}
-            >
-              See less
-            </button>
           )}
         </div>
       </CardContent>

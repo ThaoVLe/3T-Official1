@@ -32,6 +32,11 @@ html, body, #root {
     @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
   }
 
+  /* Auto-expanding editor styles */
+  .tiptap-container .ProseMirror {
+    transition: min-height 0.2s ease;
+  }
+  
   .ProseMirror {
     @apply min-h-[200px];
   }

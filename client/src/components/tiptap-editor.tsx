@@ -4,7 +4,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -89,6 +89,29 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗'],
     'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
   };
+
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (editorRef.current) {
+        const lines = editorRef.current.querySelectorAll('p, h1, h2');
+        if (lines.length > 2 && lines.length % 3 === 2){
+          const currentHeight = editorRef.current.offsetHeight;
+          editorRef.current.style.height = `${currentHeight + 30}px`; //adjust 30px as needed.
+        }
+      }
+    };
+
+    if (editorRef.current) {
+        const observer = new MutationObserver(handleResize);
+        observer.observe(editorRef.current, { childList: true, subtree: true });
+        return () => observer.disconnect();
+    }
+
+  }, [editor]);
+
+
 
   return (
     <div className="h-full flex flex-col bg-white rounded-lg w-full tiptap-container">
@@ -294,7 +317,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       </div>
 
       <div className="flex-1 w-full">
-        <EditorContent editor={editor} className="h-full w-full" />
+        <EditorContent ref={editorRef} editor={editor} className="h-full w-full" />
       </div>
     </div>
   );

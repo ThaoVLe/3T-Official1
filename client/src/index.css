@@ -128,34 +128,6 @@ html, body, #root {
     max-width: 100vw !important;
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
-
-/* Prevent toolbar from wrapping */
-.tiptap-container .flex-nowrap {
-  flex-wrap: nowrap;
-  min-width: max-content;
-}
-
-/* Make toolbar scrollable on smaller screens */
-.tiptap-container .overflow-x-auto {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-
-/* Style scrollbar for better visibility */
-.tiptap-container .overflow-x-auto::-webkit-scrollbar {
-  height: 4px;
-}
-
-.tiptap-container .overflow-x-auto::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.tiptap-container .overflow-x-auto::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 4px;
-}
-
     margin-left: 0 !important;
     margin-right: 0 !important;
   }

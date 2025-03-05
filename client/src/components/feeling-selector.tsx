@@ -297,9 +297,8 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
 
           <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
             <div className="px-2 mb-4">
-              <label className="block text-sm font-medium mb-1">What are you doing today?</label>
               <Input
-                placeholder="Enter your activity"
+                placeholder="What are you doing today?"
                 className="mb-2"
                 id="customActivity"
                 value={customActivity}

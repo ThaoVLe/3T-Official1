@@ -65,7 +65,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     if (selectedActivity) {
       const combined = {
         emoji: `${feeling.emoji} ${selectedActivity.emoji}`,
-        label: `${feeling.label}, ${selectedActivity.label}`
+        label: `${feeling.label}, ${selectedActivity.label}`,l}`
       };
       onSelect(combined);
     } else {
@@ -201,9 +201,18 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
         >
           {selectedFeeling ? (
             <div className="flex items-center gap-1.5">
-              <span className="text-xl">{selectedFeeling.emoji}</span>
-              {selectedFeeling.emoji.includes(' ') && (
-                <span className="text-xs">{selectedFeeling.label}</span>
+              {selectedFeeling.emoji.includes(' ') ? (
+                // Combined emotion and activity
+                <>
+                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
+                  <span className="text-xl">{selectedFeeling.emoji}</span>
+                </>
+              ) : (
+                // Just emotion
+                <>
+                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
+                  <span className="text-xl">{selectedFeeling.emoji}</span>
+                </>
               )}
             </div>
           ) : (
@@ -223,14 +232,14 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           <div className="flex justify-center mt-2">
             {selectedEmotion && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
-                <span>{selectedEmotion.emoji}</span>
                 <span className="text-xs">{selectedEmotion.label}</span>
+                <span>{selectedEmotion.emoji}</span>
               </div>
             )}
             {selectedActivity && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
-                <span>{selectedActivity.emoji}</span>
                 <span className="text-xs">{selectedActivity.label}</span>
+                <span>{selectedActivity.emoji}</span>.label}</span>
               </div>
             )}
           </div>

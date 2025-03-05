@@ -1,193 +1,170 @@
+import React, { useState } from "react";
+import { format } from "date-fns";
 import { Link } from "wouter";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { apiRequest } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 
 interface EntryCardProps {
   entry: DiaryEntry;
 }
 
-export default function EntryCard({ entry }: EntryCardProps) {
+export function EntryCard({ entry }: EntryCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const { toast } = useToast();
 
-  const deleteMutation = useMutation({
+  // Function to handle delete
+  const { mutate: deleteEntry } = useMutation({
     mutationFn: async () => {
-      await apiRequest("DELETE", `/api/entries/${entry.id}`);
+      const response = await fetch(`/api/entries/${entry.id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete entry");
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+      queryClient.invalidateQueries({ queryKey: ["entries"] });
       toast({
-        title: "Success",
-        description: "Entry deleted",
+        title: "Entry deleted",
+        description: "Your diary entry has been deleted",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete entry",
+        variant: "destructive",
       });
     },
   });
 
-  // Get feeling from entry and ensure it's properly typed
-  const feeling = entry.feeling ? {
-    emoji: entry.feeling.emoji || "",
-    label: entry.feeling.label || ""
-  } : null;
-
-  // Function to format time display
-  const formatTimeAgo = (createdAt: string | Date) => {
-    const now = new Date();
-    const entryDate = new Date(createdAt);
-    const diffInDays = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffInDays > 30) {
-      return format(entryDate, "MMM dd, yyyy");
-    } else if (diffInDays > 0) {
-      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
-    } else {
-      const diffInHours = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60));
-      if (diffInHours > 0) {
-        return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
-      } else {
-        const diffInMinutes = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60));
-        return diffInMinutes <= 0 ? 'Just now' : `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-      }
-    }
+  // Function to truncate text
+  const truncateText = (text: string, maxLines: number) => {
+    const lines = text.split('\n');
+    if (lines.length <= maxLines) return text;
+    return lines.slice(0, maxLines).join('\n') + '...';
   };
 
+  // Extract the first 3 lines for preview
+  const previewText = !isExpanded && entry.content 
+    ? truncateText(entry.content, 3) 
+    : entry.content;
+
   return (
-    <Card className="group hover:shadow-lg transition-shadow duration-200">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-[15px] relative">
-        <div className="flex flex-col">
-          <CardTitle className="text-xl font-semibold line-clamp-1">
-            <span>{entry.title || "Untitled Entry"}</span>
-          </CardTitle>
-          <div className="flex items-center text-sm mt-1 w-full">
-            <div className="flex items-center w-full">
-              <span className="text-muted-foreground flex-grow">
-                {formatTimeAgo(entry.createdAt)}
-              </span>
-              <span className="mx-1"></span> {/* 1 blank space */}
-              {feeling && (
-                <>
-                  <span>-</span>
-                  <div className="inline-flex items-center gap-1 ml-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-                    {feeling.label.includes(',') ? (
-                      <>
-                        {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}
-                        {' - '}{feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                      </>
-                    ) : (
-                      <>
-                        {feeling.label} {feeling.emoji}
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
+    <Card className="mb-4">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-lg">
+              {format(new Date(entry.createdAt), "MMMM d, yyyy")}
+            </CardTitle>
+            <div className="text-sm text-muted-foreground flex">
+              <span>{format(new Date(entry.createdAt), "h:mm a")}</span>
               {entry.location && (
                 <>
-                  <span className="mx-4"></span> {/* 4 blank spaces */}
                   <span>-</span>
-                  <span className="ml-1">at</span>
-                  <span className="ml-1">{entry.location}</span>
-                  <span className="ml-1">📍</span>
+                  <div className="inline-flex items-center gap-1 ml-1">
+                    <span className="ml-1">at</span>
+                    <span className="ml-1">{entry.location}</span>
+                    <span className="ml-1">📍</span>
+                  </div>
                 </>
               )}
             </div>
           </div>
-        </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-[4px] right-4">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => {
-              // Share functionality can be expanded later
-              if (navigator.share) {
-                navigator.share({
-                  title: entry.title || "My Diary Entry",
-                  text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
-                  url: window.location.origin + `/entry/${entry.id}`,
-                }).catch(err => console.log('Error sharing:', err));
-              } else {
-                // Fallback for browsers that don't support navigator.share
-                navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
-                  .then(() => toast({
-                    title: "Link copied",
-                    description: "Entry link copied to clipboard"
-                  }))
-                  .catch(err => console.error('Could not copy text:', err));
-              }
-            }}
-            className="hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30"
-          >
-            <Share className="h-4 w-4"/>
-            <span className="sr-only">Share</span>
-          </Button>
-          <Link href={`/edit/${entry.id}`}>
-            <Button size="icon" variant="ghost" className="hover:bg-muted">
-              <Edit2 className="h-4 w-4" />
-              <span className="sr-only">Edit</span>
+          <div className="flex space-x-2">
+            <Button size="sm" variant="ghost" asChild>
+              <Link href={`/editor/${entry.id}`}>Edit</Link>
             </Button>
-          </Link>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => deleteMutation.mutate()}
-            disabled={deleteMutation.isPending}
-            className="hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Delete</span>
-          </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive"
+              onClick={() => deleteEntry()}
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        <Link href={`/entry/${entry.id}`}>
-          <div
-            className="prose prose-sm dark:prose-invert max-w-none line-clamp-3 mb-4 cursor-pointer hover:text-primary transition-colors"
-            dangerouslySetInnerHTML={{ __html: entry.content }}
-          />
-        </Link>
-        {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
-            {entry.mediaUrls.map((url, i) => {
-              const isVideo = url.match(/\.(mp4|webm)$/i);
-              const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
-
-              if (isVideo) {
-                return (
-                  <video
-                    key={i}
-                    src={url}
-                    controls
-                    className="rounded-md w-full h-32 object-cover bg-black"
-                  />
-                );
-              }
-
-              if (isAudio) {
-                return (
-                  <div key={i} className="flex items-center justify-center h-32 bg-muted rounded-md p-4">
-                    <audio src={url} controls className="w-full" />
-                  </div>
-                );
-              }
-
-              return (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`Media ${i + 1}`}
-                  className="rounded-md w-full h-32 object-cover"
-                  loading="lazy"
-                />
-              );
-            })}
+        <div>
+          {/* Content with "See more" functionality */}
+          <div className="whitespace-pre-wrap mb-4">
+            {previewText}
+            {entry.content && entry.content.split('\n').length > 3 && !isExpanded && (
+              <button
+                onClick={() => setIsExpanded(true)}
+                className="text-primary font-medium block mt-2"
+              >
+                See more
+              </button>
+            )}
+            {isExpanded && (
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="text-primary font-medium block mt-2"
+              >
+                See less
+              </button>
+            )}
           </div>
-        )}
+
+          {/* Media display (Facebook-style) */}
+          {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+            <div className="media-container mt-4">
+              {/* Show only first 3 media items when collapsed */}
+              {(isExpanded ? entry.mediaUrls : entry.mediaUrls.slice(0, 3)).map((url, i) => {
+                const isVideo = url.match(/\.(mp4|webm)$/i);
+                const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+
+                if (isVideo) {
+                  return (
+                    <video
+                      key={i}
+                      src={url}
+                      controls
+                      className="rounded-md max-h-96 mb-2 w-full object-cover"
+                    />
+                  );
+                } else if (isAudio) {
+                  return (
+                    <audio
+                      key={i}
+                      src={url}
+                      controls
+                      className="rounded-md mb-2 w-full"
+                    />
+                  );
+                } else {
+                  return (
+                    <img
+                      key={i}
+                      src={url}
+                      alt={`Media ${i + 1}`}
+                      className="rounded-md max-h-96 mb-2 w-full object-cover"
+                    />
+                  );
+                }
+              })}
+
+              {/* Show indicator for additional media when collapsed */}
+              {!isExpanded && entry.mediaUrls.length > 3 && (
+                <div 
+                  className="relative rounded-md bg-muted/50 flex items-center justify-center h-48 cursor-pointer"
+                  onClick={() => setIsExpanded(true)}
+                >
+                  <span className="text-lg font-medium">
+                    +{entry.mediaUrls.length - 3} more
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

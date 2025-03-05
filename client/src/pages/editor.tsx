@@ -189,22 +189,8 @@ export default function Editor() {
   return (
     <div className="min-h-screen flex flex-col bg-white w-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
-        <div className="flex-1 max-w-full sm:max-w-2xl">
-          <Input
-            {...form.register("title")}
-            className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
-            placeholder="Untitled Entry..."
-          />
-          {form.watch("feeling") && (
-            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-              <span>is feeling</span>
-              <span className="font-medium">{form.watch("feeling").label}</span>
-              <span className="text-lg">{form.watch("feeling").emoji}</span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-2 ml-2">
+      <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
+        <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
@@ -224,6 +210,20 @@ export default function Editor() {
             <Save className="h-4 w-4 mr-1" />
             {id ? "Update" : "Create"}
           </Button>
+        </div>
+        <div className="max-w-full sm:max-w-2xl pr-24">
+          <Input
+            {...form.register("title")}
+            className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+            placeholder="Untitled Entry..."
+          />
+          {form.watch("feeling") && (
+            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+              <span>is feeling</span>
+              <span className="font-medium">{form.watch("feeling").label}</span>
+              <span className="text-lg">{form.watch("feeling").emoji}</span>
+            </div>
+          )}
         </div>
       </div>
 

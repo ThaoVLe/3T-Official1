@@ -150,7 +150,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
             </div>
           </div>
         </div>
-            </div>
+        </div>
       </CardHeader>
 
       <CardContent className="px-4 pt-0 pb-4">

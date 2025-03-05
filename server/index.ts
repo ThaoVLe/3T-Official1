@@ -95,6 +95,7 @@ app.use((req, res, next) => {
       }, () => {
         log(`Server started successfully on port ${currentPort}`);
         console.log(`Server is accessible at: https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
+        console.log(`If you're using the Run button, try accessing at: https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co:${currentPort}`);
       }).on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
           log(`Port ${currentPort} is busy, trying next port...`);

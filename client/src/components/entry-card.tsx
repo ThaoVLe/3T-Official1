@@ -65,8 +65,10 @@ export default function EntryCard({ entry }: EntryCardProps) {
           </CardTitle>
           <div className="flex items-center text-sm mt-1 w-full">
             <div className="flex items-center">
-              <span className="text-muted-foreground">{formatTimeAgo(entry.createdAt)}</span>
-              <span className="mx-4"></span> {/* 4 blank spaces */}
+              <span className="text-muted-foreground">
+                {new Date(entry.createdAt).toLocaleDateString()} {new Date(entry.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </span>
+              <span className="mx-2"></span> {/* 2 blank spaces */}
               {feeling && (
                 <>
                   <span>-</span>

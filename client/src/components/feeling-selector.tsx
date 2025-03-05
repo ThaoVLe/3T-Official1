@@ -279,7 +279,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
         e.preventDefault();
       }}>
         <SheetHeader className="mb-4">
-          <div className="flex justify-center mt-2">
+          <div className="flex justify-center">
             {selectedEmotion && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
                 <span className="text-xs">{selectedEmotion.label}</span>

@@ -64,11 +64,11 @@ export default function EntryCard({ entry }: EntryCardProps) {
             <span>{entry.title || "Untitled Entry"}</span>
           </CardTitle>
           <div className="flex items-center text-sm mt-1 w-full">
-            <div className="flex items-center">
-              <span className="text-muted-foreground">
+            <div className="flex items-center w-full">
+              <span className="text-muted-foreground flex-grow">
                 {formatTimeAgo(entry.createdAt)}
               </span>
-              <span className="mx-2"></span> {/* 2 blank spaces */}
+              <span className="mx-1"></span> {/* 1 blank space */}
               {feeling && (
                 <>
                   <span>-</span>

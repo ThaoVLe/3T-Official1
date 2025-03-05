@@ -13,12 +13,11 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Update multer configuration
+// Configure multer for file uploads
 const upload = multer({
   storage: multer.diskStorage({
     destination: uploadsDir,
     filename: (req, file, cb) => {
-      // Create a unique filename
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       cb(null, uniqueSuffix + path.extname(file.originalname));
     }
@@ -27,7 +26,6 @@ const upload = multer({
     fileSize: 50 * 1024 * 1024 // 50MB limit
   },
   fileFilter: (req, file, cb) => {
-    // Validate file types
     const validImageTypes = [
       'image/jpeg',
       'image/png',
@@ -48,7 +46,7 @@ const upload = multer({
     const allowedTypes = [...validImageTypes, ...validVideoTypes];
 
     if (!allowedTypes.includes(file.mimetype)) {
-      cb(new Error('Invalid file type. Please upload an image or video file.'));
+      cb(new Error('Invalid file type'));
       return;
     }
 
@@ -61,43 +59,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(uploadsDir));
 
   app.get("/api/entries", async (req, res) => {
-    const entries = await storage.getAllEntries();
-    res.json(entries);
+    try {
+      const entries = await storage.getAllEntries();
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching entries:", error);
+      res.status(500).json({ message: "Failed to fetch entries" });
+    }
   });
 
   app.get("/api/entries/:id", async (req, res) => {
-    const entry = await storage.getEntry(parseInt(req.params.id));
-    if (!entry) return res.status(404).json({ message: "Entry not found" });
-    res.json(entry);
+    try {
+      const entry = await storage.getEntry(parseInt(req.params.id));
+      if (!entry) return res.status(404).json({ message: "Entry not found" });
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching entry:", error);
+      res.status(500).json({ message: "Failed to fetch entry" });
+    }
   });
 
   app.post("/api/entries", async (req, res) => {
-    console.log("Creating entry with data:", req.body);
-    const result = insertEntrySchema.safeParse(req.body);
-    if (!result.success) {
-      console.error("Validation error:", result.error);
-      return res.status(400).json({ message: "Invalid entry data", errors: result.error.errors });
+    try {
+      const result = insertEntrySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid entry data", 
+          errors: result.error.errors 
+        });
+      }
+      const entry = await storage.createEntry(result.data);
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating entry:", error);
+      res.status(500).json({ message: "Failed to create entry" });
     }
-    const entry = await storage.createEntry(result.data);
-    res.status(201).json(entry);
   });
 
   app.put("/api/entries/:id", async (req, res) => {
-    console.log("Updating entry with data:", req.body);
-    const result = insertEntrySchema.safeParse(req.body);
-    if (!result.success) {
-      console.error("Validation error:", result.error);
-      return res.status(400).json({ message: "Invalid entry data", errors: result.error.errors });
+    try {
+      const result = insertEntrySchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid entry data", 
+          errors: result.error.errors 
+        });
+      }
+      const entry = await storage.updateEntry(parseInt(req.params.id), result.data);
+      if (!entry) return res.status(404).json({ message: "Entry not found" });
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating entry:", error);
+      res.status(500).json({ message: "Failed to update entry" });
     }
-    const entry = await storage.updateEntry(parseInt(req.params.id), result.data);
-    if (!entry) return res.status(404).json({ message: "Entry not found" });
-    res.json(entry);
   });
 
   app.delete("/api/entries/:id", async (req, res) => {
-    const success = await storage.deleteEntry(parseInt(req.params.id));
-    if (!success) return res.status(404).json({ message: "Entry not found" });
-    res.status(204).send();
+    try {
+      const success = await storage.deleteEntry(parseInt(req.params.id));
+      if (!success) return res.status(404).json({ message: "Entry not found" });
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting entry:", error);
+      res.status(500).json({ message: "Failed to delete entry" });
+    }
   });
 
   // Media upload endpoint with error handling
@@ -119,7 +144,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // Return the URL that can be used to access the file
       const fileUrl = `/uploads/${req.file.filename}`;
       res.json({ url: fileUrl });
     });

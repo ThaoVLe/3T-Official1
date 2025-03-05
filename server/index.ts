@@ -1,6 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
@@ -39,12 +44,30 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Serve static files from the React app
+  const clientDistPath = process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, '../dist/public')
+    : path.join(__dirname, '../client');
+  app.use(express.static(clientDistPath));
+
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
     throw err;
+  });
+
+  // The "catch all" handler: for any request that doesn't
+  // match one above, send back the index.html file.
+  app.get('*', (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ message: 'API endpoint not found' });
+    }
+
+    res.sendFile(path.join(clientDistPath, 'index.html'));
   });
 
   // importantly only setup vite in development and after
@@ -64,7 +87,7 @@ app.use((req, res, next) => {
         process.exit(1);
         return;
       }
-      
+
       const currentPort = port + attempt;
       server.listen({
         port: currentPort,
@@ -82,9 +105,9 @@ app.use((req, res, next) => {
         }
       });
     };
-    
+
     tryPort();
   };
-  
+
   tryListen();
 })();

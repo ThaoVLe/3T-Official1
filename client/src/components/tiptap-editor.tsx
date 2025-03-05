@@ -181,6 +181,14 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 <Button
                   variant="ghost"
                   className="justify-start text-left data-[active=true]:bg-slate-100"
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                  data-active={editor.isActive('heading', { level: 1 })}
+                >
+                  <span style={{ fontSize: '30px', fontWeight: 'bold' }}>Large Text</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="justify-start text-left data-[active=true]:bg-slate-100"
                   onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                   data-active={editor.isActive('heading', { level: 2 })}
                 >

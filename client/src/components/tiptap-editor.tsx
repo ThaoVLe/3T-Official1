@@ -310,8 +310,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 flex items-center justify-center"
+                className="h-8 px-2 flex items-center gap-1"
               >
+                <span className="text-sm">Feeling/Activities</span>
                 <Smile className="h-4 w-4" />
               </Button>
             </PopoverTrigger>

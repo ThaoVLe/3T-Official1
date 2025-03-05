@@ -47,6 +47,8 @@ interface FeelingSelectorProps {
 export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [selectedEmotion, setSelectedEmotion] = useState<{ emoji: string; label: string } | null>(selectedFeeling);
+  const [selectedActivity, setSelectedActivity] = useState<{ emoji: string; label: string } | null>(null);
 
   const filteredFeelings = feelings.filter(feeling => 
     feeling.label.toLowerCase().includes(searchQuery.toLowerCase())
@@ -56,8 +58,37 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     activity.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelect = (feeling: { emoji: string; label: string }) => {
-    onSelect(feeling);
+  const handleSelectEmotion = (feeling: { emoji: string; label: string }) => {
+    setSelectedEmotion(feeling);
+    
+    // If we already have an activity, combine them
+    if (selectedActivity) {
+      const combined = {
+        emoji: `${feeling.emoji} ${selectedActivity.emoji}`,
+        label: `${feeling.label}, ${selectedActivity.label}`
+      };
+      onSelect(combined);
+    } else {
+      onSelect(feeling);
+    }
+  };
+
+  const handleSelectActivity = (activity: { emoji: string; label: string }) => {
+    setSelectedActivity(activity);
+    
+    // If we already have an emotion, combine them
+    if (selectedEmotion) {
+      const combined = {
+        emoji: `${selectedEmotion.emoji} ${activity.emoji}`,
+        label: `${selectedEmotion.label}, ${activity.label}`
+      };
+      onSelect(combined);
+    } else {
+      onSelect(activity);
+    }
+  };
+
+  const handleDone = () => {
     setOpen(false);
   };
 
@@ -141,12 +172,40 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               // Now open the sheet after ensuring keyboard is dismissed
               setTimeout(() => {
                 setOpen(true);
+                
+                // Set initial states from current selection
+                if (selectedFeeling) {
+                  // Check if it's a combined selection
+                  if (selectedFeeling.label.includes(', ')) {
+                    const parts = selectedFeeling.label.split(', ');
+                    const emojis = selectedFeeling.emoji.split(' ');
+                    
+                    // Find the matching feelings and activities
+                    const emotion = feelings.find(f => f.label === parts[0]) || null;
+                    const activity = activities.find(a => a.label === parts[1]) || null;
+                    
+                    setSelectedEmotion(emotion);
+                    setSelectedActivity(activity);
+                  } else {
+                    // Check if it's an emotion or activity
+                    const emotion = feelings.find(f => f.label === selectedFeeling.label);
+                    const activity = activities.find(a => a.label === selectedFeeling.label);
+                    
+                    setSelectedEmotion(emotion || null);
+                    setSelectedActivity(activity || null);
+                  }
+                }
               }, 50);
             }, 50);
           }}
         >
           {selectedFeeling ? (
-            <span className="text-xl">{selectedFeeling.emoji}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xl">{selectedFeeling.emoji}</span>
+              {selectedFeeling.emoji.includes(' ') && (
+                <span className="text-xs">{selectedFeeling.label}</span>
+              )}
+            </div>
           ) : (
             <div className="flex items-center gap-1.5">
               <span className="text-xl">😊</span>
@@ -161,6 +220,20 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
       }}>
         <SheetHeader className="mb-4">
           <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>
+          <div className="flex justify-center mt-2">
+            {selectedEmotion && (
+              <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
+                <span>{selectedEmotion.emoji}</span>
+                <span className="text-xs">{selectedEmotion.label}</span>
+              </div>
+            )}
+            {selectedActivity && (
+              <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
+                <span>{selectedActivity.emoji}</span>
+                <span className="text-xs">{selectedActivity.label}</span>
+              </div>
+            )}
+          </div>
         </SheetHeader>
 
         <Tabs defaultValue="feelings" className="h-[calc(100%-60px)] flex flex-col">
@@ -187,9 +260,9 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               {filteredFeelings.map((feeling) => (
                 <Button
                   key={feeling.label}
-                  variant="ghost"
+                  variant={selectedEmotion?.label === feeling.label ? "default" : "ghost"}
                   className="flex items-center justify-start gap-2 p-3 h-14"
-                  onClick={() => handleSelect(feeling)}
+                  onClick={() => handleSelectEmotion(feeling)}
                 >
                   <span className="text-xl">{feeling.emoji}</span>
                   <span className="text-sm">{feeling.label}</span>
@@ -203,9 +276,9 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               {filteredActivities.map((activity) => (
                 <Button
                   key={activity.label}
-                  variant="ghost"
+                  variant={selectedActivity?.label === activity.label ? "default" : "ghost"}
                   className="flex items-center justify-start gap-2 p-3 h-14"
-                  onClick={() => handleSelect(activity)}
+                  onClick={() => handleSelectActivity(activity)}
                 >
                   <span className="text-xl">{activity.emoji}</span>
                   <span className="text-sm">{activity.label}</span>
@@ -214,6 +287,16 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             </div>
           </TabsContent>
         </Tabs>
+        
+        <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+          <Button 
+            onClick={handleDone} 
+            className="w-1/2 bg-primary text-primary-foreground"
+            disabled={!selectedEmotion && !selectedActivity}
+          >
+            Done
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
   );

@@ -117,25 +117,30 @@ html, body, #root {
     @apply w-full min-w-0;
   }
 
-  /* Embla Carousel Styles */
+  /* Embla Carousel Styles - Facebook-like */
   .embla {
+    position: relative;
     overflow: hidden;
     width: 100%;
+    touch-action: pan-y pinch-zoom;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .embla__container {
     display: flex;
-    user-select: none;
-    -webkit-touch-callout: none;
-    -khtml-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: pan-y;
+    will-change: transform;
+    touch-action: pan-y pinch-zoom;
+    cursor: grab;
+  }
+
+  .embla__container:active {
+    cursor: grabbing;
   }
 
   .embla__slide {
-    position: relative;
-    min-width: 0;
     flex: 0 0 100%;
+    min-width: 0;
+    position: relative;
   }
 
   .embla__slide img,
@@ -144,11 +149,48 @@ html, body, #root {
     height: auto;
     aspect-ratio: 16/9;
     object-fit: cover;
-    border-radius: 0.5rem;
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
   }
 
   .embla__slide audio {
     width: 100%;
+    margin: 0.5rem 0;
+  }
+
+  /* Mobile-specific styles */
+  @media (max-width: 640px) {
+    .sm-stack {
+      @apply flex flex-col;
+    }
+
+    .sm-full-width {
+      @apply w-full;
+    }
+
+    .container-page {
+      width: 100vw !important;
+      max-width: 100vw !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    body {
+      width: 100vw;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Facebook-like card spacing on mobile */
+    .card {
+      @apply border-0 shadow-none rounded-none;
+      margin-bottom: 0.5rem;
+    }
   }
 }
 

@@ -17,7 +17,10 @@ interface EntryCardProps {
 export default function EntryCard({ entry }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [emblaRef] = useEmblaCarousel({ dragFree: true });
+  const [emblaRef] = useEmblaCarousel({ 
+    dragFree: true,
+    containScroll: "trimSnaps"
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -57,45 +60,54 @@ export default function EntryCard({ entry }: EntryCardProps) {
     }
   };
 
-  // Function to determine if text needs expansion
   const needsExpansion = (content: string) => {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = content;
     const textContent = tempDiv.textContent || '';
-    return textContent.length > 280; // Similar to Twitter's character limit
+    return textContent.length > 200;
   };
 
   return (
     <Card className="group bg-white shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
       <CardHeader className="space-y-0 pb-2 pt-4 px-4">
         <div className="flex justify-between items-start">
-          <div className="flex flex-col">
+          <div className="flex flex-col space-y-1.5">
             <CardTitle className="text-[18px] font-semibold">
               {entry.title || "Untitled Entry"}
             </CardTitle>
-            <div className="flex items-center text-sm mt-1 text-muted-foreground">
-              <span>{formatTimeAgo(entry.createdAt)}</span>
-              {feeling && (
-                <span className="flex items-center ml-2">
-                  <span>•</span>
-                  <span className="ml-2">
-                    {feeling.label.includes(',') ? (
-                      <>feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                      while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}</>
-                    ) : (
-                      <>feeling {feeling.label} {feeling.emoji}</>
-                    )}
-                  </span>
-                </span>
-              )}
-              {entry.location && (
-                <span className="flex items-center ml-2">
-                  <span>•</span>
-                  <span className="ml-2">at {entry.location} 📍</span>
-                </span>
-              )}
+
+            {/* Timestamp line */}
+            <div className="text-sm text-muted-foreground">
+              {formatTimeAgo(entry.createdAt)}
             </div>
+
+            {/* Emotions and location line - will wrap if needed */}
+            {(feeling || entry.location) && (
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                {feeling && (
+                  <div className="flex items-center">
+                    {feeling.label.includes(',') ? (
+                      <span>
+                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                      </span>
+                    ) : (
+                      <span>
+                        feeling {feeling.label} {feeling.emoji}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {entry.location && (
+                  <div className="flex items-center">
+                    <span>at {entry.location} 📍</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Action buttons */}
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button
               size="icon"
@@ -137,37 +149,39 @@ export default function EntryCard({ entry }: EntryCardProps) {
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="px-4 pt-0 pb-4">
-        <div
-          className={`prose prose-sm max-w-none ${!isExpanded ? 'line-clamp-4' : ''}`}
+        {/* Text content with expansion */}
+        <div 
+          className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''}`}
           dangerouslySetInnerHTML={{ __html: entry.content }}
-          onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
         />
         {needsExpansion(entry.content) && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-sm text-muted-foreground hover:text-foreground mt-1"
+            className="text-sm text-blue-600 hover:text-blue-700 mt-1 font-medium"
           >
             {isExpanded ? 'See less' : 'See more'}
           </button>
         )}
 
+        {/* Media gallery */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
           <div className="mt-4 -mx-4">
             <div className="embla" ref={emblaRef}>
-              <div className="embla__container flex">
+              <div className="embla__container">
                 {entry.mediaUrls.map((url, i) => {
                   const isVideo = url.match(/\.(mp4|webm)$/i);
                   const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
 
                   if (isVideo) {
                     return (
-                      <div key={i} className="embla__slide min-w-0 flex-[0_0_100%] px-4">
+                      <div key={i} className="embla__slide">
                         <video
                           src={url}
                           controls
-                          className="w-full aspect-video object-cover rounded-md bg-black"
                           playsInline
+                          className="w-full aspect-video object-cover rounded-none"
                         />
                       </div>
                     );
@@ -175,8 +189,8 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
                   if (isAudio) {
                     return (
-                      <div key={i} className="embla__slide min-w-0 flex-[0_0_100%] px-4">
-                        <div className="flex items-center justify-center h-24 bg-muted rounded-md p-4">
+                      <div key={i} className="embla__slide">
+                        <div className="flex items-center justify-center h-24 bg-muted p-4">
                           <audio src={url} controls className="w-full" />
                         </div>
                       </div>
@@ -184,11 +198,11 @@ export default function EntryCard({ entry }: EntryCardProps) {
                   }
 
                   return (
-                    <div key={i} className="embla__slide min-w-0 flex-[0_0_100%] px-4">
+                    <div key={i} className="embla__slide">
                       <img
                         src={url}
                         alt={`Media ${i + 1}`}
-                        className="w-full aspect-video object-cover rounded-md"
+                        className="w-full aspect-video object-cover rounded-none"
                         loading="lazy"
                       />
                     </div>

@@ -91,7 +91,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg w-full">
+    <div className="h-full flex flex-col bg-white rounded-lg w-full tiptap-container">
       <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-white w-full">
         <div className="flex flex-wrap items-center gap-1">
           <Button

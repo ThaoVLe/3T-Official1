@@ -29,7 +29,15 @@ html, body, #root {
   }
 
   .editor-page {
-    @apply w-full h-full py-6 min-h-screen flex flex-col;
+    @apply w-full h-full py-6 min-h-screen flex flex-col bg-background flex-1;
+  }
+
+  .ProseMirror {
+    @apply min-h-[200px] flex-1;
+  }
+  
+  .tiptap-container {
+    @apply flex flex-col flex-1;
   }
   
   .card {

@@ -1,53 +1,4 @@
 @tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Facebook-style media container */
-.media-container {
-  display: grid;
-  grid-gap: 4px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* One item takes full width */
-.media-container:has(:first-child:nth-last-child(1)) {
-  grid-template-columns: 1fr;
-}
-
-/* Two items side by side */
-.media-container:has(:first-child:nth-last-child(2)),
-.media-container:has(:first-child:nth-last-child(2) ~ *) {
-  grid-template-columns: 1fr 1fr;
-}
-
-/* Three items - one large, two smaller stacked */
-.media-container:has(:first-child:nth-last-child(3)),
-.media-container:has(:first-child:nth-last-child(3) ~ *) {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-
-.media-container:has(:first-child:nth-last-child(3)) > :first-child,
-.media-container:has(:first-child:nth-last-child(3) ~ *) > :first-child {
-  grid-row: span 2;
-}
-
-/* Four or more items in a 2x2 grid */
-.media-container:has(:first-child:nth-last-child(n+4)),
-.media-container:has(:first-child:nth-last-child(n+4) ~ *) {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  max-height: 500px;
-}
-
-.media-container img,
-.media-container video,
-.media-container audio {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 /* Force full viewport width */
 html, body, #root {
@@ -56,26 +7,11 @@ html, body, #root {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
-
-/* Facebook-style post styling */
-.entry-content {
-  line-height: 1.4;
-}
-
-.truncated-content {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.media-gallery {
-  margin-top: 12px;
-}
-
-
   box-sizing: border-box;
 }
+
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   * {
@@ -102,76 +38,76 @@ html, body, #root {
     height: auto;
     overflow-y: hidden;
   }
-
+  
   .ProseMirror {
     @apply min-h-[200px];
   }
-
+  
   /* Ensure editor container grows properly */
   .tiptap-container {
     transition: height 0.2s ease;
     overflow: hidden;
   }
-
+  
   /* Custom emotion styles */
   .custom-emotion {
     color: #880000;
     font-weight: 500;
   }
-
+  
   .tiptap-container {
     @apply flex flex-col;
   }
-
+  
   /* Fix for bottom menu bar */
   .mobile-bottom-menu {
     @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
   }
-
+  
   .card {
     @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
   }
-
+  
   .heading-1 {
     @apply text-[30px] font-bold tracking-tight text-foreground mb-4;
   }
-
+  
   .heading-2 {
     @apply text-[20px] font-semibold text-foreground mb-3;
   }
-
+  
   .subtitle {
     @apply text-base text-muted-foreground mb-6;
   }
-
+  
   .form-container {
     @apply flex flex-col space-y-4 mb-6;
   }
-
+  
   .button-primary {
     @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors;
   }
-
+  
   .button-secondary {
     @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors;
   }
-
+  
   .button-outline {
     @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md;
   }
-
+  
   .drop-zone {
     @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted;
   }
-
+  
   .mobile-friendly-button {
     @apply w-full sm:w-auto;
   }
-
+  
   .responsive-grid {
     @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
   }
-
+  
   .full-width {
     @apply w-full min-w-0;
   }
@@ -182,11 +118,11 @@ html, body, #root {
   .sm-stack {
     @apply flex flex-col;
   }
-
+  
   .sm-full-width {
     @apply w-full;
   }
-
+  
   .container-page {
     width: 100vw !important;
     max-width: 100vw !important;
@@ -195,22 +131,10 @@ html, body, #root {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
-
+  
   body {
     width: 100vw;
     max-width: 100%;
     overflow-x: hidden;
   }
-}
-
-/* Entry card collapsible content styles */
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;  
-  overflow: hidden;
-}
-
-.entry-content-transition {
-  transition: max-height 0.3s ease-in-out;
 }

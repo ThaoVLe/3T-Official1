@@ -7,6 +7,24 @@ html, body, #root {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
+
+/* Facebook-style post styling */
+.entry-content {
+  line-height: 1.4;
+}
+
+.truncated-content {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.media-gallery {
+  margin-top: 12px;
+}
+
+
   box-sizing: border-box;
 }
 

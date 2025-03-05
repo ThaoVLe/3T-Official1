@@ -1,3 +1,4 @@
+
 import { Link } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface EntryCardProps {
 
 export default function EntryCard({ entry }: EntryCardProps) {
   const { toast } = useToast();
+  const [expanded, setExpanded] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -40,21 +42,29 @@ export default function EntryCard({ entry }: EntryCardProps) {
     const now = new Date();
     const entryDate = new Date(createdAt);
     const diffInDays = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffInDays > 30) {
-      return format(entryDate, "MMM dd, yyyy");
-    } else if (diffInDays > 0) {
-      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+    
+    if (diffInDays === 0) {
+      return "Today";
+    } else if (diffInDays === 1) {
+      return "Yesterday";
+    } else if (diffInDays < 7) {
+      return `${diffInDays} days ago`;
     } else {
-      const diffInHours = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60));
-      if (diffInHours > 0) {
-        return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
-      } else {
-        const diffInMinutes = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60));
-        return diffInMinutes <= 0 ? 'Just now' : `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-      }
+      return format(entryDate, "MMMM d, yyyy");
     }
   };
+
+  // Helper function to check if content is long
+  const isLongContent = () => {
+    // Create a temporary div to check content length
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = entry.content;
+    const textContent = tempDiv.textContent || tempDiv.innerText;
+    return textContent.length > 150;
+  };
+  
+  // Helper to determine if we should show media expansion
+  const hasExcessMedia = entry.mediaUrls && entry.mediaUrls.length > 3;
 
   return (
     <Card className="group hover:shadow-lg transition-shadow duration-200">
@@ -144,45 +154,94 @@ export default function EntryCard({ entry }: EntryCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div
-          className="prose prose-sm dark:prose-invert max-w-none line-clamp-3 mb-4"
-          dangerouslySetInnerHTML={{ __html: entry.content }}
-        />
+        {/* Facebook-style content with See More/See Less */}
+        <div className={`relative ${!expanded && isLongContent() ? 'max-h-[120px] overflow-hidden' : ''}`}>
+          <div 
+            className="prose prose-sm dark:prose-invert max-w-none" 
+            dangerouslySetInnerHTML={{ __html: entry.content }}
+          />
+          
+          {isLongContent() && !expanded && (
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-card to-transparent"></div>
+          )}
+        </div>
+        
+        {isLongContent() && (
+          <button 
+            onClick={() => setExpanded(!expanded)}
+            className="text-primary hover:underline text-sm font-medium mt-1"
+          >
+            {expanded ? 'See Less' : 'See More'}
+          </button>
+        )}
+        
+        {/* Facebook-style media display */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
-            {entry.mediaUrls.map((url, i) => {
-              const isVideo = url.match(/\.(mp4|webm)$/i);
-              const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
-
-              if (isVideo) {
-                return (
-                  <video
-                    key={i}
-                    src={url}
-                    controls
-                    className="rounded-md w-full h-32 object-cover bg-black"
-                  />
-                );
-              }
-
-              if (isAudio) {
-                return (
-                  <div key={i} className="flex items-center justify-center h-32 bg-muted rounded-md p-4">
-                    <audio src={url} controls className="w-full" />
-                  </div>
-                );
-              }
-
-              return (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`Media ${i + 1}`}
-                  className="rounded-md w-full h-32 object-cover"
-                  loading="lazy"
-                />
-              );
-            })}
+          <div className="mt-4">
+            {/* Different layouts based on number of media */}
+            <div className={`grid gap-1 ${
+              entry.mediaUrls.length === 1 ? 'grid-cols-1' : 
+              entry.mediaUrls.length === 2 ? 'grid-cols-2' :
+              'grid-cols-3'
+            }`}>
+              {/* Show only first 3 images when not expanded, or all when expanded */}
+              {(expanded ? entry.mediaUrls : entry.mediaUrls.slice(0, 3)).map((url, i) => {
+                const isVideo = url.match(/\.(mp4|webm|mov|MOV)$/i);
+                const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+                
+                if (isVideo) {
+                  return (
+                    <div key={i} className="relative aspect-video bg-muted rounded-md overflow-hidden">
+                      <video
+                        src={url}
+                        controls
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  );
+                } else if (isAudio) {
+                  return (
+                    <div key={i} className="relative bg-muted rounded-md p-4 flex items-center justify-center">
+                      <audio
+                        src={url}
+                        controls
+                        className="w-full"
+                      />
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={i} className="relative aspect-square bg-muted rounded-md overflow-hidden">
+                      <img
+                        src={url}
+                        alt={`Media ${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  );
+                }
+              })}
+              
+              {/* Show indicator for more media when not expanded */}
+              {!expanded && hasExcessMedia && (
+                <div 
+                  className="aspect-square bg-muted/50 rounded-md flex items-center justify-center cursor-pointer"
+                  onClick={() => setExpanded(true)}
+                >
+                  <span className="text-lg font-semibold">+{entry.mediaUrls.length - 3}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* See all media button when there are more than 3 */}
+            {hasExcessMedia && (
+              <button 
+                onClick={() => setExpanded(!expanded)} 
+                className="w-full mt-2 text-sm text-primary hover:underline font-medium"
+              >
+                {expanded ? 'Show Less' : `See All ${entry.mediaUrls.length} Media`}
+              </button>
+            )}
           </div>
         )}
       </CardContent>

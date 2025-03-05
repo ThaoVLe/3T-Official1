@@ -70,8 +70,23 @@ export default function EntryCard({ entry }: EntryCardProps) {
               {feeling && (
                 <>
                   <span>-</span>
-                  <span className="ml-1">feeling {feeling.label}</span>
-                  <span className="ml-1">{feeling.emoji}</span>
+                  <span className="ml-1">feeling</span>
+                  {feeling.emoji.includes(' ') ? (
+                    // Combined emotion and activity
+                    <>
+                      <span className="ml-1">{feeling.label.split(',')[0]}</span>
+                      <span className="ml-1">{feeling.emoji.split(' ')[0]}</span>
+                      <span>,</span>
+                      <span className="ml-1">{feeling.label.split(',')[1].trim()}</span>
+                      <span className="ml-1">{feeling.emoji.split(' ')[1]}</span>
+                    </>
+                  ) : (
+                    // Just emotion
+                    <>
+                      <span className="ml-1">{feeling.label}</span>
+                      <span className="ml-1">{feeling.emoji}</span>
+                    </>
+                  )}
                 </>
               )}
               {entry.location && (

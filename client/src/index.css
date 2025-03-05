@@ -49,6 +49,12 @@ html, body, #root {
     overflow: hidden;
   }
   
+  /* Custom emotion styles */
+  .custom-emotion {
+    color: #880000;
+    font-weight: 500;
+  }
+  
   .tiptap-container {
     @apply flex flex-col;
   }

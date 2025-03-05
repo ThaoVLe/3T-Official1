@@ -266,7 +266,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </div>
 
           <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
-            <div className="grid grid-cols-2 gap-1">
+            <div className="grid grid-cols-3 gap-1">
               {filteredFeelings.map((feeling) => (
                 <Button
                   key={feeling.label}
@@ -282,7 +282,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </TabsContent>
 
           <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
-            <div className="grid grid-cols-2 gap-1">
+            <div className="grid grid-cols-3 gap-1">
               {filteredActivities.map((activity) => (
                 <Button
                   key={activity.label}

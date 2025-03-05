@@ -6,6 +6,7 @@ import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Import Input component
 import {
   Bold,
   Italic,
@@ -95,27 +96,27 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   useEffect(() => {
     if (!editor || !editorRef.current) return;
-    
+
     // Function to adjust editor height based on content
     const adjustHeight = () => {
       if (!editorRef.current) return;
-      
+
       // Reset height first to get proper scrollHeight
       editorRef.current.style.height = 'auto';
-      
+
       // Get the actual content height
       const scrollHeight = editorRef.current.querySelector('.ProseMirror')?.scrollHeight || 200;
-      
+
       // Only grow, never shrink below the minimum or current height
       contentHeight.current = Math.max(contentHeight.current, scrollHeight);
-      
+
       // Set the height
       editorRef.current.style.height = `${contentHeight.current}px`;
     };
-    
+
     // Setup mutation observer for content changes
     const observer = new MutationObserver(adjustHeight);
-    
+
     const proseMirror = editorRef.current.querySelector('.ProseMirror');
     if (proseMirror) {
       observer.observe(proseMirror, { 
@@ -123,11 +124,11 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
         subtree: true,
         characterData: true
       });
-      
+
       // Initial adjustment
       adjustHeight();
     }
-    
+
     return () => observer.disconnect();
   }, [editor]);
 
@@ -312,10 +313,81 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-72 p-2">
+              <div className="mb-3">
+                <h3 className="text-sm font-medium mb-1">Custom Emotion</h3>
+                <div className="flex gap-2">
+                  <Input 
+                    id="customEmotion"
+                    placeholder="Add custom emotion"
+                    className="text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const input = e.currentTarget;
+                        const value = input.value.trim();
+                        if (value) {
+                          // Insert the custom emotion with dark red color
+                          editor.chain().focus().setColor('#880000').insertContent(value).setColor('default').run();
+
+                          // Save to localStorage
+                          const savedEmotions = JSON.parse(localStorage.getItem('customEmotions') || '[]');
+                          if (!savedEmotions.includes(value)) {
+                            savedEmotions.push(value);
+                            localStorage.setItem('customEmotions', JSON.stringify(savedEmotions));
+                          }
+                          input.value = '';
+                        }
+                      }
+                    }}
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="shrink-0"
+                    onClick={() => {
+                      const input = document.getElementById('customEmotion') as HTMLInputElement;
+                      const value = input.value.trim();
+                      if (value) {
+                        // Insert the custom emotion with dark red color
+                        editor.chain().focus().setColor('#880000').insertContent(value).setColor('default').run();
+
+                        // Save to localStorage
+                        const savedEmotions = JSON.parse(localStorage.getItem('customEmotions') || '[]');
+                        if (!savedEmotions.includes(value)) {
+                          savedEmotions.push(value);
+                          localStorage.setItem('customEmotions', JSON.stringify(savedEmotions));
+                        }
+                        input.value = '';
+                      }
+                    }}
+                  >
+                    Add
+                  </Button>
+                </div>
+              </div>
+
+              {/* Saved custom emotions */}
+              <div className="mb-3">
+                <h3 className="text-sm font-medium mb-1">Saved Emotions</h3>
+                <div className="grid grid-cols-3 gap-1 max-h-20 overflow-y-auto">
+                  {Array.from(new Set(JSON.parse(localStorage.getItem('customEmotions') || '[]'))).map((text: string) => (
+                    <Button
+                      key={text}
+                      variant="ghost"
+                      className="h-8 text-xs text-red-900 overflow-hidden text-ellipsis"
+                      onClick={() => {
+                        editor.chain().focus().setColor('#880000').insertContent(text).setColor('default').run();
+                      }}
+                    >
+                      {text}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Standard emoji categories */}
               {Object.entries(emojiCategories).map(([category, emojis]) => (
                 <div key={category} className="mb-2">
                   <h3 className="text-sm font-medium mb-1">{category}</h3>
-                  <div className="grid grid-cols-8 gap-1">
+                  <div className="grid grid-cols-6 gap-1">
                     {emojis.map((emoji) => (
                       <Button
                         key={emoji}

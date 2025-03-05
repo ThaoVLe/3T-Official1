@@ -77,14 +77,14 @@ export default function EntryCard({ entry }: EntryCardProps) {
             </CardTitle>
 
             {/* Combined timestamp, feeling, and location line */}
-            <div className="text-sm text-muted-foreground flex flex-wrap items-center">
+            <div className="text-sm text-muted-foreground flex items-center whitespace-nowrap overflow-hidden text-ellipsis">
               <span>{formatTimeAgo(entry.createdAt)}</span>
               
               {/* Add dash if feeling or location exists */}
               {(feeling || entry.location) && <span> – </span>}
               
               {feeling && (
-                <span className="flex items-center">
+                <span className="inline-flex items-center">
                   {feeling.label.includes(',') ? (
                     <span>
                       feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
@@ -102,7 +102,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
               {feeling && entry.location && <span> </span>}
               
               {entry.location && (
-                <span className="flex items-center">
+                <span className="inline-flex items-center">
                   at {entry.location} 📍
                 </span>
               )}

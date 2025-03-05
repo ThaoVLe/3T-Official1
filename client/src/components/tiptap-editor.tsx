@@ -294,7 +294,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       </div>
 
       <div className="flex-1 w-full">
-        <EditorContent editor={editor} className="h-full w-full" />
+        <EditorContent editor={editor} className="min-h-[200px]" />
       </div>
     </div>
   );

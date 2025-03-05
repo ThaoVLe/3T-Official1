@@ -29,7 +29,18 @@ html, body, #root {
   }
 
   .editor-page {
-    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
+    @apply w-full py-6 flex flex-col bg-background;
+    height: 100vh; 
+    height: calc(100vh - 56px); /* Adjust for bottom nav */
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Prevent gray space when keyboard is shown */
+  .ProseMirror {
+    min-height: 200px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .ProseMirror {

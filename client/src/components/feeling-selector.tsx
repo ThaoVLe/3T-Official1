@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { X } from "lucide-react";
-import { feelings, activities } from "@/data/feelings";
+import { emotions, activities } from "@/data/feelings";
 
 const feelingsData = [
   { emoji: "😊", label: "Happy" },
@@ -280,6 +280,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               ))}
             </div>
           </TabsContent>
+
           <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
             <div className="grid grid-cols-2 gap-1">
               {filteredActivities.map((activity) => (

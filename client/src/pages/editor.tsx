@@ -172,7 +172,7 @@ export default function Editor() {
 
     // Append to body, focus, then blur and remove
     document.body.appendChild(temporaryInput);
-    
+
     // Force focus then immediately blur
     setTimeout(() => {
       temporaryInput.focus();
@@ -181,7 +181,7 @@ export default function Editor() {
         document.body.removeChild(temporaryInput);
       }, 50);
     }, 50);
-    
+
     // Additional fix - add a slight delay before showing sheet
     return new Promise(resolve => setTimeout(resolve, 100));
   }, [isMobile]);
@@ -220,8 +220,18 @@ export default function Editor() {
           {form.watch("feeling") && (
             <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
               <span>is feeling</span>
-              <span className="font-medium">{form.watch("feeling").label}</span>
-              <span className="text-lg">{form.watch("feeling").emoji}</span>
+              <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                {form.watch("feeling").label.includes(',') ? (
+                  <>
+                    feeling {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
+                    {'  '}while {form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
+                  </>
+                ) : (
+                  <>
+                    feeling {form.watch("feeling").label} {form.watch("feeling").emoji}
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>

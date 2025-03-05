@@ -29,7 +29,7 @@ html, body, #root {
   }
 
   .editor-page {
-    @apply w-full h-full py-6;
+    @apply w-full h-full py-6 min-h-screen flex flex-col;
   }
   
   .card {

@@ -77,8 +77,8 @@ app.use((req, res, next) => {
         console.log(`===================================`);
       }).on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
-          log(`Port ${currentPort} is busy, trying next port...`);
-          tryPort(attempt + 1);
+          log(`Port ${currentPort} is busy`);
+          // Only allow one instance (don't retry with different ports)
         } else {
           log(`Error starting server: ${err.message}`);
           throw err;

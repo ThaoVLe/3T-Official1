@@ -134,69 +134,65 @@ export function FeelingSelector({
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[400px] px-0">
-        <Tabs defaultValue="emotions" className="w-full h-full">
-          <TabsList className="w-full justify-start rounded-none border-b px-6">
-            <TabsTrigger value="emotions" className="rounded-none">
-              Emotions
-            </TabsTrigger>
-            <TabsTrigger value="activities" className="rounded-none">
-              Activities
-            </TabsTrigger>
+        <Tabs defaultValue="emotions" className="w-full">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="emotions">Emotions</TabsTrigger>
+            <TabsTrigger value="activities">Activities</TabsTrigger>
           </TabsList>
-          <div className="p-6 pt-2">
-            <div className="flex justify-center mt-2">
-              {selectedEmotion && (
-                <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
-                  <span className="text-xs">{selectedEmotion.label}</span>
-                  <span>{selectedEmotion.emoji}</span>
-                </div>
-              )}
-              {selectedActivity && (
-                <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
-                  <span className="text-xs">{selectedActivity.label}</span>
-                  <span>{selectedActivity.emoji}</span>
-                </div>
-              )}
-            </div>
-          </div>
-          <TabsContent value="emotions" className="px-6 mt-0 h-full pb-20">
-            <div className="grid grid-cols-6 gap-2">
+          <TabsContent value="emotions" className="p-4 pt-6">
+            <div className="grid grid-cols-6 gap-3">
               {emotions.map((emotion) => (
-                <button
+                <Button
                   key={emotion.emoji}
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "flex flex-col items-center h-auto py-2 px-0",
+                    selectedEmotion?.emoji === emotion.emoji &&
+                      "border-primary/50 bg-primary/10"
+                  )}
                   onClick={() => handleSelect(emotion)}
-                  className={cn(
-                    "flex flex-col items-center justify-center aspect-square rounded-lg transition-colors",
-                    selectedEmotion?.emoji === emotion.emoji
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/60 hover:bg-muted/80"
-                  )}
                 >
-                  <span className="text-xl">{emotion.emoji}</span>
-                  <span className="text-xs mt-1">{emotion.label}</span>
-                </button>
+                  <span className="text-2xl mb-1">{emotion.emoji}</span>
+                  <span className="text-xs">{emotion.label}</span>
+                </Button>
               ))}
             </div>
           </TabsContent>
-          <TabsContent value="activities" className="px-6 mt-0 h-full pb-20">
-            <div className="grid grid-cols-6 gap-2">
+          <TabsContent value="activities" className="p-4 pt-6">
+            <div className="grid grid-cols-6 gap-3">
               {activities.map((activity) => (
-                <button
+                <Button
                   key={activity.emoji}
-                  onClick={() => handleSelectActivity(activity)}
+                  variant="outline"
+                  size="sm"
                   className={cn(
-                    "flex flex-col items-center justify-center aspect-square rounded-lg transition-colors",
-                    selectedActivity?.emoji === activity.emoji
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/60 hover:bg-muted/80"
+                    "flex flex-col items-center h-auto py-2 px-0",
+                    selectedActivity?.emoji === activity.emoji &&
+                      "border-primary/50 bg-primary/10"
                   )}
+                  onClick={() => handleSelectActivity(activity)}
                 >
-                  <span className="text-xl">{activity.emoji}</span>
-                  <span className="text-xs mt-1">{activity.label}</span>
-                </button>
+                  <span className="text-2xl mb-1">{activity.emoji}</span>
+                  <span className="text-xs">{activity.label}</span>
+                </Button>
               ))}
             </div>
           </TabsContent>
+          <div className="flex justify-center mt-2">
+            {selectedEmotion && (
+              <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
+                <span className="text-xs">{selectedEmotion.label}</span>
+                <span>{selectedEmotion.emoji}</span>
+              </div>
+            )}
+            {selectedActivity && (
+              <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
+                <span className="text-xs">{selectedActivity.label}</span>
+                <span>{selectedActivity.emoji}</span>
+              </div>
+            )}
+          </div>
         </Tabs>
       </SheetContent>
     </Sheet>

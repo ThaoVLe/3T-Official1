@@ -38,78 +38,117 @@ html, body, #root {
     height: auto;
     overflow-y: hidden;
   }
-  
+
   .ProseMirror {
     @apply min-h-[200px];
   }
-  
+
   /* Ensure editor container grows properly */
   .tiptap-container {
     transition: height 0.2s ease;
     overflow: hidden;
   }
-  
+
   /* Custom emotion styles */
   .custom-emotion {
     color: #880000;
     font-weight: 500;
   }
-  
+
   .tiptap-container {
     @apply flex flex-col;
   }
-  
+
   /* Fix for bottom menu bar */
   .mobile-bottom-menu {
     @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
   }
-  
+
   .card {
     @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
   }
-  
+
+  /* Text sizes for consistency across the app */
   .heading-1 {
-    @apply text-[30px] font-bold tracking-tight text-foreground mb-4;
+    @apply text-[24px] font-bold tracking-tight text-foreground mb-4;
   }
-  
+
   .heading-2 {
-    @apply text-[20px] font-semibold text-foreground mb-3;
+    @apply text-[18px] font-semibold text-foreground mb-3;
   }
-  
+
+  .text-default {
+    @apply text-[11px] text-foreground;
+  }
+
   .subtitle {
-    @apply text-base text-muted-foreground mb-6;
+    @apply text-[11px] text-muted-foreground mb-6;
   }
-  
+
   .form-container {
     @apply flex flex-col space-y-4 mb-6;
   }
-  
+
   .button-primary {
     @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors;
   }
-  
+
   .button-secondary {
     @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors;
   }
-  
+
   .button-outline {
     @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md;
   }
-  
+
   .drop-zone {
     @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted;
   }
-  
+
   .mobile-friendly-button {
     @apply w-full sm:w-auto;
   }
-  
+
   .responsive-grid {
     @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
   }
-  
+
   .full-width {
     @apply w-full min-w-0;
+  }
+
+  /* Embla Carousel Styles */
+  .embla {
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .embla__container {
+    display: flex;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -khtml-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: pan-y;
+  }
+
+  .embla__slide {
+    position: relative;
+    min-width: 0;
+    flex: 0 0 100%;
+  }
+
+  .embla__slide img,
+  .embla__slide video {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 0.5rem;
+  }
+
+  .embla__slide audio {
+    width: 100%;
   }
 }
 
@@ -118,11 +157,11 @@ html, body, #root {
   .sm-stack {
     @apply flex flex-col;
   }
-  
+
   .sm-full-width {
     @apply w-full;
   }
-  
+
   .container-page {
     width: 100vw !important;
     max-width: 100vw !important;
@@ -131,7 +170,7 @@ html, body, #root {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
-  
+
   body {
     width: 100vw;
     max-width: 100%;

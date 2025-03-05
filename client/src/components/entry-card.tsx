@@ -8,6 +8,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -15,6 +16,8 @@ interface EntryCardProps {
 
 export default function EntryCard({ entry }: EntryCardProps) {
   const { toast } = useToast();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [emblaRef] = useEmblaCarousel({ dragFree: true });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -29,13 +32,11 @@ export default function EntryCard({ entry }: EntryCardProps) {
     },
   });
 
-  // Get feeling from entry and ensure it's properly typed
   const feeling = entry.feeling ? {
     emoji: entry.feeling.emoji || "",
     label: entry.feeling.label || ""
   } : null;
 
-  // Function to format time display
   const formatTimeAgo = (createdAt: string | Date) => {
     const now = new Date();
     const entryDate = new Date(createdAt);
@@ -56,133 +57,145 @@ export default function EntryCard({ entry }: EntryCardProps) {
     }
   };
 
+  // Function to determine if text needs expansion
+  const needsExpansion = (content: string) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const textContent = tempDiv.textContent || '';
+    return textContent.length > 280; // Similar to Twitter's character limit
+  };
+
   return (
-    <Card className="group hover:shadow-lg transition-shadow duration-200">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-[15px] relative">
-        <div className="flex flex-col">
-          <CardTitle className="text-xl font-semibold line-clamp-1">
-            <span>{entry.title || "Untitled Entry"}</span>
-          </CardTitle>
-          <div className="flex items-center text-sm mt-1 w-full">
-            <div className="flex items-center w-full">
-              <span className="text-muted-foreground flex-grow">
-                {formatTimeAgo(entry.createdAt)}
-              </span>
-              <span className="mx-1"></span> {/* 1 blank space */}
+    <Card className="group bg-white shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+      <CardHeader className="space-y-0 pb-2 pt-4 px-4">
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col">
+            <CardTitle className="text-[18px] font-semibold">
+              {entry.title || "Untitled Entry"}
+            </CardTitle>
+            <div className="flex items-center text-sm mt-1 text-muted-foreground">
+              <span>{formatTimeAgo(entry.createdAt)}</span>
               {feeling && (
-                <>
-                  <span>-</span>
-                  <div className="inline-flex items-center gap-1 ml-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                <span className="flex items-center ml-2">
+                  <span>•</span>
+                  <span className="ml-2">
                     {feeling.label.includes(',') ? (
-                      <>
-                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}
-                        {'  '}while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                      </>
+                      <>feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                      while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}</>
                     ) : (
-                      <>
-                        feeling {feeling.label} {feeling.emoji}
-                      </>
+                      <>feeling {feeling.label} {feeling.emoji}</>
                     )}
-                  </div>
-                </>
+                  </span>
+                </span>
               )}
               {entry.location && (
-                <>
-                  <span className="mx-4"></span> {/* 4 blank spaces */}
-                  <span>-</span>
-                  <span className="ml-1">at</span>
-                  <span className="ml-1">{entry.location}</span>
-                  <span className="ml-1">📍</span>
-                </>
+                <span className="flex items-center ml-2">
+                  <span>•</span>
+                  <span className="ml-2">at {entry.location} 📍</span>
+                </span>
               )}
             </div>
           </div>
-        </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-[4px] right-4">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => {
-              // Share functionality can be expanded later
-              if (navigator.share) {
-                navigator.share({
-                  title: entry.title || "My Diary Entry",
-                  text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
-                  url: window.location.origin + `/entry/${entry.id}`,
-                }).catch(err => console.log('Error sharing:', err));
-              } else {
-                // Fallback for browsers that don't support navigator.share
-                navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
-                  .then(() => toast({
-                    title: "Link copied",
-                    description: "Entry link copied to clipboard"
-                  }))
-                  .catch(err => console.error('Could not copy text:', err));
-              }
-            }}
-            className="hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30"
-          >
-            <Share className="h-4 w-4"/>
-            <span className="sr-only">Share</span>
-          </Button>
-          <Link href={`/edit/${entry.id}`}>
-            <Button size="icon" variant="ghost" className="hover:bg-muted">
-              <Edit2 className="h-4 w-4" />
-              <span className="sr-only">Edit</span>
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: entry.title || "My Diary Entry",
+                    text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                    url: window.location.origin + `/entry/${entry.id}`,
+                  }).catch(err => console.log('Error sharing:', err));
+                } else {
+                  navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
+                    .then(() => toast({
+                      title: "Link copied",
+                      description: "Entry link copied to clipboard"
+                    }))
+                    .catch(err => console.error('Could not copy text:', err));
+                }
+              }}
+              className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
+            >
+              <Share className="h-4 w-4"/>
             </Button>
-          </Link>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => deleteMutation.mutate()}
-            disabled={deleteMutation.isPending}
-            className="hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Delete</span>
-          </Button>
+            <Link href={`/edit/${entry.id}`}>
+              <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted">
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+              className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pt-0 pb-4">
         <div
-          className="prose prose-sm dark:prose-invert max-w-none line-clamp-3 mb-4"
+          className={`prose prose-sm max-w-none ${!isExpanded ? 'line-clamp-4' : ''}`}
           dangerouslySetInnerHTML={{ __html: entry.content }}
+          onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
         />
+        {needsExpansion(entry.content) && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-sm text-muted-foreground hover:text-foreground mt-1"
+          >
+            {isExpanded ? 'See less' : 'See more'}
+          </button>
+        )}
+
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
-            {entry.mediaUrls.map((url, i) => {
-              const isVideo = url.match(/\.(mp4|webm)$/i);
-              const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+          <div className="mt-4 -mx-4">
+            <div className="embla" ref={emblaRef}>
+              <div className="embla__container flex">
+                {entry.mediaUrls.map((url, i) => {
+                  const isVideo = url.match(/\.(mp4|webm)$/i);
+                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
 
-              if (isVideo) {
-                return (
-                  <video
-                    key={i}
-                    src={url}
-                    controls
-                    className="rounded-md w-full h-32 object-cover bg-black"
-                  />
-                );
-              }
+                  if (isVideo) {
+                    return (
+                      <div key={i} className="embla__slide min-w-0 flex-[0_0_100%] px-4">
+                        <video
+                          src={url}
+                          controls
+                          className="w-full aspect-video object-cover rounded-md bg-black"
+                          playsInline
+                        />
+                      </div>
+                    );
+                  }
 
-              if (isAudio) {
-                return (
-                  <div key={i} className="flex items-center justify-center h-32 bg-muted rounded-md p-4">
-                    <audio src={url} controls className="w-full" />
-                  </div>
-                );
-              }
+                  if (isAudio) {
+                    return (
+                      <div key={i} className="embla__slide min-w-0 flex-[0_0_100%] px-4">
+                        <div className="flex items-center justify-center h-24 bg-muted rounded-md p-4">
+                          <audio src={url} controls className="w-full" />
+                        </div>
+                      </div>
+                    );
+                  }
 
-              return (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`Media ${i + 1}`}
-                  className="rounded-md w-full h-32 object-cover"
-                  loading="lazy"
-                />
-              );
-            })}
+                  return (
+                    <div key={i} className="embla__slide min-w-0 flex-[0_0_100%] px-4">
+                      <img
+                        src={url}
+                        alt={`Media ${i + 1}`}
+                        className="w-full aspect-video object-cover rounded-md"
+                        loading="lazy"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

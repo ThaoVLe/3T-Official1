@@ -77,35 +77,37 @@ export default function EntryCard({ entry }: EntryCardProps) {
             </CardTitle>
 
             {/* Combined timestamp, feeling, and location line */}
-            <div className="text-sm text-muted-foreground flex items-center whitespace-nowrap overflow-hidden text-ellipsis">
-              <span>{formatTimeAgo(entry.createdAt)}</span>
+            <div className="text-sm text-muted-foreground flex items-center gap-2 overflow-hidden">
+              <span className="whitespace-nowrap">{formatTimeAgo(entry.createdAt)}</span>
               
               {/* Add dash if feeling or location exists */}
-              {(feeling || entry.location) && <span> – </span>}
+              {(feeling || entry.location) && <span className="whitespace-nowrap"> – </span>}
               
-              {feeling && (
-                <span className="inline-flex items-center">
-                  {feeling.label.includes(',') ? (
-                    <span>
-                      feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                      while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                    </span>
-                  ) : (
-                    <span>
-                      feeling {feeling.label} {feeling.emoji}
-                    </span>
-                  )}
-                </span>
-              )}
-              
-              {/* Add space between feeling and location if both exist */}
-              {feeling && entry.location && <span> </span>}
-              
-              {entry.location && (
-                <span className="inline-flex items-center">
-                  at {entry.location} 📍
-                </span>
-              )}
+              <div className="flex flex-wrap items-center gap-2">
+                {feeling && (
+                  <div className="inline-flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                    {feeling.label.includes(',') ? (
+                      <>
+                        <span>{feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}</span>
+                        <span className="mx-1">while</span>
+                        <span>{feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>feeling {feeling.label}</span>
+                        <span>{feeling.emoji}</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                
+                {entry.location && (
+                  <div className="inline-flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                    <span>at {entry.location}</span>
+                    <span>📍</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

@@ -1,23 +1,35 @@
-import { Route, Switch } from "wouter";
+import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import Layout from "@/components/layout";
-import NewEntry from "@/pages/new-entry";
-import Entries from "@/pages/entries";
-import CurrentEntry from "@/pages/current-entry";
+import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
+import { Layout } from "@/components/layout";
+import Home from "@/pages/home";
+import Editor from "@/pages/editor";
+import NotFound from "@/pages/not-found";
 
-export default function App() {
+function Router() {
+  return (
+    <Layout>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/new" component={Editor} />
+        <Route path="/edit/:id" component={Editor} />
+        <Route path="/recent" component={Home} />
+        <Route path="/calendar" component={Home} />
+        <Route path="/entries" component={Home} />
+        <Route component={NotFound} />
+      </Switch>
+    </Layout>
+  );
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Layout>
-        <Switch>
-          <Route path="/" component={Entries} />
-          <Route path="/new" component={NewEntry} />
-          <Route path="/entry/:id" component={CurrentEntry} />
-        </Switch>
-      </Layout>
+      <Router />
       <Toaster />
     </QueryClientProvider>
   );
 }
+
+export default App;

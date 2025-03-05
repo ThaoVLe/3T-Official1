@@ -80,7 +80,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     if (selectedEmotion) {
       const combined = {
         emoji: `${selectedEmotion.emoji} ${activity.emoji}`,
-        label: `${selectedEmotion.label}, ${activity.label}`
+        label: `${selectedEmotion.label}, ${activity.label}`;
       };
       onSelect(combined);
     } else {

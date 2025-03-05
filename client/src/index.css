@@ -13,6 +13,37 @@ html, body, #root {
 @tailwind components;
 @tailwind utilities;
 
+/* Facebook-style post styling */
+.fb-post-gradient {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 90%);
+}
+.dark .fb-post-gradient {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--card) 90%);
+}
+
+/* Media grid styles */
+.media-grid-1 { grid-template-columns: 1fr; }
+.media-grid-2 { grid-template-columns: 1fr 1fr; }
+.media-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.media-grid-4 { 
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.media-grid-4 > *:first-child {
+  grid-row: span 2;
+}
+
+/* Styling for the "more media" indicator */
+.more-media-indicator {
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @layer base {
   * {
 

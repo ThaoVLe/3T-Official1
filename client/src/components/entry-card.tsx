@@ -1,14 +1,15 @@
 
-import { Link } from "wouter";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share } from "lucide-react";
-import type { DiaryEntry } from "@shared/schema";
-import { useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState } from 'react';
+import Link from "next/link";
+import { DiaryEntry } from "#/shared/schema";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient } from "#/lib/query";
+import { apiRequest } from "#/lib/axios";
+import { Button } from "#/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { useToast } from "#/components/ui/use-toast";
+import { Edit2, MapPin, Share, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -98,38 +99,20 @@ export default function EntryCard({ entry }: EntryCardProps) {
               )}
               {entry.location && (
                 <>
-                  <span className="mx-4"></span> {/* 4 blank spaces */}
                   <span>-</span>
-                  <span className="ml-1">at</span>
-                  <span className="ml-1">{entry.location}</span>
-                  <span className="ml-1">📍</span>
+                  <div className="inline-flex items-center gap-1 ml-1">
+                    <MapPin className="h-3 w-3 text-primary" />
+                    <span className="text-xs">{entry.location.name}</span>
+                  </div>
                 </>
               )}
             </div>
           </div>
         </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-[4px] right-4">
+        <div className="flex space-x-1">
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => {
-              // Share functionality can be expanded later
-              if (navigator.share) {
-                navigator.share({
-                  title: entry.title || "My Diary Entry",
-                  text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
-                  url: window.location.origin + `/entry/${entry.id}`,
-                }).catch(err => console.log('Error sharing:', err));
-              } else {
-                // Fallback for browsers that don't support navigator.share
-                navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
-                  .then(() => toast({
-                    title: "Link copied",
-                    description: "Entry link copied to clipboard"
-                  }))
-                  .catch(err => console.error('Could not copy text:', err));
-              }
-            }}
             className="hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30"
           >
             <Share className="h-4 w-4"/>
@@ -236,7 +219,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
             {/* See all media button when there are more than 3 */}
             {hasExcessMedia && (
               <button 
-                onClick={() => setExpanded(!expanded)} 
+                onClick={() => setExpanded(!expanded)}
                 className="w-full mt-2 text-sm text-primary hover:underline font-medium"
               >
                 {expanded ? 'Show Less' : `See All ${entry.mediaUrls.length} Media`}
@@ -246,5 +229,5 @@ export default function EntryCard({ entry }: EntryCardProps) {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

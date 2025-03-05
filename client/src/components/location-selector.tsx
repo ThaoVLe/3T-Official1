@@ -419,11 +419,8 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
           ) : mapError ? (
             <div className="h-[400px] w-full flex flex-col items-center justify-center bg-gray-100 rounded-md border p-4">
               <div className="bg-gray-200 rounded-full p-3 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-gray-500">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
+                {/* AlertCircle component is missing, replace with appropriate icon */}
+                {/*<AlertCircle className="h-6 w-6 text-gray-500" />*/}
               </div>
               <h3 className="text-lg font-medium mb-2">Oops! Something went wrong.</h3>
               <p className="text-sm text-gray-500 text-center max-w-md">

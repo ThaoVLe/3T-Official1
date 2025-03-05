@@ -50,21 +50,21 @@ const activitiesData = [
   { emoji: "👋", label: "Greeting" },
   { emoji: "🎂", label: "Birthday" },
   { emoji: "💼", label: "Meeting" },
-  { emoji: "🏋️", label: "Working out" },
+  { emoji: "🏋️", label: "Workout" },
   { emoji: "🎭", label: "Performing" },
   { emoji: "🛌", label: "Sleeping" },
   { emoji: "🎁", label: "Gifting" },
-  { emoji: "👨‍👩‍👧‍👦", label: "Family time" },
+  { emoji: "👨‍👩‍👧‍👦", label: "Family" },
   { emoji: "🎯", label: "Planning" },
   { emoji: "🧠", label: "Thinking" },
   { emoji: "🚗", label: "Driving" },
-  { emoji: "🏠", label: "At home" },
-  { emoji: "☕", label: "Coffee break" },
+  { emoji: "🏠", label: "Home" },
+  { emoji: "☕", label: "Coffee" },
   { emoji: "📱", label: "Scrolling" },
-  { emoji: "👥", label: "Hanging out" },
+  { emoji: "👥", label: "Hanging" },
   { emoji: "🗣️", label: "Talking" },
   { emoji: "💃", label: "Dancing" },
-  { emoji: "📸", label: "Taking photos" },
+  { emoji: "📸", label: "Photos" },
   { emoji: "🎤", label: "Singing" },
 ];
 
@@ -315,8 +315,8 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             </div>
           </TabsContent>
 
-          <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
-            <div className="grid grid-cols-3 gap-1">
+          <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1 overflow-x-hidden">
+            <div className="grid grid-cols-3 gap-1 w-full">
               {filteredActivities.map((activity) => (
                 <Button
                   key={activity.label}

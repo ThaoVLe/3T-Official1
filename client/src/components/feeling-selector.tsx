@@ -332,10 +332,10 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </TabsContent>
         </Tabs>
 
-        <div className="mt-8 pb-4 left-0 right-0 flex justify-center">
+        <div className="sticky bottom-4 left-0 right-0 flex justify-center pt-4 mt-4 bg-background">
           <Button
             onClick={handleDone}
-            className="w-1/2 bg-primary text-primary-foreground"
+            className="w-1/2 bg-primary text-primary-foreground py-2 text-base font-medium"
             disabled={!selectedEmotion && !selectedActivity && !customEmotion && !customActivity}
           >
             Done

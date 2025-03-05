@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import Placeholder from '@tiptap/extension-placeholder'; //Import Placeholder extension
 
 interface TipTapEditorProps {
   value: string;
@@ -56,6 +57,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       TextStyle,
       Color,
       Highlight.configure({ multicolor: true }),
+      Placeholder.configure({
+        placeholder: 'What are you doing today?',
+      }),
     ],
     content: value || '',
     onUpdate: ({ editor }) => {

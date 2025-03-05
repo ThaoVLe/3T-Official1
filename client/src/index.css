@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+.entry-full-page {
+  padding: 1rem;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.entry-container {
+  background-color: var(--card);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.entry-content {
+  line-height: 1.6;
+}
+
 /* Facebook-style media container */
 .media-container {
   display: grid;

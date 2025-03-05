@@ -5,6 +5,7 @@ import Layout from "@/components/layout";
 import NewEntry from "@/pages/new-entry";
 import Entries from "@/pages/entries";
 import CurrentEntry from "@/pages/current-entry";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/entry/:id" component={CurrentEntry} />
         </Switch>
       </Layout>
+      <Toaster />
     </QueryClientProvider>
   );
 }

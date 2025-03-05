@@ -1,9 +1,12 @@
-
 import { Edit2, Trash2, Share } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from 'react';
+import { queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/apiClient";
+import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
+import { useState, useCallback } from 'react';
+import { useLocation } from 'wouter';
 
 // Create API client
 import axios from "axios";
@@ -63,10 +66,26 @@ interface EntryCardProps {
   onDelete?: (id: number) => void;
 }
 
-export const EntryCard = ({ entry, onEdit, onDelete }: EntryCardProps) => {
-  const [confirmDelete, setConfirmDelete] = useState(false);
+export default function EntryCard({ entry }: { entry: DiaryEntry }) {
+  const [showActions, setShowActions] = useState(false);
   const { toast } = useToast();
-  
+  const [, navigate] = useLocation();
+  const [touchTimeout, setTouchTimeout] = useState<number | null>(null);
+
+  const handleLongTouch = useCallback(() => {
+    const timeout = window.setTimeout(() => {
+      navigate(`/entry/${entry.id}`);
+    }, 200); // 0.2 seconds delay
+    setTouchTimeout(timeout);
+  }, [entry.id, navigate]);
+
+  const clearTouchTimeout = useCallback(() => {
+    if (touchTimeout) {
+      clearTimeout(touchTimeout);
+      setTouchTimeout(null);
+    }
+  }, [touchTimeout]);
+
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest.delete(`/entries/${id}`);
@@ -78,9 +97,7 @@ export const EntryCard = ({ entry, onEdit, onDelete }: EntryCardProps) => {
         title: "Entry deleted",
         description: "Your entry has been deleted successfully."
       });
-      if (onDelete) {
-        onDelete(entry.id);
-      }
+      // onDelete remains unchanged.
     },
     onError: () => {
       toast({
@@ -99,9 +116,16 @@ export const EntryCard = ({ entry, onEdit, onDelete }: EntryCardProps) => {
       setConfirmDelete(true);
     }
   };
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <div className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow">
+    <div 
+      className="bg-card rounded-lg overflow-hidden shadow hover:shadow-md transition-shadow"
+      onTouchStart={handleLongTouch}
+      onTouchEnd={clearTouchTimeout}
+      onTouchCancel={clearTouchTimeout}
+      onTouchMove={clearTouchTimeout}
+    >
       <div className="flex justify-between items-start mb-2">
         <div>
           <div className="flex items-center gap-2">
@@ -119,6 +143,7 @@ export const EntryCard = ({ entry, onEdit, onDelete }: EntryCardProps) => {
           )}
         </div>
         <div className="flex space-x-2">
+          {/* onEdit remains unchanged */}
           {onEdit && (
             <button
               onClick={() => onEdit(entry)}

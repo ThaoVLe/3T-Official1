@@ -63,27 +63,27 @@ export default function EntryCard({ entry }: EntryCardProps) {
           <CardTitle className="text-xl font-semibold line-clamp-1">
             <span>{entry.title || "Untitled Entry"}</span>
           </CardTitle>
-          <div className="flex items-center text-sm mt-1 w-full">
+          <div className="flex flex-col space-y-1 text-sm mt-1 w-full">
             <div className="flex items-center">
               <span className="text-muted-foreground">{formatTimeAgo(entry.createdAt)}</span>
-              <span className="mx-4"></span> {/* 4 blank spaces */}
-              {feeling && (
-                <>
-                  <span>-</span>
-                  <div className="inline-flex items-center gap-1 ml-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-                    {feeling.label.includes(',') ? (
-                      <>
-                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}
-                        {'  '}while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                      </>
-                    ) : (
-                      <>
-                        feeling {feeling.label} {feeling.emoji}
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
+            </div>
+            
+            {feeling && (
+              <div className="flex items-center">
+                <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                  {feeling.label.includes(',') ? (
+                    <>
+                      feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}
+                      {'  '}while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                    </>
+                  ) : (
+                    <>
+                      feeling {feeling.label} {feeling.emoji}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
               {entry.location && (
                 <>
                   <span className="mx-4"></span> {/* 4 blank spaces */}

@@ -1,5 +1,5 @@
 
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { useEffect } from "react";
 import { format } from "date-fns";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function CurrentEntry() {
   const { id } = useParams();

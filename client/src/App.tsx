@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { Layout } from "@/components/layout";
 import Home from "@/pages/home";
 import Editor from "@/pages/editor";
-import EntryView from "@/pages/entry";
 import CurrentEntry from "@/pages/current-entry";
 import NotFound from "@/pages/not-found";
 
@@ -17,7 +16,7 @@ function Router() {
         <Route path="/new" component={Editor} />
         <Route path="/edit/:id" component={Editor} />
         <Route path="/entry/:id" component={CurrentEntry} />
-        <Route path="/view/:id" component={EntryView} />
+        <Route path="/view/:id" component={CurrentEntry} />
         <Route path="/recent" component={Home} />
         <Route path="/calendar" component={Home} />
         <Route path="/entries" component={Home} />

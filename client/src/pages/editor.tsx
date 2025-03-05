@@ -246,7 +246,7 @@ export default function Editor() {
         </div>
 
         {/* Media Controls - Fixed at bottom */}
-        <div className="border-t bg-white sticky bottom-0 w-full">
+        <div className="border-t bg-white sticky bottom-0 w-full" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}> {/*Added paddingBottom for safe area*/}
           <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">How are you feeling today?</span>

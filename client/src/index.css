@@ -29,15 +29,20 @@ html, body, #root {
   }
 
   .editor-page {
-    @apply w-full h-full py-6 min-h-screen flex flex-col bg-background flex-1;
+    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
   }
 
   .ProseMirror {
-    @apply min-h-[200px] flex-1;
+    @apply min-h-[200px];
   }
   
   .tiptap-container {
-    @apply flex flex-col flex-1;
+    @apply flex flex-col;
+  }
+  
+  /* Fix for bottom menu bar */
+  .mobile-bottom-menu {
+    @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
   }
   
   .card {

@@ -318,8 +318,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </PopoverTrigger>
             <PopoverContent className="w-72 p-2">
               <div className="mb-3">
-                          // Insert the custom emotion with dark red color
-                          editor.chain().focus().setColor('#880000').insertContent(value).setColor('default').run();
+                {/* Emotion selector content goes here */}
 
                           // Save to localStorage (keeping both for backward compatibility)
                           const savedEmotions = JSON.parse(localStorage.getItem('customEmotions') || '[]');

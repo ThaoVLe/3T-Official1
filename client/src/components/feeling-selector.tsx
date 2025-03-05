@@ -1,64 +1,36 @@
-import React, { useState, useEffect } from "react";
+
+import * as React from "react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { SmilePlusIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smile } from "lucide-react";
+import { emotions, activities } from "@/data/feelings";
+import { cn } from "@/lib/utils";
 
-const feelings = [
-  { emoji: "😊", label: "Happy" },
-  { emoji: "😢", label: "Sad" },
-  { emoji: "😡", label: "Angry" },
-  { emoji: "😴", label: "Tired" },
-  { emoji: "😍", label: "In love" },
-  { emoji: "🤔", label: "Thoughtful" },
-  { emoji: "😌", label: "Calm" },
-  { emoji: "🥳", label: "Celebratory" },
-  { emoji: "😎", label: "Cool" },
-  { emoji: "🤗", label: "Grateful" },
-  { emoji: "😬", label: "Nervous" },
-  { emoji: "🤒", label: "Sick" },
-  { emoji: "😲", label: "Surprised" },
-  { emoji: "😋", label: "Hungry" },
-  { emoji: "🥱", label: "Bored" },
-  { emoji: "😭", label: "Crying" },
-];
-
-const activities = [
-  { emoji: "🍽️", label: "Eating" },
-  { emoji: "🎮", label: "Gaming" },
-  { emoji: "📚", label: "Reading" },
-  { emoji: "🎧", label: "Listening" },
-  { emoji: "🏃‍♂️", label: "Running" },
-  { emoji: "🧘‍♀️", label: "Meditating" },
-  { emoji: "💻", label: "Working" },
-  { emoji: "🎬", label: "Watching" },
-  { emoji: "✈️", label: "Traveling" },
-];
-
-interface FeelingSelectorProps {
-  onSelect: (feeling: { emoji: string; label: string }) => void;
-  selectedFeeling: { emoji: string; label: string } | null;
+interface FeelingData {
+  emoji: string;
+  label: string;
 }
 
-export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const [selectedEmotion, setSelectedEmotion] = useState<{ emoji: string; label: string } | null>(selectedFeeling);
-  const [selectedActivity, setSelectedActivity] = useState<{ emoji: string; label: string } | null>(null);
-
-  const filteredFeelings = feelings.filter(feeling => 
-    feeling.label.toLowerCase().includes(searchQuery.toLowerCase())
+export function FeelingSelector({
+  value,
+  onSelect,
+}: {
+  value?: FeelingData | null;
+  onSelect: (data: FeelingData) => void;
+}) {
+  const [selectedEmotion, setSelectedEmotion] = React.useState<FeelingData | null>(
+    null
   );
-
-  const filteredActivities = activities.filter(activity => 
-    activity.label.toLowerCase().includes(searchQuery.toLowerCase())
+  const [selectedActivity, setSelectedActivity] = React.useState<FeelingData | null>(
+    null
   );
+  const [selectedFeeling, setSelectedFeeling] = React.useState<FeelingData | null>(
+    value || null
+  );
+  const [isOpen, setIsOpen] = React.useState(false);
 
-  const handleSelectEmotion = (feeling: { emoji: string; label: string }) => {
-    setSelectedEmotion(feeling);
-
-    // If we already have an activity, combine them
+  const handleSelect = (feeling: FeelingData) => {
     if (selectedActivity) {
       const combined = {
         emoji: `${feeling.emoji} ${selectedActivity.emoji}`,
@@ -68,58 +40,82 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     } else {
       onSelect(feeling);
     }
+    setSelectedEmotion(feeling);
+    setSelectedFeeling(selectedActivity ? {
+      emoji: `${feeling.emoji} ${selectedActivity.emoji}`,
+      label: `${feeling.label}, ${selectedActivity.label}`
+    } : feeling);
+    
+    // Close the keyboard when emotion is selected
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && activeElement.blur) {
+      activeElement.blur();
+    }
   };
 
-  const handleSelectActivity = (activity: { emoji: string; label: string }) => {
+  const handleSelectActivity = (activity: FeelingData) => {
     setSelectedActivity(activity);
-
-    // If we already have an emotion, combine them
     if (selectedEmotion) {
       const combined = {
         emoji: `${selectedEmotion.emoji} ${activity.emoji}`,
         label: `${selectedEmotion.label}, ${activity.label}`
       };
+      setSelectedFeeling(combined);
       onSelect(combined);
-    } else {
-      onSelect(activity);
+    }
+    
+    // Close the keyboard when activity is selected
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && activeElement.blur) {
+      activeElement.blur();
     }
   };
 
-  // Initialize from selectedFeeling if it has combined emojis
-  useEffect(() => {
-    if (selectedFeeling && selectedFeeling.emoji.includes(" ")) {
-      const [emotionEmoji, activityEmoji] = selectedFeeling.emoji.split(" ");
-      const [emotionLabel, activityLabel] = selectedFeeling.label.split(", ");
+  React.useEffect(() => {
+    if (value) {
+      setSelectedFeeling(value);
+      // Try to parse the combined emotion and activity
+      if (value.emoji.includes(" ") && value.label.includes(",")) {
+        const emojiParts = value.emoji.split(" ");
+        const labelParts = value.label.split(",");
+        if (emojiParts.length > 1 && labelParts.length > 1) {
+          const emotionEmoji = emojiParts[0];
+          const activityEmoji = emojiParts[1];
+          const emotionLabel = labelParts[0].trim();
+          const activityLabel = labelParts[1].trim();
 
-      const emotion = feelings.find(f => f.emoji === emotionEmoji);
-      const activity = activities.find(a => a.emoji === activityEmoji);
+          const emotion = emotions.find(
+            (e) => e.emoji === emotionEmoji && e.label === emotionLabel
+          );
+          const activity = activities.find(
+            (a) => a.emoji === activityEmoji && a.label === activityLabel
+          );
 
-      if (emotion) setSelectedEmotion(emotion);
-      if (activity) setSelectedActivity(activity);
-    } else if (selectedFeeling) {
-      const emotion = feelings.find(f => f.emoji === selectedFeeling.emoji);
-      const activity = activities.find(a => a.emoji === selectedFeeling.emoji);
-
-      if (emotion) setSelectedEmotion(emotion);
-      if (activity) setSelectedActivity(activity);
+          if (emotion) setSelectedEmotion(emotion);
+          if (activity) setSelectedActivity(activity);
+        }
+      }
     }
-  }, [selectedFeeling]);
+  }, [value]);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
-          type="button"
-          variant="ghost"
-          className="h-9 px-2 gap-1 text-muted-foreground font-normal w-full justify-start"
+          variant="outline"
+          className="h-auto py-1.5 px-2 text-xs"
+          onClick={() => setIsOpen(true)}
         >
           {selectedFeeling ? (
             <div className="flex items-center gap-1.5">
               {selectedFeeling.emoji.includes(' ') ? (
                 // Combined emotion and activity
                 <>
-                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
-                  <span className="text-xl">{selectedFeeling.emoji}</span>
+                  <span className="text-sm font-medium">{selectedFeeling.label.split(',')[0]}</span>
+                  <span className="text-xl">{selectedFeeling.emoji.split(' ')[0]}</span>
+                  <span>,</span>
+                  <span className="text-sm font-medium">{selectedFeeling.label.split(',')[1].trim()}</span>
+                  <span className="text-xl">{selectedFeeling.emoji.split(' ')[1]}</span>
                 </>
               ) : (
                 // Just emotion
@@ -130,92 +126,78 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               )}
             </div>
           ) : (
-            <>
-              <Smile className="h-4 w-4 mr-1" />
-              <span>How are you feeling today?</span>
-            </>
+            <div className="flex items-center gap-1.5">
+              <SmilePlusIcon className="w-4 h-4" />
+              <span>How are you feeling?</span>
+            </div>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[90vh] sm:h-[70vh] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>How are you feeling?</SheetTitle>
-        </SheetHeader>
-
-        <div className="mt-4">
-          <Input
-            type="text"
-            placeholder="Search feelings..."
-            className="mb-4"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-
-          <Tabs defaultValue="emotion">
-            <TabsList className="grid grid-cols-2 mb-4">
-              <TabsTrigger value="emotion">Emotion</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="emotion">
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                {filteredFeelings.map((feeling) => (
-                  <Button
-                    key={feeling.emoji}
-                    variant={selectedEmotion?.emoji === feeling.emoji ? "default" : "outline"}
-                    className="h-16 flex flex-col items-center justify-center gap-1 p-2"
-                    onClick={() => handleSelectEmotion(feeling)}
-                  >
-                    <span className="text-xl">{feeling.emoji}</span>
-                    <span className="text-xs">{feeling.label}</span>
-                  </Button>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="activity">
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                {filteredActivities.map((activity) => (
-                  <Button
-                    key={activity.emoji}
-                    variant={selectedActivity?.emoji === activity.emoji ? "default" : "outline"}
-                    className="h-16 flex flex-col items-center justify-center gap-1 p-2"
-                    onClick={() => handleSelectActivity(activity)}
-                  >
-                    <span className="text-xl">{activity.emoji}</span>
-                    <span className="text-xs">{activity.label}</span>
-                  </Button>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex justify-center mt-2">
-            {selectedEmotion && (
-              <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
-                <span className="text-xs">{selectedEmotion.label}</span>
-                <span>{selectedEmotion.emoji}</span>
-              </div>
-            )}
-            {selectedActivity && (
-              <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
-                <span className="text-xs">{selectedActivity.label}</span>
-                <span>{selectedActivity.emoji}</span>
-              </div>
-            )}
+      <SheetContent side="bottom" className="h-[400px] px-0">
+        <Tabs defaultValue="emotions" className="w-full h-full">
+          <TabsList className="w-full justify-start rounded-none border-b px-6">
+            <TabsTrigger value="emotions" className="rounded-none">
+              Emotions
+            </TabsTrigger>
+            <TabsTrigger value="activities" className="rounded-none">
+              Activities
+            </TabsTrigger>
+          </TabsList>
+          <div className="p-6 pt-2">
+            <div className="flex justify-center mt-2">
+              {selectedEmotion && (
+                <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
+                  <span className="text-xs">{selectedEmotion.label}</span>
+                  <span>{selectedEmotion.emoji}</span>
+                </div>
+              )}
+              {selectedActivity && (
+                <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
+                  <span className="text-xs">{selectedActivity.label}</span>
+                  <span>{selectedActivity.emoji}</span>
+                </div>
+              )}
+            </div>
           </div>
-
-          <div className="mt-4 flex justify-end gap-2">
-            <Button 
-              variant="ghost" 
-              onClick={() => {
-                setOpen(false);
-              }}
-            >
-              Done
-            </Button>
-          </div>
-        </div>
+          <TabsContent value="emotions" className="px-6 mt-0 h-full pb-20">
+            <div className="grid grid-cols-6 gap-2">
+              {emotions.map((emotion) => (
+                <button
+                  key={emotion.emoji}
+                  onClick={() => handleSelect(emotion)}
+                  className={cn(
+                    "flex flex-col items-center justify-center aspect-square rounded-lg transition-colors",
+                    selectedEmotion?.emoji === emotion.emoji
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/60 hover:bg-muted/80"
+                  )}
+                >
+                  <span className="text-xl">{emotion.emoji}</span>
+                  <span className="text-xs mt-1">{emotion.label}</span>
+                </button>
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="activities" className="px-6 mt-0 h-full pb-20">
+            <div className="grid grid-cols-6 gap-2">
+              {activities.map((activity) => (
+                <button
+                  key={activity.emoji}
+                  onClick={() => handleSelectActivity(activity)}
+                  className={cn(
+                    "flex flex-col items-center justify-center aspect-square rounded-lg transition-colors",
+                    selectedActivity?.emoji === activity.emoji
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/60 hover:bg-muted/80"
+                  )}
+                >
+                  <span className="text-xl">{activity.emoji}</span>
+                  <span className="text-xs mt-1">{activity.label}</span>
+                </button>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );

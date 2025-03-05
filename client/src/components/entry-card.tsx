@@ -69,89 +69,88 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
   return (
     <Card className="group bg-white shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-      <CardHeader className="space-y-0 pb-2 pt-4 px-4">
-        <div className="flex justify-between items-start">
-          <div className="flex flex-col space-y-1.5">
-            <CardTitle className="text-[18px] font-semibold">
-              {entry.title || "Untitled Entry"}
-            </CardTitle>
+      <CardHeader className="space-y-0 pb-2 pt-4 px-4 relative">
+        {/* Action buttons - positioned absolute at top right with 4px padding */}
+        <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: entry.title || "My Diary Entry",
+                  text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                  url: window.location.origin + `/entry/${entry.id}`,
+                }).catch(err => console.log('Error sharing:', err));
+              } else {
+                navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
+                  .then(() => toast({
+                    title: "Link copied",
+                    description: "Entry link copied to clipboard"
+                  }))
+                  .catch(err => console.error('Could not copy text:', err));
+              }
+            }}
+            className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
+          >
+            <Share className="h-4 w-4"/>
+          </Button>
+          <Link href={`/edit/${entry.id}`}>
+            <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted">
+              <Edit2 className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => deleteMutation.mutate()}
+            disabled={deleteMutation.isPending}
+            className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      
+        <div className="flex flex-col space-y-1.5">
+          <CardTitle className="text-[18px] font-semibold">
+            {entry.title || "Untitled Entry"}
+          </CardTitle>
 
-            {/* Combined timestamp, feeling, and location line */}
-            <div className="text-sm text-muted-foreground flex items-center gap-2 overflow-hidden">
-              <span className="whitespace-nowrap">{formatTimeAgo(entry.createdAt)}</span>
+          {/* Combined timestamp, feeling, and location line */}
+          <div className="text-sm text-muted-foreground flex items-center gap-2 overflow-hidden">
+            <span className="whitespace-nowrap">{formatTimeAgo(entry.createdAt)}</span>
+            
+            {/* Add dash if feeling or location exists */}
+            {(feeling || entry.location) && <span className="whitespace-nowrap"> – </span>}
+            
+            <div className="flex flex-wrap items-center gap-2">
+              {feeling && (
+                <div className="inline-flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                  {feeling.label.includes(',') ? (
+                    <>
+                      <span>{feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}</span>
+                      <span className="mx-1">while</span>
+                      <span>{feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>feeling {feeling.label}</span>
+                      <span>{feeling.emoji}</span>
+                    </>
+                  )}
+                </div>
+              )}
               
-              {/* Add dash if feeling or location exists */}
-              {(feeling || entry.location) && <span className="whitespace-nowrap"> – </span>}
-              
-              <div className="flex flex-wrap items-center gap-2">
-                {feeling && (
-                  <div className="inline-flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
-                    {feeling.label.includes(',') ? (
-                      <>
-                        <span>{feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}</span>
-                        <span className="mx-1">while</span>
-                        <span>{feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>feeling {feeling.label}</span>
-                        <span>{feeling.emoji}</span>
-                      </>
-                    )}
-                  </div>
-                )}
-                
-                {entry.location && (
-                  <div className="inline-flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
-                    <span>at {entry.location}</span>
-                    <span>📍</span>
-                  </div>
-                )}
-              </div>
+              {entry.location && (
+                <div className="inline-flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                  <span>at {entry.location}</span>
+                  <span>📍</span>
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Action buttons */}
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: entry.title || "My Diary Entry",
-                    text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
-                    url: window.location.origin + `/entry/${entry.id}`,
-                  }).catch(err => console.log('Error sharing:', err));
-                } else {
-                  navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
-                    .then(() => toast({
-                      title: "Link copied",
-                      description: "Entry link copied to clipboard"
-                    }))
-                    .catch(err => console.error('Could not copy text:', err));
-                }
-              }}
-              className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
-            >
-              <Share className="h-4 w-4"/>
-            </Button>
-            <Link href={`/edit/${entry.id}`}>
-              <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted">
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-              className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
+            </div>
       </CardHeader>
 
       <CardContent className="px-4 pt-0 pb-4">

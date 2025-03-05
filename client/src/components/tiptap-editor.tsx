@@ -318,11 +318,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </PopoverTrigger>
             <PopoverContent className="w-72 p-2">
               <div className="mb-3">
-                <h3 className="text-sm font-medium mb-1">Your current feeling:</h3>
                 <div className="flex gap-2">
                   <Input 
                     id="customEmotion"
-                    placeholder="Enter your feeling"
+                    placeholder="What are you doing today?"
                     className="text-sm"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {

@@ -268,9 +268,8 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </TabsList>
 
           <div className="px-2 mb-4">
-            <label className="block text-sm font-medium mb-1">Your current feeling:</label>
             <Input
-              placeholder="Enter your feeling"
+              placeholder="What are you doing today?"
               className="mb-2"
               id="customFeeling"
               value={customEmotion}

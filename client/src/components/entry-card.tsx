@@ -76,35 +76,37 @@ export default function EntryCard({ entry }: EntryCardProps) {
               {entry.title || "Untitled Entry"}
             </CardTitle>
 
-            {/* Timestamp line */}
-            <div className="text-sm text-muted-foreground">
-              {formatTimeAgo(entry.createdAt)}
+            {/* Combined timestamp, feeling, and location line */}
+            <div className="text-sm text-muted-foreground flex flex-wrap items-center">
+              <span>{formatTimeAgo(entry.createdAt)}</span>
+              
+              {/* Add dash if feeling or location exists */}
+              {(feeling || entry.location) && <span> – </span>}
+              
+              {feeling && (
+                <span className="flex items-center">
+                  {feeling.label.includes(',') ? (
+                    <span>
+                      feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                      while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                    </span>
+                  ) : (
+                    <span>
+                      feeling {feeling.label} {feeling.emoji}
+                    </span>
+                  )}
+                </span>
+              )}
+              
+              {/* Add space between feeling and location if both exist */}
+              {feeling && entry.location && <span> </span>}
+              
+              {entry.location && (
+                <span className="flex items-center">
+                  at {entry.location} 📍
+                </span>
+              )}
             </div>
-
-            {/* Emotions and location line - will wrap if needed */}
-            {(feeling || entry.location) && (
-              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                {feeling && (
-                  <div className="flex items-center">
-                    {feeling.label.includes(',') ? (
-                      <span>
-                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                      </span>
-                    ) : (
-                      <span>
-                        feeling {feeling.label} {feeling.emoji}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {entry.location && (
-                  <div className="flex items-center">
-                    <span>at {entry.location} 📍</span>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Action buttons */}

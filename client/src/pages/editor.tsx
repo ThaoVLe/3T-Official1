@@ -237,8 +237,8 @@ export default function Editor() {
       </div>
 
       {/* Content Area */}
-      <div className="editor-content w-full">
-        <div className="p-4 sm:p-6 w-full max-w-full">
+      <div className="flex-1 w-full overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 w-full max-w-full pb-20">
           <TipTapEditor
             value={form.watch("content")}
             onChange={(value) => form.setValue("content", value)}

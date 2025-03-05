@@ -48,9 +48,3 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
-run = "npm run dev"
-hidden = [".config", "package-lock.json"]
-
-[[ports]]
-localPort = 5000
-externalPort = 80

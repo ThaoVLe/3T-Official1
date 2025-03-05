@@ -1,42 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Smile } from "lucide-react";
 
 const feelings = [
   { emoji: "😊", label: "Happy" },
-  { emoji: "😇", label: "Blessed" },
-  { emoji: "😍", label: "Loved" },
-  { emoji: "😔", label: "Sad" },
-  { emoji: "😋", label: "Lovely" },
-  { emoji: "😃", label: "Thankful" },
-  { emoji: "😄", label: "Excited" },
-  { emoji: "😘", label: "In love" },
-  { emoji: "🤪", label: "Crazy" },
-  { emoji: "😁", label: "Grateful" },
-  { emoji: "😌", label: "Blissful" },
-  { emoji: "🤩", label: "Fantastic" },
-  { emoji: "🙃", label: "Silly" },
-  { emoji: "🎉", label: "Festive" },
-  { emoji: "😀", label: "Wonderful" },
+  { emoji: "😢", label: "Sad" },
+  { emoji: "😡", label: "Angry" },
+  { emoji: "😴", label: "Tired" },
+  { emoji: "😍", label: "In love" },
+  { emoji: "🤔", label: "Thoughtful" },
+  { emoji: "😌", label: "Calm" },
+  { emoji: "🥳", label: "Celebratory" },
   { emoji: "😎", label: "Cool" },
-  { emoji: "😏", label: "Amused" },
-  { emoji: "😴", label: "Relaxed" },
-  { emoji: "😊", label: "Positive" },
-  { emoji: "😌", label: "Chill" },
+  { emoji: "🤗", label: "Grateful" },
+  { emoji: "😬", label: "Nervous" },
+  { emoji: "🤒", label: "Sick" },
+  { emoji: "😲", label: "Surprised" },
+  { emoji: "😋", label: "Hungry" },
+  { emoji: "🥱", label: "Bored" },
+  { emoji: "😭", label: "Crying" },
 ];
 
 const activities = [
-  { emoji: "🏃", label: "Running" },
   { emoji: "🍽️", label: "Eating" },
-  { emoji: "📚", label: "Reading" },
-  { emoji: "💤", label: "Sleeping" },
   { emoji: "🎮", label: "Gaming" },
+  { emoji: "📚", label: "Reading" },
   { emoji: "🎧", label: "Listening" },
-  { emoji: "✈️", label: "Traveling" },
+  { emoji: "🏃‍♂️", label: "Running" },
+  { emoji: "🧘‍♀️", label: "Meditating" },
+  { emoji: "💻", label: "Working" },
   { emoji: "🎬", label: "Watching" },
+  { emoji: "✈️", label: "Traveling" },
 ];
 
 interface FeelingSelectorProps {
@@ -60,12 +57,12 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
 
   const handleSelectEmotion = (feeling: { emoji: string; label: string }) => {
     setSelectedEmotion(feeling);
-    
+
     // If we already have an activity, combine them
     if (selectedActivity) {
       const combined = {
         emoji: `${feeling.emoji} ${selectedActivity.emoji}`,
-        label: `${feeling.label}, ${selectedActivity.label}`,l}`
+        label: `${feeling.label}, ${selectedActivity.label}`
       };
       onSelect(combined);
     } else {
@@ -75,7 +72,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
 
   const handleSelectActivity = (activity: { emoji: string; label: string }) => {
     setSelectedActivity(activity);
-    
+
     // If we already have an emotion, combine them
     if (selectedEmotion) {
       const combined = {
@@ -88,116 +85,33 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     }
   };
 
-  const handleDone = () => {
-    setOpen(false);
-  };
+  // Initialize from selectedFeeling if it has combined emojis
+  useEffect(() => {
+    if (selectedFeeling && selectedFeeling.emoji.includes(" ")) {
+      const [emotionEmoji, activityEmoji] = selectedFeeling.emoji.split(" ");
+      const [emotionLabel, activityLabel] = selectedFeeling.label.split(", ");
 
-  // Improved keyboard hiding for mobile
-  const hideKeyboard = () => {
-    // Force any active element to lose focus
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
+      const emotion = feelings.find(f => f.emoji === emotionEmoji);
+      const activity = activities.find(a => a.emoji === activityEmoji);
+
+      if (emotion) setSelectedEmotion(emotion);
+      if (activity) setSelectedActivity(activity);
+    } else if (selectedFeeling) {
+      const emotion = feelings.find(f => f.emoji === selectedFeeling.emoji);
+      const activity = activities.find(a => a.emoji === selectedFeeling.emoji);
+
+      if (emotion) setSelectedEmotion(emotion);
+      if (activity) setSelectedActivity(activity);
     }
-
-    // iOS specific fix - create and remove an input to force keyboard dismissal
-    const temporaryInput = document.createElement('input');
-    temporaryInput.setAttribute('type', 'text');
-    temporaryInput.style.position = 'absolute';
-    temporaryInput.style.opacity = '0';
-    temporaryInput.style.height = '0';
-    temporaryInput.style.fontSize = '16px'; // iOS won't zoom in on inputs with font size >= 16px
-
-    document.body.appendChild(temporaryInput);
-
-    // Adding timeout to ensure focus happens after DOM update
-    setTimeout(() => {
-      temporaryInput.focus();
-      setTimeout(() => {
-        temporaryInput.blur();
-        document.body.removeChild(temporaryInput);
-      }, 50);
-    }, 50);
-
-    // Return a promise to allow awaiting keyboard dismissal
-    return new Promise(resolve => setTimeout(resolve, 100));
-  };
-
-  // Handle sheet open state change
-  const handleOpenChange = (newOpen: boolean) => {
-    if (newOpen) {
-      // For programmatic sheet opening, we'll handle keyboard dismissal
-      // in the button click handler instead for more direct control
-      setOpen(true);
-      
-      // Additional safety measure: ensure any active text input loses focus
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
-    } else {
-      setOpen(false);
-    }
-  };
+  }, [selectedFeeling]);
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button 
-          variant="ghost" 
-          className="h-10 px-3 rounded-full flex items-center"
-          aria-label="Select feeling"
-          onClick={(e) => {
-            e.preventDefault();
-            
-            // Aggressive keyboard dismissal on button click
-            if (document.activeElement instanceof HTMLElement) {
-              document.activeElement.blur();
-            }
-            
-            // Create an invisible input field, focus and blur it to force keyboard dismissal
-            const tempInput = document.createElement('input');
-            tempInput.style.position = 'fixed';
-            tempInput.style.opacity = '0';
-            tempInput.style.top = '-1000px';
-            tempInput.style.left = '0';
-            document.body.appendChild(tempInput);
-            
-            // Focus and immediately blur with a small delay
-            tempInput.focus();
-            
-            // On iOS we need to wait before removing the element
-            setTimeout(() => {
-              tempInput.blur();
-              document.body.removeChild(tempInput);
-              
-              // Now open the sheet after ensuring keyboard is dismissed
-              setTimeout(() => {
-                setOpen(true);
-                
-                // Set initial states from current selection
-                if (selectedFeeling) {
-                  // Check if it's a combined selection
-                  if (selectedFeeling.label.includes(', ')) {
-                    const parts = selectedFeeling.label.split(', ');
-                    const emojis = selectedFeeling.emoji.split(' ');
-                    
-                    // Find the matching feelings and activities
-                    const emotion = feelings.find(f => f.label === parts[0]) || null;
-                    const activity = activities.find(a => a.label === parts[1]) || null;
-                    
-                    setSelectedEmotion(emotion);
-                    setSelectedActivity(activity);
-                  } else {
-                    // Check if it's an emotion or activity
-                    const emotion = feelings.find(f => f.label === selectedFeeling.label);
-                    const activity = activities.find(a => a.label === selectedFeeling.label);
-                    
-                    setSelectedEmotion(emotion || null);
-                    setSelectedActivity(activity || null);
-                  }
-                }
-              }, 50);
-            }, 50);
-          }}
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-9 px-2 gap-1 text-muted-foreground font-normal w-full justify-start"
         >
           {selectedFeeling ? (
             <div className="flex items-center gap-1.5">
@@ -216,19 +130,66 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl">😊</span>
-              <span className="text-sm font-medium">Feeling</span>
-            </div>
+            <>
+              <Smile className="h-4 w-4 mr-1" />
+              <span>How are you feeling today?</span>
+            </>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[100dvh] pt-6" onOpenAutoFocus={(e) => {
-        // Prevent default auto focus behavior to avoid keyboard popup
-        e.preventDefault();
-      }}>
-        <SheetHeader className="mb-4">
-          <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>
+      <SheetContent side="bottom" className="h-[90vh] sm:h-[70vh] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>How are you feeling?</SheetTitle>
+        </SheetHeader>
+
+        <div className="mt-4">
+          <Input
+            type="text"
+            placeholder="Search feelings..."
+            className="mb-4"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+
+          <Tabs defaultValue="emotion">
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="emotion">Emotion</TabsTrigger>
+              <TabsTrigger value="activity">Activity</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="emotion">
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                {filteredFeelings.map((feeling) => (
+                  <Button
+                    key={feeling.emoji}
+                    variant={selectedEmotion?.emoji === feeling.emoji ? "default" : "outline"}
+                    className="h-16 flex flex-col items-center justify-center gap-1 p-2"
+                    onClick={() => handleSelectEmotion(feeling)}
+                  >
+                    <span className="text-xl">{feeling.emoji}</span>
+                    <span className="text-xs">{feeling.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="activity">
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                {filteredActivities.map((activity) => (
+                  <Button
+                    key={activity.emoji}
+                    variant={selectedActivity?.emoji === activity.emoji ? "default" : "outline"}
+                    className="h-16 flex flex-col items-center justify-center gap-1 p-2"
+                    onClick={() => handleSelectActivity(activity)}
+                  >
+                    <span className="text-xl">{activity.emoji}</span>
+                    <span className="text-xs">{activity.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+
           <div className="flex justify-center mt-2">
             {selectedEmotion && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
@@ -239,72 +200,21 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             {selectedActivity && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
                 <span className="text-xs">{selectedActivity.label}</span>
-                <span>{selectedActivity.emoji}</span>.label}</span>
+                <span>{selectedActivity.emoji}</span>
               </div>
             )}
           </div>
-        </SheetHeader>
 
-        <Tabs defaultValue="feelings" className="h-[calc(100%-60px)] flex flex-col">
-          <TabsList className="w-full grid grid-cols-2 mb-4">
-            <TabsTrigger value="feelings">Feelings</TabsTrigger>
-            <TabsTrigger value="activities">Activities</TabsTrigger>
-          </TabsList>
-
-          <div className="px-2 mb-4">
-            <Input
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-2"
-              onFocus={(e) => {
-                // If we need to allow search but want to prevent keyboard initially
-                // we can add specific handling here if needed
+          <div className="mt-4 flex justify-end gap-2">
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                setOpen(false);
               }}
-            />
+            >
+              Done
+            </Button>
           </div>
-
-          <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
-            <div className="grid grid-cols-2 gap-1">
-              {filteredFeelings.map((feeling) => (
-                <Button
-                  key={feeling.label}
-                  variant={selectedEmotion?.label === feeling.label ? "default" : "ghost"}
-                  className="flex items-center justify-start gap-2 p-3 h-14"
-                  onClick={() => handleSelectEmotion(feeling)}
-                >
-                  <span className="text-xl">{feeling.emoji}</span>
-                  <span className="text-sm">{feeling.label}</span>
-                </Button>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
-            <div className="grid grid-cols-2 gap-1">
-              {filteredActivities.map((activity) => (
-                <Button
-                  key={activity.label}
-                  variant={selectedActivity?.label === activity.label ? "default" : "ghost"}
-                  className="flex items-center justify-start gap-2 p-3 h-14"
-                  onClick={() => handleSelectActivity(activity)}
-                >
-                  <span className="text-xl">{activity.emoji}</span>
-                  <span className="text-sm">{activity.label}</span>
-                </Button>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center">
-          <Button 
-            onClick={handleDone} 
-            className="w-1/2 bg-primary text-primary-foreground"
-            disabled={!selectedEmotion && !selectedActivity}
-          >
-            Done
-          </Button>
         </div>
       </SheetContent>
     </Sheet>

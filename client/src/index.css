@@ -35,10 +35,18 @@ html, body, #root {
   /* Auto-expanding editor styles */
   .tiptap-container .ProseMirror {
     transition: min-height 0.2s ease;
+    height: auto;
+    overflow-y: hidden;
   }
   
   .ProseMirror {
     @apply min-h-[200px];
+  }
+  
+  /* Ensure editor container grows properly */
+  .tiptap-container {
+    transition: height 0.2s ease;
+    overflow: hidden;
   }
   
   .tiptap-container {

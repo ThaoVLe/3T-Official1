@@ -91,24 +91,44 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   };
 
   const editorRef = useRef<HTMLDivElement>(null);
+  const contentHeight = useRef<number>(200); // Initial minimum height
 
   useEffect(() => {
-    const handleResize = () => {
-      if (editorRef.current) {
-        const lines = editorRef.current.querySelectorAll('p, h1, h2');
-        if (lines.length > 2 && lines.length % 3 === 2){
-          const currentHeight = editorRef.current.offsetHeight;
-          editorRef.current.style.height = `${currentHeight + 30}px`; //adjust 30px as needed.
-        }
-      }
+    if (!editor || !editorRef.current) return;
+    
+    // Function to adjust editor height based on content
+    const adjustHeight = () => {
+      if (!editorRef.current) return;
+      
+      // Reset height first to get proper scrollHeight
+      editorRef.current.style.height = 'auto';
+      
+      // Get the actual content height
+      const scrollHeight = editorRef.current.querySelector('.ProseMirror')?.scrollHeight || 200;
+      
+      // Only grow, never shrink below the minimum or current height
+      contentHeight.current = Math.max(contentHeight.current, scrollHeight);
+      
+      // Set the height
+      editorRef.current.style.height = `${contentHeight.current}px`;
     };
-
-    if (editorRef.current) {
-        const observer = new MutationObserver(handleResize);
-        observer.observe(editorRef.current, { childList: true, subtree: true });
-        return () => observer.disconnect();
+    
+    // Setup mutation observer for content changes
+    const observer = new MutationObserver(adjustHeight);
+    
+    const proseMirror = editorRef.current.querySelector('.ProseMirror');
+    if (proseMirror) {
+      observer.observe(proseMirror, { 
+        childList: true, 
+        subtree: true,
+        characterData: true
+      });
+      
+      // Initial adjustment
+      adjustHeight();
     }
-
+    
+    return () => observer.disconnect();
   }, [editor]);
 
 

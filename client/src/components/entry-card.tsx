@@ -144,15 +144,43 @@ export default function EntryCard({ entry }: EntryCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div
-          className="prose prose-sm dark:prose-invert max-w-none line-clamp-3 mb-4"
-          dangerouslySetInnerHTML={{ __html: entry.content }}
-        />
-        {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
-            {entry.mediaUrls.map((url, i) => {
-              const isVideo = url.match(/\.(mp4|webm)$/i);
-              const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+        {/* State to track if content is expanded */}
+        {(() => {
+          const [isExpanded, setIsExpanded] = React.useState(false);
+          
+          return (
+            <>
+              <div
+                className={`prose prose-sm dark:prose-invert max-w-none ${isExpanded ? '' : 'line-clamp-3'} mb-2`}
+                dangerouslySetInnerHTML={{ __html: entry.content }}
+              />
+              
+              {/* Show more/less button */}
+              <button 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-primary text-xs font-medium hover:underline mb-4"
+              >
+                {isExpanded ? 'Show less' : 'Show more'}
+              </button>
+              
+              {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+                  {/* Show only first 3 media items when collapsed */}
+                  {(isExpanded ? entry.mediaUrls : entry.mediaUrls.slice(0, 3)).map((url, i) => {
+                    const isVideo = url.match(/\.(mp4|webm)$/i);
+                    const isAudio = url.match(/\.(mp3|wav|ogg)$/
+                  ))}
+                  
+                  {/* Show indicator for additional media when collapsed */}
+                  {!isExpanded && entry.mediaUrls.length > 3 && (
+                    <div className="flex items-center justify-center bg-muted rounded-md aspect-square">
+                      <span className="text-muted-foreground text-sm font-medium">
+                        +{entry.mediaUrls.length - 3} more
+                      </span>
+                    </div>
+            </>
+          );
+        })()}i);
 
               if (isVideo) {
                 return (

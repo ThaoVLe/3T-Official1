@@ -98,10 +98,14 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
         emoji: `${feeling.emoji} ${selectedActivity.emoji}`,
         label: `${feeling.label}, ${selectedActivity.label}`,
       };
+
       onSelect(combined);
     } else {
       onSelect(feeling);
     }
+
+    // Auto-close after selection
+    setTimeout(() => setOpen(false), 300);
   };
 
   const handleSelectActivity = (activity: { emoji: string; label: string }) => {
@@ -117,6 +121,9 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     } else {
       onSelect(activity);
     }
+
+    // Auto-close after selection
+    setTimeout(() => setOpen(false), 300);
   };
 
   const handleDone = () => {
@@ -136,7 +143,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     setOpen(false);
   };
 
-  // Improved keyboard hiding for mobile
+
   const hideKeyboard = () => {
     // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
@@ -332,15 +339,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </TabsContent>
         </Tabs>
 
-        <div className="sticky bottom-4 left-0 right-0 flex justify-center pt-4 mt-4 bg-background">
-          <Button
-            onClick={handleDone}
-            className="w-1/2 bg-primary text-primary-foreground py-2 text-base font-medium"
-            disabled={!selectedEmotion && !selectedActivity && !customEmotion && !customActivity}
-          >
-            Done
-          </Button>
-        </div>
+
       </SheetContent>
     </Sheet>
   );

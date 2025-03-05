@@ -253,21 +253,83 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </TabsList>
 
           <div className="px-2 mb-4">
-            <Input
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-2"
-              onFocus={(e) => {
-                // If we need to allow search but want to prevent keyboard initially
-                // we can add specific handling here if needed
-              }}
-            />
+            <label className="block text-sm font-medium mb-1">Your current feeling:</label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter your feeling"
+                className="mb-2"
+                id="customFeelingInput"
+              />
+              <Button 
+                variant="outline" 
+                className="shrink-0 mb-2"
+                onClick={() => {
+                  const input = document.getElementById('customFeelingInput') as HTMLInputElement;
+                  const value = input.value.trim();
+                  if (value) {
+                    // Flower emojis to choose from randomly
+                    const flowerEmojis = ["🌸", "🌺", "🌹", "🌷", "🌻", "🌼", "💐", "🌿", "🍀"];
+                    const randomFlower = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
+                    
+                    // Create custom feeling object
+                    const customFeeling = {
+                      emoji: randomFlower,
+                      label: value
+                    };
+                    
+                    // Save to localStorage for future use
+                    const savedCustomFeelings = JSON.parse(localStorage.getItem('customFeelings') || '[]');
+                    if (!savedCustomFeelings.some((f: any) => f.label === value)) {
+                      savedCustomFeelings.push(customFeeling);
+                      localStorage.setItem('customFeelings', JSON.stringify(savedCustomFeelings));
+                    }
+                    
+                    // Select the custom feeling
+                    onSelect(customFeeling);
+                    setOpen(false);
+                    input.value = '';
+                  }
+                }}
+              >
+                Save
+              </Button>
+            </div>
           </div>
 
           <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
+            {/* Custom Feelings Section */}
+            {(() => {
+              // Get saved custom feelings
+              const savedCustomFeelings = JSON.parse(localStorage.getItem('customFeelings') || '[]');
+              return savedCustomFeelings.length > 0 ? (
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium px-2 mb-2">Your Saved Feelings</h3>
+                  <div className="grid grid-cols-3 gap-1 mb-4">
+                    {savedCustomFeelings.map((feeling: any) => (
+                      <Button
+                        key={`custom-${feeling.label}`}
+                        variant={selectedEmotion?.label === feeling.label ? "default" : "ghost"}
+                        className="flex items-center justify-start gap-2 p-3 h-14"
+                        onClick={() => {
+                          onSelect(feeling);
+                          setSelectedEmotion(feeling);
+                          setOpen(false);
+                        }}
+                      >
+                        <span className="text-xl">{feeling.emoji}</span>
+                        <span className="text-sm">{feeling.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-200 my-3"></div>
+                </div>
+              ) : null;
+            })()}
+            
+            {/* Default Feelings */}
+            <h3 className="text-sm font-medium px-2 mb-2">Suggested Feelings</h3>
             <div className="grid grid-cols-3 gap-1">
-              {filteredFeelings.map((feeling) => (
+              {feelingsData.map((feeling) => (
                 <Button
                   key={feeling.label}
                   variant={selectedEmotion?.label === feeling.label ? "default" : "ghost"}

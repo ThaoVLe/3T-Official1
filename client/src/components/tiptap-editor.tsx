@@ -314,11 +314,11 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </PopoverTrigger>
             <PopoverContent className="w-72 p-2">
               <div className="mb-3">
-                <h3 className="text-sm font-medium mb-1">Custom Emotion</h3>
+                <h3 className="text-sm font-medium mb-1">Your current feeling:</h3>
                 <div className="flex gap-2">
                   <Input 
                     id="customEmotion"
-                    placeholder="Add custom emotion"
+                    placeholder="Enter your feeling"
                     className="text-sm"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -328,7 +328,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                           // Insert the custom emotion with dark red color
                           editor.chain().focus().setColor('#880000').insertContent(value).setColor('default').run();
 
-                          // Save to localStorage
+                          // Save to localStorage (keeping both for backward compatibility)
                           const savedEmotions = JSON.parse(localStorage.getItem('customEmotions') || '[]');
                           if (!savedEmotions.includes(value)) {
                             savedEmotions.push(value);
@@ -364,24 +364,30 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
                 </div>
               </div>
 
-              {/* Saved custom emotions */}
-              <div className="mb-3">
-                <h3 className="text-sm font-medium mb-1">Saved Emotions</h3>
-                <div className="grid grid-cols-3 gap-1 max-h-20 overflow-y-auto">
-                  {Array.from(new Set(JSON.parse(localStorage.getItem('customEmotions') || '[]'))).map((text: string) => (
-                    <Button
-                      key={text}
-                      variant="ghost"
-                      className="h-8 text-xs text-red-900 overflow-hidden text-ellipsis"
-                      onClick={() => {
-                        editor.chain().focus().setColor('#880000').insertContent(text).setColor('default').run();
-                      }}
-                    >
-                      {text}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              {/* Display saved custom emotions from feelings */}
+              {(() => {
+                const savedCustomFeelings = JSON.parse(localStorage.getItem('customFeelings') || '[]');
+                return savedCustomFeelings.length > 0 ? (
+                  <div className="mb-3">
+                    <h3 className="text-sm font-medium mb-1">Your Saved Feelings</h3>
+                    <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                      {savedCustomFeelings.map((feeling: any, index: number) => (
+                        <Button
+                          key={`editor-feeling-${index}`}
+                          variant="outline"
+                          size="sm"
+                          className="text-xs py-1 px-2"
+                          onClick={() => {
+                            editor.chain().focus().setColor('#880000').insertContent(feeling.label).setColor('default').run();
+                          }}
+                        >
+                          {feeling.emoji} {feeling.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
 
               {/* Standard emoji categories */}
               {Object.entries(emojiCategories).map(([category, emojis]) => (

@@ -1,91 +1,73 @@
+import React from 'react';
+import { Link } from 'wouter';
 
-import * as React from "react";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { BottomNavigation } from "./bottom-navigation";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarProvider,
-} from "@/components/ui/sidebar";
-
-interface LayoutProps {
+interface SidebarProps {
   children: React.ReactNode;
 }
 
-export function Layout({ children }: LayoutProps) {
-  // Check if the screen is small (mobile)
-  const [isMobile, setIsMobile] = React.useState(false);
-  
-  React.useEffect(() => {
-    // Check initial size
-    setIsMobile(window.innerWidth < 768);
-    
-    // Add resize listener
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+const Sidebar = ({ children }: SidebarProps) => {
+  return <div className="flex h-screen">{children}</div>;
+};
 
-  return isMobile ? (
-    // Mobile layout with bottom navigation
-    <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 pb-16">
-        {children}
-      </main>
-      <BottomNavigation />
-    </div>
-  ) : (
-    // Desktop layout with sidebar
-    <SidebarProvider defaultOpen={true}>
-      <div className="grid lg:grid-cols-[280px_1fr] min-h-screen">
-        {/* Sidebar */}
-        <Sidebar className="border-r">
-          <SidebarHeader className="border-b px-2 py-4">
-            <Link href="/">
-              <h1 className="font-semibold text-xl cursor-pointer bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                My Diary
-              </h1>
-            </Link>
-          </SidebarHeader>
-          
-          <SidebarContent>
-            <div className="space-y-4 py-4">
-              <div className="px-3 py-2">
-                <Link href="/new">
-                  <Button className="w-full justify-start bg-primary hover:bg-primary/90">
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Entry
-                  </Button>
-                </Link>
-              </div>
-              <div className="px-3 py-2">
-                <form className="w-full">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search entries..."
-                      className="pl-8"
-                    />
-                  </div>
-                </form>
-              </div>
-            </div>
-          </SidebarContent>
-        </Sidebar>
-
-        {/* Main content */}
-        <main className="p-4 pt-0">
-          {children}
-        </main>
-      </div>
-    </SidebarProvider>
-  );
+interface SidebarContentProps {
+  children: React.ReactNode;
 }
+
+const SidebarContent = ({ children }: SidebarContentProps) => {
+  return <div className="w-64 border-r bg-gray-50 p-4">{children}</div>;
+};
+
+interface MainContentProps {
+  children: React.ReactNode;
+}
+
+const MainContent = ({ children }: MainContentProps) => {
+  return <div className="flex-1 p-6 overflow-auto">{children}</div>;
+};
+
+const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <Sidebar>
+      <SidebarContent>
+        <h1 className="text-xl font-bold mb-4">My Diary</h1>
+        <nav className="mb-6">
+          <ul className="space-y-2">
+            <li>
+              <Link href="/">
+                <a className="block px-3 py-2 rounded hover:bg-gray-200">
+                  All Entries
+                </a>
+              </Link>
+            </li>
+            <li>
+              <Link href="/new">
+                <a className="block px-3 py-2 rounded hover:bg-gray-200">
+                  New Entry
+                </a>
+              </Link>
+            </li>
+          </ul>
+        </nav>
+        <div className="border-t pt-4">
+          <div className="mb-4">
+            <div className="text-sm font-medium mb-1">Search entries</div>
+            <div>
+              <form>
+                <div className="flex">
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="border px-3 py-1 rounded-l flex-1"
+                  />
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </SidebarContent>
+      <MainContent>{children}</MainContent>
+    </Sidebar>
+  );
+};
+
+export default Layout;

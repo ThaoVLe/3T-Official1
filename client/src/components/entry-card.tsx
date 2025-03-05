@@ -1,171 +1,156 @@
-import React, { useState } from "react";
-import { format } from "date-fns";
-import { Link } from "wouter";
+
+import { Edit2, Trash2, Share } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useState } from 'react';
+import { format } from "date-fns";
+
+// Create API client
+import axios from "axios";
+
+const API_BASE_URL = "/api";
+
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const apiRequest = {
+  get: async (url: string) => {
+    const response = await apiClient.get(url);
+    return response.data;
+  },
+  post: async (url: string, data: any) => {
+    const response = await apiClient.post(url, data);
+    return response.data;
+  },
+  put: async (url: string, data: any) => {
+    const response = await apiClient.put(url, data);
+    return response.data;
+  },
+  delete: async (url: string) => {
+    const response = await apiClient.delete(url);
+    return response.data;
+  },
+};
+
+// Create query client
+import { QueryClient } from "@tanstack/react-query";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
+// Create toast component
+export const useToast = () => {
+  return {
+    toast: (props: any) => {
+      console.log("Toast:", props);
+    }
+  };
+};
 
 interface EntryCardProps {
   entry: DiaryEntry;
+  onEdit?: (entry: DiaryEntry) => void;
+  onDelete?: (id: number) => void;
 }
 
-export function EntryCard({ entry }: EntryCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export const EntryCard = ({ entry, onEdit, onDelete }: EntryCardProps) => {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { toast } = useToast();
-
-  // Function to handle delete
-  const { mutate: deleteEntry } = useMutation({
-    mutationFn: async () => {
-      const response = await fetch(`/api/entries/${entry.id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to delete entry");
-      return response.json();
+  
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest.delete(`/entries/${id}`);
+      return id;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries"] });
+      queryClient.invalidateQueries({ queryKey: ['entries'] });
       toast({
         title: "Entry deleted",
-        description: "Your diary entry has been deleted",
+        description: "Your entry has been deleted successfully."
       });
+      if (onDelete) {
+        onDelete(entry.id);
+      }
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to delete entry",
-        variant: "destructive",
+        description: "Could not delete entry. Please try again.",
+        variant: "destructive"
       });
-    },
+    }
   });
 
-  // Function to truncate text
-  const truncateText = (text: string, maxLines: number) => {
-    const lines = text.split('\n');
-    if (lines.length <= maxLines) return text;
-    return lines.slice(0, maxLines).join('\n') + '...';
+  const handleDelete = () => {
+    if (confirmDelete) {
+      deleteMutation.mutate(entry.id);
+      setConfirmDelete(false);
+    } else {
+      setConfirmDelete(true);
+    }
   };
 
-  // Extract the first 3 lines for preview
-  const previewText = !isExpanded && entry.content 
-    ? truncateText(entry.content, 3) 
-    : entry.content;
-
   return (
-    <Card className="mb-4">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-lg">
-              {format(new Date(entry.createdAt), "MMMM d, yyyy")}
-            </CardTitle>
-            <div className="text-sm text-muted-foreground flex">
-              <span>{format(new Date(entry.createdAt), "h:mm a")}</span>
-              {entry.location && (
-                <>
-                  <span>-</span>
-                  <div className="inline-flex items-center gap-1 ml-1">
-                    <span className="ml-1">at</span>
-                    <span className="ml-1">{entry.location}</span>
-                    <span className="ml-1">📍</span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="flex space-x-2">
-            <Button size="sm" variant="ghost" asChild>
-              <Link href={`/editor/${entry.id}`}>Edit</Link>
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-destructive"
-              onClick={() => deleteEntry()}
-            >
-              Delete
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
+    <div className="border rounded-lg p-4 mb-4 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-2">
         <div>
-          {/* Content with "See more" functionality */}
-          <div className="whitespace-pre-wrap mb-4">
-            {previewText}
-            {entry.content && entry.content.split('\n').length > 3 && !isExpanded && (
-              <button
-                onClick={() => setIsExpanded(true)}
-                className="text-primary font-medium block mt-2"
-              >
-                See more
-              </button>
+          <div className="flex items-center gap-2">
+            {entry.feeling && (
+              <span title={entry.feeling.label} className="text-2xl">
+                {entry.feeling.emoji}
+              </span>
             )}
-            {isExpanded && (
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="text-primary font-medium block mt-2"
-              >
-                See less
-              </button>
-            )}
+            <h3 className="text-lg font-medium">
+              {format(new Date(entry.createdAt), "PPP")}
+            </h3>
           </div>
-
-          {/* Media display (Facebook-style) */}
-          {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-            <div className="media-container mt-4">
-              {/* Show only first 3 media items when collapsed */}
-              {(isExpanded ? entry.mediaUrls : entry.mediaUrls.slice(0, 3)).map((url, i) => {
-                const isVideo = url.match(/\.(mp4|webm)$/i);
-                const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
-
-                if (isVideo) {
-                  return (
-                    <video
-                      key={i}
-                      src={url}
-                      controls
-                      className="rounded-md max-h-96 mb-2 w-full object-cover"
-                    />
-                  );
-                } else if (isAudio) {
-                  return (
-                    <audio
-                      key={i}
-                      src={url}
-                      controls
-                      className="rounded-md mb-2 w-full"
-                    />
-                  );
-                } else {
-                  return (
-                    <img
-                      key={i}
-                      src={url}
-                      alt={`Media ${i + 1}`}
-                      className="rounded-md max-h-96 mb-2 w-full object-cover"
-                    />
-                  );
-                }
-              })}
-
-              {/* Show indicator for additional media when collapsed */}
-              {!isExpanded && entry.mediaUrls.length > 3 && (
-                <div 
-                  className="relative rounded-md bg-muted/50 flex items-center justify-center h-48 cursor-pointer"
-                  onClick={() => setIsExpanded(true)}
-                >
-                  <span className="text-lg font-medium">
-                    +{entry.mediaUrls.length - 3} more
-                  </span>
-                </div>
-              )}
-            </div>
+          {entry.location && (
+            <p className="text-sm text-gray-500 mt-1">{entry.location}</p>
           )}
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex space-x-2">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(entry)}
+              className="p-1 rounded hover:bg-gray-100"
+              aria-label="Edit entry"
+            >
+              <Edit2 className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={handleDelete}
+            className={`p-1 rounded ${
+              confirmDelete ? "bg-red-100 text-red-600" : "hover:bg-gray-100"
+            }`}
+            aria-label="Delete entry"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <button
+            className="p-1 rounded hover:bg-gray-100"
+            aria-label="Share entry"
+          >
+            <Share className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      {entry.content && <p className="mt-2">{entry.content}</p>}
+      {confirmDelete && (
+        <div className="mt-2 text-sm text-red-600">
+          Click again to confirm deletion
+        </div>
+      )}
+    </div>
   );
-}
+};

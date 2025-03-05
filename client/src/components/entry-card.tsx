@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { Link } from "wouter";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -116,6 +116,7 @@ export function EntryCard({ entry }: EntryCardProps) {
           {/* Media display (Facebook-style) */}
           {entry.mediaUrls && entry.mediaUrls.length > 0 && (
             <div className="media-container mt-4">
+              {/* Show only first 3 media items when collapsed */}
               {(isExpanded ? entry.mediaUrls : entry.mediaUrls.slice(0, 3)).map((url, i) => {
                 const isVideo = url.match(/\.(mp4|webm)$/i);
                 const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
@@ -150,6 +151,7 @@ export function EntryCard({ entry }: EntryCardProps) {
                 }
               })}
 
+              {/* Show indicator for additional media when collapsed */}
               {!isExpanded && entry.mediaUrls.length > 3 && (
                 <div 
                   className="relative rounded-md bg-muted/50 flex items-center justify-center h-48 cursor-pointer"

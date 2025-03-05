@@ -57,7 +57,7 @@ app.use((req, res, next) => {
   }
 
   // Try to serve on port 5000 first, then fall back to other ports
-  const tryListen = (port = 5000, maxAttempts = 3) => {
+  const tryListen = (port = 5000, maxAttempts = 10) => {
     const tryPort = (attempt = 0) => {
       if (attempt >= maxAttempts) {
         log(`Failed to bind to any port after ${maxAttempts} attempts`);

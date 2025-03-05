@@ -6,6 +6,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { X } from "lucide-react";
 import { emotions, activities } from "../data/feelings";
 
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { emotions, activities } from "@/data/feelings";
+
 interface FeelingSelectorProps {
   onSelect: (feeling: { emoji: string; label: string }) => void;
   selectedFeeling: { emoji: string; label: string } | null;
@@ -163,7 +170,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
         e.preventDefault();
       }}>
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>
+          <SheetTitle className="text-center text-xl">How are you feeling today?</SheetTitle>le>
           <div className="flex justify-center mt-2">
             {selectedEmotion && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
@@ -214,6 +221,21 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               ))}
             </div>
           </TabsContent>
+          <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
+            <div className="grid grid-cols-2 gap-1">
+              {filteredActivities.map((activity) => (
+                <Button
+                  key={activity.label}
+                  variant={selectedActivity?.label === activity.label ? "default" : "ghost"}
+                  className="flex items-center justify-start gap-2 p-3 h-14"
+                  onClick={() => handleSelectActivity(activity)}
+                >
+                  <span className="text-xl">{activity.emoji}</span>
+                  <span className="text-sm">{activity.label}</span>
+                </Button>
+              ))}
+            </div>
+          </TabsContent>nt>
 
           <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
             <div className="grid grid-cols-2 gap-1">

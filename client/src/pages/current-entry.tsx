@@ -1,4 +1,3 @@
-
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import { format } from "date-fns";
 
 export default function CurrentEntry() {
   const { id } = useParams();
-  
+
   // Fetch the specific entry
   const { data: entry, isLoading } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -26,7 +25,7 @@ export default function CurrentEntry() {
     } else {
       document.title = "Entry | My Diary";
     }
-    
+
     return () => {
       document.title = "My Diary";
     };
@@ -85,7 +84,7 @@ export default function CurrentEntry() {
 
   // Format the date in Facebook style
   const formattedDate = format(new Date(entry.createdAt), "MMMM d, yyyy 'at' h:mm a");
-  
+
   // Get feeling from entry and ensure it's properly typed
   const feeling = entry.feeling ? {
     emoji: entry.feeling.emoji || "",
@@ -100,7 +99,7 @@ export default function CurrentEntry() {
           Back to Entries
         </Button>
       </Link>
-      
+
       <Card className="mb-8 overflow-hidden">
         {/* Header section */}
         <div className="p-4 border-b">
@@ -108,22 +107,22 @@ export default function CurrentEntry() {
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
               {entry.title ? entry.title[0].toUpperCase() : "D"}
             </div>
-            
+
             <div className="ml-3 flex-1">
               <div className="flex flex-col">
                 <h2 className="font-semibold text-lg">
                   {entry.title || "Untitled Entry"}
                 </h2>
-                
+
                 <div className="flex items-center text-sm text-muted-foreground">
                   <span>{formattedDate}</span>
-                  
+
                   {feeling && (
                     <span className="ml-1">
                       {" · "}feeling {feeling.label} {feeling.emoji}
                     </span>
                   )}
-                  
+
                   {entry.location && (
                     <span className="ml-1">
                       {" · "}at {entry.location} 📍
@@ -134,7 +133,7 @@ export default function CurrentEntry() {
             </div>
           </div>
         </div>
-        
+
         {/* Content section */}
         <div className="p-4">
           <div 
@@ -142,7 +141,7 @@ export default function CurrentEntry() {
             dangerouslySetInnerHTML={{ __html: entry.content }}
           />
         </div>
-        
+
         {/* Media section */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
           <div className={`
@@ -155,7 +154,7 @@ export default function CurrentEntry() {
             {entry.mediaUrls.map((url, index) => {
               const isVideo = url.match(/\.(mp4|webm|mov|MOV)$/i);
               const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
-              
+
               if (isVideo) {
                 return (
                   <div key={index} className="relative w-full h-full aspect-video">
@@ -186,7 +185,7 @@ export default function CurrentEntry() {
             })}
           </div>
         )}
-        
+
         {/* Facebook-style action buttons */}
         <div className="p-2 border-t">
           <div className="flex justify-between">

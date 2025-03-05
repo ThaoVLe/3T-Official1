@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, Share } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/query";
+import { apiRequest } from "@/lib/axios";
+import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { useState } from 'react';
 

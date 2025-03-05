@@ -64,13 +64,17 @@ app.use((req, res, next) => {
         process.exit(1);
         return;
       }
-      
+
       const currentPort = port + attempt;
       server.listen({
         port: currentPort,
         host: "0.0.0.0",
       }, () => {
         log(`Server started successfully on port ${currentPort}`);
+        console.log(`===================================`);
+        console.log(`Server is accessible at: https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
+        console.log(`Main URL (no port needed): https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
+        console.log(`===================================`);
       }).on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
           log(`Port ${currentPort} is busy, trying next port...`);
@@ -81,9 +85,9 @@ app.use((req, res, next) => {
         }
       });
     };
-    
+
     tryPort();
   };
-  
+
   tryListen();
 })();

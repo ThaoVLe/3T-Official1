@@ -76,7 +76,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
                     <>
                       <span className="ml-1">{feeling.label.split(',')[0]}</span>
                       <span className="ml-1">{feeling.emoji.split(' ')[0]}</span>
-                      <span>,</span>
+                      <span> while</span>
                       <span className="ml-1">{feeling.label.split(',')[1].trim()}</span>
                       <span className="ml-1">{feeling.emoji.split(' ')[1]}</span>
                     </>

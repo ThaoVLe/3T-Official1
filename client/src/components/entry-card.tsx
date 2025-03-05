@@ -168,8 +168,9 @@ export default function EntryCard({ entry }: EntryCardProps) {
                   {/* Show only first 3 media items when collapsed */}
                   {(isExpanded ? entry.mediaUrls : entry.mediaUrls.slice(0, 3)).map((url, i) => {
                     const isVideo = url.match(/\.(mp4|webm)$/i);
-                    const isAudio = url.match(/\.(mp3|wav|ogg)$/
-                  ))}
+                    const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+                    
+                    return (
                   
                   {/* Show indicator for additional media when collapsed */}
                   {!isExpanded && entry.mediaUrls.length > 3 && (
@@ -178,12 +179,20 @@ export default function EntryCard({ entry }: EntryCardProps) {
                         +{entry.mediaUrls.length - 3} more
                       </span>
                     </div>
-            </>
-          );
-        })()}i);
+                  )}
+                </div>
+              </>
+            );
+          })()}
+          
+          {entry.mediaUrls && entry.mediaUrls.length > 0 && !(() => { return true; })() && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+              {entry.mediaUrls.map((url, i) => {
+                const isVideo = url.match(/\.(mp4|webm)$/i);
+                const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
 
-              if (isVideo) {
-                return (
+                if (isVideo) {
+                  return (
                   <video
                     key={i}
                     src={url}

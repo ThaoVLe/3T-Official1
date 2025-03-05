@@ -344,6 +344,50 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           </TabsContent>
 
           <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1">
+            <div className="px-2 mb-4">
+              <label className="block text-sm font-medium mb-1">What are you doing today?</label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter your activity"
+                  className="mb-2"
+                  id="customActivityInput"
+                />
+                <Button 
+                  variant="outline" 
+                  className="shrink-0 mb-2"
+                  onClick={() => {
+                    const input = document.getElementById('customActivityInput') as HTMLInputElement;
+                    const value = input.value.trim();
+                    if (value) {
+                      // Animal emojis to choose from randomly
+                      const animalEmojis = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", "🐧", "🐦", "🦆", "🦅", "🦉"];
+                      const randomAnimal = animalEmojis[Math.floor(Math.random() * animalEmojis.length)];
+                      
+                      // Create custom activity object
+                      const customActivity = {
+                        emoji: randomAnimal,
+                        label: value
+                      };
+                      
+                      // Save to localStorage for future use
+                      const savedCustomActivities = JSON.parse(localStorage.getItem('customActivities') || '[]');
+                      if (!savedCustomActivities.includes(value)) {
+                        savedCustomActivities.push(value);
+                        localStorage.setItem('customActivities', JSON.stringify(savedCustomActivities));
+                      }
+                      
+                      // Select the custom activity
+                      handleSelectActivity(customActivity);
+                      
+                      // Clear input
+                      input.value = '';
+                    }
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
             <div className="grid grid-cols-3 gap-1">
               {filteredActivities.map((activity) => (
                 <Button

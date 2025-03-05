@@ -269,7 +269,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
 
           <div className="px-2 mb-4">
             <Input
-              placeholder="What are you doing today?"
+              placeholder="How are you feeling today?"
               className="mb-2"
               id="customFeeling"
               value={customEmotion}

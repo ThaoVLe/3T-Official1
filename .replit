@@ -7,8 +7,8 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "cloudrun"
-build = ["sh", "-c", "npm run build"]
-run = ["sh", "-c", "npm run start"]
+build = ["npm", "run", "build"]
+run = ["npm", "run", "start"]
 
 [[ports]]
 localPort = 5000
@@ -21,26 +21,6 @@ externalPort = 3000
 [[ports]]
 localPort = 5002
 externalPort = 3001
-
-[[ports]]
-localPort = 5003
-externalPort = 3002
-
-[[ports]]
-localPort = 5004
-externalPort = 3003
-
-[[ports]]
-localPort = 5005
-externalPort = 3004
-
-[[ports]]
-localPort = 5006
-externalPort = 3005
-
-[[ports]]
-localPort = 5007
-externalPort = 3006
 
 [workflows]
 runButton = "Start application"

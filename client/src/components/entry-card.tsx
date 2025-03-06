@@ -7,9 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState, useRef } from 'react';
-import useEmblaCarousel from 'embla-carousel-react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useState } from 'react';
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -18,11 +16,7 @@ interface EntryCardProps {
 export default function EntryCard({ entry }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
-  const [emblaRef] = useEmblaCarousel({ 
-    dragFree: true,
-    containScroll: "trimSnaps"
-  });
+  const [isMediaExpanded, setIsMediaExpanded] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -69,151 +63,143 @@ export default function EntryCard({ entry }: EntryCardProps) {
     return textContent.length > 200;
   };
 
-  const getMediaGrid = () => {
+  const getMediaLayout = () => {
     if (!entry.mediaUrls?.length) return null;
 
     const mediaCount = entry.mediaUrls.length;
+    const displayCount = isMediaExpanded ? mediaCount : Math.min(3, mediaCount);
 
-    if (mediaCount === 1) {
-      return "grid-cols-1";
-    } else if (mediaCount === 2) {
-      return "grid-cols-2";
-    } else if (mediaCount === 3) {
-      return "grid-cols-2";
-    } else if (mediaCount === 4) {
-      return "grid-cols-2";
+    if (displayCount === 1) {
+      return { gridClass: "grid-cols-1", heightClass: "h-[300px]" };
+    } else if (displayCount === 2) {
+      return { gridClass: "grid-cols-2", heightClass: "h-[200px]" };
+    } else if (displayCount === 3) {
+      return { gridClass: "grid-cols-3", heightClass: "h-[200px]" };
     } else {
-      return "grid-cols-2";
+      return { gridClass: "grid-cols-3", heightClass: "h-[200px]" };
     }
   };
 
   return (
-    <>
-      <Card className="group bg-white shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-        <CardHeader className="space-y-0 pb-2 pt-4 px-4">
-          <div className="flex justify-between items-start">
-            <div className="flex flex-col space-y-1.5">
-              <CardTitle className="text-[18px] font-semibold">
-                {entry.title || "Untitled Entry"}
-              </CardTitle>
+    <Card className="group bg-white shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+      <CardHeader className="space-y-0 pb-2 pt-4 px-4">
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col space-y-1.5">
+            <CardTitle className="text-[18px] font-semibold">
+              {entry.title || "Untitled Entry"}
+            </CardTitle>
 
-              {/* Timestamp line */}
-              <div className="text-sm text-muted-foreground">
-                {formatTimeAgo(entry.createdAt)}
+            {/* Timestamp line */}
+            <div className="text-sm text-muted-foreground">
+              {formatTimeAgo(entry.createdAt)}
+            </div>
+
+            {/* Emotions and location line - will wrap if needed */}
+            {(feeling || entry.location) && (
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                {feeling && (
+                  <div className="flex items-center">
+                    {feeling.label.includes(',') ? (
+                      <span>
+                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                      </span>
+                    ) : (
+                      <span>
+                        feeling {feeling.label} {feeling.emoji}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {entry.location && (
+                  <div className="flex items-center">
+                    <span>at {entry.location} 📍</span>
+                  </div>
+                )}
               </div>
-
-              {/* Emotions and location line - will wrap if needed */}
-              {(feeling || entry.location) && (
-                <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  {feeling && (
-                    <div className="flex items-center">
-                      {feeling.label.includes(',') ? (
-                        <span>
-                          feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                          while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                        </span>
-                      ) : (
-                        <span>
-                          feeling {feeling.label} {feeling.emoji}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {entry.location && (
-                    <div className="flex items-center">
-                      <span>at {entry.location} 📍</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: entry.title || "My Diary Entry",
-                      text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
-                      url: window.location.origin + `/entry/${entry.id}`,
-                    }).catch(err => console.log('Error sharing:', err));
-                  } else {
-                    navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
-                      .then(() => toast({
-                        title: "Link copied",
-                        description: "Entry link copied to clipboard"
-                      }))
-                      .catch(err => console.error('Could not copy text:', err));
-                  }
-                }}
-                className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
-              >
-                <Share className="h-4 w-4"/>
-              </Button>
-              <Link href={`/edit/${entry.id}`}>
-                <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted">
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => deleteMutation.mutate()}
-                disabled={deleteMutation.isPending}
-                className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            )}
           </div>
-        </CardHeader>
 
-        <CardContent className="px-4 pt-0 pb-4">
-          {/* Text content with expansion */}
-          <div 
-            onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
-            className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
-            dangerouslySetInnerHTML={{ __html: entry.content }}
-          />
-          {needsExpansion(entry.content) && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-sm text-blue-600 hover:text-blue-700 mt-1 font-medium"
+          {/* Action buttons */}
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: entry.title || "My Diary Entry",
+                    text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                    url: window.location.origin + `/entry/${entry.id}`,
+                  }).catch(err => console.log('Error sharing:', err));
+                } else {
+                  navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
+                    .then(() => toast({
+                      title: "Link copied",
+                      description: "Entry link copied to clipboard"
+                    }))
+                    .catch(err => console.error('Could not copy text:', err));
+                }
+              }}
+              className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
             >
-              {isExpanded ? 'See less' : 'See more'}
-            </button>
-          )}
+              <Share className="h-4 w-4"/>
+            </Button>
+            <Link href={`/edit/${entry.id}`}>
+              <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted">
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+              className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
 
-          {/* Media gallery */}
-          {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-            <div className={`mt-4 -mx-4 grid ${getMediaGrid()} gap-1`}>
-              {entry.mediaUrls.map((url, i) => {
+      <CardContent className="px-4 pt-0 pb-4">
+        {/* Text content with expansion */}
+        <div 
+          onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
+          className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
+          dangerouslySetInnerHTML={{ __html: entry.content }}
+        />
+        {needsExpansion(entry.content) && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-sm text-blue-600 hover:text-blue-700 mt-1 font-medium"
+          >
+            {isExpanded ? 'See less' : 'See more'}
+          </button>
+        )}
+
+        {/* Media gallery */}
+        {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+          <div className="mt-4 -mx-4" onClick={() => setIsMediaExpanded(!isMediaExpanded)}>
+            <div className={`grid ${getMediaLayout()?.gridClass} gap-1 cursor-pointer transition-all duration-300`}>
+              {entry.mediaUrls.slice(0, isMediaExpanded ? undefined : 3).map((url, i) => {
                 const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
                 const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
-
-                // Special layout for 3 or more images
-                const isFirstInThree = entry.mediaUrls.length === 3 && i === 0;
-                const isFirstInFive = entry.mediaUrls.length >= 5 && i === 0;
+                const isLastVisible = !isMediaExpanded && i === 2 && entry.mediaUrls.length > 3;
 
                 const containerClasses = `
-                  relative overflow-hidden cursor-pointer
-                  ${isFirstInThree || isFirstInFive ? 'col-span-2 row-span-2' : ''}
-                  ${entry.mediaUrls.length >= 5 && i >= 4 ? 'hidden' : ''}
+                  relative overflow-hidden 
+                  ${getMediaLayout()?.heightClass}
+                  ${isLastVisible ? 'relative' : ''}
                 `;
 
                 if (isVideo) {
                   return (
-                    <div
-                      key={i}
-                      className={containerClasses}
-                      onClick={() => setSelectedMedia(url)}
-                    >
+                    <div key={i} className={containerClasses}>
                       <video
                         src={url}
-                        className="w-full h-full object-cover aspect-square"
+                        className="w-full h-full object-cover"
                         playsInline
                       />
                     </div>
@@ -222,31 +208,24 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
                 if (isAudio) {
                   return (
-                    <div
-                      key={i}
-                      className="col-span-2 flex items-center justify-center h-24 bg-muted p-4"
-                    >
+                    <div key={i} className="col-span-full flex items-center justify-center h-24 bg-muted p-4">
                       <audio src={url} controls className="w-full" />
                     </div>
                   );
                 }
 
                 return (
-                  <div
-                    key={i}
-                    className={containerClasses}
-                    onClick={() => setSelectedMedia(url)}
-                  >
+                  <div key={i} className={containerClasses}>
                     <img
                       src={url}
                       alt={`Media ${i + 1}`}
-                      className="w-full h-full object-cover aspect-square"
+                      className="w-full h-full object-cover"
                       loading="lazy"
                     />
-                    {entry.mediaUrls.length >= 5 && i === 3 && (
+                    {isLastVisible && (
                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                         <span className="text-white text-xl font-semibold">
-                          +{entry.mediaUrls.length - 4}
+                          +{entry.mediaUrls.length - 3}
                         </span>
                       </div>
                     )}
@@ -254,40 +233,9 @@ export default function EntryCard({ entry }: EntryCardProps) {
                 );
               })}
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Full-screen media dialog */}
-      <Dialog open={!!selectedMedia} onOpenChange={() => setSelectedMedia(null)}>
-        <DialogContent className="max-w-[95vw] h-[90vh] p-0 overflow-hidden">
-          <div className="relative w-full h-full flex items-center justify-center bg-black">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSelectedMedia(null)}
-              className="absolute top-2 right-2 z-50 text-white hover:bg-white/20"
-            >
-              <X className="h-6 w-6" />
-            </Button>
-            {selectedMedia?.match(/\.(mp4|webm|MOV|mov)$/i) ? (
-              <video
-                src={selectedMedia}
-                controls
-                autoPlay
-                playsInline
-                className="max-h-full max-w-full object-contain"
-              />
-            ) : (
-              <img
-                src={selectedMedia!}
-                alt="Full size media"
-                className="max-h-full max-w-full object-contain"
-              />
-            )}
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

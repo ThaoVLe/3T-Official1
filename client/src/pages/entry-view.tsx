@@ -4,15 +4,11 @@ import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [swipeProgress, setSwipeProgress] = useState(0);
-  const touchStartXRef = useRef(0);
-  const touchStartTimeRef = useRef(0);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -20,55 +16,28 @@ export default function EntryView() {
   });
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    let touchStartX = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
-      touchStartXRef.current = e.touches[0].clientX;
-      touchStartTimeRef.current = Date.now();
-      setSwipeProgress(0);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      const touchCurrentX = e.touches[0].clientX;
-      const swipeDistance = touchCurrentX - touchStartXRef.current;
-
-      // Only allow right swipe (positive distance)
-      if (swipeDistance > 0) {
-        // Calculate progress as percentage (0-100)
-        const progress = Math.min((swipeDistance / window.innerWidth) * 100, 100);
-        setSwipeProgress(progress);
-      }
+      touchStartX = e.touches[0].clientX;
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       const touchEndX = e.changedTouches[0].clientX;
-      const swipeDistance = touchEndX - touchStartXRef.current;
-      const swipeTime = Date.now() - touchStartTimeRef.current;
-      const velocity = Math.abs(swipeDistance) / swipeTime;
+      const swipeDistance = touchEndX - touchStartX;
 
-      // Navigate back if:
-      // 1. Swiped more than 25% of screen width OR
-      // 2. Fast swipe (high velocity) with minimum distance
-      if (
-        swipeDistance > window.innerWidth * 0.25 || // Lower threshold for easier triggering
-        (velocity > 0.5 && swipeDistance > window.innerWidth * 0.1) // Added velocity check
-      ) {
+      // If swiped right more than 100px, go back
+      if (swipeDistance > 100) {
         navigate('/');
-      } else {
-        // Reset progress if not navigating
-        setSwipeProgress(0);
       }
     };
 
-    container.addEventListener('touchstart', handleTouchStart);
-    container.addEventListener('touchmove', handleTouchMove);
-    container.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [navigate]);
 
@@ -84,23 +53,7 @@ export default function EntryView() {
   };
 
   return (
-    <div 
-      ref={containerRef}
-      className="min-h-screen flex flex-col no-scrollbar bg-white"
-      style={{
-        transform: `translateX(${swipeProgress}px)`,
-        opacity: 1 - (swipeProgress / 200), // Fade out as we swipe
-        transition: swipeProgress === 0 ? 'all 0.2s ease-out' : 'none' // Smooth reset, instant follow
-      }}
-    >
-      {/* Back arrow indicator */}
-      <div 
-        className="fixed left-4 top-1/2 -translate-y-1/2 transition-opacity"
-        style={{ opacity: swipeProgress > 0 ? 1 : 0 }}
-      >
-        <ArrowLeft className="h-8 w-8 text-primary" />
-      </div>
-
+    <div className="min-h-screen bg-white flex flex-col no-scrollbar">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">

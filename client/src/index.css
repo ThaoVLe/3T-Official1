@@ -50,6 +50,31 @@ html, body, #root {
   display: none; /* Chrome, Safari, Opera */
 }
 
+
+/* Touch swipe transitions */
+.swiping-active {
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+@keyframes slide-from-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-to-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+.page-transition-enter {
+  animation: slide-from-right 0.35s forwards cubic-bezier(0.32, 0.72, 0.2, 1.0);
+}
+
+.page-transition-exit {
+  animation: slide-to-right 0.35s forwards cubic-bezier(0.32, 0.72, 0.2, 1.0);
+}
+
 @import './styles/embla.css';
 
 @tailwind base;

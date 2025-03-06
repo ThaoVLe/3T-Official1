@@ -1,4 +1,3 @@
-
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { DiaryEntry } from "@shared/schema";
@@ -29,7 +28,7 @@ export default function EntryView() {
 
     const handleTouchStart = (e: TouchEvent) => {
       if (!pageRef.current || isTransitioning) return;
-      
+
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
@@ -42,110 +41,96 @@ export default function EntryView() {
         pageRef.current.style.transition = 'none';
         pageRef.current.style.transform = 'translateX(0)';
         pageRef.current.style.opacity = '1';
+        pageRef.current.style.boxShadow = 'none';
       }
+      document.body.classList.add('swiping-active');
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!pageRef.current || isTransitioning) return;
 
-      const touchX = e.touches[0].clientX;
-      const touchY = e.touches[0].clientY;
-      const deltaX = touchX - touchStartX;
-      const deltaY = touchY - touchStartY;
-      
-      // Determine horizontal swipe early with a small threshold
-      if (!isHorizontalSwipe && !isSwiping) {
-        // Require a minimum movement to start detecting direction
-        if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
-          // If movement is more horizontal than vertical
-          isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
-          
-          if (isHorizontalSwipe && deltaX > 0 && startScrollPosition <= 5) {
-            isSwiping = true;
-            e.preventDefault(); // Prevent scrolling
+      const touchCurrentX = e.touches[0].clientX;
+      const touchCurrentY = e.touches[0].clientY;
+      const deltaX = touchCurrentX - touchStartX;
+      const deltaY = touchCurrentY - touchStartY;
+
+      // Detect horizontal swipes with lower threshold (more like Facebook)
+      if (!isHorizontalSwipe) {
+        // More sensitive detection - only 10px threshold
+        if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
+          isHorizontalSwipe = true;
+          // Prevent scrolling during swipe
+          if (deltaX > 0) {
+            e.preventDefault();
           }
+        } else {
+          return; // Let normal scrolling happen
         }
       }
 
-      // If we've determined this is a rightward swipe
-      if (isSwiping && isHorizontalSwipe && deltaX > 0) {
-        e.preventDefault(); // Prevent scrolling during swipe
-        
-        // Apply a resistance factor for natural feel
+      // Only process right swipes (going back) when near the top of content
+      if (deltaX > 0 && isHorizontalSwipe && startScrollPosition <= 10) {
+        e.preventDefault();
+        isSwiping = true;
+
+        // Smoother feel with cubic resistance (feels more like Facebook)
         const resistance = 0.8;
-        const transformX = Math.min(deltaX * resistance, window.innerWidth);
-        
-        // Calculate progress as a percentage (0-1)
-        const progress = Math.min(transformX / (window.innerWidth * 0.6), 1);
-        
-        // Apply transform with subtle scaling and rotation for natural feel
-        const scale = 1 - (0.05 * progress);
-        const rotate = 2 * progress; // Max 2 degrees rotation
-        const opacity = 1 - (0.3 * progress);
-        
-        pageRef.current.style.transform = `translateX(${transformX}px) scale(${scale}) rotate(${rotate}deg)`;
+        const transform = deltaX * resistance;
+        const percent = Math.min(transform / window.innerWidth, 1);
+
+        // Visual effects more similar to Facebook's swipe
+        const scale = 1 - (percent * 0.08);
+        const rotate = percent * 2; // slight rotation
+        const opacity = 1 - (percent * 0.4);
+
+        pageRef.current.style.transform = `translateX(${transform}px) scale(${scale}) rotate(${rotate}deg)`;
         pageRef.current.style.opacity = opacity.toString();
-        
-        // Update visual indicator if present
-        const indicator = pageRef.current.querySelector('[data-swipe-indicator]') as HTMLElement;
-        if (indicator) {
-          indicator.style.transform = `scaleX(${progress})`;
-          indicator.style.opacity = progress.toString();
-        }
+
+        // Add a shadow effect during swipe
+        pageRef.current.style.boxShadow = `0 0 ${20 * percent}px rgba(0,0,0,${0.2 * percent})`;
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
+      // Remove active class regardless of outcome
+      document.body.classList.remove('swiping-active');
+
       if (!pageRef.current || !isHorizontalSwipe || !isSwiping || isTransitioning) return;
-      
+
       const touchEndX = e.changedTouches[0].clientX;
-      const touchEndTime = Date.now();
-      const swipeDistance = touchEndX - touchStartX;
-      const swipeTime = touchEndTime - touchStartTime;
-      const velocity = swipeDistance / swipeTime;
-      
-      // Navigate back if swipe meets criteria:
-      // 1. Swipe is at least 30% of screen width, OR
-      // 2. Swipe velocity is fast enough (> 0.5 px/ms)
-      const shouldNavigateBack = (swipeDistance > window.innerWidth * 0.3) || (velocity > 0.5);
-      
-      // Add visual feedback for swipe indicator
-      const indicator = pageRef.current.querySelector('[data-swipe-indicator]') as HTMLElement;
-      if (indicator) {
-        indicator.style.transition = 'all 0.3s ease';
-        indicator.style.transform = shouldNavigateBack ? 'scaleX(1)' : 'scaleX(0)';
-        indicator.style.opacity = shouldNavigateBack ? '1' : '0';
-      }
-      
-      if (shouldNavigateBack) {
-        // Prevent multiple transitions
+      const deltaX = touchEndX - touchStartX;
+      const touchDuration = Date.now() - touchStartTime;
+
+      // More Facebook-like swipe detection:
+      // 1. Quick swipe (velocity-based) - only needs 60px with short duration
+      // 2. Distance-based swipe - 1/4 of screen is enough (Facebook is quite sensitive)
+      const isQuickSwipe = touchDuration < 300 && deltaX > 60;
+      const isLongSwipe = deltaX > window.innerWidth / 4;
+
+      if ((isQuickSwipe || isLongSwipe) && deltaX > 0 && isHorizontalSwipe) {
+        // Complete the swipe with smooth animation
         setIsTransitioning(true);
-        
-        // Add smooth transition for exit animation
-        pageRef.current.style.transition = 'all 0.35s cubic-bezier(0.32, 0.72, 0.2, 1)';
+        pageRef.current.style.transition = 'all 0.35s cubic-bezier(0.32, 0.72, 0.2, 1.0)';
         pageRef.current.style.transform = `translateX(${window.innerWidth}px) scale(0.92) rotate(3deg)`;
-        pageRef.current.style.opacity = '0';
-        
-        // Navigate after animation completes
+        pageRef.current.style.opacity = '0.6';
+        pageRef.current.style.boxShadow = '0 0 30px rgba(0,0,0,0.2)';
+
+        // Navigate after animation completes with a slight delay for better visual effect
         setTimeout(() => {
           navigate('/');
           setIsTransitioning(false);
         }, 350);
-      } else {
-        // Spring back to original position
-        pageRef.current.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      } else if (pageRef.current) {
+        // Spring back with slight bounce effect (like Facebook)
+        pageRef.current.style.transition = 'all 0.35s cubic-bezier(0.32, 0.72, 0.2, 1.2)';
         pageRef.current.style.transform = 'translateX(0) scale(1) rotate(0deg)';
         pageRef.current.style.opacity = '1';
-        
-        // Reset after animation completes
-        setTimeout(() => {
-          pageRef.current?.style.removeProperty('transition');
-        }, 400);
+        pageRef.current.style.boxShadow = 'none';
       }
-      
-      // Reset flags
-      isSwiping = false;
+
+      // Reset state
       isHorizontalSwipe = false;
+      isSwiping = false;
     };
 
     const handleTransitionEnd = () => {
@@ -178,13 +163,13 @@ export default function EntryView() {
     // Scroll to selected media if specified in URL
     const params = new URLSearchParams(window.location.search);
     const mediaIndex = params.get('media');
-    
+
     if (mediaIndex && entry?.media && entry.media.length > 0) {
       const index = parseInt(mediaIndex, 10);
-      
+
       // Find all media elements
       const mediaElements = document.querySelectorAll('.media-item');
-      
+
       if (mediaElements.length > 0 && index < mediaElements.length) {
         setTimeout(() => {
           mediaElements[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -274,7 +259,7 @@ export default function EntryView() {
             <div className="mb-2 text-sm font-medium text-gray-500">
               Media ({entry.media.length})
             </div>
-            
+
             <div className="media-grid grid-cols-3 auto-rows-fr">
               {entry.media.map((media, index) => (
                 <div 

@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { ScrollArea, ScrollBar } from '@radix-ui/react-scroll'
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 
 export default function EntryView() {

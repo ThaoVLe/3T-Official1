@@ -85,6 +85,13 @@ export default function EntryView() {
     return format(new Date(date), "MMMM d, yyyy 'at' h:mm a");
   };
 
+  const swipeIndicatorStyle = {
+    height: '4px',
+    backgroundColor: 'lightgray',
+    width: `${swipeProgress}%`,
+    transition: 'width 0.3s ease-out'
+  };
+
   return (
     <div 
       className="flex flex-col h-screen overflow-hidden bg-white"
@@ -94,6 +101,9 @@ export default function EntryView() {
       }}
       ref={contentRef}
     >
+      {/* Swipe indicator bar */}
+      <div style={swipeIndicatorStyle} />
+
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">
@@ -110,7 +120,7 @@ export default function EntryView() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto no-scrollbar">
+      <div className="flex-1 overflow-y-auto no-scrollbar" style={{ touchAction: swipeProgress > 0 ? 'none' : 'auto' }}>
         <div className="px-4 py-6">
           <div className="space-y-4">
             <h1 className="text-[24px] font-semibold">

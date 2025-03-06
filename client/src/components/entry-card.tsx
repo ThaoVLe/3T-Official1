@@ -64,7 +64,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
   };
 
   return (
-    <Card className="group bg-white shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+    <Card className="group bg-white border-0 shadow-none w-full">
       <CardHeader className="space-y-0 pb-2 pt-4 px-4">
         <div className="flex justify-between items-start">
           <div className="flex flex-col space-y-1.5">
@@ -77,26 +77,26 @@ export default function EntryCard({ entry }: EntryCardProps) {
               {formatTimeAgo(entry.createdAt)}
             </div>
 
-            {/* Emotions and location line - take up full width */}
+            {/* Emotions and location line - will wrap if needed */}
             {(feeling || entry.location) && (
-              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground w-full">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 {feeling && (
-                  <div className="flex-1 min-w-0">
+                  <div className="flex items-center">
                     {feeling.label.includes(',') ? (
-                      <span className="inline-block w-full truncate">
+                      <span>
                         feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
                         while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
                       </span>
                     ) : (
-                      <span className="inline-block w-full truncate">
+                      <span>
                         feeling {feeling.label} {feeling.emoji}
                       </span>
                     )}
                   </div>
                 )}
                 {entry.location && (
-                  <div className={`${feeling ? 'ml-auto' : 'flex-1'} min-w-0`}>
-                    <span className="inline-block truncate">at {entry.location} 📍</span>
+                  <div className="flex items-center">
+                    <span>at {entry.location} 📍</span>
                   </div>
                 )}
               </div>
@@ -164,10 +164,10 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
         {/* Media gallery */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="mt-4 -mx-4 space-y-1" onClick={() => navigate(`/entry/${entry.id}`)}>
+          <div className="mt-4 -mx-4" onClick={() => navigate(`/entry/${entry.id}`)}>
             {/* First media - large */}
             {entry.mediaUrls[0] && (
-              <div className="aspect-[16/9] w-full cursor-pointer">
+              <div className="aspect-[16/9] w-full cursor-pointer overflow-hidden">
                 {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
                   <video
                     src={entry.mediaUrls[0]}
@@ -185,15 +185,15 @@ export default function EntryCard({ entry }: EntryCardProps) {
               </div>
             )}
 
-            {/* Second and third media - smaller */}
+            {/* Second and third media - two columns */}
             {entry.mediaUrls.length > 1 && (
-              <div className="grid grid-cols-2 gap-1">
+              <div className="grid grid-cols-2 gap-[2px] mt-[2px]">
                 {entry.mediaUrls.slice(1, 3).map((url, i) => {
                   const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
                   const isLastVisible = i === 1 && entry.mediaUrls.length > 3;
 
                   return (
-                    <div key={i} className="aspect-square relative cursor-pointer">
+                    <div key={i} className="aspect-square relative cursor-pointer overflow-hidden">
                       {isVideo ? (
                         <video
                           src={url}

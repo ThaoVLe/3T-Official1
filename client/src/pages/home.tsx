@@ -13,12 +13,12 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="p-8 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         <div className="flex justify-between items-center mb-8">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-64 w-full" />
           ))}
@@ -29,7 +29,7 @@ export default function Home() {
 
   if (!entries?.length) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
           Welcome to Your Diary
         </h1>
@@ -47,22 +47,26 @@ export default function Home() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          My Diary
-        </h1>
-        <Link href="/new">
-          <Button className="flex gap-2">
-            <PlusCircle className="w-4 h-4" />
-            New Entry
-          </Button>
-        </Link>
+    <div className="min-h-screen bg-gray-50">
+      <div className="sticky top-0 z-10 bg-white border-b">
+        <div className="flex justify-between items-center px-4 py-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            My Diary
+          </h1>
+          <Link href="/new">
+            <Button className="flex gap-2">
+              <PlusCircle className="w-4 h-4" />
+              New Entry
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="divide-y divide-gray-100">
         {entries.map((entry) => (
-          <EntryCard key={entry.id} entry={entry} />
+          <div key={entry.id} className="bg-white w-full">
+            <EntryCard entry={entry} />
+          </div>
         ))}
       </div>
     </div>

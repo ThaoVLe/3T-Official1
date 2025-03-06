@@ -109,7 +109,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1 absolute top-4 right-4">
             <Button
               size="icon"
               variant="ghost"

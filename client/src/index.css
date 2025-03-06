@@ -34,9 +34,7 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;     /* Firefox */
     overflow-y: auto;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
+    overscroll-behavior-y: none;
   }
 
   .no-scrollbar::-webkit-scrollbar {

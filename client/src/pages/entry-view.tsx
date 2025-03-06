@@ -53,9 +53,9 @@ export default function EntryView() {
   };
 
   return (
-    <div className="min-h-screen bg-white no-scrollbar">
+    <div className="min-h-screen bg-white flex flex-col no-scrollbar">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b">
+      <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">
           <Button
             variant="ghost"
@@ -70,7 +70,7 @@ export default function EntryView() {
       </div>
 
       {/* Content */}
-      <div className="px-4 py-6">
+      <div className="flex-1 px-4 py-6 overflow-y-auto no-scrollbar">
         <div className="space-y-4">
           <h1 className="text-[24px] font-semibold">
             {entry.title || "Untitled Entry"}

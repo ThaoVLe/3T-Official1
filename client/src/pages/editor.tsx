@@ -187,105 +187,105 @@ export default function Editor() {
   }, [isMobile]);
 
   return (
-    <div className="min-h-screen bg-white no-scrollbar">
+    <div className="min-h-screen flex flex-col bg-white w-full">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b">
-        <div className="relative px-4 sm:px-6 py-3">
-          <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/")}
-              className="whitespace-nowrap"
-            >
-              <X className="h-4 w-4 mr-1" />
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={form.handleSubmit((data) => mutation.mutate(data))}
-              disabled={mutation.isPending}
-              className="bg-primary hover:bg-primary/90 whitespace-nowrap"
-            >
-              <Save className="h-4 w-4 mr-1" />
-              {id ? "Update" : "Create"}
-            </Button>
-          </div>
-          <div className="max-w-full sm:max-w-2xl pr-24">
-            <Input
-              {...form.register("title")}
-              className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
-              placeholder="Untitled Entry..."
-            />
-            {form.watch("feeling") && (
-              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                  {form.watch("feeling").label.includes(',') ? (
-                    <>
-                      {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
-                      {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
-                    </>
-                  ) : (
-                    <>
-                      {form.watch("feeling").label} {form.watch("feeling").emoji}
-                    </>
-                  )}
-                </div>
+      <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
+        <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/")}
+            className="whitespace-nowrap"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={form.handleSubmit((data) => mutation.mutate(data))}
+            disabled={mutation.isPending}
+            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            {id ? "Update" : "Create"}
+          </Button>
+        </div>
+        <div className="max-w-full sm:max-w-2xl pr-24">
+          <Input
+            {...form.register("title")}
+            className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+            placeholder="Untitled Entry..."
+          />
+          {form.watch("feeling") && (
+            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+              <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                {form.watch("feeling").label.includes(',') ? (
+                  <>
+                    {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
+                    {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
+                  </>
+                ) : (
+                  <>
+                    {form.watch("feeling").label} {form.watch("feeling").emoji}
+                  </>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="p-4 sm:p-6">
-        <TipTapEditor
-          value={form.watch("content")}
-          onChange={(value) => form.setValue("content", value)}
-        />
-      </div>
-
-      {/* Media Controls - Fixed at bottom */}
-      <div className="sticky bottom-0 border-t bg-white" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
-        <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">How are you feeling today?</span>
-            <FeelingSelector
-              selectedFeeling={form.getValues("feeling")}
-              onSelect={async (feeling) => {
-                await hideKeyboard();
-                form.setValue("feeling", feeling);
-              }}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Checking in at:</span>
-            <LocationSelector
-              selectedLocation={form.getValues("location")}
-              onSelect={(location) => {
-                hideKeyboard();
-                form.setValue("location", location);
-              }}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Add media:</span>
-            <MediaRecorder onCapture={onMediaUpload} />
-          </div>
+      <div className="flex-1 flex flex-col overflow-auto w-full">
+        <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+          <TipTapEditor
+            value={form.watch("content")}
+            onChange={(value) => form.setValue("content", value)}
+          />
         </div>
-        {form.watch("mediaUrls")?.length > 0 && (
-          <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
-            <MediaPreview
-              urls={form.watch("mediaUrls")}
-              onRemove={onMediaRemove}
-              loading={isUploading}
-              uploadProgress={uploadProgress}
-            />
+
+        {/* Media Controls - Fixed at bottom */}
+        <div className="border-t bg-white sticky bottom-0 w-full" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}> {/*Added paddingBottom for safe area*/}
+          <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">How are you feeling today?</span>
+              <FeelingSelector
+                selectedFeeling={form.getValues("feeling")}
+                onSelect={async (feeling) => {
+                  await hideKeyboard();
+                  form.setValue("feeling", feeling);
+                }}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Checking in at:</span>
+              <LocationSelector
+                selectedLocation={form.getValues("location")}
+                onSelect={(location) => {
+                  hideKeyboard();
+                  form.setValue("location", location);
+                }}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Add media:</span>
+              <MediaRecorder onCapture={onMediaUpload} />
+            </div>
           </div>
-        )}
+          {form.watch("mediaUrls")?.length > 0 && (
+            <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
+              <MediaPreview
+                urls={form.watch("mediaUrls")}
+                onRemove={onMediaRemove}
+                loading={isUploading}
+                uploadProgress={uploadProgress}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

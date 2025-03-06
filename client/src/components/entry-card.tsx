@@ -164,10 +164,15 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
         {/* Media gallery */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="mt-3 -mx-4" onClick={() => navigate(`/entry/${entry.id}`)}>
+          <div className="mt-3 -mx-4" onClick={(e) => {
+            // Find the closest media item to get its index
+            const mediaItem = e.target.closest('.media-item');
+            const index = mediaItem ? Array.from(mediaItem.parentElement.children).indexOf(mediaItem) : 0;
+            navigate(`/entry/${entry.id}?media=${index}`);
+          }}>
             {/* First media - large */}
             {entry.mediaUrls[0] && (
-              <div className="aspect-[16/9] w-full cursor-pointer overflow-hidden">
+              <div className="media-item aspect-[16/9] w-full cursor-pointer overflow-hidden">
                 {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
                   <video
                     src={entry.mediaUrls[0]}
@@ -193,7 +198,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
                   const isLastVisible = i === 1 && entry.mediaUrls.length > 3;
 
                   return (
-                    <div key={i} className="aspect-square relative cursor-pointer overflow-hidden">
+                    <div key={i} className="media-item aspect-square relative cursor-pointer overflow-hidden">
                       {isVideo ? (
                         <video
                           src={url}

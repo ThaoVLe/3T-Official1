@@ -211,7 +211,7 @@ export default function EntryView() {
           </Button>
           <div className="ml-1">
             <div className="text-sm font-medium">
-              {format(new Date(entry.date), 'EEEE, MMMM d, yyyy')}
+              {entry.date ? format(new Date(entry.date), 'EEEE, MMMM d, yyyy') : format(new Date(entry.createdAt || Date.now()), 'EEEE, MMMM d, yyyy')}
             </div>
             {entry.title && (
               <h1 className="text-xl font-semibold">{entry.title}</h1>

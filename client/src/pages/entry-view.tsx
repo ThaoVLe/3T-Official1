@@ -1,19 +1,14 @@
-
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [swipeTranslate, setSwipeTranslate] = useState(0);
-  const [opacity, setOpacity] = useState(1);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -22,84 +17,28 @@ export default function EntryView() {
 
   useEffect(() => {
     let touchStartX = 0;
-    let touchStartY = 0;
-    let isHorizontalSwipe = false;
-    
-    const handleTouchStart = (e: TouchEvent) => {
-      if (isTransitioning) return;
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      isHorizontalSwipe = false;
-    };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (isTransitioning) return;
-      
-      const touchX = e.touches[0].clientX;
-      const touchY = e.touches[0].clientY;
-      const deltaX = touchX - touchStartX;
-      const deltaY = touchY - touchStartY;
-      
-      // Determine if this is a horizontal swipe (used on first move)
-      if (!isHorizontalSwipe && Math.abs(deltaX) > 10) {
-        // If we've moved at least 10px horizontally, check if horizontal movement dominates
-        isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY * 1.5);
-      }
-      
-      // Only handle right swipes
-      if (isHorizontalSwipe && deltaX > 0) {
-        e.preventDefault(); // Prevent page scrolling
-        setSwipeTranslate(deltaX);
-        
-        // Calculate opacity based on swipe distance (max 100px for full effect)
-        const newOpacity = Math.max(1 - (deltaX / 250), 0.3);
-        setOpacity(newOpacity);
-      }
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (isTransitioning) return;
-      
-      const threshold = window.innerWidth * 0.3; // 30% of screen width
-      
-      if (swipeTranslate > threshold) {
-        // Complete the swipe animation
-        setIsTransitioning(true);
-        setSwipeTranslate(window.innerWidth);
-        setOpacity(0);
-        
-        // Navigate after animation
-        setTimeout(() => {
-          navigate('/');
-        }, 300);
-      } else {
-        // Reset position with animation
-        setIsTransitioning(true);
-        setSwipeTranslate(0);
-        setOpacity(1);
-        
-        // Clear transitioning state after animation
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, 300);
+      const touchEndX = e.changedTouches[0].clientX;
+      const swipeDistance = touchEndX - touchStartX;
+
+      if (swipeDistance > 100) {
+        navigate('/');
       }
     };
 
-    const content = contentRef.current;
-    if (content) {
-      content.addEventListener('touchstart', handleTouchStart, { passive: false });
-      content.addEventListener('touchmove', handleTouchMove, { passive: false });
-      content.addEventListener('touchend', handleTouchEnd, { passive: false });
-    }
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      if (content) {
-        content.removeEventListener('touchstart', handleTouchStart);
-        content.removeEventListener('touchmove', handleTouchMove);
-        content.removeEventListener('touchend', handleTouchEnd);
-      }
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [navigate, swipeTranslate, isTransitioning]);
+  }, [navigate]);
 
   if (!entry) return null;
 
@@ -113,27 +52,7 @@ export default function EntryView() {
   };
 
   return (
-    <div 
-      className="flex flex-col h-screen overflow-hidden bg-white"
-      style={{
-        transform: `translateX(${swipeTranslate}px)`,
-        opacity: opacity,
-        transition: isTransitioning ? 'transform 0.3s ease-out, opacity 0.3s ease-out' : 'none'
-      }}
-      ref={contentRef}
-    >
-      {/* Visual swipe indicator */}
-      <div className="absolute top-0 left-0 h-full w-16 flex items-center justify-center pointer-events-none">
-        <div 
-          className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center"
-          style={{
-            opacity: swipeTranslate > 0 ? Math.min(swipeTranslate / 100, 0.8) : 0
-          }}
-        >
-          <ArrowLeft className="h-6 w-6 text-gray-600" />
-        </div>
-      </div>
-
+    <div className="flex flex-col h-screen overflow-hidden bg-white">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">
@@ -161,41 +80,77 @@ export default function EntryView() {
               {formatDate(entry.createdAt)}
             </div>
 
-            {/* Feelings and emotions */}
-            {feeling && (
-              <div className="py-2">
-                {feeling.label.includes(',') ? (
-                  <div className="text-muted-foreground">
-                    feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                    while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+            {(feeling || entry.location) && (
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                {feeling && (
+                  <div className="flex items-center">
+                    {feeling.label.includes(',') ? (
+                      <span>
+                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                      </span>
+                    ) : (
+                      <span>
+                        feeling {feeling.label} {feeling.emoji}
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <div className="text-muted-foreground">
-                    feeling {feeling.label} {feeling.emoji}
+                )}
+                {entry.location && (
+                  <div className="flex items-center">
+                    <span>at {entry.location} 📍</span>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Location */}
-            {entry.location && (
-              <div className="py-2 text-muted-foreground">
-                at {entry.location} 📍
-              </div>
-            )}
-
-            {/* Activity */}
-            {entry.activity && (
-              <div className="py-2 text-muted-foreground">
-                {entry.activity.emoji} {entry.activity.label}
-              </div>
-            )}
-
-            {/* Entry content */}
+            {/* Content */}
             <div
-              className="prose prose-sm max-w-none prose-img:rounded-md"
-              dangerouslySetInnerHTML={{ __html: entry.content || "" }}
+              className="prose max-w-none"
+              dangerouslySetInnerHTML={{ __html: entry.content }}
             />
+
+            {/* Media */}
+            {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+              <div className="space-y-4 mt-6">
+                {entry.mediaUrls.map((url, i) => {
+                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+
+                  if (isVideo) {
+                    return (
+                      <div key={i} className="w-full">
+                        <video
+                          src={url}
+                          controls
+                          playsInline
+                          className="w-full aspect-video object-cover rounded-lg"
+                        />
+                      </div>
+                    );
+                  }
+
+                  if (isAudio) {
+                    return (
+                      <div key={i} className="w-full bg-muted rounded-lg p-4">
+                        <audio src={url} controls className="w-full" />
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={i} className="w-full">
+                      <img
+                        src={url}
+                        alt={`Media ${i + 1}`}
+                        className="w-full rounded-lg"
+                        loading="lazy"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

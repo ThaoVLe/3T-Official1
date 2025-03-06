@@ -19,39 +19,55 @@ export default function EntryView() {
 
   useEffect(() => {
     let touchStartX = 0;
+    let touchStartY = 0;
     let touchStartTime = 0;
     let startScrollPosition = 0;
+    let isHorizontalSwipe = false;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
       startScrollPosition = contentRef.current?.scrollTop || 0;
+      isHorizontalSwipe = false;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!pageRef.current) return;
 
       const touchCurrentX = e.touches[0].clientX;
+      const touchCurrentY = e.touches[0].clientY;
       const deltaX = touchCurrentX - touchStartX;
+      const deltaY = touchCurrentY - touchStartY;
+
+      // Determine if this is a horizontal swipe or vertical scroll
+      if (!isHorizontalSwipe) {
+        if (Math.abs(deltaX) > Math.abs(deltaY) * 2) {
+          isHorizontalSwipe = true;
+        } else {
+          return;
+        }
+      }
 
       // Only handle right swipes
-      if (deltaX > 0) {
+      if (deltaX > 0 && isHorizontalSwipe) {
         // Prevent default only when swiping right and at top of content
         if (startScrollPosition <= 0) {
           e.preventDefault();
 
-          // Calculate transform based on swipe distance
-          const transform = Math.min(deltaX * 0.5, window.innerWidth);
-          const opacity = 1 - (transform / window.innerWidth) * 0.5;
+          // Make the transform movement follow the finger more naturally
+          const transform = Math.min(deltaX * 0.8, window.innerWidth);
+          const opacity = 1 - (transform / window.innerWidth) * 0.3;
+          const scale = 1 - (transform / window.innerWidth) * 0.1;
 
-          pageRef.current.style.transform = `translateX(${transform}px)`;
+          pageRef.current.style.transform = `translateX(${transform}px) scale(${scale})`;
           pageRef.current.style.opacity = opacity.toString();
         }
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!pageRef.current) return;
+      if (!pageRef.current || !isHorizontalSwipe) return;
 
       const touchEndX = e.changedTouches[0].clientX;
       const touchEndTime = Date.now();
@@ -62,14 +78,14 @@ export default function EntryView() {
       // Navigate back if swipe is fast enough or far enough
       if ((swipeDistance > 100 && startScrollPosition <= 0) || (velocity > 0.5 && startScrollPosition <= 0)) {
         // Add transition for smooth exit
-        pageRef.current.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-        pageRef.current.style.transform = `translateX(${window.innerWidth}px)`;
+        pageRef.current.style.transition = 'all 0.3s cubic-bezier(0.2, 1, 0.3, 1)';
+        pageRef.current.style.transform = `translateX(${window.innerWidth}px) scale(0.9)`;
         pageRef.current.style.opacity = '0';
 
         setTimeout(() => navigate('/'), 300);
       } else {
         // Reset position with transition
-        pageRef.current.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+        pageRef.current.style.transition = 'all 0.3s cubic-bezier(0.2, 1, 0.3, 1)';
         pageRef.current.style.transform = '';
         pageRef.current.style.opacity = '1';
       }

@@ -11,13 +11,17 @@
 
   html {
     scroll-behavior: smooth;
+    height: 100%;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    height: 100%;
     /* Hide scrollbar while maintaining functionality */
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;     /* Firefox */
+    overflow-y: auto;
+    overscroll-behavior-y: none;
   }
 
   /* Hide scrollbar for Chrome, Safari and Opera */
@@ -30,6 +34,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
     overflow-y: auto;
+    overscroll-behavior-y: none;
   }
 
   .scroll-hidden::-webkit-scrollbar {
@@ -247,6 +252,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
     overflow-y: auto;
+    overscroll-behavior-y: none;
   }
 
   .no-scrollbar::-webkit-scrollbar {

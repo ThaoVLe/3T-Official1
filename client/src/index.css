@@ -53,7 +53,7 @@
   }
 
   .editor-page {
-    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background no-scrollbar overflow-y-auto;
+    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background no-scrollbar;
   }
   /* Auto-expanding editor styles */
   .tiptap-container .ProseMirror {
@@ -69,13 +69,7 @@
   /* Ensure editor container grows properly */
   .tiptap-container {
     transition: height 0.2s ease;
-    overflow: visible;
-  }
-  
-  /* Editor scrollable styling */
-  .editor-scroll-container {
-    @apply flex-1 overflow-y-auto no-scrollbar;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
   }
 
   /* Custom emotion styles */

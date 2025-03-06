@@ -1,7 +1,7 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share, X } from "lucide-react";
+import { Edit2, Trash2, Share } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -16,7 +16,7 @@ interface EntryCardProps {
 export default function EntryCard({ entry }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isMediaExpanded, setIsMediaExpanded] = useState(false);
+  const [, navigate] = useLocation();
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -61,23 +61,6 @@ export default function EntryCard({ entry }: EntryCardProps) {
     tempDiv.innerHTML = content;
     const textContent = tempDiv.textContent || '';
     return textContent.length > 200;
-  };
-
-  const getMediaLayout = () => {
-    if (!entry.mediaUrls?.length) return null;
-
-    const mediaCount = entry.mediaUrls.length;
-    const displayCount = isMediaExpanded ? mediaCount : Math.min(3, mediaCount);
-
-    if (displayCount === 1) {
-      return { gridClass: "grid-cols-1", heightClass: "h-[300px]" };
-    } else if (displayCount === 2) {
-      return { gridClass: "grid-cols-2", heightClass: "h-[200px]" };
-    } else if (displayCount === 3) {
-      return { gridClass: "grid-cols-3", heightClass: "h-[200px]" };
-    } else {
-      return { gridClass: "grid-cols-3", heightClass: "h-[200px]" };
-    }
   };
 
   return (
@@ -181,58 +164,62 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
         {/* Media gallery */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="mt-4 -mx-4" onClick={() => setIsMediaExpanded(!isMediaExpanded)}>
-            <div className={`grid ${getMediaLayout()?.gridClass} gap-1 cursor-pointer transition-all duration-300`}>
-              {entry.mediaUrls.slice(0, isMediaExpanded ? undefined : 3).map((url, i) => {
-                const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
-                const isLastVisible = !isMediaExpanded && i === 2 && entry.mediaUrls.length > 3;
+          <div className="mt-4 -mx-4 space-y-1" onClick={() => navigate(`/entry/${entry.id}`)}>
+            {/* First media - large */}
+            {entry.mediaUrls[0] && (
+              <div className="aspect-[16/9] w-full cursor-pointer">
+                {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
+                  <video
+                    src={entry.mediaUrls[0]}
+                    className="w-full h-full object-cover"
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={entry.mediaUrls[0]}
+                    alt="Media 1"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                )}
+              </div>
+            )}
 
-                const containerClasses = `
-                  relative overflow-hidden 
-                  ${getMediaLayout()?.heightClass}
-                  ${isLastVisible ? 'relative' : ''}
-                `;
+            {/* Second and third media - smaller */}
+            {entry.mediaUrls.length > 1 && (
+              <div className="grid grid-cols-2 gap-1">
+                {entry.mediaUrls.slice(1, 3).map((url, i) => {
+                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                  const isLastVisible = i === 1 && entry.mediaUrls.length > 3;
 
-                if (isVideo) {
                   return (
-                    <div key={i} className={containerClasses}>
-                      <video
-                        src={url}
-                        className="w-full h-full object-cover"
-                        playsInline
-                      />
+                    <div key={i} className="aspect-square relative cursor-pointer">
+                      {isVideo ? (
+                        <video
+                          src={url}
+                          className="w-full h-full object-cover"
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={url}
+                          alt={`Media ${i + 2}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      )}
+                      {isLastVisible && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          <span className="text-white text-xl font-semibold">
+                            +{entry.mediaUrls.length - 3}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
-                }
-
-                if (isAudio) {
-                  return (
-                    <div key={i} className="col-span-full flex items-center justify-center h-24 bg-muted p-4">
-                      <audio src={url} controls className="w-full" />
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={i} className={containerClasses}>
-                    <img
-                      src={url}
-                      alt={`Media ${i + 1}`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                    {isLastVisible && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                        <span className="text-white text-xl font-semibold">
-                          +{entry.mediaUrls.length - 3}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                })}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

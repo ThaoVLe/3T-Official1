@@ -5,8 +5,7 @@ import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function EntryView() {
   const { id } = useParams();
@@ -55,7 +54,7 @@ export default function EntryView() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white no-scrollbar">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="container px-4 py-2 flex items-center">
@@ -73,7 +72,7 @@ export default function EntryView() {
 
       {/* Content */}
       <div className="container px-4 py-6">
-        <ScrollArea className="h-[500px]" style={{ overflowY: 'auto' }}>
+        <ScrollArea className="h-[calc(100vh-80px)] no-scrollbar">
           <div className="space-y-4">
             <h1 className="text-[24px] font-semibold">
               {entry.title || "Untitled Entry"}

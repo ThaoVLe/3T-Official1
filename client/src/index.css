@@ -19,19 +19,19 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;     /* Firefox */
   }
-  
+
   /* Hide scrollbar for Chrome, Safari and Opera */
   body::-webkit-scrollbar {
     display: none;
   }
-  
+
   /* For divs that need scrolling but hidden scrollbar */
   .scroll-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
     overflow-y: auto;
   }
-  
+
   .scroll-hidden::-webkit-scrollbar {
     display: none;
   }
@@ -39,13 +39,12 @@
 
 @layer components {
   .container-page {
-    @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
+    @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden no-scrollbar;
   }
 
   .editor-page {
-    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
+    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background no-scrollbar;
   }
-
   /* Auto-expanding editor styles */
   .tiptap-container .ProseMirror {
     transition: min-height 0.2s ease;
@@ -239,6 +238,19 @@
     .media-grid {
       margin: 0 -1rem;
     }
+  }
+}
+
+@layer utilities {
+  /* Scrollbar hiding utility classes */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    overflow-y: auto;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 

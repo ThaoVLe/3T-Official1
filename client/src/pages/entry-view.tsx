@@ -4,11 +4,15 @@ import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
+import { motion } from "framer-motion"; // Added for animation
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [touchStart, setTouchStart] = useState< { x: number; y: number } | null>(null);
+  const [swipeProgress, setSwipeProgress] = useState(0);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -51,8 +55,47 @@ export default function EntryView() {
     return format(new Date(date), "MMMM d, yyyy 'at' h:mm a");
   };
 
+  const routeTransition = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 }
+  };
+
+
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-white">
+    <motion.div
+      className="flex flex-col h-screen overflow-hidden bg-white"
+      {...routeTransition}
+      onTouchStart={(e) => {
+        setTouchStart({
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+        });
+      }}
+      onTouchMove={(e) => {
+        if (!touchStart) return;
+
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+
+        const xDiff = currentX - touchStart.x;
+        const yDiff = Math.abs(currentY - touchStart.y);
+
+        if (xDiff > 20 && xDiff > yDiff) {
+          setSwipeProgress(Math.min(100, (xDiff / 100) * 100));
+        } else {
+          setSwipeProgress(0);
+        }
+      }}
+      onTouchEnd={(e) => {
+        if (swipeProgress > 60) {
+          navigate('/');
+        }
+        setSwipeProgress(0);
+        setTouchStart(null);
+      }}
+      ref={contentRef}
+    >
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">
@@ -154,6 +197,6 @@ export default function EntryView() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

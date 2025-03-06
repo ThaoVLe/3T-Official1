@@ -1,8 +1,8 @@
+@import './styles/embla.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import './styles/embla.css';
 
 @layer base {
   * {
@@ -177,10 +177,11 @@
       overflow-x: hidden;
     }
 
-    /* Facebook-like card spacing on mobile */
+    /* Modern Facebook-like card spacing on mobile */
     .card {
-      @apply border-0 shadow-none rounded-none;
-      margin-bottom: 0.5rem;
+      @apply border-0 shadow-sm rounded-lg;
+      margin-bottom: 0.75rem;
+      background-color: white;
     }
   }
 }

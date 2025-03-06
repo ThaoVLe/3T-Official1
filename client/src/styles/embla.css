@@ -3,12 +3,21 @@
   --slide-spacing: 0;
   --slide-size: 100%;
   overflow: hidden;
+  position: relative;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .embla__container {
   display: flex;
-  backface-visibility: hidden;
+  will-change: transform;
   touch-action: pan-y;
+  cursor: grab;
+  backface-visibility: hidden;
+}
+
+.embla__container:active {
+  cursor: grabbing;
 }
 
 .embla__slide {
@@ -17,3 +26,16 @@
   position: relative;
 }
 
+.embla__slide img {
+  display: block;
+  width: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.embla__slide video {
+  display: block;
+  width: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}

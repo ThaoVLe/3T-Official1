@@ -68,7 +68,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
   };
 
   return (
-    <Card className="group bg-white shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden relative">
+    <Card className="group bg-white shadow-sm hover:shadow transition-shadow duration-200 overflow-hidden relative rounded-lg mb-4">
       <CardHeader className="space-y-0 pb-2 pt-4 px-4">
         <div className="flex justify-between items-start">
           <div className="flex flex-col space-y-1.5">
@@ -167,9 +167,9 @@ export default function EntryCard({ entry }: EntryCardProps) {
           </button>
         )}
 
-        {/* Media gallery - Facebook-style */}
+        {/* Media gallery - Modern Facebook style */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="mt-4 -mx-4 border-t border-b border-gray-200">
+          <div className="mt-2 overflow-hidden">
             <div className="embla" ref={emblaRef}>
               <div className="embla__container">
                 {entry.mediaUrls.map((url, i) => {
@@ -183,7 +183,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
                           src={url}
                           controls
                           playsInline
-                          className="w-full h-full object-contain max-h-[500px] bg-black"
+                          className="w-full max-h-[500px] object-cover bg-black"
                         />
                       </div>
                     );
@@ -204,7 +204,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
                       <img
                         src={url}
                         alt={`Media ${i + 1}`}
-                        className="w-full h-full object-contain max-h-[500px] bg-black"
+                        className="w-full object-cover aspect-[16/9]"
                         loading="lazy"
                       />
                     </div>
@@ -213,9 +213,9 @@ export default function EntryCard({ entry }: EntryCardProps) {
               </div>
             </div>
             {entry.mediaUrls.length > 1 && (
-              <div className="flex justify-center gap-1 py-2">
+              <div className="flex justify-center gap-2 py-2">
                 {entry.mediaUrls.map((_, i) => (
-                  <div key={i} className="w-2 h-2 rounded-full bg-gray-300"></div>
+                  <div key={i} className="w-2 h-2 rounded-full bg-blue-500 opacity-75"></div>
                 ))}
               </div>
             )}

@@ -64,9 +64,9 @@ export default function EntryCard({ entry }: EntryCardProps) {
   };
 
   return (
-    <Card className="group bg-white border-0 shadow-none w-full">
-      <CardHeader className="space-y-0 pb-2 pt-4 px-4">
-        <div className="flex justify-between items-start">
+    <Card className="group bg-white shadow-none border-0 w-full mb-4">
+      <CardHeader className="space-y-0 pb-2 pt-3 px-0">
+        <div className="flex justify-between items-start px-4">
           <div className="flex flex-col space-y-1.5">
             <CardTitle className="text-[18px] font-semibold">
               {entry.title || "Untitled Entry"}
@@ -104,7 +104,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity px-4">
             <Button
               size="icon"
               variant="ghost"
@@ -146,7 +146,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="px-4 pt-0 pb-4">
+      <CardContent className="px-4 pt-0 pb-3">
         {/* Text content with expansion */}
         <div 
           onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
@@ -164,7 +164,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
         {/* Media gallery */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="mt-4 -mx-4" onClick={() => navigate(`/entry/${entry.id}`)}>
+          <div className="mt-3 -mx-4" onClick={() => navigate(`/entry/${entry.id}`)}>
             {/* First media - large */}
             {entry.mediaUrls[0] && (
               <div className="aspect-[16/9] w-full cursor-pointer overflow-hidden">
@@ -187,7 +187,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
             {/* Second and third media - two columns */}
             {entry.mediaUrls.length > 1 && (
-              <div className="grid grid-cols-2 gap-[2px] mt-[2px]">
+              <div className="grid grid-cols-2 gap-[1px] mt-[1px]">
                 {entry.mediaUrls.slice(1, 3).map((url, i) => {
                   const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
                   const isLastVisible = i === 1 && entry.mediaUrls.length > 3;

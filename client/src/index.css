@@ -58,7 +58,7 @@
   }
   /* Auto-expanding editor styles */
   .tiptap-container .ProseMirror {
-    transition: min-height 0.2s ease;
+    transition: height 0.2s ease;
     height: auto;
     overflow-y: hidden;
   }
@@ -90,6 +90,7 @@
 
   .card {
     @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
+  }
 
 /* Enhance touch scrolling */
 .tiptap {
@@ -108,8 +109,6 @@
     touch-action: pan-y;
   }
 }
-
-  }
 
   /* Text sizes for consistency across the app */
   .heading-1 {

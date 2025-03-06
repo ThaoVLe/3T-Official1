@@ -1,16 +1,18 @@
+
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const contentRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -23,95 +25,127 @@ export default function EntryView() {
     let touchStartTime = 0;
     let startScrollPosition = 0;
     let isHorizontalSwipe = false;
+    let isSwiping = false;
 
     const handleTouchStart = (e: TouchEvent) => {
+      if (!pageRef.current || isTransitioning) return;
+      
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
       startScrollPosition = contentRef.current?.scrollTop || 0;
       isHorizontalSwipe = false;
+      isSwiping = false;
 
-      // Reset any existing transitions
+      // Reset any existing transforms
       if (pageRef.current) {
         pageRef.current.style.transition = 'none';
-        pageRef.current.style.transform = 'translateX(0) scale(1) rotate(0deg)';
+        pageRef.current.style.transform = 'translateX(0)';
         pageRef.current.style.opacity = '1';
-        pageRef.current.classList.remove('swiping'); //remove swiping class
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!pageRef.current) return;
+      if (!pageRef.current || isTransitioning) return;
 
       const touchX = e.touches[0].clientX;
       const touchY = e.touches[0].clientY;
       const deltaX = touchX - touchStartX;
       const deltaY = touchY - touchStartY;
-
-      // Determine if this is a horizontal swipe early in the gesture
-      // And make the detection more sensitive (reduced threshold from 10 to 5)
-      if (!isHorizontalSwipe && Math.abs(deltaX) > 5) {
-        isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
-
-        // If we're in a horizontal swipe at the top of content, set a class to indicate this
-        if (isHorizontalSwipe && startScrollPosition <= 5) {
-          pageRef.current.classList.add('swiping');
+      
+      // Determine horizontal swipe early with a small threshold
+      if (!isHorizontalSwipe && !isSwiping) {
+        // Require a minimum movement to start detecting direction
+        if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+          // If movement is more horizontal than vertical
+          isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
+          
+          if (isHorizontalSwipe && deltaX > 0 && startScrollPosition <= 5) {
+            isSwiping = true;
+            e.preventDefault(); // Prevent scrolling
+          }
         }
       }
 
-      // Only handle horizontal swipes for back navigation when at the top
-      if (isHorizontalSwipe && startScrollPosition <= 5) {
-        e.preventDefault(); // Prevent scrolling when swiping horizontally
-
-        // Calculate swipe progress
-        const progress = Math.max(0, Math.min(1, deltaX / (window.innerWidth * 0.6)));
-
-        // Use transforms for smooth animation
-        const transform = deltaX;
-        const scale = 1 - 0.08 * progress;
-        const rotate = 3 * progress;
-        const opacity = 1 - 0.5 * progress;
-
-        pageRef.current.style.transform = `translateX(${transform}px) scale(${scale}) rotate(${rotate}deg)`;
+      // If we've determined this is a rightward swipe
+      if (isSwiping && isHorizontalSwipe && deltaX > 0) {
+        e.preventDefault(); // Prevent scrolling during swipe
+        
+        // Apply a resistance factor for natural feel
+        const resistance = 0.8;
+        const transformX = Math.min(deltaX * resistance, window.innerWidth);
+        
+        // Calculate progress as a percentage (0-1)
+        const progress = Math.min(transformX / (window.innerWidth * 0.6), 1);
+        
+        // Apply transform with subtle scaling and rotation for natural feel
+        const scale = 1 - (0.05 * progress);
+        const rotate = 2 * progress; // Max 2 degrees rotation
+        const opacity = 1 - (0.3 * progress);
+        
+        pageRef.current.style.transform = `translateX(${transformX}px) scale(${scale}) rotate(${rotate}deg)`;
         pageRef.current.style.opacity = opacity.toString();
+        
+        // Update visual indicator if present
+        const indicator = pageRef.current.querySelector('[data-swipe-indicator]') as HTMLElement;
+        if (indicator) {
+          indicator.style.transform = `scaleX(${progress})`;
+          indicator.style.opacity = progress.toString();
+        }
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!pageRef.current || !isHorizontalSwipe) return;
-
+      if (!pageRef.current || !isHorizontalSwipe || !isSwiping || isTransitioning) return;
+      
       const touchEndX = e.changedTouches[0].clientX;
       const touchEndTime = Date.now();
       const swipeDistance = touchEndX - touchStartX;
       const swipeTime = touchEndTime - touchStartTime;
       const velocity = swipeDistance / swipeTime;
-
-      // Navigate back if swipe is fast enough or far enough
-      const shouldNavigateBack = (swipeDistance > window.innerWidth * 0.3 && startScrollPosition <= 0) || 
-                                (velocity > 0.5 && startScrollPosition <= 0);
-
-      // Update swipe indicator
+      
+      // Navigate back if swipe meets criteria:
+      // 1. Swipe is at least 30% of screen width, OR
+      // 2. Swipe velocity is fast enough (> 0.5 px/ms)
+      const shouldNavigateBack = (swipeDistance > window.innerWidth * 0.3) || (velocity > 0.5);
+      
+      // Add visual feedback for swipe indicator
       const indicator = pageRef.current.querySelector('[data-swipe-indicator]') as HTMLElement;
       if (indicator) {
-        indicator.style.transition = 'transform 0.4s ease-in-out, opacity 0.4s ease-in-out';
+        indicator.style.transition = 'all 0.3s ease';
         indicator.style.transform = shouldNavigateBack ? 'scaleX(1)' : 'scaleX(0)';
         indicator.style.opacity = shouldNavigateBack ? '1' : '0';
       }
-
+      
       if (shouldNavigateBack) {
-        // Add transition for smooth exit
+        // Prevent multiple transitions
+        setIsTransitioning(true);
+        
+        // Add smooth transition for exit animation
         pageRef.current.style.transition = 'all 0.35s cubic-bezier(0.32, 0.72, 0.2, 1)';
         pageRef.current.style.transform = `translateX(${window.innerWidth}px) scale(0.92) rotate(3deg)`;
         pageRef.current.style.opacity = '0';
-
-        setTimeout(() => navigate('/'), 350);
+        
+        // Navigate after animation completes
+        setTimeout(() => {
+          navigate('/');
+          setIsTransitioning(false);
+        }, 350);
       } else {
-        // Reset position with spring-like transition
-        pageRef.current.style.transition = 'all 0.5s cubic-bezier(0.32, 0.72, 0.2, 1.2)';
+        // Spring back to original position
+        pageRef.current.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
         pageRef.current.style.transform = 'translateX(0) scale(1) rotate(0deg)';
         pageRef.current.style.opacity = '1';
-        pageRef.current.classList.remove('swiping'); //remove swiping class
+        
+        // Reset after animation completes
+        setTimeout(() => {
+          pageRef.current?.style.removeProperty('transition');
+        }, 400);
       }
+      
+      // Reset flags
+      isSwiping = false;
+      isHorizontalSwipe = false;
     };
 
     const handleTransitionEnd = () => {
@@ -120,8 +154,10 @@ export default function EntryView() {
       }
     };
 
+    // Add event listeners
     const page = pageRef.current;
     if (page) {
+      // Use passive: false to allow preventDefault() on iOS
       page.addEventListener('touchstart', handleTouchStart, { passive: false });
       page.addEventListener('touchmove', handleTouchMove, { passive: false });
       page.addEventListener('touchend', handleTouchEnd);
@@ -136,41 +172,43 @@ export default function EntryView() {
         page.removeEventListener('transitionend', handleTransitionEnd);
       }
     };
-  }, [navigate]);
+  }, [navigate, isTransitioning]);
 
   useEffect(() => {
     // Scroll to selected media if specified in URL
     const params = new URLSearchParams(window.location.search);
     const mediaIndex = params.get('media');
-
-    if (mediaIndex && contentRef.current) {
-      const mediaElements = contentRef.current.querySelectorAll('.media-item');
-      const targetElement = mediaElements[parseInt(mediaIndex)];
-
-      if (targetElement) {
+    
+    if (mediaIndex && entry?.media && entry.media.length > 0) {
+      const index = parseInt(mediaIndex, 10);
+      
+      // Find all media elements
+      const mediaElements = document.querySelectorAll('.media-item');
+      
+      if (mediaElements.length > 0 && index < mediaElements.length) {
         setTimeout(() => {
-          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          mediaElements[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 100);
       }
     }
   }, [entry]);
 
-  if (!entry) return null;
-
-  const feeling = entry.feeling ? {
-    emoji: entry.feeling.emoji || "",
-    label: entry.feeling.label || ""
-  } : null;
-
-  const formatDate = (date: string | Date) => {
-    return format(new Date(date), "MMMM d, yyyy 'at' h:mm a");
-  };
+  if (!entry) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div ref={pageRef} className="flex flex-col h-screen overflow-hidden bg-white">
+    <div 
+      ref={pageRef} 
+      className="w-full h-full bg-white touch-manipulation"
+    >
       {/* Swipe indicator */}
       <div 
-        data-swipe-indicator 
+        data-swipe-indicator
         className="absolute top-0 left-0 w-full h-1 bg-primary z-20 origin-left"
         style={{ transform: 'scaleX(0)', opacity: 0 }}
       />
@@ -181,100 +219,95 @@ export default function EntryView() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/')}
             className="mr-2"
+            onClick={() => navigate('/')}
           >
-            <ArrowLeft className="h-6 w-6" />
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold">Entry</h1>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div ref={contentRef} className="flex-1 overflow-y-auto no-scrollbar">
-        <div className="px-4 py-6">
-          <div className="space-y-4">
-            <h1 className="text-[24px] font-semibold">
-              {entry.title || "Untitled Entry"}
-            </h1>
-
-            <div className="text-sm text-muted-foreground">
-              {formatDate(entry.createdAt)}
+          <div className="ml-1">
+            <div className="text-sm font-medium">
+              {format(new Date(entry.date), 'EEEE, MMMM d, yyyy')}
             </div>
-
-            {(feeling || entry.location) && (
-              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                {feeling && (
-                  <div className="flex items-center">
-                    {feeling.label.includes(',') ? (
-                      <span>
-                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                      </span>
-                    ) : (
-                      <span>
-                        feeling {feeling.label} {feeling.emoji}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {entry.location && (
-                  <div className="flex items-center">
-                    <span>at {entry.location} 📍</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Content */}
-            <div
-              className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: entry.content }}
-            />
-
-            {/* Media */}
-            {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-              <div className="space-y-4 mt-6">
-                {entry.mediaUrls.map((url, i) => {
-                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
-
-                  if (isVideo) {
-                    return (
-                      <div key={i} className="media-item w-full">
-                        <video
-                          src={url}
-                          controls
-                          playsInline
-                          className="w-full aspect-video object-cover rounded-lg"
-                        />
-                      </div>
-                    );
-                  }
-
-                  if (isAudio) {
-                    return (
-                      <div key={i} className="media-item w-full bg-muted rounded-lg p-4">
-                        <audio src={url} controls className="w-full" />
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div key={i} className="media-item w-full">
-                      <img
-                        src={url}
-                        alt={`Media ${i + 1}`}
-                        className="w-full rounded-lg"
-                        loading="lazy"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+            {entry.title && (
+              <h1 className="text-xl font-semibold">{entry.title}</h1>
             )}
           </div>
         </div>
+      </div>
+
+      {/* Entry content */}
+      <div 
+        ref={contentRef}
+        className="px-4 py-2 overflow-auto pb-20"
+        style={{ 
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch' 
+        }}
+      >
+        {/* Feeling/Activity tags */}
+        {(entry.feeling || entry.activity) && (
+          <div className="flex gap-2 mb-4 flex-wrap">
+            {entry.feeling && (
+              <div className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800">
+                {entry.feeling}
+              </div>
+            )}
+            {entry.activity && (
+              <div className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-800">
+                {entry.activity}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Entry text content */}
+        {entry.content && (
+          <div
+            className="prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: entry.content }}
+          />
+        )}
+
+        {/* Media content */}
+        {entry.media && entry.media.length > 0 && (
+          <div className="mt-4">
+            <div className="mb-2 text-sm font-medium text-gray-500">
+              Media ({entry.media.length})
+            </div>
+            
+            <div className="media-grid grid-cols-3 auto-rows-fr">
+              {entry.media.map((media, index) => (
+                <div 
+                  key={index}
+                  className="media-item relative bg-gray-100 rounded overflow-hidden"
+                  style={{ aspectRatio: '1/1' }}
+                >
+                  {media.type === 'image' ? (
+                    <img
+                      src={media.url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : media.type === 'video' ? (
+                    <video
+                      src={media.url}
+                      className="w-full h-full object-cover"
+                      controls
+                    />
+                  ) : media.type === 'audio' ? (
+                    <div className="flex items-center justify-center h-full bg-gray-800 text-white">
+                      <div className="text-center p-2">
+                        <div className="text-xs">Audio</div>
+                        <audio src={media.url} controls className="w-full mt-2" />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

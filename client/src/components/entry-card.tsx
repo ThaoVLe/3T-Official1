@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
+import MediaDialog from "@/components/media-dialog"; // Added import
 
 interface EntryCardProps {
   entry: DiaryEntry;

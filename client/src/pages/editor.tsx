@@ -239,10 +239,12 @@ export default function Editor() {
       {/* Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6">
-          <TipTapEditor
-            value={form.watch("content")}
-            onChange={(value) => form.setValue("content", value)}
-          />
+          <div className="pb-[100px]">
+            <TipTapEditor
+              value={form.watch("content")}
+              onChange={(value) => form.setValue("content", value)}
+            />
+          </div>
         </div>
 
         {/* Media Controls - Fixed at bottom */}

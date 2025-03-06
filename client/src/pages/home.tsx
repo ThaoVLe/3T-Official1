@@ -66,7 +66,7 @@ export default function Home() {
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar bg-[#f0f2f5]">
-        <div className="space-y-2">
+        <div className="space-y-2 pb-[100px]">
           {entries.map((entry) => (
             <div key={entry.id} className="bg-white">
               <EntryCard entry={entry} />

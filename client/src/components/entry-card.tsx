@@ -68,7 +68,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
   };
 
   return (
-    <Card className="group bg-white shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+    <Card className="group bg-white shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden relative">
       <CardHeader className="space-y-0 pb-2 pt-4 px-4">
         <div className="flex justify-between items-start">
           <div className="flex flex-col space-y-1.5">
@@ -109,7 +109,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-4">
             <Button
               size="icon"
               variant="ghost"

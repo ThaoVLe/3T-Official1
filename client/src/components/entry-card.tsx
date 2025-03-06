@@ -77,26 +77,26 @@ export default function EntryCard({ entry }: EntryCardProps) {
               {formatTimeAgo(entry.createdAt)}
             </div>
 
-            {/* Emotions and location line - will wrap if needed */}
+            {/* Emotions and location line - take up full width */}
             {(feeling || entry.location) && (
-              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground w-full">
                 {feeling && (
-                  <div className="flex items-center">
+                  <div className="flex-1 min-w-0">
                     {feeling.label.includes(',') ? (
-                      <span>
+                      <span className="inline-block w-full truncate">
                         feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
                         while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
                       </span>
                     ) : (
-                      <span>
+                      <span className="inline-block w-full truncate">
                         feeling {feeling.label} {feeling.emoji}
                       </span>
                     )}
                   </div>
                 )}
                 {entry.location && (
-                  <div className="flex items-center">
-                    <span>at {entry.location} 📍</span>
+                  <div className={`${feeling ? 'ml-auto' : 'flex-1'} min-w-0`}>
+                    <span className="inline-block truncate">at {entry.location} 📍</span>
                   </div>
                 )}
               </div>

@@ -12,16 +12,16 @@
   html {
     scroll-behavior: smooth;
     height: 100%;
-    overflow: hidden;
+    overflow: visible;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
     height: 100%;
-    overflow: hidden;
+    overflow: visible;
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;     /* Firefox */
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: contain;
   }
 
   /* Hide scrollbar for Chrome, Safari and Opera */

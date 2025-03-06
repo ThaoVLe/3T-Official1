@@ -187,7 +187,7 @@ export default function Editor() {
   }, [isMobile]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white w-full">
+    <div className="min-h-screen flex flex-col overflow-auto bg-white w-full">
       {/* Header */}
       <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
         <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
@@ -237,8 +237,8 @@ export default function Editor() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 flex flex-col overflow-auto w-full">
-        <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+      <div className="flex-1 flex flex-col w-full">
+        <div className="flex-1 p-4 sm:p-6 w-full max-w-full touch-auto overflow-y-auto">
           <TipTapEditor
             value={form.watch("content")}
             onChange={(value) => form.setValue("content", value)}

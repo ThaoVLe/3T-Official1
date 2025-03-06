@@ -152,9 +152,10 @@ export default function EntryCard({ entry }: EntryCardProps) {
       </CardHeader>
 
       <CardContent className="px-4 pt-0 pb-4">
-        {/* Text content with expansion */}
+        {/* Text content with expansion - now clickable */}
         <div 
-          className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''}`}
+          onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
+          className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
           dangerouslySetInnerHTML={{ __html: entry.content }}
         />
         {needsExpansion(entry.content) && (

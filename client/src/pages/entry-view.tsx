@@ -53,7 +53,7 @@ export default function EntryView() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col overflow-auto">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">
@@ -70,7 +70,7 @@ export default function EntryView() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 py-6 overflow-y-auto touch-auto">
+      <div className="flex-1 px-4 py-6">
         <div className="space-y-4">
           <h1 className="text-[24px] font-semibold">
             {entry.title || "Untitled Entry"}

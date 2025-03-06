@@ -167,23 +167,23 @@ export default function EntryCard({ entry }: EntryCardProps) {
           </button>
         )}
 
-        {/* Media gallery */}
+        {/* Media gallery - Facebook-style */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="mt-4 -mx-4">
+          <div className="mt-4 -mx-4 border-t border-b border-gray-200">
             <div className="embla" ref={emblaRef}>
               <div className="embla__container">
                 {entry.mediaUrls.map((url, i) => {
-                  const isVideo = url.match(/\.(mp4|webm)$/i);
+                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
                   const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
 
                   if (isVideo) {
                     return (
-                      <div key={i} className="embla__slide">
+                      <div key={i} className="embla__slide p-0 overflow-hidden">
                         <video
                           src={url}
                           controls
                           playsInline
-                          className="w-full aspect-video object-cover rounded-none"
+                          className="w-full h-full object-contain max-h-[500px] bg-black"
                         />
                       </div>
                     );
@@ -192,7 +192,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
                   if (isAudio) {
                     return (
                       <div key={i} className="embla__slide">
-                        <div className="flex items-center justify-center h-24 bg-muted p-4">
+                        <div className="flex items-center justify-center h-24 bg-gray-100 p-4 border-t border-b border-gray-200">
                           <audio src={url} controls className="w-full" />
                         </div>
                       </div>
@@ -204,7 +204,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
                       <img
                         src={url}
                         alt={`Media ${i + 1}`}
-                        className="w-full aspect-video object-cover rounded-none"
+                        className="w-full h-full object-contain max-h-[500px] bg-black"
                         loading="lazy"
                       />
                     </div>
@@ -212,6 +212,13 @@ export default function EntryCard({ entry }: EntryCardProps) {
                 })}
               </div>
             </div>
+            {entry.mediaUrls.length > 1 && (
+              <div className="flex justify-center gap-1 py-2">
+                {entry.mediaUrls.map((_, i) => (
+                  <div key={i} className="w-2 h-2 rounded-full bg-gray-300"></div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

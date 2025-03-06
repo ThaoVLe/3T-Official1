@@ -1,17 +1,8 @@
 @tailwind base;
-
-/* Force full viewport width */
-html, body, #root {
-  width: 100vw;
-  max-width: 100%;
-  overflow-x: hidden;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 @tailwind components;
 @tailwind utilities;
+
+@import './styles/embla.css';
 
 @layer base {
   * {

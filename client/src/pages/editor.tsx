@@ -187,9 +187,9 @@ export default function Editor() {
   }, [isMobile]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white w-full">
+    <div className="h-screen flex flex-col overflow-hidden bg-white">
       {/* Header */}
-      <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
+      <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 flex-none">
         <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
           <Button
             variant="ghost"
@@ -237,8 +237,8 @@ export default function Editor() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 flex flex-col w-full">
-        <div className="flex-1 p-4 sm:p-6 w-full max-w-full overflow-y-auto no-scrollbar">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto no-scrollbar">
           <TipTapEditor
             value={form.watch("content")}
             onChange={(value) => form.setValue("content", value)}
@@ -246,7 +246,7 @@ export default function Editor() {
         </div>
 
         {/* Media Controls - Fixed at bottom */}
-        <div className="border-t bg-white sticky bottom-0 w-full" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}> {/*Added paddingBottom for safe area*/}
+        <div className="border-t bg-white flex-none" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
           <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">How are you feeling today?</span>

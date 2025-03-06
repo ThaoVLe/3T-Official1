@@ -53,7 +53,7 @@ export default function EntryView() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col no-scrollbar">
+    <div className="h-screen flex flex-col overflow-hidden bg-white">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">

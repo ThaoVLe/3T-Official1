@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share, MessageCircle } from "lucide-react";
+import { Edit2, Trash2, Share } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -63,23 +63,6 @@ export default function EntryCard({ entry }: EntryCardProps) {
     return textContent.length > 200;
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: entry.title || "My Diary Entry",
-        text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
-        url: window.location.origin + `/entry/${entry.id}`,
-      }).catch(err => console.log('Error sharing:', err));
-    } else {
-      navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
-        .then(() => toast({
-          title: "Link copied",
-          description: "Entry link copied to clipboard"
-        }))
-        .catch(err => console.error('Could not copy text:', err));
-    }
-  };
-
   return (
     <Card className="group bg-white shadow-none border-0 w-full mb-4">
       <CardHeader className="space-y-0 pb-2 pt-3 px-0">
@@ -125,7 +108,22 @@ export default function EntryCard({ entry }: EntryCardProps) {
             <Button
               size="icon"
               variant="ghost"
-              onClick={handleShare}
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: entry.title || "My Diary Entry",
+                    text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                    url: window.location.origin + `/entry/${entry.id}`,
+                  }).catch(err => console.log('Error sharing:', err));
+                } else {
+                  navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
+                    .then(() => toast({
+                      title: "Link copied",
+                      description: "Entry link copied to clipboard"
+                    }))
+                    .catch(err => console.error('Could not copy text:', err));
+                }
+              }}
               className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
             >
               <Share className="h-4 w-4"/>
@@ -166,15 +164,10 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
         {/* Media gallery */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="mt-3 -mx-4" onClick={(e) => {
-            // Find the closest media item to get its index
-            const mediaItem = (e.target as HTMLElement).closest('.media-item');
-            const index = mediaItem ? Array.from(mediaItem.parentElement!.children).indexOf(mediaItem) : 0;
-            navigate(`/entry/${entry.id}?media=${index}`);
-          }}>
+          <div className="mt-3 -mx-4" onClick={() => navigate(`/entry/${entry.id}`)}>
             {/* First media - large */}
             {entry.mediaUrls[0] && (
-              <div className="media-item aspect-[16/9] w-full cursor-pointer overflow-hidden">
+              <div className="aspect-[16/9] w-full cursor-pointer overflow-hidden">
                 {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
                   <video
                     src={entry.mediaUrls[0]}
@@ -197,10 +190,10 @@ export default function EntryCard({ entry }: EntryCardProps) {
               <div className="grid grid-cols-2 gap-[1px] mt-[1px]">
                 {entry.mediaUrls.slice(1, 3).map((url, i) => {
                   const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                  const isLastVisible = i === 1 && entry.mediaUrls && entry.mediaUrls.length > 3;
+                  const isLastVisible = i === 1 && entry.mediaUrls.length > 3;
 
                   return (
-                    <div key={i} className="media-item aspect-square relative cursor-pointer overflow-hidden">
+                    <div key={i} className="aspect-square relative cursor-pointer overflow-hidden">
                       {isVideo ? (
                         <video
                           src={url}
@@ -230,30 +223,6 @@ export default function EntryCard({ entry }: EntryCardProps) {
           </div>
         )}
       </CardContent>
-
-      {/* Footer with comment and share buttons */}
-      <CardFooter className="px-4 pt-2 pb-3 flex justify-between">
-        <div className="flex gap-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-muted-foreground hover:text-foreground"
-            onClick={() => navigate(`/entry/${entry.id}#comments`)}
-          >
-            <MessageCircle className="h-4 w-4 mr-1" />
-            Comment
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-muted-foreground hover:text-foreground"
-            onClick={handleShare}
-          >
-            <Share className="h-4 w-4 mr-1" />
-            Share
-          </Button>
-        </div>
-      </CardFooter>
     </Card>
   );
 }

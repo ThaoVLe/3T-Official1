@@ -13,13 +13,32 @@
     scroll-behavior: smooth;
     height: 100%;
     overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
     height: 100%;
     overflow: hidden;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+    overscroll-behavior-y: none;
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* For divs that need scrolling but hidden scrollbar */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+    overflow-y: auto;
+    overscroll-behavior-y: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 
   #root {
@@ -30,13 +49,12 @@
 
 @layer components {
   .container-page {
-    @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
+    @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden no-scrollbar;
   }
 
   .editor-page {
-    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
+    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background no-scrollbar;
   }
-
   /* Auto-expanding editor styles */
   .tiptap-container .ProseMirror {
     transition: min-height 0.2s ease;
@@ -48,25 +66,20 @@
     @apply min-h-[200px];
   }
 
+  /* Ensure editor container grows properly */
+  .tiptap-container {
+    transition: height 0.2s ease;
+    overflow: hidden;
+  }
+
+  /* Custom emotion styles */
+  .custom-emotion {
+    color: #880000;
+    font-weight: 500;
+  }
+
   .tiptap-container {
     @apply flex flex-col;
-  }
-
-  /* Scrollbar hiding with smooth scroll */
-  .no-scrollbar {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior-y: none;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .no-scrollbar::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-    display: none;
   }
 
   /* Fix for bottom menu bar */
@@ -239,7 +252,7 @@
 }
 
 @layer utilities {
-  /* Responsive fixes */
+  /* Additional responsive fixes */
   @media (max-width: 640px) {
     .sm-stack {
       @apply flex flex-col;

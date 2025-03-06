@@ -30,6 +30,13 @@ export default function EntryView() {
       touchStartTime = Date.now();
       startScrollPosition = contentRef.current?.scrollTop || 0;
       isHorizontalSwipe = false;
+
+      // Reset any existing transitions
+      if (pageRef.current) {
+        pageRef.current.style.transition = 'none';
+        pageRef.current.style.transform = 'translateX(0) scale(1) rotate(0deg)';
+        pageRef.current.style.opacity = '1';
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {

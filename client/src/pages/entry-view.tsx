@@ -62,14 +62,14 @@ export default function EntryView() {
       // Navigate back if swipe is fast enough or far enough
       if ((swipeDistance > 100 && startScrollPosition <= 0) || (velocity > 0.5 && startScrollPosition <= 0)) {
         // Add transition for smooth exit
-        pageRef.current.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+        pageRef.current.style.transition = 'transform 0.4s ease-in-out, opacity 0.4s ease-in-out';
         pageRef.current.style.transform = `translateX(${window.innerWidth}px)`;
         pageRef.current.style.opacity = '0';
 
-        setTimeout(() => navigate('/'), 300);
+        setTimeout(() => navigate('/'), 400);
       } else {
         // Reset position with transition
-        pageRef.current.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+        pageRef.current.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out';
         pageRef.current.style.transform = '';
         pageRef.current.style.opacity = '1';
       }
@@ -127,8 +127,23 @@ export default function EntryView() {
     return format(new Date(date), "MMMM d, yyyy 'at' h:mm a");
   };
 
+  const swipeIndicatorStyle = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: 2,
+    backgroundColor: 'lightgray',
+    transform: 'scaleX(0)',
+    transition: 'transform 0.3s ease-in-out',
+  };
+
+
   return (
     <div ref={pageRef} className="flex flex-col h-screen overflow-hidden bg-white">
+      {/* Swipe progress indicator */}
+      <div style={swipeIndicatorStyle} />
+
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">

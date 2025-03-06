@@ -71,6 +71,13 @@ export default function EntryView() {
 
         pageRef.current.style.transform = `translateX(${transform}px) scale(${scale}) rotate(${rotate}deg)`;
         pageRef.current.style.opacity = opacity.toString();
+        
+        // Update swipe indicator
+        const indicator = pageRef.current.querySelector('[data-swipe-indicator]') as HTMLElement;
+        if (indicator) {
+          indicator.style.transform = `scaleX(${progress})`;
+          indicator.style.opacity = progress.toString();
+        }
       }
     };
 
@@ -86,6 +93,14 @@ export default function EntryView() {
       // Navigate back if swipe is fast enough or far enough
       const shouldNavigateBack = (swipeDistance > window.innerWidth * 0.3 && startScrollPosition <= 0) || 
                                 (velocity > 0.5 && startScrollPosition <= 0);
+
+      // Update swipe indicator
+      const indicator = pageRef.current.querySelector('[data-swipe-indicator]') as HTMLElement;
+      if (indicator) {
+        indicator.style.transition = 'transform 0.4s ease-in-out, opacity 0.4s ease-in-out';
+        indicator.style.transform = shouldNavigateBack ? 'scaleX(1)' : 'scaleX(0)';
+        indicator.style.opacity = shouldNavigateBack ? '1' : '0';
+      }
 
       if (shouldNavigateBack) {
         // Add transition for smooth exit
@@ -156,6 +171,13 @@ export default function EntryView() {
 
   return (
     <div ref={pageRef} className="flex flex-col h-screen overflow-hidden bg-white">
+      {/* Swipe indicator */}
+      <div 
+        data-swipe-indicator 
+        className="absolute top-0 left-0 w-full h-1 bg-primary z-20 origin-left"
+        style={{ transform: 'scaleX(0)', opacity: 0 }}
+      />
+      
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">

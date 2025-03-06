@@ -4,11 +4,13 @@ import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [swipeProgress, setSwipeProgress] = useState(0);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -17,26 +19,58 @@ export default function EntryView() {
 
   useEffect(() => {
     let touchStartX = 0;
+    let currentX = 0;
+    const minSwipeDistance = 20; // Minimum distance to trigger navigation
+    const maxSwipeDistance = 150; // Maximum distance for full animation
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
+      currentX = touchStartX;
+      setSwipeProgress(0);
     };
 
-    const handleTouchEnd = (e: TouchEvent) => {
-      const touchEndX = e.changedTouches[0].clientX;
-      const swipeDistance = touchEndX - touchStartX;
+    const handleTouchMove = (e: TouchEvent) => {
+      currentX = e.touches[0].clientX;
+      const swipeDistance = currentX - touchStartX;
 
-      if (swipeDistance > 100) {
-        navigate('/');
+      // Only allow right swipes (positive distance)
+      if (swipeDistance > 0) {
+        // Calculate progress percentage (0 to 100)
+        const progress = Math.min((swipeDistance / maxSwipeDistance) * 100, 100);
+        setSwipeProgress(progress);
+
+        // Prevent default scrolling when swiping
+        if (swipeDistance > 10) {
+          e.preventDefault();
+        }
       }
     };
 
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchend', handleTouchEnd);
+    const handleTouchEnd = () => {
+      const swipeDistance = currentX - touchStartX;
+
+      // Navigate back if swipe distance exceeds minimum threshold
+      if (swipeDistance >= minSwipeDistance) {
+        navigate('/');
+      } else {
+        // Reset progress if swipe was not far enough
+        setSwipeProgress(0);
+      }
+    };
+
+    const content = contentRef.current;
+    if (content) {
+      content.addEventListener('touchstart', handleTouchStart, { passive: false });
+      content.addEventListener('touchmove', handleTouchMove, { passive: false });
+      content.addEventListener('touchend', handleTouchEnd);
+    }
 
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
+      if (content) {
+        content.removeEventListener('touchstart', handleTouchStart);
+        content.removeEventListener('touchmove', handleTouchMove);
+        content.removeEventListener('touchend', handleTouchEnd);
+      }
     };
   }, [navigate]);
 
@@ -52,7 +86,14 @@ export default function EntryView() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-white">
+    <div 
+      className="flex flex-col h-screen overflow-hidden bg-white"
+      style={{
+        transform: `translateX(-${swipeProgress}px)`,
+        transition: swipeProgress === 0 ? 'transform 0.3s ease-out' : 'none'
+      }}
+      ref={contentRef}
+    >
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">

@@ -36,48 +36,44 @@ export default function EntryView() {
         pageRef.current.style.transition = 'none';
         pageRef.current.style.transform = 'translateX(0) scale(1) rotate(0deg)';
         pageRef.current.style.opacity = '1';
+        pageRef.current.classList.remove('swiping'); //remove swiping class
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!pageRef.current) return;
 
-      const touchCurrentX = e.touches[0].clientX;
-      const touchCurrentY = e.touches[0].clientY;
-      const deltaX = touchCurrentX - touchStartX;
-      const deltaY = touchCurrentY - touchStartY;
+      const touchX = e.touches[0].clientX;
+      const touchY = e.touches[0].clientY;
+      const deltaX = touchX - touchStartX;
+      const deltaY = touchY - touchStartY;
 
-      // Determine if this is a horizontal swipe or vertical scroll
-      if (!isHorizontalSwipe) {
-        if (Math.abs(deltaX) > Math.abs(deltaY) * 2) {
-          isHorizontalSwipe = true;
-        } else {
-          return;
+      // Determine if this is a horizontal swipe early in the gesture
+      // And make the detection more sensitive (reduced threshold from 10 to 5)
+      if (!isHorizontalSwipe && Math.abs(deltaX) > 5) {
+        isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
+
+        // If we're in a horizontal swipe at the top of content, set a class to indicate this
+        if (isHorizontalSwipe && startScrollPosition <= 5) {
+          pageRef.current.classList.add('swiping');
         }
       }
 
-      // Only handle right swipes when we're at the top of content
-      if (deltaX > 0 && isHorizontalSwipe && startScrollPosition <= 0) {
-        e.preventDefault();
+      // Only handle horizontal swipes for back navigation when at the top
+      if (isHorizontalSwipe && startScrollPosition <= 5) {
+        e.preventDefault(); // Prevent scrolling when swiping horizontally
 
-        // Make the transform movement follow the finger with natural resistance
-        const transform = Math.min(deltaX * 0.85, window.innerWidth);
-        const progress = transform / window.innerWidth;
+        // Calculate swipe progress
+        const progress = Math.max(0, Math.min(1, deltaX / (window.innerWidth * 0.6)));
 
-        // Apply a natural curve to the scale and opacity
-        const scale = 1 - (progress * 0.08); // Subtle scale effect
-        const opacity = 1 - (progress * 0.4); // Smoother fade out
-        const rotate = progress * 2; // Subtle rotation
+        // Use transforms for smooth animation
+        const transform = deltaX;
+        const scale = 1 - 0.08 * progress;
+        const rotate = 3 * progress;
+        const opacity = 1 - 0.5 * progress;
 
         pageRef.current.style.transform = `translateX(${transform}px) scale(${scale}) rotate(${rotate}deg)`;
         pageRef.current.style.opacity = opacity.toString();
-        
-        // Update swipe indicator
-        const indicator = pageRef.current.querySelector('[data-swipe-indicator]') as HTMLElement;
-        if (indicator) {
-          indicator.style.transform = `scaleX(${progress})`;
-          indicator.style.opacity = progress.toString();
-        }
       }
     };
 
@@ -114,6 +110,7 @@ export default function EntryView() {
         pageRef.current.style.transition = 'all 0.5s cubic-bezier(0.32, 0.72, 0.2, 1.2)';
         pageRef.current.style.transform = 'translateX(0) scale(1) rotate(0deg)';
         pageRef.current.style.opacity = '1';
+        pageRef.current.classList.remove('swiping'); //remove swiping class
       }
     };
 
@@ -177,7 +174,7 @@ export default function EntryView() {
         className="absolute top-0 left-0 w-full h-1 bg-primary z-20 origin-left"
         style={{ transform: 'scaleX(0)', opacity: 0 }}
       />
-      
+
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b flex-none">
         <div className="px-4 py-2 flex items-center">

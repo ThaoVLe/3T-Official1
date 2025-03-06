@@ -190,7 +190,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
           {/* Media gallery */}
           {entry.mediaUrls && entry.mediaUrls.length > 0 && (
             <div className={`mt-4 -mx-4 grid ${getMediaGrid()} gap-1`}>
-              {entry.mediaUrls.map((url, i) => {
+              {entry.mediaUrls.slice(0, 3).map((url, i) => {
                 const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
                 const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
 
@@ -254,6 +254,12 @@ export default function EntryCard({ entry }: EntryCardProps) {
                 );
               })}
             </div>
+            {entry.mediaUrls.length > 3 && (
+              <div className="text-center mt-2 text-sm text-gray-500">
+                +{entry.mediaUrls.length - 3} more
+              </div>
+            )}
+          </div>
           )}
         </CardContent>
       </Card>

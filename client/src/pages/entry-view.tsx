@@ -49,20 +49,21 @@ export default function EntryView() {
         }
       }
 
-      // Only handle right swipes
-      if (deltaX > 0 && isHorizontalSwipe) {
-        // Prevent default only when swiping right and at top of content
-        if (startScrollPosition <= 0) {
-          e.preventDefault();
+      // Only handle right swipes when we're at the top of content
+      if (deltaX > 0 && isHorizontalSwipe && startScrollPosition <= 0) {
+        e.preventDefault();
 
-          // Make the transform movement follow the finger more naturally
-          const transform = Math.min(deltaX * 0.8, window.innerWidth);
-          const opacity = 1 - (transform / window.innerWidth) * 0.3;
-          const scale = 1 - (transform / window.innerWidth) * 0.1;
+        // Make the transform movement follow the finger with natural resistance
+        const transform = Math.min(deltaX * 0.85, window.innerWidth);
+        const progress = transform / window.innerWidth;
 
-          pageRef.current.style.transform = `translateX(${transform}px) scale(${scale})`;
-          pageRef.current.style.opacity = opacity.toString();
-        }
+        // Apply a natural curve to the scale and opacity
+        const scale = 1 - (progress * 0.08); // Subtle scale effect
+        const opacity = 1 - (progress * 0.4); // Smoother fade out
+        const rotate = progress * 2; // Subtle rotation
+
+        pageRef.current.style.transform = `translateX(${transform}px) scale(${scale}) rotate(${rotate}deg)`;
+        pageRef.current.style.opacity = opacity.toString();
       }
     };
 
@@ -76,17 +77,20 @@ export default function EntryView() {
       const velocity = swipeDistance / swipeTime;
 
       // Navigate back if swipe is fast enough or far enough
-      if ((swipeDistance > 100 && startScrollPosition <= 0) || (velocity > 0.5 && startScrollPosition <= 0)) {
+      const shouldNavigateBack = (swipeDistance > window.innerWidth * 0.3 && startScrollPosition <= 0) || 
+                                (velocity > 0.5 && startScrollPosition <= 0);
+
+      if (shouldNavigateBack) {
         // Add transition for smooth exit
-        pageRef.current.style.transition = 'all 0.3s cubic-bezier(0.2, 1, 0.3, 1)';
-        pageRef.current.style.transform = `translateX(${window.innerWidth}px) scale(0.9)`;
+        pageRef.current.style.transition = 'all 0.35s cubic-bezier(0.32, 0.72, 0.2, 1)';
+        pageRef.current.style.transform = `translateX(${window.innerWidth}px) scale(0.92) rotate(3deg)`;
         pageRef.current.style.opacity = '0';
 
-        setTimeout(() => navigate('/'), 300);
+        setTimeout(() => navigate('/'), 350);
       } else {
-        // Reset position with transition
-        pageRef.current.style.transition = 'all 0.3s cubic-bezier(0.2, 1, 0.3, 1)';
-        pageRef.current.style.transform = '';
+        // Reset position with spring-like transition
+        pageRef.current.style.transition = 'all 0.5s cubic-bezier(0.32, 0.72, 0.2, 1.2)';
+        pageRef.current.style.transform = 'translateX(0) scale(1) rotate(0deg)';
         pageRef.current.style.opacity = '1';
       }
     };

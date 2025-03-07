@@ -265,7 +265,10 @@ export default function EntryView() {
                   className="text-muted-foreground hover:text-foreground flex items-center gap-2"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  <span className="font-medium">{commentCount > 0 ? `${commentCount} Comments` : "Comments"}</span>
+                  {commentCount > 0 && (
+                    <span className="font-medium">{commentCount} Comments</span>
+                  )}
+                  {!commentCount && <span>Comments</span>}
                 </Button>
 
                 <div className="flex gap-1">
@@ -314,7 +317,7 @@ export default function EntryView() {
 
               {/* Comments Section */}
               {showComments && (
-                <div className="mt-4 pb-16">
+                <div className="mt-4 pb-16" id="comments-section">
                   <Comments 
                     entryId={entry.id} 
                     onCommentCountChange={setCommentCount}

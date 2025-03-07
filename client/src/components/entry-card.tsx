@@ -228,7 +228,10 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             className="text-muted-foreground hover:text-foreground flex items-center gap-2"
           >
             <MessageCircle className="h-4 w-4" />
-            <span className="font-medium">{commentCount > 0 ? `${commentCount} Comments` : "Comments"}</span>
+            {commentCount > 0 && (
+              <span className="font-medium">{commentCount} Comments</span>
+            )}
+            {!commentCount && <span>Comments</span>}
           </Button>
 
           <div className="flex gap-1">

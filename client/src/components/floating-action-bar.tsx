@@ -25,6 +25,10 @@ export function FloatingActionBar({
     <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t z-50"
          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}>
       <div className="p-2 flex items-center gap-2">
+        <MediaUploader
+          onUpload={onMediaUpload}
+          triggerClassName="h-10 w-10 rounded-full"
+        />
 
         <FeelingSelector
           selectedFeeling={selectedFeeling}

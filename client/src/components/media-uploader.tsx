@@ -115,24 +115,33 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
           <Loader2 className="h-5 w-5 animate-spin" />
         </Button>
       ) : (
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => {
               hideKeyboard();
-              const choice = Math.random() > 0.5; // Randomly choose input to simulate unified button
-              if (choice) {
-                imageInputRef.current?.click();
-              } else {
-                videoInputRef.current?.click();
-              }
+              imageInputRef.current?.click();
             }}
             disabled={disabled}
             className={triggerClassName || "h-10 w-10 rounded-full"}
-            title="Upload media"
+            title="Upload image"
           >
-            <ImageIcon className="h-5 w-5" />
+            <Image className="h-5 w-5" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              hideKeyboard();
+              videoInputRef.current?.click();
+            }}
+            disabled={disabled}
+            className={triggerClassName || "h-10 w-10 rounded-full"}
+            title="Upload video"
+          >
+            <Video className="h-5 w-5" />
           </Button>
         </div>
       )}

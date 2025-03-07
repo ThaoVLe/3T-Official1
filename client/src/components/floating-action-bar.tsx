@@ -29,7 +29,7 @@ export function FloatingActionBar({
   };
 
   return (
-    <div className="fixed bottom-[48px] left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-b z-50"
+    <div className="fixed bottom-[8px] left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-b z-50"
          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="p-2 flex items-center gap-2">
         <div className="relative">

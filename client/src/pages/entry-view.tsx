@@ -1,50 +1,57 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Share, MoreVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useEntryById } from '@/hooks/useEntries';
-import { Skeleton } from '@/components/ui/skeleton';
-import DeleteEntryButton from '@/components/delete-entry-button';
-import { formatDate } from '@/lib/utils';
+import { useParams, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import type { DiaryEntry } from "@shared/schema";
+import { format } from "date-fns";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useEffect, useRef } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-export function EntryView() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { isLoading, entry } = useEntryById(id || '');
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number; time: number } | null>(null);
+export default function EntryView() {
+  const { id } = useParams();
+  const [, navigate] = useLocation();
+  const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Handle back swipe gesture
+  const { data: entry } = useQuery<DiaryEntry>({
+    queryKey: [`/api/entries/${id}`],
+    enabled: !!id,
+  });
+
   useEffect(() => {
-    if (!id) return;
+    let touchStartX = 0;
+    let touchStartTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
-      setTouchStart({
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-        time: Date.now(),
-      });
+      touchStartX = e.touches[0].clientX;
+      touchStartTime = Date.now();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!touchStart) return;
-
       const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const swipeDistance = touchEndX - touchStart.x;
-      const verticalDistance = Math.abs(touchEndY - touchStart.y);
-      const swipeTime = Date.now() - touchStart.time;
+      const touchEndTime = Date.now();
+      const swipeDistance = touchEndX - touchStartX;
+      const swipeTime = touchEndTime - touchStartTime;
 
-      // Only trigger for quick horizontal swipes without much vertical movement
-      if (swipeDistance > 100 && swipeTime < 300 && verticalDistance < 50) {
-        console.log('Detected back swipe gesture');
-
-        // Navigate back with state to restore scroll position
-        navigate('/', { 
-          state: { 
-            shouldRestoreScroll: true,
-            lastViewedEntryId: id
-          }
-        });
+      // Only trigger for quick swipes (less than 300ms) and sufficient distance
+      if (swipeDistance > 100 && swipeTime < 300) {
+        // Get the scrollable element from the home page
+        const container = document.querySelector('.diary-content') || document.body;
+        
+        // Save the current entry ID to find it later - use sessionStorage for better session handling
+        if (id) {
+          console.log('Saving last viewed entry ID:', id);
+          sessionStorage.setItem('lastViewedEntryId', id);
+          
+          // We'll retrieve the scroll position from session storage
+          // which is saved when the home page unmounts
+          
+          // Force a small delay before navigation to ensure everything is saved
+          setTimeout(() => {
+            navigate('/');
+          }, 10);
+        } else {
+          navigate('/');
+        }
       }
     };
 
@@ -55,69 +62,159 @@ export function EntryView() {
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [id, navigate, touchStart]);
+  }, [navigate, id]);
 
-  if (isLoading || !entry) {
-    return (
-      <div className="min-h-screen bg-white p-4">
-        <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="icon">
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="icon">
-              <Share className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-        <Skeleton className="h-8 w-3/4 mb-2" />
-        <Skeleton className="h-4 w-1/2 mb-8" />
-        <div className="space-y-4">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const mediaParam = new URLSearchParams(window.location.search).get('media');
+    if (mediaParam !== null) {
+      const mediaIndex = parseInt(mediaParam);
+      const mediaElement = mediaRefs.current[mediaIndex];
+      if (mediaElement) {
+        setTimeout(() => {
+          mediaElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
+  }, [entry]);
+
+  if (!entry) return null;
+
+  const feeling = entry.feeling ? {
+    emoji: entry.feeling.emoji || "",
+    label: entry.feeling.label || ""
+  } : null;
+
+  const formatDate = (date: string | Date) => {
+    return format(new Date(date), "MMMM d, yyyy 'at' h:mm a");
+  };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-white overflow-auto" style={{
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'none',
+      msOverflowStyle: 'none',
+      scrollbarWidth: 'none',
+      touchAction: 'pan-y pinch-zoom',
+      WebkitTapHighlightColor: 'transparent',
+      WebkitUserSelect: 'none',
+    }}>
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white border-b">
+        <div className="container px-4 py-2 flex items-center">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => {
-              // Navigate back with state to restore scroll position
-              navigate('/', { 
-                state: { 
-                  shouldRestoreScroll: true,
-                  lastViewedEntryId: id
-                } 
-              });
+              // Save the current entry ID using sessionStorage instead of localStorage
+              if (id) {
+                console.log('Saving last viewed entry ID (back button):', id);
+                sessionStorage.setItem('lastViewedEntryId', id);
+              }
+              
+              // Navigate back to home
+              setTimeout(() => {
+                navigate('/');
+              }, 10);
             }}
+            className="mr-2"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ArrowLeft className="h-6 w-6" />
           </Button>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="icon">
-              <Share className="h-5 w-5" />
-            </Button>
-            <DeleteEntryButton id={entry.id} />
-          </div>
+          <h1 className="text-lg font-semibold">Entry</h1>
         </div>
       </div>
-      <div className="p-4">
-        <h1 className="text-2xl font-semibold mb-1">{entry.title}</h1>
-        <p className="text-sm text-gray-500 mb-6">{formatDate(new Date())}</p>
-        <div
-          className="prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: entry.content }}
-        />
+
+      {/* Content */}
+      <div className="container px-4 py-6">
+        <ScrollArea className="h-[calc(100vh-80px)]" style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'none',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+          touchAction: 'pan-y pinch-zoom',
+        }}>
+          <div className="space-y-4 diary-content">
+            <h1 className="text-[24px] font-semibold">
+              {entry.title || "Untitled Entry"}
+            </h1>
+
+            <div className="text-sm text-muted-foreground">
+              {formatDate(entry.createdAt)}
+            </div>
+
+            {(feeling || entry.location) && (
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                {feeling && (
+                  <div className="flex items-center">
+                    {feeling.label.includes(',') ? (
+                      <span>
+                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                      </span>
+                    ) : (
+                      <span>
+                        feeling {feeling.label} {feeling.emoji}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {entry.location && (
+                  <div className="flex items-center">
+                    <span>at {entry.location} 📍</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Content */}
+            <div
+              className="prose max-w-none"
+              dangerouslySetInnerHTML={{ __html: entry.content }}
+            />
+
+            {/* Media */}
+            {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+              <div className="space-y-4 mt-6">
+                {entry.mediaUrls.map((url, i) => {
+                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+
+                  if (isVideo) {
+                    return (
+                      <div key={i} className="w-full" ref={el => mediaRefs.current[i] = el}>
+                        <video
+                          src={url}
+                          controls
+                          playsInline
+                          className="w-full aspect-video object-cover rounded-lg"
+                        />
+                      </div>
+                    );
+                  }
+
+                  if (isAudio) {
+                    return (
+                      <div key={i} className="w-full bg-muted rounded-lg p-4" ref={el => mediaRefs.current[i] = el}>
+                        <audio src={url} controls className="w-full" />
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={i} className="w-full" ref={el => mediaRefs.current[i] = el}>
+                      <img
+                        src={url}
+                        alt={`Media ${i + 1}`}
+                        className="w-full rounded-lg"
+                        loading="lazy"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );

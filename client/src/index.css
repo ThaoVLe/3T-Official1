@@ -10,7 +10,7 @@
 
   * {
     -ms-overflow-style: none !important;
-    scrollbar-width: 0 !important; /* Firefox */
+    scrollbar-width: none !important;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: contain;
   }

@@ -4,18 +4,14 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Bold,
   Italic,
   List,
   ListOrdered,
-  Link as LinkIcon,
   Smile,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
   Type,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -65,7 +61,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal'
+        class: 'focus:outline-none prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal'
       }
     }
   });
@@ -76,55 +72,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     }
   }, [editor, value]);
 
-  const editorRef = useRef<HTMLDivElement>(null);
-  const contentHeight = useRef<number>(200); // Initial minimum height
-
-  useEffect(() => {
-    if (!editor || !editorRef.current) return;
-
-    // Function to adjust editor height based on content
-    const adjustHeight = () => {
-      if (!editorRef.current) return;
-
-      // Get the actual content height
-      const proseMirror = editorRef.current.querySelector('.ProseMirror');
-      if (!proseMirror) return;
-
-      const scrollHeight = proseMirror.scrollHeight;
-
-      // Only grow, never shrink below the minimum
-      contentHeight.current = Math.max(200, scrollHeight);
-
-      // Set the height
-      editorRef.current.style.height = `${contentHeight.current}px`;
-    };
-
-    // Setup mutation observer for content changes
-    const observer = new MutationObserver(adjustHeight);
-
-    const proseMirror = editorRef.current.querySelector('.ProseMirror');
-    if (proseMirror) {
-      observer.observe(proseMirror, { 
-        childList: true, 
-        subtree: true,
-        characterData: true
-      });
-
-      // Initial adjustment
-      adjustHeight();
-    }
-
-    return () => observer.disconnect();
-  }, [editor]);
-
   if (!editor) {
     return null;
   }
-
-  const colors = [
-    '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
-    '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
-  ];
 
   const emojiCategories = {
     'Smileys': ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '😉', '😌', '😍', '🥰', '😘'],
@@ -134,9 +84,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   };
 
   return (
-    <div className="h-full flex flex-col no-scrollbar">
-      {/* Toolbar - Sticky at top of editor area */}
-      <div className="flex flex-wrap items-center gap-1 p-2 bg-white border-b sticky top-0 z-10">
+    <div className="h-full flex flex-col">
+      {/* Toolbar - Fixed at top */}
+      <div className="flex-none flex flex-wrap items-center gap-1 p-2 bg-white border-b">
         <Button
           type="button"
           variant="ghost"
@@ -261,9 +211,12 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
         </Popover>
       </div>
 
-      {/* Editor Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto no-scrollbar">
-        <EditorContent ref={editorRef} editor={editor} className="h-full" />
+      {/* Editor Content */}
+      <div className="flex-1 overflow-y-auto">
+        <EditorContent 
+          editor={editor} 
+          className="h-full"
+        />
       </div>
     </div>
   );

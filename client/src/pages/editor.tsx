@@ -18,7 +18,6 @@ import { LocationSelector } from "@/components/location-selector";
 
 // Simulate useIsMobile hook - replace with actual implementation
 const useIsMobile = () => {
-  // Replace with actual mobile detection logic
   return window.innerWidth < 768;
 };
 
@@ -152,30 +151,10 @@ export default function Editor() {
   const hideKeyboard = useCallback(() => {
     if (!isMobile) return;
 
-    // Force any active element to lose focus
+    // Focus any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-
-    // More aggressive iOS keyboard dismissal
-    const temporaryInput = document.createElement('input');
-    temporaryInput.setAttribute('type', 'text');
-    temporaryInput.style.position = 'fixed';
-    temporaryInput.style.top = '-100px';
-    temporaryInput.style.left = '0';
-    temporaryInput.style.opacity = '0';
-    temporaryInput.style.height = '0';
-    temporaryInput.style.width = '100%';
-    temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
-
-    document.body.appendChild(temporaryInput);
-    temporaryInput.focus();
-    setTimeout(() => {
-      temporaryInput.blur();
-      document.body.removeChild(temporaryInput);
-    }, 50);
-
-    return new Promise(resolve => setTimeout(resolve, 100));
   }, [isMobile]);
 
   // Add swipe to go back gesture
@@ -206,9 +185,9 @@ export default function Editor() {
   }, [navigate]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-white w-full">
+    <div className="fixed inset-0 bg-white flex flex-col">
       {/* Header - Fixed at top */}
-      <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full flex-none">
+      <div className="flex-none px-4 sm:px-6 py-3 border-b bg-white z-10">
         <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
           <Button
             variant="ghost"
@@ -256,8 +235,8 @@ export default function Editor() {
       </div>
 
       {/* Content Area - Scrollable */}
-      <div className="flex-1 overflow-y-auto no-scrollbar">
-        <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 py-6">
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6">
           <TipTapEditor
             value={form.watch("content")}
             onChange={(value) => form.setValue("content", value)}
@@ -266,7 +245,7 @@ export default function Editor() {
       </div>
 
       {/* Footer - Fixed at bottom */}
-      <div className="border-t bg-white w-full flex-none" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
+      <div className="flex-none border-t bg-white" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
         <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 py-3 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">How are you feeling today?</span>

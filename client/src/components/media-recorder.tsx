@@ -1,7 +1,13 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, FolderOpenIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MediaRecorderProps {
   onCapture: (file: File) => void;
@@ -48,20 +54,34 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       />
 
       <div className="flex gap-2">
-        <label htmlFor="media-upload">
-          <Button 
-            type="button" 
-            variant="ghost" 
-            size="icon"
-            className="h-10 w-10" // Increased size
-            disabled={isUploading}
-            asChild
-          >
-            <span>
-              <ImageIcon className="h-8 w-8" /> {/* Increased size */}
-            </span>
-          </Button>
-        </label>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="icon"
+              className="h-10 w-10"
+              disabled={isUploading}
+            >
+              <ImageIcon className="h-8 w-8" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => document.getElementById("media-upload")?.click()}>
+              <FolderOpenIcon className="mr-2 h-4 w-4" />
+              <span>Gallery</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <input
+          type="file"
+          id="media-upload"
+          className="hidden"
+          accept="image/*,video/*"
+          onChange={handleFileChange}
+          disabled={isUploading}
+        />
       </div>
     </div>
   );

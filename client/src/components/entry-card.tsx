@@ -4,62 +4,36 @@ import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, Share, MessageCircle } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 
-// Component for video thumbnails with rotating key frames
+// Component for video thumbnails that play in a continuous loop
 const VideoThumbnail = ({ url, className }: { url: string; className?: string }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [keyFrames, setKeyFrames] = useState<number[]>([]);
-  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
 
-  // Generate 3 random key frames when component mounts
+  // Set up the video to autoplay and loop when component mounts
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleLoadedMetadata = () => {
+    const handleLoadedData = () => {
       if (!video) return;
-
-      // Generate 3 random positions within the video duration
-      const duration = video.duration;
-      if (isNaN(duration) || duration <= 0) return;
-
-      const frames = [
-        Math.random() * 0.3 * duration, // First third
-        0.3 * duration + Math.random() * 0.3 * duration, // Middle third
-        0.6 * duration + Math.random() * 0.4 * duration // Last third
-      ];
-
-      setKeyFrames(frames);
-
-      // Set initial frame
-      if (frames.length > 0) {
-        video.currentTime = frames[0];
-      }
+      
+      // Ensure the video starts playing
+      video.play().catch(err => {
+        console.log("Auto-play was prevented:", err);
+        
+        // If autoplay is blocked, at least show a frame from the video
+        video.currentTime = 0.1;
+      });
     };
 
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('loadeddata', handleLoadedData);
 
     return () => {
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      if (video) {
+        video.removeEventListener('loadeddata', handleLoadedData);
+        video.pause();
+      }
     };
   }, []);
-
-  // Rotate through key frames every second
-  useEffect(() => {
-    if (keyFrames.length === 0) return;
-
-    const interval = setInterval(() => {
-      setCurrentFrameIndex((prevIndex) => {
-        const nextIndex = (prevIndex + 1) % keyFrames.length;
-        const video = videoRef.current;
-        if (video) {
-          video.currentTime = keyFrames[nextIndex];
-        }
-        return nextIndex;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [keyFrames]);
 
   return (
     <video
@@ -68,6 +42,8 @@ const VideoThumbnail = ({ url, className }: { url: string; className?: string })
       className={className}
       playsInline
       muted
+      loop
+      autoPlay
       preload="auto"
       crossOrigin="anonymous"
       poster={`${url}#t=0.1`}

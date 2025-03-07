@@ -12,16 +12,10 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
-
-// Simulate useIsMobile hook - replace with actual implementation
-const useIsMobile = () => {
-  // Replace with actual mobile detection logic
-  return window.innerWidth < 768;
-};
-
+import { PageTransition } from "@/components/animations";
 
 export default function Editor() {
   const { id } = useParams();
@@ -30,7 +24,52 @@ export default function Editor() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
-  const isMobile = useIsMobile();
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndTime = Date.now();
+      const swipeDistance = touchEndX - touchStartX;
+      const verticalDistance = Math.abs(touchEndY - touchStartY);
+      const swipeTime = touchEndTime - touchStartTime;
+
+      if (swipeDistance > 50 && swipeTime < 300 && verticalDistance < 30) {
+        if (id) {
+          sessionStorage.setItem('lastViewedEntryId', id);
+        }
+        const container = document.querySelector('.diary-content');
+        if (container) {
+          sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+        }
+        setIsExiting(true);
+        setTimeout(() => navigate('/'), 100);
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [id, navigate]);
+
+  const isMobile = () => {
+    return window.innerWidth < 768;
+  };
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -48,7 +87,7 @@ export default function Editor() {
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (entry) {
       form.reset({
         title: entry.title,
@@ -151,7 +190,7 @@ export default function Editor() {
 
   // Function to hide keyboard on mobile devices
   const hideKeyboard = useCallback(() => {
-    if (!isMobile) return;
+    if (!isMobile()) return;
 
     // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
@@ -184,109 +223,117 @@ export default function Editor() {
 
     // Additional fix - add a slight delay before showing sheet
     return new Promise(resolve => setTimeout(resolve, 100));
-  }, [isMobile]);
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white w-full">
-      {/* Header */}
-      <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
-        <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/")}
-            className="whitespace-nowrap"
-          >
-            <X className="h-4 w-4 mr-1" />
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={form.handleSubmit((data) => mutation.mutate(data))}
-            disabled={mutation.isPending}
-            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
-          >
-            <Save className="h-4 w-4 mr-1" />
-            {id ? "Update" : "Create"}
-          </Button>
+    <PageTransition direction={1}>
+      <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+        {/* Header */}
+        <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
+          <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (id) {
+                  sessionStorage.setItem('lastViewedEntryId', id);
+                }
+                setIsExiting(true);
+                setTimeout(() => navigate("/"), 100);
+              }}
+              className="whitespace-nowrap"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={form.handleSubmit((data) => mutation.mutate(data))}
+              disabled={mutation.isPending}
+              className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+            >
+              <Save className="h-4 w-4 mr-1" />
+              {id ? "Update" : "Create"}
+            </Button>
+          </div>
+          <div className="max-w-full sm:max-w-2xl pr-24">
+            <Input
+              {...form.register("title")}
+              className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+              placeholder="Untitled Entry..."
+            />
+            {form.watch("feeling") && (
+              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                  {form.watch("feeling").label.includes(',') ? (
+                    <>
+                      {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
+                      {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
+                    </>
+                  ) : (
+                    <>
+                      {form.watch("feeling").label} {form.watch("feeling").emoji}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="max-w-full sm:max-w-2xl pr-24">
-          <Input
-            {...form.register("title")}
-            className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
-            placeholder="Untitled Entry..."
-          />
-          {form.watch("feeling") && (
-            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-              <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                {form.watch("feeling").label.includes(',') ? (
-                  <>
-                    {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
-                    {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
-                  </>
-                ) : (
-                  <>
-                    {form.watch("feeling").label} {form.watch("feeling").emoji}
-                  </>
-                )}
+
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col overflow-auto w-full">
+          <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+            <TipTapEditor
+              value={form.watch("content")}
+              onChange={(value) => form.setValue("content", value)}
+            />
+          </div>
+
+          {/* Media Controls - Fixed at bottom */}
+          <div className="border-t bg-white sticky bottom-0 w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}> {/*Added paddingBottom for safe area*/}
+            <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">How are you feeling today?</span>
+                <FeelingSelector
+                  selectedFeeling={form.getValues("feeling")}
+                  onSelect={async (feeling) => {
+                    await hideKeyboard();
+                    form.setValue("feeling", feeling);
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Checking in at:</span>
+                <LocationSelector
+                  selectedLocation={form.getValues("location")}
+                  onSelect={(location) => {
+                    hideKeyboard();
+                    form.setValue("location", location);
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Add media:</span>
+                <MediaRecorder onCapture={onMediaUpload} />
               </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <div className="flex-1 flex flex-col overflow-auto w-full">
-        <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
-          <TipTapEditor
-            value={form.watch("content")}
-            onChange={(value) => form.setValue("content", value)}
-          />
-        </div>
-
-        {/* Media Controls - Fixed at bottom */}
-        <div className="border-t bg-white sticky bottom-0 w-full" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}> {/*Added paddingBottom for safe area*/}
-          <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">How are you feeling today?</span>
-              <FeelingSelector
-                selectedFeeling={form.getValues("feeling")}
-                onSelect={async (feeling) => {
-                  await hideKeyboard();
-                  form.setValue("feeling", feeling);
-                }}
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Checking in at:</span>
-              <LocationSelector
-                selectedLocation={form.getValues("location")}
-                onSelect={(location) => {
-                  hideKeyboard();
-                  form.setValue("location", location);
-                }}
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Add media:</span>
-              <MediaRecorder onCapture={onMediaUpload} />
-            </div>
+            {form.watch("mediaUrls")?.length > 0 && (
+              <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
+                <MediaPreview
+                  urls={form.watch("mediaUrls")}
+                  onRemove={onMediaRemove}
+                  loading={isUploading}
+                  uploadProgress={uploadProgress}
+                />
+              </div>
+            )}
           </div>
-          {form.watch("mediaUrls")?.length > 0 && (
-            <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
-              <MediaPreview
-                urls={form.watch("mediaUrls")}
-                onRemove={onMediaRemove}
-                loading={isUploading}
-                uploadProgress={uploadProgress}
-              />
-            </div>
-          )}
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

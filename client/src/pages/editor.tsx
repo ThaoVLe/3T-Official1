@@ -286,29 +286,6 @@ export default function Editor() {
         {/* Content Area */}
         <div className="flex-1 flex flex-col overflow-auto w-full">
           <div className="flex-1 p-4 sm:p-6 w-full max-w-full pb-24">
-            <Input
-              {...form.register("title")}
-              className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
-              placeholder="Untitled Entry..."
-            />
-
-            {form.watch("feeling") && (
-              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                  {form.watch("feeling").label.includes(',') ? (
-                    <>
-                      {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
-                      {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
-                    </>
-                  ) : (
-                    <>
-                      {form.watch("feeling").label} {form.watch("feeling").emoji}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
             <TipTapEditor
               value={form.watch("content")}
               onChange={(value) => form.setValue("content", value)}

@@ -7,7 +7,78 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+
+// Component for video thumbnails with rotating key frames
+const VideoThumbnail = ({ url, className }: { url: string; className?: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [keyFrames, setKeyFrames] = useState<number[]>([]);
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
+
+  // Generate 3 random key frames when component mounts
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleLoadedMetadata = () => {
+      if (!video) return;
+
+      // Generate 3 random positions within the video duration
+      const duration = video.duration;
+      if (isNaN(duration) || duration <= 0) return;
+
+      const frames = [
+        Math.random() * 0.3 * duration, // First third
+        0.3 * duration + Math.random() * 0.3 * duration, // Middle third
+        0.6 * duration + Math.random() * 0.4 * duration // Last third
+      ];
+
+      setKeyFrames(frames);
+
+      // Set initial frame
+      if (frames.length > 0) {
+        video.currentTime = frames[0];
+      }
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, []);
+
+  // Rotate through key frames every second
+  useEffect(() => {
+    if (keyFrames.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentFrameIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % keyFrames.length;
+        const video = videoRef.current;
+        if (video) {
+          video.currentTime = keyFrames[nextIndex];
+        }
+        return nextIndex;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [keyFrames]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={url}
+      className={className}
+      playsInline
+      muted
+      preload="auto"
+      crossOrigin="anonymous"
+      poster={`${url}#t=0.1`}
+    />
+  );
+};
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -144,16 +215,9 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
           <div className="mt-3 -mx-4">
             {entry.mediaUrls[0] && (
-              <div 
-                className="aspect-[16/9] w-full cursor-pointer overflow-hidden"
-                onClick={() => handleMediaClick(0)}
-              >
+              <div className="aspect-[16/9] w-full cursor-pointer overflow-hidden">
                 {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
-                  <video
-                    src={entry.mediaUrls[0]}
-                    className="w-full h-full object-cover"
-                    playsInline
-                  />
+                  <VideoThumbnail url={entry.mediaUrls[0]} className="w-full h-full object-cover" />
                 ) : (
                   <img
                     src={entry.mediaUrls[0]}
@@ -179,11 +243,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                       onClick={() => handleMediaClick(mediaIndex)}
                     >
                       {isVideo ? (
-                        <video
-                          src={url}
-                          className="w-full h-full object-cover"
-                          playsInline
-                        />
+                        <VideoThumbnail url={url} className="w-full h-full object-cover" />
                       ) : (
                         <img
                           src={url}

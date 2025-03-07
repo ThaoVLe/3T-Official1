@@ -21,27 +21,38 @@ export default function Home() {
     if (entries && !scrollRestoredRef.current) {
       const savedScrollPosition = localStorage.getItem('homeScrollPosition');
       const lastViewedEntryId = localStorage.getItem('lastViewedEntryId');
-
-      // Use a slight delay to ensure DOM is fully rendered
-      setTimeout(() => {
-        const entryElement = lastViewedEntryId 
-          ? document.querySelector(`#entry-${lastViewedEntryId}`)
-          : null;
-
-        if (savedScrollPosition && containerRef.current) {
-          // First restore the exact scroll position that was saved
-          containerRef.current.scrollTo({
-            top: parseInt(savedScrollPosition),
-            behavior: 'instant'
-          });
-
-          // Mark as restored and clear saved data
-          scrollRestoredRef.current = true;
-          localStorage.removeItem('homeScrollPosition');
-          localStorage.removeItem('lastViewedEntryId');
-          setSelectedEntryId(null);
-        }
-      }, 100); // Small delay to ensure the DOM has updated
+      
+      if (savedScrollPosition) {
+        // Use a larger delay to ensure DOM is fully rendered and ready
+        setTimeout(() => {
+          // Get the container element directly from the DOM - this is the scrollable area
+          const containerElement = document.querySelector('.diary-content');
+          
+          if (containerElement) {
+            // Set the scroll position directly
+            containerElement.scrollTop = parseInt(savedScrollPosition);
+            console.log('Restored scroll position to:', savedScrollPosition);
+            
+            // If we have a specific entry ID, try to ensure it's visible
+            if (lastViewedEntryId) {
+              const entryElement = document.querySelector(`#entry-${lastViewedEntryId}`);
+              if (entryElement) {
+                console.log('Found entry element:', lastViewedEntryId);
+              }
+            }
+            
+            // Mark as restored and clear saved data
+            scrollRestoredRef.current = true;
+            
+            // Don't remove the data immediately to allow time for rendering
+            setTimeout(() => {
+              localStorage.removeItem('homeScrollPosition');
+              localStorage.removeItem('lastViewedEntryId');
+              setSelectedEntryId(null);
+            }, 500);
+          }
+        }, 300); // Larger delay to ensure the DOM has fully updated
+      }
     }
   }, [entries]); // Run when entries are loaded
 
@@ -128,7 +139,12 @@ export default function Home() {
         touchAction: 'pan-y pinch-zoom',
       }}>
         {entries.map((entry) => (
-          <div key={entry.id} id={`entry-${entry.id}`} className="bg-white">
+          <div 
+            key={entry.id} 
+            id={`entry-${entry.id}`} 
+            className="bg-white"
+            data-entry-id={entry.id}
+          >
             <EntryCard 
               entry={entry} 
               setSelectedEntryId={setSelectedEntryId} 

@@ -34,11 +34,16 @@ export default function EntryView() {
 
       // Only trigger for quick swipes (less than 300ms) and sufficient distance
       if (swipeDistance > 100 && swipeTime < 300) {
-        // Save scroll position before navigation
-        const container = document.querySelector('.diary-content');
+        // Get the scrollable element - may be document.body or a container
+        const container = document.querySelector('.diary-content') || document.body;
+        
+        // Save scroll position before navigation - use scrollTop property
         if (container) {
-          localStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+          const currentScrollTop = container.scrollTop;
+          console.log('Saving scroll position:', currentScrollTop);
+          localStorage.setItem('homeScrollPosition', currentScrollTop.toString());
         }
+        
         // Save the current entry ID to find it later
         localStorage.setItem('lastViewedEntryId', id || '');
         navigate('/');
@@ -95,11 +100,16 @@ export default function EntryView() {
             variant="ghost"
             size="icon"
             onClick={() => {
+              // Get the scrollable element - may be document.body or a container
+              const container = document.querySelector('.diary-content') || document.body;
+              
               // Save scroll position before navigation
-              const container = document.querySelector('.diary-content');
               if (container) {
-                localStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+                const currentScrollTop = container.scrollTop;
+                console.log('Saving scroll position from back button:', currentScrollTop);
+                localStorage.setItem('homeScrollPosition', currentScrollTop.toString());
               }
+              
               // Save the current entry ID to find it later
               localStorage.setItem('lastViewedEntryId', id || '');
               navigate('/');

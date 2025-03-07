@@ -15,15 +15,15 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#f0f2f5]">
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-[calc(100vh-80px)] no-scrollbar" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
           <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
-          <Skeleton className="h-10 w-48" />
-        </div>
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-64 w-full" />
-          ))}
-        </div>
+            <Skeleton className="h-10 w-48" />
+          </div>
+          <div className="space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-64 w-full" />
+            ))}
+          </div>
         </ScrollArea>
       </div>
     );
@@ -50,28 +50,28 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#f0f2f5]">
-      <ScrollArea className="h-full">
+      <ScrollArea className="h-[calc(100vh-80px)] no-scrollbar" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
         <div className="sticky top-0 z-10 bg-white border-b">
           <div className="flex justify-between items-center px-4 py-3">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            My Diary
-          </h1>
-          <Link href="/new">
-            <Button className="flex gap-2">
-              <PlusCircle className="w-4 h-4" />
-              New Entry
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        {entries.map((entry) => (
-          <div key={entry.id} className="bg-white">
-            <EntryCard entry={entry} />
+              My Diary
+            </h1>
+            <Link href="/new">
+              <Button className="flex gap-2">
+                <PlusCircle className="w-4 h-4" />
+                New Entry
+              </Button>
+            </Link>
           </div>
-        ))}
-      </div>
+        </div>
+
+        <div className="space-y-2">
+          {entries.map((entry) => (
+            <div key={entry.id} className="bg-white">
+              <EntryCard entry={entry} />
+            </div>
+          ))}
+        </div>
       </ScrollArea>
     </div>
   );

@@ -34,19 +34,24 @@ export default function EntryView() {
 
       // Only trigger for quick swipes (less than 300ms) and sufficient distance
       if (swipeDistance > 100 && swipeTime < 300) {
-        // Get the scrollable element - may be document.body or a container
+        // Get the scrollable element from the home page
         const container = document.querySelector('.diary-content') || document.body;
         
-        // Save scroll position before navigation - use scrollTop property
-        if (container) {
-          const currentScrollTop = container.scrollTop;
-          console.log('Saving scroll position:', currentScrollTop);
-          localStorage.setItem('homeScrollPosition', currentScrollTop.toString());
+        // Save the current entry ID to find it later - use sessionStorage for better session handling
+        if (id) {
+          console.log('Saving last viewed entry ID:', id);
+          sessionStorage.setItem('lastViewedEntryId', id);
+          
+          // We'll retrieve the scroll position from session storage
+          // which is saved when the home page unmounts
+          
+          // Force a small delay before navigation to ensure everything is saved
+          setTimeout(() => {
+            navigate('/');
+          }, 10);
+        } else {
+          navigate('/');
         }
-        
-        // Save the current entry ID to find it later
-        localStorage.setItem('lastViewedEntryId', id || '');
-        navigate('/');
       }
     };
 
@@ -100,19 +105,16 @@ export default function EntryView() {
             variant="ghost"
             size="icon"
             onClick={() => {
-              // Get the scrollable element - may be document.body or a container
-              const container = document.querySelector('.diary-content') || document.body;
-              
-              // Save scroll position before navigation
-              if (container) {
-                const currentScrollTop = container.scrollTop;
-                console.log('Saving scroll position from back button:', currentScrollTop);
-                localStorage.setItem('homeScrollPosition', currentScrollTop.toString());
+              // Save the current entry ID using sessionStorage instead of localStorage
+              if (id) {
+                console.log('Saving last viewed entry ID (back button):', id);
+                sessionStorage.setItem('lastViewedEntryId', id);
               }
               
-              // Save the current entry ID to find it later
-              localStorage.setItem('lastViewedEntryId', id || '');
-              navigate('/');
+              // Navigate back to home
+              setTimeout(() => {
+                navigate('/');
+              }, 10);
             }}
             className="mr-2"
           >

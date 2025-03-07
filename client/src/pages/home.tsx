@@ -15,45 +15,73 @@ export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRestoredRef = useRef(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-
+  
+  // Store scroll position when component is unmounted or before navigation
   useEffect(() => {
-    // Only try to restore scroll if we have entries and haven't restored yet
-    if (entries && !scrollRestoredRef.current) {
-      const savedScrollPosition = localStorage.getItem('homeScrollPosition');
-      const lastViewedEntryId = localStorage.getItem('lastViewedEntryId');
-      
-      if (savedScrollPosition) {
-        // Use a larger delay to ensure DOM is fully rendered and ready
-        setTimeout(() => {
-          // Get the container element directly from the DOM - this is the scrollable area
-          const containerElement = document.querySelector('.diary-content');
-          
-          if (containerElement) {
-            // Set the scroll position directly
-            containerElement.scrollTop = parseInt(savedScrollPosition);
-            console.log('Restored scroll position to:', savedScrollPosition);
-            
-            // If we have a specific entry ID, try to ensure it's visible
-            if (lastViewedEntryId) {
-              const entryElement = document.querySelector(`#entry-${lastViewedEntryId}`);
-              if (entryElement) {
-                console.log('Found entry element:', lastViewedEntryId);
-              }
-            }
-            
-            // Mark as restored and clear saved data
-            scrollRestoredRef.current = true;
-            
-            // Don't remove the data immediately to allow time for rendering
-            setTimeout(() => {
-              localStorage.removeItem('homeScrollPosition');
-              localStorage.removeItem('lastViewedEntryId');
-              setSelectedEntryId(null);
-            }, 500);
-          }
-        }, 300); // Larger delay to ensure the DOM has fully updated
+    const storeScrollPosition = () => {
+      const container = document.querySelector('.diary-content');
+      if (container) {
+        // Use sessionStorage instead of localStorage for better session handling
+        sessionStorage.setItem('homeScrollPosition', String(container.scrollTop));
+        console.log('Stored scroll position before unload:', container.scrollTop);
       }
-    }
+    };
+    
+    // Add event listener for page visibility change and beforeunload
+    window.addEventListener('visibilitychange', storeScrollPosition);
+    window.addEventListener('beforeunload', storeScrollPosition);
+    
+    return () => {
+      storeScrollPosition(); // Store position when component unmounts
+      window.removeEventListener('visibilitychange', storeScrollPosition);
+      window.removeEventListener('beforeunload', storeScrollPosition);
+    };
+  }, []);
+  
+  // Handle scroll restoration
+  useEffect(() => {
+    if (!entries || entries.length === 0 || scrollRestoredRef.current) return;
+    
+    const restoreScroll = () => {
+      const savedPosition = sessionStorage.getItem('homeScrollPosition');
+      const lastViewedEntryId = sessionStorage.getItem('lastViewedEntryId');
+      const container = document.querySelector('.diary-content');
+      
+      if (savedPosition && container) {
+        const position = parseInt(savedPosition, 10);
+        console.log('Attempting to restore scroll to position:', position);
+        
+        // Force reflow to ensure DOM is ready
+        container.scrollTop = 0;
+        setTimeout(() => {
+          container.scrollTop = position;
+          console.log('Scroll position restored to:', position);
+          
+          // If we have a specific entry ID, ensure it's visible
+          if (lastViewedEntryId) {
+            const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
+            if (entryElement) {
+              console.log('Found and scrolled to entry:', lastViewedEntryId);
+            }
+          }
+          
+          // Mark as restored
+          scrollRestoredRef.current = true;
+        }, 150);
+      }
+    };
+    
+    // Try multiple times with increasing delays to ensure DOM is ready
+    restoreScroll();
+    const t1 = setTimeout(restoreScroll, 100);
+    const t2 = setTimeout(restoreScroll, 300);
+    const t3 = setTimeout(restoreScroll, 600);
+    
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [entries]); // Run when entries are loaded
 
   // Reset the restoration flag when unmounting

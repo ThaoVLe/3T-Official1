@@ -66,11 +66,19 @@
     min-height: 200px !important;
     padding: 1rem;
     overflow-y: hidden;
+    resize: none;
+    box-sizing: border-box;
   }
 
   .ProseMirror p {
     margin: 0;
     line-height: 1.5;
+  }
+  
+  /* Ensure editor never collapses */
+  .ProseMirror.ProseMirror-focused {
+    min-height: 200px !important;
+    height: auto !important;
   }
 
   .ProseMirror p.is-editor-empty:first-child::before {

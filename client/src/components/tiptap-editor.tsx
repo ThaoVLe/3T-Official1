@@ -104,10 +104,26 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     if (proseMirror) {
       observer.observe(proseMirror);
       adjustHeight(); // Initial adjustment
+      
+      // Also adjust on input/paste/keydown events for immediate feedback
+      proseMirror.addEventListener('input', adjustHeight);
+      proseMirror.addEventListener('paste', adjustHeight);
+      proseMirror.addEventListener('keydown', () => {
+        // Use setTimeout to ensure content has updated
+        setTimeout(adjustHeight, 0);
+      });
     }
 
     // Cleanup
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      const proseMirror = editorRef.current?.querySelector('.ProseMirror');
+      if (proseMirror) {
+        proseMirror.removeEventListener('input', adjustHeight);
+        proseMirror.removeEventListener('paste', adjustHeight);
+        proseMirror.removeEventListener('keydown', () => setTimeout(adjustHeight, 0));
+      }
+    };
   }, [editor]);
 
   if (!editor) {

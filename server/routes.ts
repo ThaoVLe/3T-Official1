@@ -125,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Media upload endpoint with error handling
+  // Media upload endpoint with error handling and progress tracking
   app.post("/api/upload", (req, res) => {
     upload.single("file")(req, res, (err) => {
       if (err instanceof multer.MulterError) {
@@ -144,8 +144,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      // Get actual MIME type for better handling 
       const fileUrl = `/uploads/${req.file.filename}`;
-      res.json({ url: fileUrl });
+      const fileType = req.file.mimetype;
+      const fileSize = req.file.size;
+      
+      res.json({ 
+        url: fileUrl,
+        type: fileType,
+        size: fileSize,
+        name: req.file.originalname,
+      });
     });
   });
 

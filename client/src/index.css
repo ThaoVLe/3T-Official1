@@ -56,10 +56,16 @@
     @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background no-scrollbar;
   }
   /* Auto-expanding editor styles */
+  .tiptap-container {
+    @apply flex flex-col;
+  }
+
   .tiptap-container .ProseMirror {
     transition: min-height 0.2s ease;
     height: auto;
     overflow-y: hidden;
+    min-height: 200px;
+    padding: 1rem;
   }
 
   .ProseMirror {
@@ -78,9 +84,6 @@
     font-weight: 500;
   }
 
-  .tiptap-container {
-    @apply flex flex-col;
-  }
 
   /* Fix for bottom menu bar */
   .mobile-bottom-menu {

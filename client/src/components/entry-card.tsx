@@ -11,9 +11,10 @@ import { useState } from 'react';
 
 interface EntryCardProps {
   entry: DiaryEntry;
+  setSelectedEntryId?: (id: string) => void;
 }
 
-export default function EntryCard({ entry }: EntryCardProps) {
+export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [, navigate] = useLocation();
@@ -67,6 +68,10 @@ export default function EntryCard({ entry }: EntryCardProps) {
     if (document.querySelector('.diary-content')) {
       const scrollPosition = document.querySelector('.diary-content')?.scrollTop;
       localStorage.setItem('homeScrollPosition', scrollPosition?.toString() || '0');
+    }
+    // Save the current entry ID to find it later
+    if (setSelectedEntryId) {
+      setSelectedEntryId(entry.id.toString());
     }
     navigate(`/entry/${entry.id}?media=${mediaIndex}`);
   };

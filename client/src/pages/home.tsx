@@ -123,8 +123,8 @@ export default function Home() {
         touchAction: 'pan-y pinch-zoom',
       }}>
         {entries.map((entry) => (
-          <div key={entry.id} id={`entry-${entry.id}`} className="bg-white"> {/* Added ID to each entry */}
-            <EntryCard entry={entry} setSelectedEntryId={setSelectedEntryId} /> {/* Pass setSelectedEntryId to EntryCard */}
+          <div key={entry.id} id={`entry-${entry.id}`} className="bg-white">
+            <EntryCard entry={entry} setSelectedEntryId={setSelectedEntryId} />
           </div>
         ))}
       </div>

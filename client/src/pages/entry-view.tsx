@@ -39,6 +39,8 @@ export default function EntryView() {
         if (container) {
           localStorage.setItem('homeScrollPosition', container.scrollTop.toString());
         }
+        // Save the current entry ID to find it later
+        localStorage.setItem('lastViewedEntryId', id || '');
         navigate('/');
       }
     };
@@ -50,7 +52,7 @@ export default function EntryView() {
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [navigate]);
+  }, [navigate, id]);
 
   useEffect(() => {
     const mediaParam = new URLSearchParams(window.location.search).get('media');
@@ -119,7 +121,7 @@ export default function EntryView() {
           scrollbarWidth: 'none',
           touchAction: 'pan-y pinch-zoom',
         }}>
-          <div className="space-y-4 diary-content"> {/* Added diary-content class here */}
+          <div className="space-y-4 diary-content">
             <h1 className="text-[24px] font-semibold">
               {entry.title || "Untitled Entry"}
             </h1>

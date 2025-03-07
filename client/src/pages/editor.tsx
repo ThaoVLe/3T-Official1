@@ -3,23 +3,16 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form } from "@/components/ui/form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertEntrySchema, type DiaryEntry, type InsertEntry } from "@shared/schema";
 import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
-import { X, ArrowLeft } from "lucide-react";
-import React, { useState, useCallback } from 'react';
+import { ArrowLeft } from "lucide-react";
+import React, { useState } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
-
-// Simulate useIsMobile hook - replace with actual implementation
-const useIsMobile = () => {
-  return window.innerWidth < 768;
-};
 
 export default function Editor() {
   const { id } = useParams();
@@ -27,8 +20,6 @@ export default function Editor() {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
-  const isMobile = useIsMobile();
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -78,13 +69,6 @@ export default function Editor() {
 
   const onMediaUpload = async (file: File) => {
     setIsUploading(true);
-    setUploadProgress(0);
-
-    const tempUrl = URL.createObjectURL(file);
-    const currentUrls = form.getValues("mediaUrls") || [];
-    const tempUrls = [...currentUrls, tempUrl];
-    setTempMediaUrls(tempUrls);
-    form.setValue("mediaUrls", tempUrls);
 
     try {
       const formData = new FormData();
@@ -100,24 +84,17 @@ export default function Editor() {
       }
 
       const { url } = await response.json();
-      const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
-      form.setValue("mediaUrls", finalUrls);
-      setTempMediaUrls([]);
+      const currentUrls = form.getValues("mediaUrls") || [];
+      form.setValue("mediaUrls", [...currentUrls, url]);
 
     } catch (error) {
       console.error('Upload error:', error);
-      const currentUrls = form.getValues("mediaUrls") || [];
-      const finalUrls = currentUrls.filter(url => url !== tempUrl);
-      form.setValue("mediaUrls", finalUrls);
-      setTempMediaUrls([]);
-
       toast({
         title: "Upload Error",
         description: "Failed to upload media. Please try again.",
         variant: "destructive"
       });
     } finally {
-      URL.revokeObjectURL(tempUrl);
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -129,14 +106,6 @@ export default function Editor() {
     newUrls.splice(index, 1);
     form.setValue("mediaUrls", newUrls);
   };
-
-  const hideKeyboard = useCallback(() => {
-    if (!isMobile) return;
-
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-  }, [isMobile]);
 
   // Add swipe to go back gesture
   React.useEffect(() => {
@@ -178,7 +147,7 @@ export default function Editor() {
             <ArrowLeft className="h-6 w-6" />
           </Button>
           <h1 className="text-xl font-semibold">
-            {id ? "Edit Entry" : "Create Entry"}
+            Create Post
           </h1>
         </div>
         <Button
@@ -186,7 +155,7 @@ export default function Editor() {
           disabled={mutation.isPending}
           className="bg-primary font-semibold px-4"
         >
-          {id ? "Update" : "Post"}
+          Post
         </Button>
       </div>
 
@@ -194,14 +163,6 @@ export default function Editor() {
       <div className="mt-14 mb-32 h-[calc(100vh-8.5rem)] overflow-y-auto">
         <div className="max-w-full sm:max-w-2xl mx-auto px-4">
           <div className="py-4">
-            <Input
-              {...form.register("title")}
-              className="text-xl font-normal border-0 px-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground"
-              placeholder="Entry title..."
-            />
-          </div>
-
-          <div className="relative">
             <TipTapEditor
               value={form.watch("content")}
               onChange={(value) => form.setValue("content", value)}

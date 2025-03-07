@@ -1,4 +1,4 @@
-import { diaryEntries, type DiaryEntry, type InsertEntry } from "@shared/schema";
+import { diaryEntries, comments, type DiaryEntry, type InsertEntry, type Comment, type InsertComment } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
@@ -8,6 +8,10 @@ export interface IStorage {
   createEntry(entry: InsertEntry): Promise<DiaryEntry>;
   updateEntry(id: number, entry: InsertEntry): Promise<DiaryEntry | undefined>;
   deleteEntry(id: number): Promise<boolean>;
+  // New comment methods
+  getComments(entryId: number): Promise<Comment[]>;
+  addComment(comment: InsertComment): Promise<Comment>;
+  deleteComment(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -30,7 +34,8 @@ export class DatabaseStorage implements IStorage {
         title: entry.title,
         content: entry.content,
         mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling // Add feeling to the database insert
+        feeling: entry.feeling,
+        location: entry.location
       })
       .returning();
     return newEntry;
@@ -43,7 +48,8 @@ export class DatabaseStorage implements IStorage {
         title: entry.title,
         content: entry.content,
         mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling // Add feeling to the database update
+        feeling: entry.feeling,
+        location: entry.location
       })
       .where(eq(diaryEntries.id, id))
       .returning();
@@ -54,6 +60,31 @@ export class DatabaseStorage implements IStorage {
     const [deleted] = await db
       .delete(diaryEntries)
       .where(eq(diaryEntries.id, id))
+      .returning();
+    return !!deleted;
+  }
+
+  // New comment methods
+  async getComments(entryId: number): Promise<Comment[]> {
+    return await db
+      .select()
+      .from(comments)
+      .where(eq(comments.entryId, entryId))
+      .orderBy(desc(comments.createdAt));
+  }
+
+  async addComment(comment: InsertComment): Promise<Comment> {
+    const [newComment] = await db
+      .insert(comments)
+      .values(comment)
+      .returning();
+    return newComment;
+  }
+
+  async deleteComment(id: number): Promise<boolean> {
+    const [deleted] = await db
+      .delete(comments)
+      .where(eq(comments.id, id))
       .returning();
     return !!deleted;
   }

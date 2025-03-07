@@ -1,13 +1,14 @@
 import { Link, useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share } from "lucide-react";
+import { Edit2, Trash2, Share, MessageCircle } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState, useEffect } from 'react';
+import { Comments } from "./comments";
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -17,6 +18,7 @@ interface EntryCardProps {
 export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const [, navigate] = useLocation();
 
   const deleteMutation = useMutation({
@@ -65,7 +67,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   };
 
   const handleMediaClick = (mediaIndex: number) => {
-    // Save the current scroll position before navigation
     const container = document.querySelector('.diary-content');
     if (container) {
       sessionStorage.setItem('homeScrollPosition', String(container.scrollTop));
@@ -73,22 +74,18 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       console.log('Saving last viewed entry ID:', entry.id.toString());
     }
 
-    // Also update state if the function is provided
     if (setSelectedEntryId) {
       setSelectedEntryId(entry.id.toString());
     }
 
-    // Store selected media index in sessionStorage as a backup
     sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
-    
-    // Clear any existing params and navigate to the entry view with media parameter
     const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
     console.log('Navigating to media at index:', mediaIndex);
     navigate(cleanUrl);
   };
 
   return (
-    <Card id={`entry-${entry.id}`} className="group bg-white shadow-none border-0 w-full mb-4">
+    <Card className="group bg-white shadow-none border-0 w-full mb-4">
       <CardHeader className="space-y-0 pb-2 pt-3 px-0">
         <div className="flex justify-between items-start px-4">
           <div className="flex flex-col space-y-1.5">
@@ -96,12 +93,10 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
               {entry.title || "Untitled Entry"}
             </CardTitle>
 
-            {/* Timestamp line */}
             <div className="text-sm text-muted-foreground">
               {formatTimeAgo(entry.createdAt)}
             </div>
 
-            {/* Emotions and location line - will wrap if needed */}
             {(feeling || entry.location) && (
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 {feeling && (
@@ -127,51 +122,12 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             )}
           </div>
 
-          {/* Action buttons */}
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity px-4">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: entry.title || "My Diary Entry",
-                    text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
-                    url: window.location.origin + `/entry/${entry.id}`,
-                  }).catch(err => console.log('Error sharing:', err));
-                } else {
-                  navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
-                    .then(() => toast({
-                      title: "Link copied",
-                      description: "Entry link copied to clipboard"
-                    }))
-                    .catch(err => console.error('Could not copy text:', err));
-                }
-              }}
-              className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
-            >
-              <Share className="h-4 w-4"/>
-            </Button>
-            <Link href={`/edit/${entry.id}`}>
-              <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted">
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
-              className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="px-4 pt-0 pb-3">
-        {/* Text content with expansion */}
         <div 
           onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
           className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
@@ -186,10 +142,8 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
           </button>
         )}
 
-        {/* Media gallery */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
           <div className="mt-3 -mx-4">
-            {/* First media - large */}
             {entry.mediaUrls[0] && (
               <div 
                 className="aspect-[16/9] w-full cursor-pointer overflow-hidden"
@@ -212,7 +166,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
               </div>
             )}
 
-            {/* Second and third media - two columns */}
             {entry.mediaUrls.length > 1 && (
               <div className="grid grid-cols-2 gap-[1px] mt-[1px]">
                 {entry.mediaUrls.slice(1, 3).map((url, i) => {
@@ -252,6 +205,64 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mt-4 pt-3 border-t">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowComments(!showComments)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Comments
+          </Button>
+
+          <div className="flex gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: entry.title || "My Diary Entry",
+                    text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                    url: window.location.origin + `/entry/${entry.id}`,
+                  }).catch(err => console.log('Error sharing:', err));
+                } else {
+                  navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
+                    .then(() => toast({
+                      title: "Link copied",
+                      description: "Entry link copied to clipboard"
+                    }))
+                    .catch(err => console.error('Could not copy text:', err));
+                }
+              }}
+              className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
+            >
+              <Share className="h-4 w-4"/>
+            </Button>
+            <Link href={`/edit/${entry.id}`}>
+              <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted">
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+              className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {showComments && (
+          <div className="mt-4">
+            <Comments entryId={entry.id} />
           </div>
         )}
       </CardContent>

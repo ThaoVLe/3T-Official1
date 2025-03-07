@@ -56,37 +56,14 @@
     @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background no-scrollbar;
   }
   /* Auto-expanding editor styles */
-  .tiptap-container {
-    @apply flex flex-col;
-  }
-
   .tiptap-container .ProseMirror {
-    transition: height 0.2s ease;
+    transition: min-height 0.2s ease;
     height: auto;
-    min-height: 200px !important;
-    padding: 1rem;
     overflow-y: hidden;
-    resize: none;
-    box-sizing: border-box;
   }
 
-  .ProseMirror p {
-    margin: 0;
-    line-height: 1.5;
-  }
-
-  /* Ensure editor never collapses */
-  .ProseMirror.ProseMirror-focused {
-    min-height: 200px !important;
-    height: auto !important;
-  }
-
-  .ProseMirror p.is-editor-empty:first-child::before {
-    color: #adb5bd;
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
+  .ProseMirror {
+    @apply min-h-[200px];
   }
 
   /* Ensure editor container grows properly */
@@ -95,11 +72,15 @@
     overflow: hidden;
   }
 
+  /* Custom emotion styles */
   .custom-emotion {
     color: #880000;
     font-weight: 500;
   }
 
+  .tiptap-container {
+    @apply flex flex-col;
+  }
 
   /* Fix for bottom menu bar */
   .mobile-bottom-menu {
@@ -267,57 +248,6 @@
     .media-grid {
       margin: 0 -1rem;
     }
-  }
-
-  /* Added styles from edited snippet */
-  .entry-editor {
-    @apply flex flex-col h-screen bg-white;
-  }
-
-  .entry-editor-header {
-    @apply sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b;
-  }
-
-  .entry-editor-input {
-    @apply text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full transition-colors;
-  }
-
-  .entry-editor-input::placeholder {
-    @apply text-muted-foreground/60;
-  }
-
-  .entry-editor-timestamp {
-    @apply text-sm text-muted-foreground/80 font-medium;
-  }
-
-  .mood-location-pill {
-    @apply flex items-center gap-1 bg-muted/30 rounded-full px-3 py-1.5 transition-colors hover:bg-muted/40;
-  }
-
-  .entry-content-area {
-    @apply w-full min-h-[200px] p-4 text-base leading-relaxed border-0 focus:ring-0 resize-none focus:outline-none transition-all;
-  }
-
-  .entry-content-area::placeholder {
-    @apply text-muted-foreground/60;
-  }
-
-  /* Bottom action bar */
-  .entry-action-bar {
-    @apply border-t bg-white flex-none px-4 py-3;
-  }
-
-  .entry-action-button {
-    @apply flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-muted/10 transition-colors;
-  }
-  .entry-transition {
-    @apply transition-all duration-200 ease-in-out;
-  }
-  .social-hover {
-    @apply hover:bg-muted/10 transition-colors duration-150;
-  }
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px];
   }
 }
 

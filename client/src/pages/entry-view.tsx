@@ -4,12 +4,13 @@ import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
+  const mediaRefs = useRef<HTMLDivElement[]>([]);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -117,11 +118,15 @@ export default function EntryView() {
               <div className="space-y-4 mt-6">
                 {entry.mediaUrls.map((url, i) => {
                   const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+                  const isAudio = url.match(/\.(mp3|wav|aac|ogg)$/i);
 
                   if (isVideo) {
                     return (
-                      <div key={i} className="w-full">
+                      <div 
+                        key={i} 
+                        className="w-full" 
+                        ref={el => (mediaRefs.current[i] = el)}
+                      >
                         <video
                           src={url}
                           controls
@@ -134,14 +139,22 @@ export default function EntryView() {
 
                   if (isAudio) {
                     return (
-                      <div key={i} className="w-full bg-muted rounded-lg p-4">
+                      <div 
+                        key={i} 
+                        className="w-full bg-muted rounded-lg p-4"
+                        ref={el => (mediaRefs.current[i] = el)}
+                      >
                         <audio src={url} controls className="w-full" />
                       </div>
                     );
                   }
 
                   return (
-                    <div key={i} className="w-full">
+                    <div 
+                      key={i} 
+                      className="w-full"
+                      ref={el => (mediaRefs.current[i] = el)}
+                    >
                       <img
                         src={url}
                         alt={`Media ${i + 1}`}

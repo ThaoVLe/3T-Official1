@@ -15,6 +15,7 @@ import { Save, X } from "lucide-react";
 import React, { useState, useCallback } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
+import { BottomNavigation } from "@/components/bottom-navigation"; // Added import
 
 // Simulate useIsMobile hook - replace with actual implementation
 const useIsMobile = () => {
@@ -238,7 +239,7 @@ export default function Editor() {
 
       {/* Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 pb-20"> {/* Added padding-bottom */}
           <div className="pb-[100px]">
             <TipTapEditor
               value={form.watch("content")}
@@ -289,6 +290,7 @@ export default function Editor() {
           )}
         </div>
       </div>
+      <BottomNavigation /> {/* Added BottomNavigation */}
     </div>
   );
 }

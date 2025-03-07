@@ -246,7 +246,7 @@ export default function EntryView() {
                 {entry.mediaUrls && entry.mediaUrls.length > 0 && (
                   <div className="space-y-2 my-4">
                     {entry.mediaUrls.map((url, index) => {
-                      const isVideo = /\.(mp4|webm|mov|MOV)$/i.test(url);
+                      const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
                       return (
                         <motion.div 
                           key={index} 
@@ -263,7 +263,6 @@ export default function EntryView() {
                               src={url}
                               controls
                               playsInline
-                              preload="metadata"
                               className="w-full aspect-video object-cover rounded-lg"
                             />
                           ) : (

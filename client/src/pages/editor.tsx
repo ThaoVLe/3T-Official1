@@ -16,18 +16,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
-import { FloatingActionBar } from "@/components/floating-action-bar";
-
-const formatTimeAgo = (currentTime: Date) => {
-  const seconds = Math.floor((Date.now() - currentTime.getTime()) / 1000);
-  if (seconds < 60) return `${seconds} seconds ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} minutes ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hours ago`;
-  const days = Math.floor(hours / 24);
-  return `${days} days ago`;
-};
 
 export default function Editor() {
   const { id } = useParams();
@@ -133,57 +121,61 @@ export default function Editor() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
+    const tempUrl = URL.createObjectURL(file);
+    const currentUrls = form.getValues("mediaUrls") || [];
+    const tempUrls = [...currentUrls, tempUrl];
+    setTempMediaUrls(tempUrls);
+    form.setValue("mediaUrls", tempUrls);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+    try {
+      const uploadPromise = new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append("file", file);
+
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const progress = Math.round((e.loaded * 100) / e.total);
             setUploadProgress(progress);
           }
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to upload file');
-      }
-
-      const data = await response.json();
-
-      const currentMediaUrls = form.watch('mediaUrls') || [];
-      const updatedMediaUrls = [...currentMediaUrls, data.url];
-      form.setValue('mediaUrls', updatedMediaUrls);
-      console.log("Media URLs after upload:", updatedMediaUrls);
-
-      if (id) {
-        const currentValues = form.getValues();
-        await apiRequest(`/api/entries/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify({
-            ...currentValues,
-            mediaUrls: updatedMediaUrls
-          }),
         });
-        console.log("Auto-saved entry with new media");
-      }
 
-      toast({
-        title: "Success",
-        description: "Media uploaded successfully",
+        xhr.addEventListener("load", () => {
+          if (xhr.status === 200) {
+            const { url } = JSON.parse(xhr.responseText);
+            const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
+            form.setValue("mediaUrls", finalUrls);
+            setTempMediaUrls([]);
+            resolve(url);
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed"));
+        });
+
+        xhr.open("POST", "/api/upload");
+        xhr.send(formData);
       });
-    } catch (error: any) {
-      console.error('Error uploading media:', error);
+
+      await uploadPromise;
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      const currentUrls = form.getValues("mediaUrls") || [];
+      const finalUrls = currentUrls.filter(url => url !== tempUrl);
+      form.setValue("mediaUrls", finalUrls);
+      setTempMediaUrls([]);
+
       toast({
         title: "Upload Error",
-        description: error.message || "Failed to upload media",
-        variant: "destructive",
+        description: "Failed to upload media. Please try again.",
+        variant: "destructive"
       });
     } finally {
+      URL.revokeObjectURL(tempUrl);
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -196,13 +188,17 @@ export default function Editor() {
     form.setValue("mediaUrls", newUrls);
   };
 
+  // Function to hide keyboard on mobile devices
   const hideKeyboard = useCallback(() => {
     if (!isMobile()) return;
 
+    // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
+    // More aggressive iOS keyboard dismissal
+    // Create an offscreen input and force it to focus and blur
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
     temporaryInput.style.position = 'fixed';
@@ -211,10 +207,12 @@ export default function Editor() {
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
     temporaryInput.style.width = '100%';
-    temporaryInput.style.fontSize = '16px';
+    temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
 
+    // Append to body, focus, then blur and remove
     document.body.appendChild(temporaryInput);
 
+    // Force focus then immediately blur
     setTimeout(() => {
       temporaryInput.focus();
       setTimeout(() => {
@@ -223,43 +221,14 @@ export default function Editor() {
       }, 50);
     }, 50);
 
+    // Additional fix - add a slight delay before showing sheet
     return new Promise(resolve => setTimeout(resolve, 100));
   }, []);
-
-  useEffect(() => {
-    if (id) {
-      const fetchEntry = async () => {
-        try {
-          const entryData = await apiRequest(`/api/entries/${id}`);
-          console.log("Loaded entry data:", entryData);
-          const mediaUrls = Array.isArray(entryData.mediaUrls) ? entryData.mediaUrls : [];
-          form.reset({
-            title: entryData.title,
-            content: entryData.content,
-            mediaUrls: mediaUrls,
-            feeling: entryData.feeling,
-            location: entryData.location
-          });
-          console.log("Form reset with mediaUrls:", form.getValues().mediaUrls);
-        } catch (error) {
-          console.error('Error fetching entry:', error);
-          toast({
-            title: "Error",
-            description: "Failed to fetch entry",
-            variant: "destructive",
-          });
-          navigate("/");
-        }
-      };
-      fetchEntry();
-    } else {
-      form.setValue('mediaUrls', []);
-    }
-  }, [id, form, navigate, toast]);
 
   return (
     <PageTransition direction={1}>
       <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+        {/* Header */}
         <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
           <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
             <Button
@@ -313,6 +282,7 @@ export default function Editor() {
           </div>
         </div>
 
+        {/* Content Area */}
         <div className="flex-1 flex flex-col overflow-auto w-full">
           <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
             <TipTapEditor
@@ -321,72 +291,47 @@ export default function Editor() {
             />
           </div>
 
-          {form.watch("mediaUrls")?.length > 0 && (
-            <div className="mt-8 flex flex-col gap-4 pb-20">
-              <h3 className="text-sm font-medium text-muted-foreground">Attached Media</h3>
-              <div className="flex flex-wrap gap-4">
-                {form.watch("mediaUrls").map((url, i) => {
-                  const isVideo = /\.(mp4|webm|mov|MOV)$/i.test(url);
-                  const currentTime = new Date();
-                  return (
-                    <div
-                      key={url}
-                      className="relative rounded-md overflow-hidden"
-                      style={{ width: 'calc(50% - 10px)' }}
-                    >
-                      {isVideo ? (
-                        <video
-                          src={url}
-                          className="w-full object-cover"
-                          controls
-                          playsInline
-                          preload="metadata"
-                          style={{ aspectRatio: '1/1' }}
-                        />
-                      ) : (
-                        <img
-                          src={url}
-                          alt={`Media ${i + 1}`}
-                          className="w-full object-cover"
-                          loading="lazy"
-                          style={{ aspectRatio: '1/1' }}
-                        />
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
-                        <span className="text-white text-xs">{formatTimeAgo(currentTime)}</span>
-                      </div>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 rounded-full"
-                        onClick={() => {
-                          const newMediaUrls = [...form.watch("mediaUrls")];
-                          newMediaUrls.splice(i, 1);
-                          form.setValue("mediaUrls", newMediaUrls);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  );
-                })}
+          {/* Media Controls - Fixed at bottom */}
+          <div className="border-t bg-white sticky bottom-0 w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}> {/*Added paddingBottom for safe area*/}
+            <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">How are you feeling today?</span>
+                <FeelingSelector
+                  selectedFeeling={form.getValues("feeling")}
+                  onSelect={async (feeling) => {
+                    await hideKeyboard();
+                    form.setValue("feeling", feeling);
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Checking in at:</span>
+                <LocationSelector
+                  selectedLocation={form.getValues("location")}
+                  onSelect={(location) => {
+                    hideKeyboard();
+                    form.setValue("location", location);
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Add media:</span>
+                <MediaRecorder onCapture={onMediaUpload} />
               </div>
             </div>
-          )}
-
-          <FloatingActionBar
-            onMediaUpload={onMediaUpload}
-            onFeelingSelect={(feeling) => {
-              hideKeyboard();
-              form.setValue("feeling", feeling);
-            }}
-            onLocationSelect={(location) => {
-              hideKeyboard();
-              form.setValue("location", location);
-            }}
-            selectedFeeling={form.watch("feeling")}
-            selectedLocation={form.watch("location")}
-          />
+            {form.watch("mediaUrls")?.length > 0 && (
+              <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
+                <MediaPreview
+                  urls={form.watch("mediaUrls")}
+                  onRemove={onMediaRemove}
+                  loading={isUploading}
+                  uploadProgress={uploadProgress}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </PageTransition>

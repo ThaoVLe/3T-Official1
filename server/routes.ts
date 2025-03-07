@@ -81,10 +81,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/entries", async (req, res) => {
     try {
-      console.log("Creating entry with data:", req.body);
       const result = insertEntrySchema.safeParse(req.body);
       if (!result.success) {
-        console.error("Validation error:", result.error.errors);
         return res.status(400).json({ 
           message: "Invalid entry data", 
           errors: result.error.errors 
@@ -100,10 +98,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/entries/:id", async (req, res) => {
     try {
-      console.log("Updating entry with data:", req.body);
       const result = insertEntrySchema.safeParse(req.body);
       if (!result.success) {
-        console.error("Validation error:", result.error.errors);
         return res.status(400).json({ 
           message: "Invalid entry data", 
           errors: result.error.errors 

@@ -6,7 +6,7 @@ export const diaryEntries = pgTable("diary_entries", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  mediaUrls: jsonb("media_urls").$type<string[]>().default([]).notNull(),
+  mediaUrls: jsonb("media_urls").$type<string[]>().default([]),
   feeling: jsonb("feeling").$type<{ emoji: string; label: string } | null>().default(null),
   location: text("location"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -19,15 +19,10 @@ export const comments = pgTable("comments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Update the schema to properly validate mediaUrls
-export const insertEntrySchema = createInsertSchema(diaryEntries)
-  .extend({
-    mediaUrls: z.array(z.string()).default([]),
-  })
-  .omit({
-    id: true,
-    createdAt: true,
-  });
+export const insertEntrySchema = createInsertSchema(diaryEntries).omit({
+  id: true,
+  createdAt: true,
+});
 
 export const insertCommentSchema = createInsertSchema(comments).omit({
   id: true,

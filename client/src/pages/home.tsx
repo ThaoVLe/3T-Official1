@@ -52,50 +52,21 @@ export default function Home() {
 
         // If we have a specific entry ID, prioritize scrolling to that element
         if (lastViewedEntryId) {
-          // Create a temporary overlay to hide the scroll animation
-          const overlay = document.createElement('div');
-          overlay.style.position = 'fixed';
-          overlay.style.inset = '0';
-          overlay.style.backgroundColor = 'white';
-          overlay.style.zIndex = '9999';
-          overlay.style.opacity = '0';
-          overlay.style.transition = 'opacity 150ms ease';
-          document.body.appendChild(overlay);
+          const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
+          if (entryElement) {
+            // Reset scroll position first
+            container.scrollTop = 0;
 
-          // Flash the overlay to create a "blink" effect
-          requestAnimationFrame(() => {
-            overlay.style.opacity = '1';
+            // Scroll the entry into view with a small delay to ensure DOM is ready
+            setTimeout(() => {
+              entryElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+              console.log('Scrolled to entry card:', lastViewedEntryId);
 
-            requestAnimationFrame(() => {
-              const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
-              if (entryElement) {
-                // Instantly scroll to the position without animation
-                console.log('Scrolled to entry card:', lastViewedEntryId);
-                entryElement.scrollIntoView({ behavior: 'instant' });
-                scrollRestoredRef.current = true;
-              } else {
-                // Fallback to position-based scrolling if entry not found
-                const savedPosition = sessionStorage.getItem('homeScrollPosition');
-                if (savedPosition) {
-                  const position = parseInt(savedPosition, 10);
-                  console.log('Falling back to position-based scroll:', position);
-                  container.scrollTop = position;
-                  console.log('Scroll position restored to:', position);
-                  scrollRestoredRef.current = true;
-                }
-              }
-
-              // Remove the overlay with a fade out
-              setTimeout(() => {
-                overlay.style.opacity = '0';
-                setTimeout(() => {
-                  document.body.removeChild(overlay);
-                }, 150);
-              }, 50);
-            });
-          });
-
-          return;
+              // Mark as restored
+              scrollRestoredRef.current = true;
+            }, 250);
+            return;
+          }
         }
 
         // Fallback to position-based scrolling if entry not found
@@ -117,11 +88,16 @@ export default function Home() {
       }
     };
 
-    // Try just once with a small delay to ensure DOM is ready
+    // Try multiple times with increasing delays to ensure DOM is ready
+    restoreScroll();
     const t1 = setTimeout(restoreScroll, 100);
+    const t2 = setTimeout(restoreScroll, 300);
+    const t3 = setTimeout(restoreScroll, 600);
 
     return () => {
       clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
     };
   }, [entries]); // Run when entries are loaded
 

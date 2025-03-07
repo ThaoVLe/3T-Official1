@@ -23,11 +23,13 @@ export default function EntryView() {
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
+    let touchStartScroll = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
+      touchStartScroll = window.scrollY;
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -37,26 +39,29 @@ export default function EntryView() {
       const swipeDistance = touchEndX - touchStartX;
       const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
+      const scrollDelta = Math.abs(window.scrollY - touchStartScroll);
 
-      // Only trigger for quick horizontal swipes (less than 300ms) 
-      // and sufficient distance, with minimal vertical movement
-      if (swipeDistance > 100 && swipeTime < 300 && verticalDistance < 50) {
-        // Get the scrollable element from the home page
+      // Only trigger for quick horizontal swipes with minimal vertical movement
+      // and no significant scrolling
+      if (swipeDistance > 100 && swipeTime < 300 && verticalDistance < 50 && scrollDelta < 10) {
+        // Save scroll position before navigation
         const container = document.querySelector('.diary-content');
+        if (container) {
+          sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+        }
 
         // Save the current entry ID before navigation
         if (id) {
-          console.log('Saving last viewed entry ID:', id);
           sessionStorage.setItem('lastViewedEntryId', id);
-
-          // Trigger exit animation
-          setIsExiting(true);
-
-          // Navigate after animation
-          setTimeout(() => {
-            navigate('/');
-          }, 200);
         }
+
+        // Trigger exit animation
+        setIsExiting(true);
+
+        // Navigate after animation
+        setTimeout(() => {
+          navigate('/');
+        }, 200);
       }
     };
 
@@ -75,9 +80,10 @@ export default function EntryView() {
       const mediaIndex = parseInt(mediaParam);
       const mediaElement = mediaRefs.current[mediaIndex];
       if (mediaElement) {
-        setTimeout(() => {
-          mediaElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
+        // Use requestAnimationFrame for smooth scrolling
+        requestAnimationFrame(() => {
+          mediaElement.scrollIntoView({ behavior: 'instant', block: 'center' });
+        });
       }
     }
   }, [entry]);
@@ -95,10 +101,17 @@ export default function EntryView() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: 300 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 300 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      initial={{ opacity: 0, x: 300, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 300, scale: 0.95 }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 300, 
+        damping: 30,
+        scale: {
+          duration: 0.2
+        }
+      }}
       className={`min-h-screen bg-white overflow-auto ${isExiting ? 'pointer-events-none' : ''}`}
       style={{
         WebkitOverflowScrolling: 'touch',
@@ -140,7 +153,7 @@ export default function EntryView() {
             className="space-y-4 diary-content"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.1 }}
           >
             <h1 className="text-[24px] font-semibold">
               {entry.title || "Untitled Entry"}
@@ -179,7 +192,7 @@ export default function EntryView() {
               className="prose max-w-none"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.2 }}
               dangerouslySetInnerHTML={{ __html: entry.content }}
             />
 
@@ -189,7 +202,7 @@ export default function EntryView() {
                 className="space-y-4 mt-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.3 }}
               >
                 <AnimatePresence>
                   {entry.mediaUrls.map((url, i) => {
@@ -200,10 +213,13 @@ export default function EntryView() {
                       <motion.div
                         key={i}
                         ref={el => mediaRefs.current[i] = el}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ delay: i * 0.1 }}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{ 
+                          delay: i * 0.1,
+                          duration: 0.2
+                        }}
                       >
                         {isVideo ? (
                           <video

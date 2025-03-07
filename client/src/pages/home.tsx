@@ -16,24 +16,23 @@ export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRestoredRef = useRef(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Store scroll position when component is unmounted or before navigation
   useEffect(() => {
     const storeScrollPosition = () => {
       const container = document.querySelector('.diary-content');
       if (container) {
-        // Use sessionStorage instead of localStorage for better session handling
         sessionStorage.setItem('homeScrollPosition', String(container.scrollTop));
         console.log('Stored scroll position before unload:', container.scrollTop);
       }
     };
 
-    // Add event listener for page visibility change and beforeunload
     window.addEventListener('visibilitychange', storeScrollPosition);
     window.addEventListener('beforeunload', storeScrollPosition);
 
     return () => {
-      storeScrollPosition(); // Store position when component unmounts
+      storeScrollPosition(); 
       window.removeEventListener('visibilitychange', storeScrollPosition);
       window.removeEventListener('beforeunload', storeScrollPosition);
     };
@@ -54,17 +53,21 @@ export default function Home() {
         if (lastViewedEntryId) {
           const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
           if (entryElement) {
-            // Reset scroll position first
-            container.scrollTop = 0;
+            // Start fade out
+            setIsRestoring(true);
 
-            // Scroll the entry into view with a small delay to ensure DOM is ready
+            // After fade out, perform instant scroll
             setTimeout(() => {
-              entryElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+              container.scrollTop = 0;
+              entryElement.scrollIntoView({ behavior: 'instant', block: 'center' });
               console.log('Scrolled to entry card:', lastViewedEntryId);
 
-              // Mark as restored
-              scrollRestoredRef.current = true;
-            }, 250);
+              // Start fade in
+              setTimeout(() => {
+                setIsRestoring(false);
+                scrollRestoredRef.current = true;
+              }, 50);
+            }, 150);
             return;
           }
         }
@@ -75,31 +78,27 @@ export default function Home() {
           const position = parseInt(savedPosition, 10);
           console.log('Falling back to position-based scroll:', position);
 
-          // Force reflow to ensure DOM is ready
-          container.scrollTop = 0;
+          // Start fade out
+          setIsRestoring(true);
+
+          // After fade out, perform instant scroll
           setTimeout(() => {
             container.scrollTop = position;
             console.log('Scroll position restored to:', position);
 
-            // Mark as restored
-            scrollRestoredRef.current = true;
+            // Start fade in
+            setTimeout(() => {
+              setIsRestoring(false);
+              scrollRestoredRef.current = true;
+            }, 50);
           }, 150);
         }
       }
     };
 
-    // Try multiple times with increasing delays to ensure DOM is ready
-    restoreScroll();
-    const t1 = setTimeout(restoreScroll, 100);
-    const t2 = setTimeout(restoreScroll, 300);
-    const t3 = setTimeout(restoreScroll, 600);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
-  }, [entries]); // Run when entries are loaded
+    // Single attempt with proper timing
+    setTimeout(restoreScroll, 100);
+  }, [entries]);
 
   // Reset the restoration flag when unmounting
   useEffect(() => {
@@ -200,6 +199,14 @@ export default function Home() {
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'none',
             touchAction: 'pan-y pinch-zoom',
+          }}
+          animate={{
+            opacity: isRestoring ? 0 : 1,
+            scale: isRestoring ? 0.98 : 1,
+          }}
+          transition={{
+            duration: 0.15,
+            ease: "easeInOut"
           }}
         >
           {entries.map((entry) => (

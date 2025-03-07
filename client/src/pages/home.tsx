@@ -5,7 +5,7 @@ import { PlusCircle } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
   const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
@@ -14,27 +14,31 @@ export default function Home() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRestoredRef = useRef(false);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
   useEffect(() => {
     // Only try to restore scroll if we have entries and haven't restored yet
-    if (entries && !scrollRestoredRef.current) {
+    if (entries && !scrollRestoredRef.current && selectedEntryId) {
       const savedScrollPosition = localStorage.getItem('homeScrollPosition');
-      if (savedScrollPosition && containerRef.current) {
+      const entryElement = containerRef.current?.querySelector(`#entry-${selectedEntryId}`);
+
+      if (savedScrollPosition && containerRef.current && entryElement) {
         // Use requestAnimationFrame to ensure DOM is ready
         requestAnimationFrame(() => {
           if (containerRef.current) {
             containerRef.current.scrollTo({
-              top: parseInt(savedScrollPosition),
-              behavior: 'instant'
+              top: entryElement.offsetTop, // Scroll to the selected entry
+              behavior: 'smooth' // Use smooth scrolling for better UX
             });
             // Mark as restored and clear the saved position
             scrollRestoredRef.current = true;
             localStorage.removeItem('homeScrollPosition');
+            setSelectedEntryId(null); // Clear selectedEntryId after scrolling
           }
         });
       }
     }
-  }, [entries]); // Run when entries are loaded
+  }, [entries, selectedEntryId]); // Run when entries are loaded
 
   // Reset the restoration flag when unmounting
   useEffect(() => {
@@ -86,9 +90,9 @@ export default function Home() {
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll" 
+      className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll"
       style={{
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'none',
@@ -119,8 +123,8 @@ export default function Home() {
         touchAction: 'pan-y pinch-zoom',
       }}>
         {entries.map((entry) => (
-          <div key={entry.id} className="bg-white">
-            <EntryCard entry={entry} />
+          <div key={entry.id} id={`entry-${entry.id}`} className="bg-white"> {/* Added ID to each entry */}
+            <EntryCard entry={entry} setSelectedEntryId={setSelectedEntryId} /> {/* Pass setSelectedEntryId to EntryCard */}
           </div>
         ))}
       </div>

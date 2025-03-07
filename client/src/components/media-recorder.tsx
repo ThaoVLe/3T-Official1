@@ -73,15 +73,6 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        
-        <input
-          type="file"
-          id="media-upload"
-          className="hidden"
-          accept="image/*,video/*"
-          onChange={handleFileChange}
-          disabled={isUploading}
-        />
       </div>
     </div>
   );

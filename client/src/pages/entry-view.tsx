@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import MediaDialog from './MediaDialog'; //Import the MediaDialog component
+import MediaDialog from '@/components/media-dialog';
 
 
 export default function EntryView() {
@@ -186,14 +186,5 @@ export default function EntryView() {
   );
 }
 
-// Dummy MediaDialog component - Replace with your actual implementation
-function MediaDialog({ urls, initialIndex, open, onOpenChange }: { urls: string[], initialIndex: number, open: boolean, onOpenChange: (open: boolean) => void }) {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
-
-  return (
-    <div style={{ display: open ? 'block' : 'none' }}>
-      <img src={urls[currentIndex]} alt={`Media ${currentIndex + 1}`} style={{ width: '100%', maxWidth: '800px', maxHeight: '600px' }} />
-      <button onClick={() => onOpenChange(false)}>Close</button>
-    </div>
-  );
-}
+// Using the actual MediaDialog component from the project
+import MediaDialog from "@/components/media-dialog";

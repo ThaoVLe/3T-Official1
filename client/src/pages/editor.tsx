@@ -133,74 +133,63 @@ export default function Editor() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    const formData = new FormData();
-    formData.append("file", file);
+    const tempUrl = URL.createObjectURL(file);
+    const currentUrls = form.getValues("mediaUrls") || [];
+    const tempUrls = [...currentUrls, tempUrl];
+    setTempMediaUrls(tempUrls);
+    form.setValue("mediaUrls", tempUrls);
 
     try {
-      // Create an XMLHttpRequest to track upload progress
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/upload', true);
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const percentComplete = Math.round((e.loaded / e.total) * 100);
-          setUploadProgress(percentComplete);
-        }
-      };
-
-      // Create a promise to handle the XHR response
       const uploadPromise = new Promise<string>((resolve, reject) => {
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            try {
-              const response = JSON.parse(xhr.responseText);
-              resolve(response.url);
-            } catch (e) {
-              reject(new Error("Invalid response format"));
-            }
-          } else {
-            let errorMessage = "Failed to upload file";
-            try {
-              const error = JSON.parse(xhr.responseText);
-              errorMessage = error.message || errorMessage;
-            } catch (e) {
-              // Parsing error, use default message
-            }
-            reject(new Error(errorMessage));
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append("file", file);
+
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const progress = Math.round((e.loaded * 100) / e.total);
+            setUploadProgress(progress);
           }
-        };
+        });
 
-        xhr.onerror = function() {
-          reject(new Error("Network error during upload"));
-        };
+        xhr.addEventListener("load", () => {
+          if (xhr.status === 200) {
+            const { url } = JSON.parse(xhr.responseText);
+            const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
+            form.setValue("mediaUrls", finalUrls);
+            setTempMediaUrls([]);
+            resolve(url);
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed"));
+        });
+
+        xhr.open("POST", "/api/upload");
+        xhr.send(formData);
       });
 
-      // Send the request
-      xhr.send(formData);
+      await uploadPromise;
 
-      // Wait for the upload to complete
-      const url = await uploadPromise;
-
-      // Add the new media URL to the form
-      const currentMediaUrls = form.watch("mediaUrls") || [];
-      form.setValue("mediaUrls", [...currentMediaUrls, url]);
-
-      // Add to temp URLs for preview
-      setTempMediaUrls(prev => [...prev, url]);
-
-      toast({
-        title: "File uploaded",
-        description: "Media added to your entry",
-      });
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error('Upload error:', error);
+      const currentUrls = form.getValues("mediaUrls") || [];
+      const finalUrls = currentUrls.filter(url => url !== tempUrl);
+      form.setValue("mediaUrls", finalUrls);
+      setTempMediaUrls([]);
+
       toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "An error occurred during upload",
-        variant: "destructive",
+        title: "Upload Error",
+        description: "Failed to upload media. Please try again.",
+        variant: "destructive"
       });
     } finally {
+      URL.revokeObjectURL(tempUrl);
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 

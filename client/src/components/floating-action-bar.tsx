@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { Plus, Image, Video, Smile, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, Smile } from "lucide-react";
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
-import { MediaUploader } from "@/components/media-uploader";
+import { useState } from "react";
 
 interface FloatingActionBarProps {
   onMediaUpload: (file: File) => Promise<void>;
@@ -20,20 +19,13 @@ export function FloatingActionBar({
   selectedFeeling,
   selectedLocation
 }: FloatingActionBarProps) {
-  const [showAttachOptions, setShowAttachOptions] = useState(false);
+  const [showMediaOptions, setShowMediaOptions] = useState(false);
 
-  const handleMediaUpload = (url: string) => {
-    // The MediaUploader component returns the URL directly after upload
-    // We need to convert this back to simulate the old direct file handling
-    fetch(url)
-      .then(response => response.blob())
-      .then(blob => {
-        const file = new File([blob], url.split('/').pop() || 'file', { type: blob.type });
-        onMediaUpload(file);
-      })
-      .catch(error => {
-        console.error("Error converting URL to file:", error);
-      });
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onMediaUpload(file);
+    }
   };
 
   return (
@@ -44,15 +36,37 @@ export function FloatingActionBar({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setShowAttachOptions(!showAttachOptions)}
+            onClick={() => setShowMediaOptions(!showMediaOptions)}
             className="h-10 w-10 rounded-full"
           >
             <Plus className="h-5 w-5" />
           </Button>
-
-          {showAttachOptions && (
-            <div className="absolute bottom-full left-0 mb-2 bg-background rounded-lg shadow-lg border p-2">
-              <MediaUploader onUpload={handleMediaUpload} />
+          
+          {showMediaOptions && (
+            <div className="absolute bottom-full left-0 mb-2 bg-background rounded-lg shadow-lg border p-2 flex gap-2">
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <Button variant="ghost" size="icon" className="h-10 w-10">
+                  <Image className="h-5 w-5" />
+                </Button>
+              </label>
+              
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <Button variant="ghost" size="icon" className="h-10 w-10">
+                  <Video className="h-5 w-5" />
+                </Button>
+              </label>
             </div>
           )}
         </div>

@@ -133,61 +133,57 @@ export default function Editor() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    const tempUrl = URL.createObjectURL(file);
-    const currentUrls = form.getValues("mediaUrls") || [];
-    const tempUrls = [...currentUrls, tempUrl];
-    setTempMediaUrls(tempUrls);
-    form.setValue("mediaUrls", tempUrls);
-
     try {
-      const uploadPromise = new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        const formData = new FormData();
-        formData.append("file", file);
+      const formData = new FormData();
+      formData.append('file', file);
 
-        xhr.upload.addEventListener("progress", (e) => {
-          if (e.lengthComputable) {
-            const progress = Math.round((e.loaded * 100) / e.total);
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             setUploadProgress(progress);
           }
-        });
-
-        xhr.addEventListener("load", () => {
-          if (xhr.status === 200) {
-            const { url } = JSON.parse(xhr.responseText);
-            const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
-            form.setValue("mediaUrls", finalUrls);
-            setTempMediaUrls([]);
-            resolve(url);
-          } else {
-            reject(new Error("Upload failed"));
-          }
-        });
-
-        xhr.addEventListener("error", () => {
-          reject(new Error("Upload failed"));
-        });
-
-        xhr.open("POST", "/api/upload");
-        xhr.send(formData);
+        },
       });
 
-      await uploadPromise;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to upload file');
+      }
 
-    } catch (error) {
-      console.error('Upload error:', error);
-      const currentUrls = form.getValues("mediaUrls") || [];
-      const finalUrls = currentUrls.filter(url => url !== tempUrl);
-      form.setValue("mediaUrls", finalUrls);
-      setTempMediaUrls([]);
+      const data = await response.json();
+
+      const currentMediaUrls = form.watch('mediaUrls') || [];
+      const updatedMediaUrls = [...currentMediaUrls, data.url];
+      form.setValue('mediaUrls', updatedMediaUrls);
+      console.log("Media URLs after upload:", updatedMediaUrls);
+
+      if (id) {
+        const currentValues = form.getValues();
+        await apiRequest(`/api/entries/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            ...currentValues,
+            mediaUrls: updatedMediaUrls
+          }),
+        });
+        console.log("Auto-saved entry with new media");
+      }
 
       toast({
+        title: "Success",
+        description: "Media uploaded successfully",
+      });
+    } catch (error: any) {
+      console.error('Error uploading media:', error);
+      toast({
         title: "Upload Error",
-        description: "Failed to upload media. Please try again.",
-        variant: "destructive"
+        description: error.message || "Failed to upload media",
+        variant: "destructive",
       });
     } finally {
-      URL.revokeObjectURL(tempUrl);
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -200,17 +196,13 @@ export default function Editor() {
     form.setValue("mediaUrls", newUrls);
   };
 
-  // Function to hide keyboard on mobile devices
   const hideKeyboard = useCallback(() => {
     if (!isMobile()) return;
 
-    // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
-    // More aggressive iOS keyboard dismissal
-    // Create an offscreen input and force it to focus and blur
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
     temporaryInput.style.position = 'fixed';
@@ -219,12 +211,10 @@ export default function Editor() {
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
     temporaryInput.style.width = '100%';
-    temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
+    temporaryInput.style.fontSize = '16px';
 
-    // Append to body, focus, then blur and remove
     document.body.appendChild(temporaryInput);
 
-    // Force focus then immediately blur
     setTimeout(() => {
       temporaryInput.focus();
       setTimeout(() => {
@@ -233,14 +223,43 @@ export default function Editor() {
       }, 50);
     }, 50);
 
-    // Additional fix - add a slight delay before showing sheet
     return new Promise(resolve => setTimeout(resolve, 100));
   }, []);
+
+  useEffect(() => {
+    if (id) {
+      const fetchEntry = async () => {
+        try {
+          const entryData = await apiRequest(`/api/entries/${id}`);
+          console.log("Loaded entry data:", entryData);
+          const mediaUrls = Array.isArray(entryData.mediaUrls) ? entryData.mediaUrls : [];
+          form.reset({
+            title: entryData.title,
+            content: entryData.content,
+            mediaUrls: mediaUrls,
+            feeling: entryData.feeling,
+            location: entryData.location
+          });
+          console.log("Form reset with mediaUrls:", form.getValues().mediaUrls);
+        } catch (error) {
+          console.error('Error fetching entry:', error);
+          toast({
+            title: "Error",
+            description: "Failed to fetch entry",
+            variant: "destructive",
+          });
+          navigate("/");
+        }
+      };
+      fetchEntry();
+    } else {
+      form.setValue('mediaUrls', []);
+    }
+  }, [id, form, navigate, toast]);
 
   return (
     <PageTransition direction={1}>
       <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
-        {/* Header */}
         <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
           <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
             <Button
@@ -294,7 +313,6 @@ export default function Editor() {
           </div>
         </div>
 
-        {/* Content Area */}
         <div className="flex-1 flex flex-col overflow-auto w-full">
           <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
             <TipTapEditor
@@ -303,7 +321,6 @@ export default function Editor() {
             />
           </div>
 
-          {/* Media Display - Always at the end of the page */}
           {form.watch("mediaUrls")?.length > 0 && (
             <div className="mt-8 flex flex-col gap-4 pb-20">
               <h3 className="text-sm font-medium text-muted-foreground">Attached Media</h3>
@@ -311,7 +328,6 @@ export default function Editor() {
                 {form.watch("mediaUrls").map((url, i) => {
                   const isVideo = /\.(mp4|webm|mov|MOV)$/i.test(url);
                   const currentTime = new Date();
-                  // Calculate width as half of viewport minus 10px
                   return (
                     <div
                       key={url}
@@ -358,7 +374,6 @@ export default function Editor() {
             </div>
           )}
 
-          {/* Floating Action Bar */}
           <FloatingActionBar
             onMediaUpload={onMediaUpload}
             onFeelingSelect={(feeling) => {

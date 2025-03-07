@@ -28,31 +28,45 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEntry(entry: InsertEntry): Promise<DiaryEntry> {
+    // Ensure mediaUrls is always an array
+    const mediaUrls = Array.isArray(entry.mediaUrls) ? entry.mediaUrls : [];
+    
+    console.log("Creating entry with mediaUrls:", mediaUrls);
+    
     const [newEntry] = await db
       .insert(diaryEntries)
       .values({
         title: entry.title,
         content: entry.content,
-        mediaUrls: entry.mediaUrls || [],
+        mediaUrls: mediaUrls,
         feeling: entry.feeling,
         location: entry.location
       })
       .returning();
+      
+    console.log("Created entry:", newEntry);
     return newEntry;
   }
 
   async updateEntry(id: number, entry: InsertEntry): Promise<DiaryEntry | undefined> {
+    // Ensure mediaUrls is always an array
+    const mediaUrls = Array.isArray(entry.mediaUrls) ? entry.mediaUrls : [];
+    
+    console.log(`Updating entry ${id} with mediaUrls:`, mediaUrls);
+    
     const [updated] = await db
       .update(diaryEntries)
       .set({
         title: entry.title,
         content: entry.content,
-        mediaUrls: entry.mediaUrls || [],
+        mediaUrls: mediaUrls,
         feeling: entry.feeling,
         location: entry.location
       })
       .where(eq(diaryEntries.id, id))
       .returning();
+      
+    console.log("Updated entry:", updated);
     return updated;
   }
 

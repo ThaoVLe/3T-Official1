@@ -56,7 +56,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
   useEffect(() => {
     // Only proceed if we have videos with key frames
     if (Object.keys(videoKeyFrames).length === 0) return;
-    
+
     const interval = setInterval(() => {
       setFrameIndices(prev => {
         const newIndices = { ...prev };
@@ -64,7 +64,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
           const index = Number(indexStr);
           const video = videoRefs.current[index];
           const frames = videoKeyFrames[index];
-          
+
           if (video && frames) {
             const currentFrameIndex = prev[index] || 0;
             const nextFrameIndex = (currentFrameIndex + 1) % frames.length;
@@ -126,7 +126,9 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
                   className="w-full h-full object-cover"
                   muted
                   playsInline
-                  preload="metadata"
+                  preload="auto"
+                  crossOrigin="anonymous"
+                  poster={isUploading ? undefined : url + '#t=0.1'} // Add a poster as fallback
                 />
               )}
               {!isVideo && (

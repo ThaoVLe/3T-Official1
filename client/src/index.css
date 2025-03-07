@@ -1,29 +1,3 @@
-
-/* Facebook-style editor transitions and styling */
-.transition-height {
-  transition: height 0.15s ease-out;
-  overflow: hidden;
-}
-
-/* Facebook-like editor focus styles */
-.editor-focused .ProseMirror {
-  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
-  border-color: #1877f2 !important;
-}
-
-.ProseMirror {
-  min-height: 100px;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 15px;
-  line-height: 1.4;
-}
-
-.ProseMirror:focus {
-  outline: none;
-}
-
-/* Fix the import order to avoid CSS errors */
 @import './styles/embla.css';
 
 @tailwind base;

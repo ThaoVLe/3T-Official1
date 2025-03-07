@@ -96,34 +96,26 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   };
 
   const editorRef = useRef<HTMLDivElement>(null);
-  const minHeight = 100; // Start with a smaller initial height
-  
+  const contentHeight = useRef<number>(200); // Initial minimum height
+
   useEffect(() => {
     if (!editor || !editorRef.current) return;
 
-    // Add Facebook-style auto-expanding behavior
+    // Function to adjust editor height based on content
     const adjustHeight = () => {
       if (!editorRef.current) return;
 
-      const proseMirror = editorRef.current.querySelector('.ProseMirror');
-      if (!proseMirror) return;
-      
-      // Add the transition class for smooth height changes
-      if (!proseMirror.classList.contains('transition-height')) {
-        proseMirror.classList.add('transition-height');
-      }
+      // Reset height first to get proper scrollHeight
+      editorRef.current.style.height = 'auto';
 
-      // Reset height to get accurate scrollHeight measurement
-      (proseMirror as HTMLElement).style.height = 'auto';
-      
-      // Get scroll height (content height)
-      const scrollHeight = (proseMirror as HTMLElement).scrollHeight;
-      
-      // Calculate new height with a little padding to avoid scrollbars flickering
-      const newHeight = Math.max(minHeight, scrollHeight + 10);
-      
-      // Apply the new height with smooth transition
-      (proseMirror as HTMLElement).style.height = `${newHeight}px`;
+      // Get the actual content height
+      const scrollHeight = editorRef.current.querySelector('.ProseMirror')?.scrollHeight || 200;
+
+      // Only grow, never shrink below the minimum or current height
+      contentHeight.current = Math.max(contentHeight.current, scrollHeight);
+
+      // Set the height
+      editorRef.current.style.height = `${contentHeight.current}px`;
     };
 
     // Setup mutation observer for content changes
@@ -139,55 +131,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
       // Initial adjustment
       adjustHeight();
-
-      // Adjust on various events to catch all possible content changes
-      window.addEventListener('resize', adjustHeight);
-      
-      // Facebook-style behavior: adjust immediately on every content update
-      editor.on('update', adjustHeight);
-      
-      // Add focus styling for Facebook-like experience
-      editor.on('focus', () => {
-        if (editorRef.current) {
-          editorRef.current.classList.add('editor-focused');
-        }
-        adjustHeight();
-      });
-      
-      editor.on('blur', () => {
-        if (editorRef.current) {
-          editorRef.current.classList.remove('editor-focused');
-        }
-        adjustHeight();
-      });
-      
-      // Add immediate adjustment on input and key events for instant feedback
-      const editorElement = editorRef.current.querySelector('.ProseMirror');
-      if (editorElement) {
-        editorElement.addEventListener('input', adjustHeight);
-        editorElement.addEventListener('keydown', () => {
-          // Using setTimeout to catch the height after content is actually updated
-          setTimeout(adjustHeight, 0);
-        });
-      }
     }
 
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', adjustHeight);
-      
-      if (editor) {
-        editor.off('update', adjustHeight);
-        editor.off('focus');
-        editor.off('blur');
-      }
-      
-      const editorElement = editorRef.current?.querySelector('.ProseMirror');
-      if (editorElement) {
-        editorElement.removeEventListener('input', adjustHeight);
-        editorElement.removeEventListener('keydown', adjustHeight);
-      }
-    };
+    return () => observer.disconnect();
   }, [editor]);
 
 

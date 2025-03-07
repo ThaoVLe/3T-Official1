@@ -6,15 +6,6 @@
   position: relative;
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.embla::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background-color: transparent !important;
 }
 
 .embla__container {

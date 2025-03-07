@@ -18,6 +18,17 @@ import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
 import { FloatingActionBar } from "@/components/floating-action-bar";
 
+const formatTimeAgo = (currentTime: Date) => {
+  const seconds = Math.floor((Date.now() - currentTime.getTime()) / 1000);
+  if (seconds < 60) return `${seconds} seconds ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minutes ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hours ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} days ago`;
+};
+
 export default function Editor() {
   const { id } = useParams();
   const [, navigate] = useLocation();
@@ -285,23 +296,65 @@ export default function Editor() {
 
         {/* Content Area */}
         <div className="flex-1 flex flex-col overflow-auto w-full">
-          <div className="flex-1 p-4 sm:p-6 w-full max-w-full pb-24">
+          <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
             <TipTapEditor
               value={form.watch("content")}
               onChange={(value) => form.setValue("content", value)}
             />
-
-            {form.watch("mediaUrls")?.length > 0 && (
-              <div className="mt-4">
-                <MediaPreview
-                  urls={form.watch("mediaUrls")}
-                  onRemove={onMediaRemove}
-                  loading={isUploading}
-                  uploadProgress={uploadProgress}
-                />
-              </div>
-            )}
           </div>
+
+          {/* Media Display - Always at the end of the page */}
+          {form.watch("mediaUrls")?.length > 0 && (
+            <div className="mt-8 flex flex-col gap-4 pb-20">
+              <h3 className="text-sm font-medium text-muted-foreground">Attached Media</h3>
+              <div className="flex flex-wrap gap-4">
+                {form.watch("mediaUrls").map((url, i) => {
+                  const isVideo = url.match(/\.(mp4|webm|mov|MOV)$/i);
+                  const currentTime = new Date();
+                  // Calculate width as half of viewport minus 10px
+                  return (
+                    <div
+                      key={url}
+                      className="relative rounded-md overflow-hidden"
+                      style={{ width: 'calc(50% - 10px)' }}
+                    >
+                      {isVideo ? (
+                        <video
+                          src={url}
+                          className="w-full object-cover"
+                          playsInline
+                          style={{ aspectRatio: '1/1' }}
+                        />
+                      ) : (
+                        <img
+                          src={url}
+                          alt={`Media ${i + 1}`}
+                          className="w-full object-cover"
+                          loading="lazy"
+                          style={{ aspectRatio: '1/1' }}
+                        />
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
+                        <span className="text-white text-xs">{formatTimeAgo(currentTime)}</span>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 rounded-full"
+                        onClick={() => {
+                          const newMediaUrls = [...form.watch("mediaUrls")];
+                          newMediaUrls.splice(i, 1);
+                          form.setValue("mediaUrls", newMediaUrls);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Floating Action Bar */}
           <FloatingActionBar

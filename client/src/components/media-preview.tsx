@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
+import { formatTimeAgo } from "@/utils/date";
 
 interface MediaPreviewProps {
   urls: string[];

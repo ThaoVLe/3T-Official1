@@ -35,7 +35,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-lg focus:outline-none min-h-[200px] text-[18px]',
+        class: 'prose prose-lg focus:outline-none text-[18px] text-black',
       }
     }
   });
@@ -51,6 +51,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   }
 
   return (
-    <EditorContent editor={editor} className="w-full" />
+    <EditorContent 
+      editor={editor} 
+      className="w-full min-h-[150px]"
+    />
   );
 }

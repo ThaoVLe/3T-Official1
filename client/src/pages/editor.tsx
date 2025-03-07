@@ -9,10 +9,11 @@ import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { X, Image } from "lucide-react";
 import React, { useState } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
+import { Avatar } from "@/components/ui/avatar";
 
 export default function Editor() {
   const { id } = useParams();
@@ -144,10 +145,10 @@ export default function Editor() {
             onClick={() => navigate("/")}
             className="rounded-full"
           >
-            <ArrowLeft className="h-6 w-6" />
+            <X className="h-6 w-6" />
           </Button>
           <h1 className="text-xl font-semibold">
-            Create Post
+            Create post
           </h1>
         </div>
         <Button
@@ -162,13 +163,31 @@ export default function Editor() {
       {/* Content Area */}
       <div className="mt-14 mb-32 h-[calc(100vh-8.5rem)] overflow-y-auto">
         <div className="max-w-full sm:max-w-2xl mx-auto px-4">
-          <div className="py-4">
+          {/* User Info */}
+          <div className="flex items-center gap-3 py-4">
+            <Avatar className="h-10 w-10" />
+            <div className="flex flex-col">
+              <span className="font-semibold text-sm">Your Name</span>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                {form.watch("feeling") && (
+                  <span>{form.watch("feeling")?.label} {form.watch("feeling")?.emoji}</span>
+                )}
+                {form.watch("location") && (
+                  <span>at {form.watch("location")} 📍</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Editor */}
+          <div className="py-2">
             <TipTapEditor
               value={form.watch("content")}
               onChange={(value) => form.setValue("content", value)}
             />
           </div>
 
+          {/* Media Preview */}
           {form.watch("mediaUrls")?.length > 0 && (
             <div className="mt-4">
               <MediaPreview
@@ -182,10 +201,20 @@ export default function Editor() {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Footer Buttons */}
       <div className="fixed bottom-0 left-0 right-0 border-t bg-white z-20" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
         <div className="max-w-full sm:max-w-2xl mx-auto px-4">
-          <div className="py-2 flex items-center gap-4">
+          <div className="grid grid-cols-4 gap-1 py-2">
+            <MediaRecorder onCapture={onMediaUpload}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full h-12 flex flex-col items-center justify-center gap-1 hover:bg-transparent"
+              >
+                <Image className="h-6 w-6 text-green-500" />
+                <span className="text-xs">Photo/video</span>
+              </Button>
+            </MediaRecorder>
             <FeelingSelector
               selectedFeeling={form.getValues("feeling")}
               onSelect={(feeling) => form.setValue("feeling", feeling)}
@@ -194,7 +223,15 @@ export default function Editor() {
               selectedLocation={form.getValues("location")}
               onSelect={(location) => form.setValue("location", location)}
             />
-            <MediaRecorder onCapture={onMediaUpload} />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-12 flex flex-col items-center justify-center gap-1 hover:bg-transparent"
+              disabled
+            >
+              <span className="h-6 w-6 rounded-full bg-slate-200" />
+              <span className="text-xs">More</span>
+            </Button>
           </div>
         </div>
       </div>

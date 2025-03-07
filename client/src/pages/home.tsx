@@ -27,7 +27,7 @@ export default function Home() {
         requestAnimationFrame(() => {
           if (containerRef.current) {
             containerRef.current.scrollTo({
-              top: entryElement.offsetTop, // Scroll to the selected entry
+              top: entryElement.getBoundingClientRect().top + containerRef.current.scrollTop,
               behavior: 'smooth' // Use smooth scrolling for better UX
             });
             // Mark as restored and clear the saved position

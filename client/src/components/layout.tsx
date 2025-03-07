@@ -19,7 +19,6 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [isMobile, setIsMobile] = React.useState(false);
   const [location] = useLocation();
-  const [hideNav, setHideNav] = React.useState(false);
 
   React.useEffect(() => {
     // Check initial size
@@ -30,22 +29,15 @@ export function Layout({ children }: LayoutProps) {
       setIsMobile(window.innerWidth < 768);
     };
 
-    // Listen for comment toggle events
-    const handleCommentToggle = (e: CustomEvent) => {
-      setHideNav(e.detail.show);
-    };
-
     window.addEventListener('resize', handleResize);
-    window.addEventListener('toggleComments', handleCommentToggle as EventListener);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('toggleComments', handleCommentToggle as EventListener);
     };
   }, []);
 
-  // Only show bottom navigation on home page and when comments are not open
-  const showBottomNav = isMobile && location === '/' && !hideNav;
+  // Only show bottom navigation on home page
+  const showBottomNav = isMobile && location === '/';
 
   return isMobile ? (
     // Mobile layout with conditional bottom navigation

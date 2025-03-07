@@ -144,9 +144,6 @@ export default function EntryView() {
       <ScrollArea className="h-[calc(100vh-56px)]">
         <div className="container px-4 py-6 diary-content">
           <div className="space-y-4">
-            <h1 className="text-[24px] font-semibold">
-              {entry.title || "Untitled Entry"}
-            </h1>
 
             <div className="text-sm text-muted-foreground">
               {formatDate(entry.createdAt)}

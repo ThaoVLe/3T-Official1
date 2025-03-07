@@ -51,6 +51,20 @@
       -webkit-overflow-scrolling: touch;
     }
   }
+  
+  /* Custom scroll area styles */
+  .scroll-area {
+    overflow: hidden; /* Prevent default scrollbars */
+  }
+  
+  .viewport {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .viewport::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
 }
 
 /* Container and page styles */

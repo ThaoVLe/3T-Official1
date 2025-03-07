@@ -72,7 +72,7 @@ export default function EntryView() {
 
       {/* Content */}
       <div className="container px-4 py-6">
-        <ScrollArea className="h-[calc(100vh-80px)] no-scrollbar" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
+        <ScrollArea className="h-[calc(100vh-80px)] no-scrollbar" showScrollbar={false} style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
           <div className="space-y-4">
             <h1 className="text-[24px] font-semibold">
               {entry.title || "Untitled Entry"}

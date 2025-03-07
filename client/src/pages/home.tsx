@@ -13,18 +13,14 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-screen overflow-hidden">
-        <div className="sticky top-0 z-10 bg-white border-b flex-none">
-          <div className="px-4 py-4">
-            <Skeleton className="h-10 w-48" />
-          </div>
+      <div className="space-y-4 no-scrollbar">
+        <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
+          <Skeleton className="h-10 w-48" />
         </div>
-        <div className="flex-1 overflow-y-auto no-scrollbar bg-[#f0f2f5]">
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-64 w-full" />
-            ))}
-          </div>
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-64 w-full" />
+          ))}
         </div>
       </div>
     );
@@ -32,7 +28,7 @@ export default function Home() {
 
   if (!entries?.length) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen text-center p-4">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
           Welcome to Your Diary
         </h1>
@@ -50,8 +46,8 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <div className="sticky top-0 z-10 bg-white border-b flex-none">
+    <div className="min-h-screen bg-[#f0f2f5] no-scrollbar">
+      <div className="sticky top-0 z-10 bg-white border-b">
         <div className="flex justify-between items-center px-4 py-3">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             My Diary
@@ -65,14 +61,12 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar bg-[#f0f2f5]">
-        <div className="space-y-2">
-          {entries.map((entry) => (
-            <div key={entry.id} className="bg-white">
-              <EntryCard entry={entry} />
-            </div>
-          ))}
-        </div>
+      <div className="space-y-2">
+        {entries.map((entry) => (
+          <div key={entry.id} className="bg-white">
+            <EntryCard entry={entry} />
+          </div>
+        ))}
       </div>
     </div>
   );

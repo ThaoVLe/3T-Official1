@@ -74,7 +74,7 @@
     margin: 0;
     line-height: 1.5;
   }
-  
+
   /* Ensure editor never collapses */
   .ProseMirror.ProseMirror-focused {
     min-height: 200px !important;
@@ -95,7 +95,6 @@
     overflow: hidden;
   }
 
-  /* Custom emotion styles */
   .custom-emotion {
     color: #880000;
     font-weight: 500;

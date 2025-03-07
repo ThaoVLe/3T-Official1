@@ -7,28 +7,36 @@ import type { DiaryEntry } from "@shared/schema";
 // Component for video thumbnails that play in a continuous loop
 const VideoThumbnail = ({ url, className }: { url: string; className?: string }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Set up the video to autoplay and loop when component mounts
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleLoadedData = () => {
+    // Pre-load a frame at 0.1s to avoid initial white flash
+    video.currentTime = 0.1;
+
+    const handleCanPlay = () => {
       if (!video) return;
       
       // Ensure the video starts playing
       video.play().catch(err => {
         console.log("Auto-play was prevented:", err);
-        
-        // If autoplay is blocked, at least show a frame from the video
         video.currentTime = 0.1;
       });
     };
 
+    const handleLoadedData = () => {
+      setIsLoaded(true);
+    };
+
+    video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('loadeddata', handleLoadedData);
 
     return () => {
       if (video) {
+        video.removeEventListener('canplay', handleCanPlay);
         video.removeEventListener('loadeddata', handleLoadedData);
         video.pause();
       }
@@ -36,18 +44,19 @@ const VideoThumbnail = ({ url, className }: { url: string; className?: string })
   }, []);
 
   return (
-    <video
-      ref={videoRef}
-      src={url}
-      className={className}
-      playsInline
-      muted
-      loop
-      autoPlay
-      preload="auto"
-      crossOrigin="anonymous"
-      poster={`${url}#t=0.1`}
-    />
+    <div className="relative w-full h-full bg-neutral-100">
+      <video
+        ref={videoRef}
+        src={url}
+        className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+        playsInline
+        muted
+        loop
+        autoPlay
+        preload="auto"
+        crossOrigin="anonymous"
+      />
+    </div>
   );
 };
 

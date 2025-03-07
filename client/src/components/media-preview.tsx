@@ -16,24 +16,35 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
   const mediaUrls = urls || [];
 
+  // Track loaded state of videos
+  const [loadedVideos, setLoadedVideos] = useState<{[key: number]: boolean}>({});
+
   // Set up video playback for thumbnails
   useEffect(() => {
     mediaUrls.forEach((url, index) => {
       if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) && videoRefs.current[index]) {
         const video = videoRefs.current[index];
+        
+        // Pre-load a frame at 0.1s to avoid initial white flash
+        video.currentTime = 0.1;
 
-        // Listen for metadata to load before playing
-        const handleLoadedData = () => {
+        // Listen for when video can be played
+        const handleCanPlay = () => {
           // Start playing the video in a loop
           video.play().catch(err => {
             console.log("Auto-play was prevented:", err);
-            // If autoplay is blocked, at least show a frame from the video
             video.currentTime = 0.1;
           });
         };
 
+        const handleLoadedData = () => {
+          setLoadedVideos(prev => ({...prev, [index]: true}));
+        };
+
+        video.addEventListener('canplay', handleCanPlay);
         video.addEventListener('loadeddata', handleLoadedData);
         return () => {
+          video.removeEventListener('canplay', handleCanPlay);
           video.removeEventListener('loadeddata', handleLoadedData);
           video.pause();
         };
@@ -82,18 +93,19 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
               onClick={() => setSelectedIndex(index)}
             >
               {isVideo && (
-                <video
-                  ref={el => el && (videoRefs.current[index] = el)}
-                  src={url}
-                  className="w-full h-full object-cover"
-                  muted
-                  playsInline
-                  loop
-                  autoPlay
-                  preload="auto"
-                  crossOrigin="anonymous"
-                  poster={`${url}#t=0.1`}
-                />
+                <div className="relative w-full h-full bg-neutral-100">
+                  <video
+                    ref={el => el && (videoRefs.current[index] = el)}
+                    src={url}
+                    className={`w-full h-full object-cover ${loadedVideos[index] ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+                    muted
+                    playsInline
+                    loop
+                    autoPlay
+                    preload="auto"
+                    crossOrigin="anonymous"
+                  />
+                </div>
               )}
               {!isVideo && (
                 <img

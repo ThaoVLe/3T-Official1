@@ -29,8 +29,8 @@ export function FloatingActionBar({
   };
 
   return (
-    <div className="fixed bottom-[48px] left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-b z-50"
-         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t z-50"
+         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}>
       <div className="p-2 flex items-center gap-2">
         <div className="relative">
           <Button
@@ -41,7 +41,7 @@ export function FloatingActionBar({
           >
             <Plus className="h-5 w-5" />
           </Button>
-
+          
           {showMediaOptions && (
             <div className="absolute bottom-full left-0 mb-2 bg-background rounded-lg shadow-lg border p-2 flex gap-2">
               <label className="cursor-pointer">
@@ -55,7 +55,7 @@ export function FloatingActionBar({
                   <Image className="h-5 w-5" />
                 </Button>
               </label>
-
+              
               <label className="cursor-pointer">
                 <input
                   type="file"

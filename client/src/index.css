@@ -61,15 +61,24 @@
   }
 
   .tiptap-container .ProseMirror {
-    transition: min-height 0.2s ease;
+    transition: height 0.2s ease;
     height: auto;
-    overflow-y: hidden;
-    min-height: 200px;
+    min-height: 200px !important;
     padding: 1rem;
+    overflow-y: hidden;
   }
 
-  .ProseMirror {
-    @apply min-h-[200px];
+  .ProseMirror p {
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .ProseMirror p.is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
   }
 
   /* Ensure editor container grows properly */

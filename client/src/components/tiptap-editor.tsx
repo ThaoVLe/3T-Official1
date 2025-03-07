@@ -6,7 +6,6 @@ import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Import Input component
 import {
   Bold,
   Italic,
@@ -22,7 +21,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Placeholder from '@tiptap/extension-placeholder'; //Import Placeholder extension
+import Placeholder from '@tiptap/extension-placeholder';
 
 interface TipTapEditorProps {
   value: string;
@@ -72,11 +71,44 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     }
   });
 
+  const editorRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
       editor.commands.setContent(value || '', false);
     }
   }, [editor, value]);
+
+  useEffect(() => {
+    if (!editor || !editorRef.current) return;
+
+    // Ensure minimum height and smooth expansion
+    const adjustHeight = () => {
+      if (!editorRef.current) return;
+
+      const proseMirror = editorRef.current.querySelector('.ProseMirror');
+      if (!proseMirror) return;
+
+      // Set initial height
+      proseMirror.style.minHeight = '200px';
+
+      // Calculate and set height based on content
+      const scrollHeight = Math.max(200, proseMirror.scrollHeight);
+      proseMirror.style.height = `${scrollHeight}px`;
+    };
+
+    // Setup observer for content changes
+    const observer = new ResizeObserver(adjustHeight);
+    const proseMirror = editorRef.current.querySelector('.ProseMirror');
+
+    if (proseMirror) {
+      observer.observe(proseMirror);
+      adjustHeight(); // Initial adjustment
+    }
+
+    // Cleanup
+    return () => observer.disconnect();
+  }, [editor]);
 
   if (!editor) {
     return null;
@@ -94,47 +126,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗'],
     'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
   };
-
-  const editorRef = useRef<HTMLDivElement>(null);
-  const contentHeight = useRef<number>(200); // Initial minimum height
-
-  useEffect(() => {
-    if (!editor || !editorRef.current) return;
-
-    // Function to adjust editor height based on content
-    const adjustHeight = () => {
-      if (!editorRef.current) return;
-
-      // Reset height first to get proper scrollHeight
-      editorRef.current.style.height = 'auto';
-
-      // Get the actual content height
-      const scrollHeight = editorRef.current.querySelector('.ProseMirror')?.scrollHeight || 200;
-
-      // Only grow, never shrink below the minimum or current height
-      contentHeight.current = Math.max(contentHeight.current, scrollHeight);
-
-      // Set the height
-      editorRef.current.style.height = `${contentHeight.current}px`;
-    };
-
-    // Setup mutation observer for content changes
-    const observer = new MutationObserver(adjustHeight);
-
-    const proseMirror = editorRef.current.querySelector('.ProseMirror');
-    if (proseMirror) {
-      observer.observe(proseMirror, { 
-        childList: true, 
-        subtree: true,
-        characterData: true
-      });
-
-      // Initial adjustment
-      adjustHeight();
-    }
-
-    return () => observer.disconnect();
-  }, [editor]);
 
 
   return (
@@ -316,13 +307,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </PopoverTrigger>
             <PopoverContent className="w-72 p-2">
               <div className="mb-3">
-                {/* Emotion selector content */}
                 <div className="grid grid-cols-3 gap-1">
-                  {/* Emotion buttons will go here */}
                 </div>
               </div>
 
-              {/* Standard emoji categories */}
               {Object.entries(emojiCategories).map(([category, emojis]) => (
                 <div key={category} className="mb-2">
                   <h3 className="text-sm font-medium mb-1">{category}</h3>
@@ -347,7 +335,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
         </div>
       </div>
 
-      <div className="flex-1 w-full">
+      <div className="flex-1 w-full relative">
         <EditorContent ref={editorRef} editor={editor} className="h-full w-full" />
       </div>
     </div>

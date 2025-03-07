@@ -65,14 +65,21 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   };
 
   const handleMediaClick = (mediaIndex: number) => {
+    // Save the current scroll position before navigation
     if (document.querySelector('.diary-content')) {
       const scrollPosition = document.querySelector('.diary-content')?.scrollTop;
       localStorage.setItem('homeScrollPosition', scrollPosition?.toString() || '0');
     }
+    
     // Save the current entry ID to find it later
+    localStorage.setItem('lastViewedEntryId', entry.id.toString());
+    
+    // Also update state if the function is provided
     if (setSelectedEntryId) {
       setSelectedEntryId(entry.id.toString());
     }
+    
+    // Navigate to the entry view with media parameter
     navigate(`/entry/${entry.id}?media=${mediaIndex}`);
   };
 

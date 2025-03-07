@@ -21,33 +21,27 @@ export default function Home() {
     if (entries && !scrollRestoredRef.current) {
       const savedScrollPosition = localStorage.getItem('homeScrollPosition');
       const lastViewedEntryId = localStorage.getItem('lastViewedEntryId');
-      const entryElement = lastViewedEntryId 
-        ? document.querySelector(`#entry-${lastViewedEntryId}`)
-        : null;
 
-      if (savedScrollPosition && containerRef.current) {
-        // Use requestAnimationFrame to ensure DOM is ready
-        requestAnimationFrame(() => {
-          if (containerRef.current && entryElement) {
-            // Get the entry's position relative to the viewport
-            const entryRect = entryElement.getBoundingClientRect();
-            const containerRect = containerRef.current.getBoundingClientRect();
-            const relativeTop = entryRect.top - containerRect.top;
+      // Use a slight delay to ensure DOM is fully rendered
+      setTimeout(() => {
+        const entryElement = lastViewedEntryId 
+          ? document.querySelector(`#entry-${lastViewedEntryId}`)
+          : null;
 
-            // Scroll to the entry's position
-            containerRef.current.scrollTo({
-              top: parseInt(savedScrollPosition),
-              behavior: 'instant'
-            });
+        if (savedScrollPosition && containerRef.current) {
+          // First restore the exact scroll position that was saved
+          containerRef.current.scrollTo({
+            top: parseInt(savedScrollPosition),
+            behavior: 'instant'
+          });
 
-            // Mark as restored and clear saved data
-            scrollRestoredRef.current = true;
-            localStorage.removeItem('homeScrollPosition');
-            localStorage.removeItem('lastViewedEntryId');
-            setSelectedEntryId(null);
-          }
-        });
-      }
+          // Mark as restored and clear saved data
+          scrollRestoredRef.current = true;
+          localStorage.removeItem('homeScrollPosition');
+          localStorage.removeItem('lastViewedEntryId');
+          setSelectedEntryId(null);
+        }
+      }, 100); // Small delay to ensure the DOM has updated
     }
   }, [entries]); // Run when entries are loaded
 
@@ -135,7 +129,10 @@ export default function Home() {
       }}>
         {entries.map((entry) => (
           <div key={entry.id} id={`entry-${entry.id}`} className="bg-white">
-            <EntryCard entry={entry} setSelectedEntryId={setSelectedEntryId} />
+            <EntryCard 
+              entry={entry} 
+              setSelectedEntryId={setSelectedEntryId} 
+            />
           </div>
         ))}
       </div>

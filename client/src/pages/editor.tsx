@@ -293,11 +293,10 @@ export default function Editor() {
 
           {/* Media Controls - Now in floating bar */}
           <div 
-            className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t p-2 flex flex-col gap-3 z-50"
+            className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t p-2 z-50"
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">How are you feeling today?</span>
+            <div className="flex items-center justify-between gap-4">
               <FeelingSelector
                 selectedFeeling={form.getValues("feeling")}
                 onSelect={async (feeling) => {
@@ -305,15 +304,9 @@ export default function Editor() {
                   form.setValue("feeling", feeling);
                 }}
               />
-            </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Add media:</span>
               <MediaRecorder onCapture={onMediaUpload} />
-            </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Checking in at:</span>
               <LocationSelector
                 selectedLocation={form.getValues("location")}
                 onSelect={(location) => {

@@ -68,16 +68,25 @@ export default function EntryView() {
 
   useEffect(() => {
     const mediaParam = new URLSearchParams(window.location.search).get('media');
-    if (mediaParam !== null) {
+    if (mediaParam !== null && entry?.mediaUrls) {
       const mediaIndex = parseInt(mediaParam);
-      const mediaElement = mediaRefs.current[mediaIndex];
-      if (mediaElement) {
-        requestAnimationFrame(() => {
-          mediaElement.scrollIntoView({ behavior: 'instant', block: 'center' });
-        });
-      }
+      console.log('Entry view received media parameter:', mediaIndex);
+      
+      // Wait for DOM updates to complete
+      setTimeout(() => {
+        // Refresh references to make sure they're current
+        if (mediaRefs.current[mediaIndex]) {
+          console.log('Scrolling to media at index:', mediaIndex);
+          mediaRefs.current[mediaIndex]?.scrollIntoView({ 
+            behavior: 'auto', 
+            block: 'center' 
+          });
+        } else {
+          console.log('Media element reference not found for index:', mediaIndex);
+        }
+      }, 300); // Allow time for DOM to fully render
     }
-  }, [entry]);
+  }, [entry?.mediaUrls]);
 
   if (!entry) return null;
 

@@ -78,6 +78,9 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       setSelectedEntryId(entry.id.toString());
     }
 
+    // Store selected media index in sessionStorage as a backup
+    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
+    
     // Clear any existing params and navigate to the entry view with media parameter
     const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
     console.log('Navigating to media at index:', mediaIndex);

@@ -22,7 +22,6 @@ const useIsMobile = () => {
   return window.innerWidth < 768;
 };
 
-
 export default function Editor() {
   const { id } = useParams();
   const [, navigate] = useLocation();
@@ -159,7 +158,6 @@ export default function Editor() {
     }
 
     // More aggressive iOS keyboard dismissal
-    // Create an offscreen input and force it to focus and blur
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
     temporaryInput.style.position = 'fixed';
@@ -170,26 +168,47 @@ export default function Editor() {
     temporaryInput.style.width = '100%';
     temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
 
-    // Append to body, focus, then blur and remove
     document.body.appendChild(temporaryInput);
-
-    // Force focus then immediately blur
+    temporaryInput.focus();
     setTimeout(() => {
-      temporaryInput.focus();
-      setTimeout(() => {
-        temporaryInput.blur();
-        document.body.removeChild(temporaryInput);
-      }, 50);
+      temporaryInput.blur();
+      document.body.removeChild(temporaryInput);
     }, 50);
 
-    // Additional fix - add a slight delay before showing sheet
     return new Promise(resolve => setTimeout(resolve, 100));
   }, [isMobile]);
 
+  // Add swipe to go back gesture
+  React.useEffect(() => {
+    let touchStartX = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const swipeDistance = touchEndX - touchStartX;
+
+      // If swiped right more than 100px, go back
+      if (swipeDistance > 100) {
+        navigate('/');
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [navigate]);
+
   return (
-    <div className="min-h-screen flex flex-col bg-white w-full">
-      {/* Header */}
-      <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
+    <div className="h-screen flex flex-col overflow-hidden bg-white w-full">
+      {/* Header - Fixed at top */}
+      <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full flex-none">
         <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
           <Button
             variant="ghost"
@@ -220,14 +239,14 @@ export default function Editor() {
           {form.watch("feeling") && (
             <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
               <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                {form.watch("feeling").label.includes(',') ? (
+                {form.watch("feeling")?.label.includes(',') ? (
                   <>
-                    {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
-                    {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
+                    {form.watch("feeling")?.label.split(',')[0].trim()} {form.watch("feeling")?.emoji.split(' ')[0]}
+                    {' - '}{form.watch("feeling")?.label.split(',')[1].trim()} {form.watch("feeling")?.emoji.split(' ')[1]}
                   </>
                 ) : (
                   <>
-                    {form.watch("feeling").label} {form.watch("feeling").emoji}
+                    {form.watch("feeling")?.label} {form.watch("feeling")?.emoji}
                   </>
                 )}
               </div>
@@ -236,56 +255,57 @@ export default function Editor() {
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 flex flex-col overflow-auto w-full">
-        <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+      {/* Content Area - Scrollable */}
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+        <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 py-6">
           <TipTapEditor
             value={form.watch("content")}
             onChange={(value) => form.setValue("content", value)}
           />
         </div>
+      </div>
 
-        {/* Media Controls - Fixed at bottom */}
-        <div className="border-t bg-white sticky bottom-0 w-full" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}> {/*Added paddingBottom for safe area*/}
-          <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">How are you feeling today?</span>
-              <FeelingSelector
-                selectedFeeling={form.getValues("feeling")}
-                onSelect={async (feeling) => {
-                  await hideKeyboard();
-                  form.setValue("feeling", feeling);
-                }}
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Checking in at:</span>
-              <LocationSelector
-                selectedLocation={form.getValues("location")}
-                onSelect={(location) => {
-                  hideKeyboard();
-                  form.setValue("location", location);
-                }}
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Add media:</span>
-              <MediaRecorder onCapture={onMediaUpload} />
-            </div>
+      {/* Footer - Fixed at bottom */}
+      <div className="border-t bg-white w-full flex-none" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
+        <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 py-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">How are you feeling today?</span>
+            <FeelingSelector
+              selectedFeeling={form.getValues("feeling")}
+              onSelect={async (feeling) => {
+                await hideKeyboard();
+                form.setValue("feeling", feeling);
+              }}
+            />
           </div>
-          {form.watch("mediaUrls")?.length > 0 && (
-            <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
-              <MediaPreview
-                urls={form.watch("mediaUrls")}
-                onRemove={onMediaRemove}
-                loading={isUploading}
-                uploadProgress={uploadProgress}
-              />
-            </div>
-          )}
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Checking in at:</span>
+            <LocationSelector
+              selectedLocation={form.getValues("location")}
+              onSelect={(location) => {
+                hideKeyboard();
+                form.setValue("location", location);
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Add media:</span>
+            <MediaRecorder onCapture={onMediaUpload} />
+          </div>
         </div>
+
+        {form.watch("mediaUrls")?.length > 0 && (
+          <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 pt-2 pb-4">
+            <MediaPreview
+              urls={form.watch("mediaUrls")}
+              onRemove={onMediaRemove}
+              loading={isUploading}
+              uploadProgress={uploadProgress}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

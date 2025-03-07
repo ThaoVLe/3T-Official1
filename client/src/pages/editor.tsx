@@ -235,8 +235,8 @@ export default function Editor() {
       </div>
 
       {/* Content Area - Scrollable */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6">
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+        <div className="max-w-2xl mx-auto p-4 space-y-4 relative">
           <TipTapEditor
             value={form.watch("content")}
             onChange={(value) => form.setValue("content", value)}

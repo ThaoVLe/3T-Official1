@@ -17,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Placeholder from '@tiptap/extension-placeholder';
+import React from 'react';
 
 interface TipTapEditorProps {
   value: string;
@@ -112,6 +113,26 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
     return () => observer.disconnect();
   }, [editor]);
+
+  // Fix for mobile focus issues
+  useEffect(() => {
+    const handleFocus = () => {
+      // Scroll a bit to ensure the editor is in view when focused on mobile
+      setTimeout(() => window.scrollTo(0, window.scrollY + 1), 100);
+    };
+
+    const editorElement = document.querySelector('.ProseMirror');
+    if (editorElement) {
+      editorElement.addEventListener('focus', handleFocus);
+    }
+
+    return () => {
+      if (editorElement) {
+        editorElement.removeEventListener('focus', handleFocus);
+      }
+    };
+  }, []);
+
 
   if (!editor) {
     return null;
@@ -253,11 +274,11 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       </div>
 
       {/* Editor Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-4"> {/* Added padding */}
         <EditorContent 
           ref={editorRef}
           editor={editor} 
-          className="h-full ProseMirror-focused"
+          className="h-full ProseMirror-focused relative z-10" {/* Added z-index */}
         />
       </div>
     </div>

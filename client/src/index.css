@@ -12,17 +12,16 @@
   html {
     scroll-behavior: smooth;
     height: 100%;
-    overflow: auto;
+    overflow: hidden;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
     height: 100%;
-    overflow: auto;
+    overflow: hidden;
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;     /* Firefox */
-    overscroll-behavior-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
   }
 
   /* Hide scrollbar for Chrome, Safari and Opera */
@@ -90,25 +89,6 @@
 
   .card {
     @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
-
-/* Enhance touch scrolling */
-.tiptap {
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-}
-
-/* Improve mobile scrolling */
-@media (max-width: 767px) {
-  html, body {
-    touch-action: pan-y;
-    overflow-x: hidden;
-  }
-  
-  .tiptap-content {
-    touch-action: pan-y;
-  }
-}
-
   }
 
   /* Text sizes for consistency across the app */

@@ -7,6 +7,8 @@
 @layer base {
   * {
     @apply border-border;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   html {
@@ -15,7 +17,6 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    /* Hide scrollbar while maintaining functionality */
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;     /* Firefox */
   }
@@ -25,15 +26,20 @@
     display: none;
   }
 
-  /* For divs that need scrolling but hidden scrollbar */
-  .scroll-hidden {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    overflow-y: auto;
+  /* Global scrollbar styling */
+  *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
   }
 
-  .scroll-hidden::-webkit-scrollbar {
-    display: none;
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: transparent;
+    border: none;
   }
 }
 
@@ -244,13 +250,24 @@
 @layer utilities {
   /* Scrollbar hiding utility classes */
   .no-scrollbar {
-    -ms-overflow-style: none;
     scrollbar-width: none;
+    -ms-overflow-style: none;
     overflow-y: auto;
   }
 
   .no-scrollbar::-webkit-scrollbar {
-    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+
+  .no-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .no-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border: none;
   }
 }
 

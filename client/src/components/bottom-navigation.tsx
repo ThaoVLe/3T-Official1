@@ -1,9 +1,16 @@
 
 import * as React from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Home, Plus, Settings } from "lucide-react";
 
 export function BottomNavigation() {
+  const [location] = useLocation();
+  
+  // Hide the bottom navigation on the editor page (including both /new and /editor/:id routes)
+  if (location.startsWith('/editor') || location === '/new') {
+    return null;
+  }
+  
   return (
     <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-gray-200 pt-[5px]">
       <div className="grid h-full w-full grid-cols-3 mx-auto">

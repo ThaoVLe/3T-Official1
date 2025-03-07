@@ -5,11 +5,29 @@ import { PlusCircle } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useRef } from "react";
 
 export default function Home() {
   const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
     queryKey: ["/api/entries"],
   });
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Restore scroll position if it exists
+    const savedScrollPosition = localStorage.getItem('homeScrollPosition');
+    if (savedScrollPosition && containerRef.current) {
+      setTimeout(() => {
+        containerRef.current?.scrollTo({
+          top: parseInt(savedScrollPosition),
+          behavior: 'instant'
+        });
+      }, 100);
+      // Clear the saved position after restoring
+      localStorage.removeItem('homeScrollPosition');
+    }
+  }, [entries]); // Run when entries are loaded
 
   if (isLoading) {
     return (
@@ -54,15 +72,19 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll" style={{
-      WebkitOverflowScrolling: 'touch',
-      overscrollBehavior: 'none',
-      msOverflowStyle: 'none',
-      scrollbarWidth: 'none',
-      touchAction: 'pan-y pinch-zoom',
-      WebkitTapHighlightColor: 'transparent',
-      WebkitUserSelect: 'none',
-    }}>
+    <div 
+      ref={containerRef}
+      className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll" 
+      style={{
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'none',
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+        touchAction: 'pan-y pinch-zoom',
+        WebkitTapHighlightColor: 'transparent',
+        WebkitUserSelect: 'none',
+      }}
+    >
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="flex justify-between items-center px-4 py-3">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">

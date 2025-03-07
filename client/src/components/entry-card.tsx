@@ -63,6 +63,14 @@ export default function EntryCard({ entry }: EntryCardProps) {
     return textContent.length > 200;
   };
 
+  const handleMediaClick = (mediaIndex: number) => {
+    if (document.querySelector('.diary-content')) {
+      const scrollPosition = document.querySelector('.diary-content')?.scrollTop;
+      localStorage.setItem('homeScrollPosition', scrollPosition?.toString() || '0');
+    }
+    navigate(`/entry/${entry.id}?media=${mediaIndex}`);
+  };
+
   return (
     <Card className="group bg-white shadow-none border-0 w-full mb-4">
       <CardHeader className="space-y-0 pb-2 pt-3 px-0">
@@ -169,7 +177,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
             {entry.mediaUrls[0] && (
               <div 
                 className="aspect-[16/9] w-full cursor-pointer overflow-hidden"
-                onClick={() => navigate(`/entry/${entry.id}?media=0`)}
+                onClick={() => handleMediaClick(0)}
               >
                 {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
                   <video
@@ -200,7 +208,7 @@ export default function EntryCard({ entry }: EntryCardProps) {
                     <div 
                       key={i} 
                       className="aspect-square relative cursor-pointer overflow-hidden"
-                      onClick={() => navigate(`/entry/${entry.id}?media=${mediaIndex}`)}
+                      onClick={() => handleMediaClick(mediaIndex)}
                     >
                       {isVideo ? (
                         <video

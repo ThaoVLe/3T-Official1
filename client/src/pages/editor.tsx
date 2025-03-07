@@ -15,7 +15,7 @@ import { Save, X } from "lucide-react";
 import React, { useState, useCallback } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
-import { BottomNavigation } from "@/components/bottom-navigation"; // Added import
+// No bottom navigation import needed
 
 // Simulate useIsMobile hook - replace with actual implementation
 const useIsMobile = () => {
@@ -290,7 +290,6 @@ export default function Editor() {
           )}
         </div>
       </div>
-      <BottomNavigation /> {/* Added BottomNavigation */}
     </div>
   );
 }

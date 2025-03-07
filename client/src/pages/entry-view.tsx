@@ -21,6 +21,21 @@ export default function EntryView() {
   const [commentCount, setCommentCount] = useState(0);
   const { toast } = useToast();
 
+  // Check URL parameters for showComments
+  useEffect(() => {
+    const showCommentsParam = new URLSearchParams(window.location.search).get('showComments');
+    if (showCommentsParam === 'true') {
+      setShowComments(true);
+      // Scroll to comments section after a short delay to ensure content is loaded
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  }, []);
+
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
     enabled: !!id,
@@ -104,6 +119,35 @@ export default function EntryView() {
   const formatDate = (date: string | Date) => {
     return format(new Date(date), "MMMM d, yyyy 'at' h:mm a");
   };
+
+  // Update the comments button click handler
+  const handleCommentsClick = () => {
+    setShowComments(!showComments);
+    const event = new CustomEvent('toggleComments', { 
+      detail: { show: !showComments } 
+    });
+    window.dispatchEvent(event);
+
+    if (!showComments) {
+      // Update URL to reflect comments state without navigation
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('showComments', 'true');
+      window.history.pushState({}, '', newUrl.toString());
+
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
+    } else {
+      // Remove showComments from URL when closing
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('showComments');
+      window.history.pushState({}, '', newUrl.toString());
+    }
+  };
+
 
   return (
     <PageTransition direction={1}>
@@ -212,23 +256,7 @@ export default function EntryView() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    setShowComments(!showComments);
-                    const event = new CustomEvent('toggleComments', { 
-                      detail: { show: !showComments } 
-                    });
-                    window.dispatchEvent(event);
-
-                    // Scroll to comments section when opening
-                    if (!showComments) {
-                      setTimeout(() => {
-                        window.scrollTo({
-                          top: document.body.scrollHeight,
-                          behavior: 'smooth'
-                        });
-                      }, 100);
-                    }
-                  }}
+                  onClick={handleCommentsClick}
                   className="text-muted-foreground hover:text-foreground flex items-center gap-2"
                 >
                   <MessageCircle className="h-4 w-4" />

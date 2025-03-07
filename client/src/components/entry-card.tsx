@@ -3,12 +3,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, Share, MessageCircle } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState, useEffect } from 'react';
-import { Comments } from "./comments";
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -18,9 +17,17 @@ interface EntryCardProps {
 export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [, navigate] = useLocation();
+
+  // Fetch comment count
+  const { data: comments = [] } = useQuery({
+    queryKey: [`/api/entries/${entry.id}/comments`],
+    queryFn: () => apiRequest("GET", `/api/entries/${entry.id}/comments`),
+    onSuccess: (data) => {
+      setCommentCount(data.length);
+    }
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -70,9 +77,8 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const handleMediaClick = (mediaIndex: number) => {
     const container = document.querySelector('.diary-content');
     if (container) {
-      sessionStorage.setItem('homeScrollPosition', String(container.scrollTop));
+      sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
       sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
-      console.log('Saving last viewed entry ID:', entry.id.toString());
     }
 
     if (setSelectedEntryId) {
@@ -81,7 +87,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
 
     sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
     const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
-    console.log('Navigating to media at index:', mediaIndex);
     navigate(cleanUrl);
   };
 
@@ -121,9 +126,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 )}
               </div>
             )}
-          </div>
-
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity px-4">
           </div>
         </div>
       </CardHeader>
@@ -214,11 +216,14 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             variant="ghost"
             size="sm"
             onClick={() => {
-              setShowComments(!showComments);
-              const event = new CustomEvent('toggleComments', { 
-                detail: { show: !showComments } 
-              });
-              window.dispatchEvent(event);
+              if (entry.id) {
+                sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
+              }
+              const container = document.querySelector('.diary-content');
+              if (container) {
+                sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+              }
+              navigate(`/entry/${entry.id}?showComments=true`);
             }}
             className="text-muted-foreground hover:text-foreground flex items-center gap-2"
           >
@@ -271,15 +276,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             </Button>
           </div>
         </div>
-
-        {showComments && (
-          <div className="mt-4 pb-16">
-            <Comments 
-              entryId={entry.id} 
-              onCommentCountChange={setCommentCount}
-            />
-          </div>
-        )}
       </CardContent>
     </Card>
   );

@@ -25,11 +25,26 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
 
         // Listen for metadata to load before seeking
         const handleLoadedMetadata = () => {
-          video.currentTime = 0; // Start with first frame
+          // Set to 1 second in to get a better thumbnail
+          if (video.duration > 2) {
+            video.currentTime = 1;
+          } else {
+            video.currentTime = 0;
+          }
+        };
+
+        // Handle video loading errors
+        const handleError = () => {
+          console.error(`Error loading video: ${url}`);
         };
 
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
-        return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        video.addEventListener('error', handleError);
+        
+        return () => {
+          video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+          video.removeEventListener('error', handleError);
+        };
       }
     });
   }, [mediaUrls]);
@@ -97,14 +112,21 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
               onClick={() => setSelectedIndex(index)}
             >
               {isVideo && (
-                <video
-                  ref={el => el && (videoRefs.current[index] = el)}
-                  src={url}
-                  className="w-full h-full object-cover"
-                  muted
-                  playsInline
-                  preload="metadata"
-                />
+                <div className="relative w-full h-full">
+                  <video
+                    ref={el => el && (videoRefs.current[index] = el)}
+                    src={url}
+                    className="w-full h-full object-cover"
+                    muted
+                    playsInline
+                    preload="metadata"
+                  />
+                  <div className="absolute bottom-1 right-1 bg-black/50 rounded-full p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                  </div>
+                </div>
               )}
               {!isVideo && (
                 <img

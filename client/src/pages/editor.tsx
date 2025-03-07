@@ -243,49 +243,6 @@ export default function Editor() {
           />
         </div>
       </div>
-
-      {/* Footer - Fixed at bottom */}
-      <div className="flex-none border-t bg-white" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
-        <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 py-3 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">How are you feeling today?</span>
-            <FeelingSelector
-              selectedFeeling={form.getValues("feeling")}
-              onSelect={async (feeling) => {
-                await hideKeyboard();
-                form.setValue("feeling", feeling);
-              }}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Checking in at:</span>
-            <LocationSelector
-              selectedLocation={form.getValues("location")}
-              onSelect={(location) => {
-                hideKeyboard();
-                form.setValue("location", location);
-              }}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Add media:</span>
-            <MediaRecorder onCapture={onMediaUpload} />
-          </div>
-        </div>
-
-        {form.watch("mediaUrls")?.length > 0 && (
-          <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 pt-2 pb-4">
-            <MediaPreview
-              urls={form.watch("mediaUrls")}
-              onRemove={onMediaRemove}
-              loading={isUploading}
-              uploadProgress={uploadProgress}
-            />
-          </div>
-        )}
-      </div>
     </div>
   );
 }

@@ -82,10 +82,7 @@
     @apply flex flex-col;
   }
 
-  /* Fix for bottom menu bar */
-  .mobile-bottom-menu {
-    @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
-  }
+  /* Bottom menu bar removed */
 
   .card {
     @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;

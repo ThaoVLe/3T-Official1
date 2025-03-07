@@ -1,137 +1,260 @@
-
-import { formatDate } from "@/lib/utils";
-import { EntryWithMedia } from "@/types/api";
+import { Link, useLocation } from "wouter";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Trash } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { EditIcon } from "@/components/icons/edit-icon";
+import { Edit2, Trash2, Share } from "lucide-react";
+import type { DiaryEntry } from "@shared/schema";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { useState, useEffect } from 'react';
 
 interface EntryCardProps {
-  entry: EntryWithMedia;
-  onDelete?: (id: string) => void;
-  onEdit?: (id: string) => void;
-  selectedImageId?: string;
+  entry: DiaryEntry;
+  setSelectedEntryId?: (id: string) => void;
 }
 
-export function EntryCard({ entry, onDelete, onEdit, selectedImageId }: EntryCardProps) {
-  const navigate = useNavigate();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const imageRefs = useRef<Record<string, HTMLImageElement | null>>({});
+export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
+  const { toast } = useToast();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [, navigate] = useLocation();
 
-  const handleViewEntry = () => {
-    navigate(`/entry/${entry.id}`);
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/entries/${entry.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+      toast({
+        title: "Success",
+        description: "Entry deleted",
+      });
+    },
+  });
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isDeleting || !onDelete) return;
+  const feeling = entry.feeling ? {
+    emoji: entry.feeling.emoji || "",
+    label: entry.feeling.label || ""
+  } : null;
 
-    setIsDeleting(true);
-    try {
-      await onDelete(entry.id);
-    } finally {
-      setIsDeleting(false);
+  const formatTimeAgo = (createdAt: string | Date) => {
+    const now = new Date();
+    const entryDate = new Date(createdAt);
+    const diffInDays = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffInDays > 30) {
+      return format(entryDate, "MMM dd, yyyy");
+    } else if (diffInDays > 0) {
+      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+    } else {
+      const diffInHours = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60));
+      if (diffInHours > 0) {
+        return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+      } else {
+        const diffInMinutes = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60));
+        return diffInMinutes <= 0 ? 'Just now' : `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+      }
     }
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onEdit) {
-      onEdit(entry.id);
-    }
+  const needsExpansion = (content: string) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const textContent = tempDiv.textContent || '';
+    return textContent.length > 200;
   };
 
-  const handleImageClick = (e: React.MouseEvent, mediaId: string) => {
-    e.stopPropagation();
-    navigate(`/entry/${entry.id}?imageId=${mediaId}`);
+  const handleMediaClick = (mediaIndex: number) => {
+    // Save the current scroll position before navigation
+    const container = document.querySelector('.diary-content');
+    if (container) {
+      sessionStorage.setItem('homeScrollPosition', String(container.scrollTop));
+      sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
+      console.log('Saving last viewed entry ID:', entry.id.toString());
+    }
+
+    // Also update state if the function is provided
+    if (setSelectedEntryId) {
+      setSelectedEntryId(entry.id.toString());
+    }
+
+    // Store selected media index in sessionStorage as a backup
+    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
+    
+    // Clear any existing params and navigate to the entry view with media parameter
+    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
+    console.log('Navigating to media at index:', mediaIndex);
+    navigate(cleanUrl);
   };
 
   return (
-    <div
-      className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-      onClick={handleViewEntry}
-    >
-      <div className="p-6 space-y-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-lg font-semibold">{entry.title || "Untitled Entry"}</h3>
-            <p className="text-sm text-muted-foreground">
-              {formatDate(entry.createdAt)}
-            </p>
+    <Card id={`entry-${entry.id}`} className="group bg-white shadow-none border-0 w-full mb-4">
+      <CardHeader className="space-y-0 pb-2 pt-3 px-0">
+        <div className="flex justify-between items-start px-4">
+          <div className="flex flex-col space-y-1.5">
+            <CardTitle className="text-[18px] font-semibold">
+              {entry.title || "Untitled Entry"}
+            </CardTitle>
+
+            {/* Timestamp line */}
+            <div className="text-sm text-muted-foreground">
+              {formatTimeAgo(entry.createdAt)}
+            </div>
+
+            {/* Emotions and location line - will wrap if needed */}
+            {(feeling || entry.location) && (
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                {feeling && (
+                  <div className="flex items-center">
+                    {feeling.label.includes(',') ? (
+                      <span>
+                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                      </span>
+                    ) : (
+                      <span>
+                        feeling {feeling.label} {feeling.emoji}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {entry.location && (
+                  <div className="flex items-center">
+                    <span>at {entry.location} 📍</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          <div className="flex gap-2">
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleEdit}
-                className="h-8 w-8"
-              >
-                <EditIcon className="h-4 w-4" />
+
+          {/* Action buttons */}
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity px-4">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: entry.title || "My Diary Entry",
+                    text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                    url: window.location.origin + `/entry/${entry.id}`,
+                  }).catch(err => console.log('Error sharing:', err));
+                } else {
+                  navigator.clipboard.writeText(window.location.origin + `/entry/${entry.id}`)
+                    .then(() => toast({
+                      title: "Link copied",
+                      description: "Entry link copied to clipboard"
+                    }))
+                    .catch(err => console.error('Could not copy text:', err));
+                }
+              }}
+              className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
+            >
+              <Share className="h-4 w-4"/>
+            </Button>
+            <Link href={`/edit/${entry.id}`}>
+              <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted">
+                <Edit2 className="h-4 w-4" />
               </Button>
-            )}
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleDelete}
-                className="h-8 w-8"
-                disabled={isDeleting}
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-            )}
+            </Link>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+              className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
+      </CardHeader>
 
-        {entry.content && (
-          <div
-            className="text-sm line-clamp-3"
-            dangerouslySetInnerHTML={{
-              __html: entry.content.replace(/<img[^>]*>/g, ""),
-            }}
-          />
+      <CardContent className="px-4 pt-0 pb-3">
+        {/* Text content with expansion */}
+        <div 
+          onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
+          className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
+          dangerouslySetInnerHTML={{ __html: entry.content }}
+        />
+        {needsExpansion(entry.content) && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-sm text-blue-600 hover:text-blue-700 mt-1 font-medium"
+          >
+            {isExpanded ? 'See less' : 'See more'}
+          </button>
         )}
 
-        {entry.media && entry.media.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {entry.media.slice(0, 4).map((media) => (
-              <div
-                key={media.id}
-                className="relative"
-                onClick={(e) => handleImageClick(e, media.id)}
+        {/* Media gallery */}
+        {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+          <div className="mt-3 -mx-4">
+            {/* First media - large */}
+            {entry.mediaUrls[0] && (
+              <div 
+                className="aspect-[16/9] w-full cursor-pointer overflow-hidden"
+                onClick={() => handleMediaClick(0)}
               >
-                <img
-                  ref={(el) => (imageRefs.current[media.id] = el)}
-                  src={media.url}
-                  alt=""
-                  className="w-24 h-24 object-cover rounded-md"
-                  loading="lazy"
-                />
+                {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
+                  <video
+                    src={entry.mediaUrls[0]}
+                    className="w-full h-full object-cover"
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={entry.mediaUrls[0]}
+                    alt="Media 1"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                )}
               </div>
-            ))}
-            {entry.media.length > 4 && (
-              <div className="w-24 h-24 flex items-center justify-center bg-muted rounded-md">
-                <span className="text-sm text-muted-foreground">
-                  +{entry.media.length - 4} more
-                </span>
+            )}
+
+            {/* Second and third media - two columns */}
+            {entry.mediaUrls.length > 1 && (
+              <div className="grid grid-cols-2 gap-[1px] mt-[1px]">
+                {entry.mediaUrls.slice(1, 3).map((url, i) => {
+                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                  const isLastVisible = i === 1 && entry.mediaUrls?.length > 3;
+                  const mediaIndex = i + 1;
+
+                  return (
+                    <div 
+                      key={i} 
+                      className="aspect-square relative cursor-pointer overflow-hidden"
+                      onClick={() => handleMediaClick(mediaIndex)}
+                    >
+                      {isVideo ? (
+                        <video
+                          src={url}
+                          className="w-full h-full object-cover"
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={url}
+                          alt={`Media ${mediaIndex + 1}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      )}
+                      {isLastVisible && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          <span className="text-white text-xl font-semibold">
+                            +{entry.mediaUrls.length - 3}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
         )}
-      </div>
-      <div className="flex items-center justify-end p-4 border-t">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1 h-8"
-          onClick={handleViewEntry}
-        >
-          View
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

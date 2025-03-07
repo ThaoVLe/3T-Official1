@@ -4,13 +4,16 @@ import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import MediaDialog from './MediaDialog'; //Import the MediaDialog component
+
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const mediaRefs = useRef<HTMLDivElement[]>([]);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState<number | undefined>(undefined);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -116,6 +119,15 @@ export default function EntryView() {
             {/* Media */}
             {entry.mediaUrls && entry.mediaUrls.length > 0 && (
               <div className="space-y-4 mt-6">
+                {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+                  <MediaDialog 
+                    urls={entry.mediaUrls}
+                    initialIndex={selectedMediaIndex || 0}
+                    open={selectedMediaIndex !== undefined}
+                    onOpenChange={(open) => !open && setSelectedMediaIndex(undefined)}
+                  />
+                )}
+
                 {entry.mediaUrls.map((url, i) => {
                   const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
                   const isAudio = url.match(/\.(mp3|wav|aac|ogg)$/i);
@@ -130,8 +142,8 @@ export default function EntryView() {
                         <video
                           src={url}
                           controls
+                          className="w-full rounded-lg"
                           playsInline
-                          className="w-full aspect-video object-cover rounded-lg"
                         />
                       </div>
                     );
@@ -152,8 +164,9 @@ export default function EntryView() {
                   return (
                     <div 
                       key={i} 
-                      className="w-full"
+                      className="w-full cursor-pointer"
                       ref={el => (mediaRefs.current[i] = el)}
+                      onClick={() => setSelectedMediaIndex(i)}
                     >
                       <img
                         src={url}
@@ -169,6 +182,18 @@ export default function EntryView() {
           </div>
         </ScrollArea>
       </div>
+    </div>
+  );
+}
+
+// Dummy MediaDialog component - Replace with your actual implementation
+function MediaDialog({ urls, initialIndex, open, onOpenChange }: { urls: string[], initialIndex: number, open: boolean, onOpenChange: (open: boolean) => void }) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  return (
+    <div style={{ display: open ? 'block' : 'none' }}>
+      <img src={urls[currentIndex]} alt={`Media ${currentIndex + 1}`} style={{ width: '100%', maxWidth: '800px', maxHeight: '600px' }} />
+      <button onClick={() => onOpenChange(false)}>Close</button>
     </div>
   );
 }

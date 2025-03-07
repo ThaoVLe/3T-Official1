@@ -164,12 +164,13 @@ export default function EntryCard({ entry }: EntryCardProps) {
 
         {/* Media gallery */}
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="mt-3 -mx-4" onClick={() => navigate(`/entry/${entry.id}`)}>
+          <div className="mt-3 -mx-4">
             {/* First media - large */}
             {entry.mediaUrls[0] && (
               <div 
                 className="aspect-[16/9] w-full cursor-pointer overflow-hidden"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   navigate(`/entry/${entry.id}?mediaIndex=0`);
                 }}

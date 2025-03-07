@@ -11,10 +11,10 @@ import { useState } from 'react';
 
 interface EntryCardProps {
   entry: DiaryEntry;
-  setSelectedEntryId?: (id: string) => void;
+  onClick: () => void;
 }
 
-export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
+export default function EntryCard({ entry, onClick }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [, navigate] = useLocation();
@@ -72,17 +72,12 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
     }
 
-    // Also update state if the function is provided
-    if (setSelectedEntryId) {
-      setSelectedEntryId(entry.id.toString());
-    }
-
     // Navigate to the entry view with media parameter
     navigate(`/entry/${entry.id}?media=${mediaIndex}`);
   };
 
   return (
-    <Card className="group bg-white shadow-none border-0 w-full mb-4">
+    <Card className="group bg-white shadow-none border-0 w-full mb-4 cursor-pointer" onClick={onClick}>
       <CardHeader className="space-y-0 pb-2 pt-3 px-0">
         <div className="flex justify-between items-start px-4">
           <div className="flex flex-col space-y-1.5">

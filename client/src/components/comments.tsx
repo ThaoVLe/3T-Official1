@@ -10,19 +10,25 @@ import { Send, Trash2 } from "lucide-react";
 
 interface CommentsProps {
   entryId: number;
+  onCommentCountChange?: (count: number) => void;
 }
 
-export function Comments({ entryId }: CommentsProps) {
+export function Comments({ entryId, onCommentCountChange }: CommentsProps) {
   const [newComment, setNewComment] = useState("");
   const { toast } = useToast();
 
   const { data: comments = [] } = useQuery<Comment[]>({
     queryKey: [`/api/entries/${entryId}/comments`],
+    onSuccess: (data) => {
+      if (onCommentCountChange) {
+        onCommentCountChange(data.length);
+      }
+    }
   });
 
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
-      await apiRequest("POST", `/api/entries/${entryId}/comments`, { content });
+      return await apiRequest("POST", `/api/entries/${entryId}/comments`, { content });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/entries/${entryId}/comments`] });

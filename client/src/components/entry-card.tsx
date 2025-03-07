@@ -19,6 +19,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
   const [, navigate] = useLocation();
 
   const deleteMutation = useMutation({
@@ -213,10 +214,15 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             variant="ghost"
             size="sm"
             onClick={() => setShowComments(!showComments)}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-2"
           >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Comments
+            <MessageCircle className="h-4 w-4" />
+            <span>Comments</span>
+            {commentCount > 0 && (
+              <span className="text-xs bg-muted rounded-full px-2 py-0.5 ml-1">
+                {commentCount}
+              </span>
+            )}
           </Button>
 
           <div className="flex gap-1">
@@ -262,7 +268,10 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
 
         {showComments && (
           <div className="mt-4">
-            <Comments entryId={entry.id} />
+            <Comments 
+              entryId={entry.id} 
+              onCommentCountChange={setCommentCount}
+            />
           </div>
         )}
       </CardContent>

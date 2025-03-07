@@ -16,6 +16,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
+import { FloatingActionBar } from "@/components/floating-action-bar";
 
 export default function Editor() {
   const { id } = useParams();
@@ -284,45 +285,37 @@ export default function Editor() {
 
         {/* Content Area */}
         <div className="flex-1 flex flex-col overflow-auto w-full">
-          <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+          <div className="flex-1 p-4 sm:p-6 w-full max-w-full pb-24">
+            <Input
+              {...form.register("title")}
+              className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+              placeholder="Untitled Entry..."
+            />
+
+            {form.watch("feeling") && (
+              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                  {form.watch("feeling").label.includes(',') ? (
+                    <>
+                      {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
+                      {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
+                    </>
+                  ) : (
+                    <>
+                      {form.watch("feeling").label} {form.watch("feeling").emoji}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
             <TipTapEditor
               value={form.watch("content")}
               onChange={(value) => form.setValue("content", value)}
             />
-          </div>
 
-          {/* Media Controls - Fixed at bottom */}
-          <div className="border-t bg-white sticky bottom-0 w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}> {/*Added paddingBottom for safe area*/}
-            <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">How are you feeling today?</span>
-                <FeelingSelector
-                  selectedFeeling={form.getValues("feeling")}
-                  onSelect={async (feeling) => {
-                    await hideKeyboard();
-                    form.setValue("feeling", feeling);
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Checking in at:</span>
-                <LocationSelector
-                  selectedLocation={form.getValues("location")}
-                  onSelect={(location) => {
-                    hideKeyboard();
-                    form.setValue("location", location);
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Add media:</span>
-                <MediaRecorder onCapture={onMediaUpload} />
-              </div>
-            </div>
             {form.watch("mediaUrls")?.length > 0 && (
-              <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
+              <div className="mt-4">
                 <MediaPreview
                   urls={form.watch("mediaUrls")}
                   onRemove={onMediaRemove}
@@ -332,6 +325,21 @@ export default function Editor() {
               </div>
             )}
           </div>
+
+          {/* Floating Action Bar */}
+          <FloatingActionBar
+            onMediaUpload={onMediaUpload}
+            onFeelingSelect={(feeling) => {
+              hideKeyboard();
+              form.setValue("feeling", feeling);
+            }}
+            onLocationSelect={(location) => {
+              hideKeyboard();
+              form.setValue("location", location);
+            }}
+            selectedFeeling={form.watch("feeling")}
+            selectedLocation={form.watch("location")}
+          />
         </div>
       </div>
     </PageTransition>

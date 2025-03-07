@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useLocation as useNavigate } from 'wouter';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import EntryCard from "@/components/entry-card";
 import { Button } from "@/components/ui/button";

@@ -64,7 +64,7 @@ export function Comments({ entryId, onCommentCountChange }: CommentsProps) {
     <div className="space-y-4">
       {/* Comment list */}
       <div className="space-y-3">
-        {comments.map((comment) => (
+        {Array.isArray(comments) && comments.map((comment) => (
           <div key={comment.id} className="flex items-start gap-2 group">
             <div className="flex-1 bg-muted rounded-lg p-3">
               <div className="text-sm">{comment.content}</div>

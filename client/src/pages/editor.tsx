@@ -291,27 +291,40 @@ export default function Editor() {
             />
           </div>
 
-          {/* Media Controls - Fixed at bottom */}
-          <div className="border-t bg-white sticky bottom-0 w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}> {/*Added paddingBottom for safe area*/}
-            <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">How are you feeling today?</span>
-                <FeelingSelector
-                  selectedFeeling={form.getValues("feeling")}
-                  onSelect={async (feeling) => {
-                    await hideKeyboard();
-                    form.setValue("feeling", feeling);
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Add media:</span>
-                <MediaRecorder onCapture={onMediaUpload} />
-              </div>
+          {/* Media Controls - Now in floating bar */}
+          <div 
+            className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t p-2 flex flex-col gap-3 z-50"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">How are you feeling today?</span>
+              <FeelingSelector
+                selectedFeeling={form.getValues("feeling")}
+                onSelect={async (feeling) => {
+                  await hideKeyboard();
+                  form.setValue("feeling", feeling);
+                }}
+              />
             </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Add media:</span>
+              <MediaRecorder onCapture={onMediaUpload} />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Checking in at:</span>
+              <LocationSelector
+                selectedLocation={form.getValues("location")}
+                onSelect={(location) => {
+                  hideKeyboard();
+                  form.setValue("location", location);
+                }}
+              />
+            </div>
+
             {form.watch("mediaUrls")?.length > 0 && (
-              <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
+              <div className="pt-2">
                 <MediaPreview
                   urls={form.watch("mediaUrls")}
                   onRemove={onMediaRemove}
@@ -320,20 +333,6 @@ export default function Editor() {
                 />
               </div>
             )}
-          </div>
-
-          {/* Location Selector - Floating above keyboard */}
-          <div 
-            className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t p-2 flex items-center gap-2 z-50"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
-          >
-            <span className="text-sm font-medium">Checking in at:</span>
-            <LocationSelector
-              onSelect={(location) => {
-                hideKeyboard();
-                form.setValue("location", location);
-              }}
-            />
           </div>
         </div>
       </div>

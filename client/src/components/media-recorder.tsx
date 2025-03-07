@@ -1,18 +1,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, FolderOpenIcon } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Popover, 
-  PopoverTrigger, 
-  PopoverContent 
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandList,
-  CommandGroup,
-  CommandItem
-} from "@/components/ui/command";
 
 interface MediaRecorderProps {
   onCapture: (file: File) => void;
@@ -59,35 +48,20 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
       />
 
       <div className="flex gap-2">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="icon"
-              className="h-10 w-10" 
-              disabled={isUploading}
-            >
-              <ImageIcon className="h-8 w-8" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 p-0" align="start">
-            <Command>
-              <CommandList>
-                <CommandGroup>
-                  <CommandItem
-                    onSelect={() => {
-                      document.getElementById("media-upload")?.click();
-                    }}
-                  >
-                    <FolderOpenIcon className="mr-2 h-4 w-4" />
-                    <span>Gallery</span>
-                  </CommandItem>
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <label htmlFor="media-upload">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="icon"
+            className="h-10 w-10" // Increased size
+            disabled={isUploading}
+            asChild
+          >
+            <span>
+              <ImageIcon className="h-8 w-8" /> {/* Increased size */}
+            </span>
+          </Button>
+        </label>
       </div>
     </div>
   );

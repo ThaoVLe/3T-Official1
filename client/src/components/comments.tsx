@@ -7,6 +7,9 @@ import { Comment } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { Send, Trash2 } from "lucide-react";
+//Assumed to be defined elsewhere
+import { formatTimeAgo } from '@/utils/date';
+
 
 interface CommentsProps {
   entryId: number;
@@ -69,7 +72,7 @@ export function Comments({ entryId, onCommentCountChange }: CommentsProps) {
             <div className="flex-1 bg-muted rounded-lg p-3">
               <div className="text-sm">{comment.content}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                {format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                {formatTimeAgo(new Date(comment.createdAt))}
               </div>
             </div>
             <Button

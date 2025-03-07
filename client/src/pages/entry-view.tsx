@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function EntryView() {
   const { id } = useParams();
@@ -23,13 +23,11 @@ export default function EntryView() {
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
-    let touchStartScroll = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
-      touchStartScroll = window.scrollY;
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -39,29 +37,23 @@ export default function EntryView() {
       const swipeDistance = touchEndX - touchStartX;
       const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
-      const scrollDelta = Math.abs(window.scrollY - touchStartScroll);
 
-      // Only trigger for quick horizontal swipes with minimal vertical movement
-      // and no significant scrolling
-      if (swipeDistance > 100 && swipeTime < 300 && verticalDistance < 50 && scrollDelta < 10) {
-        // Save scroll position before navigation
-        const container = document.querySelector('.diary-content');
-        if (container) {
-          sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
-        }
-
-        // Save the current entry ID before navigation
+      if (swipeDistance > 50 && swipeTime < 300 && verticalDistance < 30) {
         if (id) {
+          // Save entry ID for restoration
           sessionStorage.setItem('lastViewedEntryId', id);
+
+          // Save current scroll position
+          const container = document.querySelector('.diary-content');
+          if (container) {
+            sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+          }
+
+          setIsExiting(true);
+          setTimeout(() => {
+            navigate('/');
+          }, 100);
         }
-
-        // Trigger exit animation
-        setIsExiting(true);
-
-        // Navigate after animation
-        setTimeout(() => {
-          navigate('/');
-        }, 200);
       }
     };
 
@@ -80,7 +72,6 @@ export default function EntryView() {
       const mediaIndex = parseInt(mediaParam);
       const mediaElement = mediaRefs.current[mediaIndex];
       if (mediaElement) {
-        // Use requestAnimationFrame for smooth scrolling
         requestAnimationFrame(() => {
           mediaElement.scrollIntoView({ behavior: 'instant', block: 'center' });
         });
@@ -101,29 +92,22 @@ export default function EntryView() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: 300, scale: 0.95 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 300, scale: 0.95 }}
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
       transition={{ 
-        type: "spring", 
-        stiffness: 300, 
-        damping: 30,
-        scale: {
-          duration: 0.2
-        }
+        type: "tween",
+        duration: 0.2,
+        ease: "easeInOut"
       }}
-      className={`min-h-screen bg-white overflow-auto ${isExiting ? 'pointer-events-none' : ''}`}
+      className={`fixed inset-0 bg-white ${isExiting ? 'pointer-events-none' : ''}`}
       style={{
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'none',
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
         touchAction: 'pan-y pinch-zoom',
-        WebkitTapHighlightColor: 'transparent',
-        WebkitUserSelect: 'none',
+        zIndex: 50,
       }}
     >
-      {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="container px-4 py-2 flex items-center">
           <Button
@@ -135,7 +119,7 @@ export default function EntryView() {
                 setIsExiting(true);
                 setTimeout(() => {
                   navigate('/');
-                }, 200);
+                }, 100);
               }
             }}
             className="mr-2"
@@ -146,15 +130,9 @@ export default function EntryView() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="container px-4 py-6">
-        <ScrollArea className="h-[calc(100vh-80px)]">
-          <motion.div 
-            className="space-y-4 diary-content"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+      <ScrollArea className="h-[calc(100vh-56px)]">
+        <div className="container px-4 py-6 diary-content">
+          <div className="space-y-4">
             <h1 className="text-[24px] font-semibold">
               {entry.title || "Untitled Entry"}
             </h1>
@@ -187,68 +165,50 @@ export default function EntryView() {
               </div>
             )}
 
-            {/* Content */}
-            <motion.div
+            <div
               className="prose max-w-none"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
               dangerouslySetInnerHTML={{ __html: entry.content }}
             />
 
-            {/* Media */}
             {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-              <motion.div 
-                className="space-y-4 mt-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <AnimatePresence>
-                  {entry.mediaUrls.map((url, i) => {
-                    const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                    const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+              <div className="space-y-4 mt-6">
+                {entry.mediaUrls.map((url, i) => {
+                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
 
-                    return (
-                      <motion.div
-                        key={i}
-                        ref={el => mediaRefs.current[i] = el}
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        transition={{ 
-                          delay: i * 0.1,
-                          duration: 0.2
-                        }}
-                      >
-                        {isVideo ? (
-                          <video
-                            src={url}
-                            controls
-                            playsInline
-                            className="w-full aspect-video object-cover rounded-lg"
-                          />
-                        ) : isAudio ? (
-                          <div className="w-full bg-muted rounded-lg p-4">
-                            <audio src={url} controls className="w-full" />
-                          </div>
-                        ) : (
-                          <img
-                            src={url}
-                            alt={`Media ${i + 1}`}
-                            className="w-full rounded-lg"
-                            loading="lazy"
-                          />
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.div>
+                  return (
+                    <div
+                      key={i}
+                      ref={el => mediaRefs.current[i] = el}
+                      className="w-full"
+                    >
+                      {isVideo ? (
+                        <video
+                          src={url}
+                          controls
+                          playsInline
+                          className="w-full aspect-video object-cover rounded-lg"
+                        />
+                      ) : isAudio ? (
+                        <div className="w-full bg-muted rounded-lg p-4">
+                          <audio src={url} controls className="w-full" />
+                        </div>
+                      ) : (
+                        <img
+                          src={url}
+                          alt={`Media ${i + 1}`}
+                          className="w-full rounded-lg"
+                          loading="lazy"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
-          </motion.div>
-        </ScrollArea>
-      </div>
+          </div>
+        </div>
+      </ScrollArea>
     </motion.div>
   );
 }

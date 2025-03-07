@@ -62,7 +62,6 @@ export function Comments({ entryId, onCommentCountChange }: CommentsProps) {
 
   return (
     <div className="space-y-4" id="comments-section">
-      <h3 className="text-lg font-semibold">Comments</h3>
       <div className="space-y-3">
         {Array.isArray(comments) && comments.map((comment) => (
           <div key={comment.id} className="flex items-start gap-2 group">

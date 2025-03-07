@@ -6,6 +6,7 @@ import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
   const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
@@ -15,7 +16,7 @@ export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRestoredRef = useRef(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  
+
   // Store scroll position when component is unmounted or before navigation
   useEffect(() => {
     const storeScrollPosition = () => {
@@ -26,73 +27,73 @@ export default function Home() {
         console.log('Stored scroll position before unload:', container.scrollTop);
       }
     };
-    
+
     // Add event listener for page visibility change and beforeunload
     window.addEventListener('visibilitychange', storeScrollPosition);
     window.addEventListener('beforeunload', storeScrollPosition);
-    
+
     return () => {
       storeScrollPosition(); // Store position when component unmounts
       window.removeEventListener('visibilitychange', storeScrollPosition);
       window.removeEventListener('beforeunload', storeScrollPosition);
     };
   }, []);
-  
+
   // Handle scroll restoration
   useEffect(() => {
     if (!entries || entries.length === 0 || scrollRestoredRef.current) return;
-    
+
     const restoreScroll = () => {
       const lastViewedEntryId = sessionStorage.getItem('lastViewedEntryId');
       const container = document.querySelector('.diary-content');
-      
+
       if (container) {
         console.log('Attempting to scroll to entry:', lastViewedEntryId);
-        
+
         // If we have a specific entry ID, prioritize scrolling to that element
         if (lastViewedEntryId) {
           const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
           if (entryElement) {
             // Reset scroll position first
             container.scrollTop = 0;
-            
+
             // Scroll the entry into view with a small delay to ensure DOM is ready
             setTimeout(() => {
               entryElement.scrollIntoView({ behavior: 'auto', block: 'center' });
               console.log('Scrolled to entry card:', lastViewedEntryId);
-              
+
               // Mark as restored
               scrollRestoredRef.current = true;
             }, 250);
             return;
           }
         }
-        
+
         // Fallback to position-based scrolling if entry not found
         const savedPosition = sessionStorage.getItem('homeScrollPosition');
         if (savedPosition) {
           const position = parseInt(savedPosition, 10);
           console.log('Falling back to position-based scroll:', position);
-          
+
           // Force reflow to ensure DOM is ready
           container.scrollTop = 0;
           setTimeout(() => {
             container.scrollTop = position;
             console.log('Scroll position restored to:', position);
-            
+
             // Mark as restored
             scrollRestoredRef.current = true;
           }, 150);
         }
       }
     };
-    
+
     // Try multiple times with increasing delays to ensure DOM is ready
     restoreScroll();
     const t1 = setTimeout(restoreScroll, 100);
     const t2 = setTimeout(restoreScroll, 300);
     const t3 = setTimeout(restoreScroll, 600);
-    
+
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -109,15 +110,21 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll" style={{
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'none',
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-        touchAction: 'pan-y pinch-zoom',
-        WebkitTapHighlightColor: 'transparent',
-        WebkitUserSelect: 'none',
-      }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'none',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+          touchAction: 'pan-y pinch-zoom',
+          WebkitTapHighlightColor: 'transparent',
+          WebkitUserSelect: 'none',
+        }}
+      >
         <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
           <Skeleton className="h-10 w-48" />
         </div>
@@ -126,13 +133,18 @@ export default function Home() {
             <Skeleton key={i} className="h-64 w-full" />
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   if (!entries?.length) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4"
+      >
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
           Welcome to Your Diary
         </h1>
@@ -145,13 +157,17 @@ export default function Home() {
             Create Your First Entry
           </Button>
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll"
       style={{
         WebkitOverflowScrolling: 'touch',
@@ -177,25 +193,34 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="space-y-2 mobile-scroll" style={{
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'none',
-        touchAction: 'pan-y pinch-zoom',
-      }}>
-        {entries.map((entry) => (
-          <div 
-            key={entry.id} 
-            id={`entry-${entry.id}`} 
-            className="bg-white"
-            data-entry-id={entry.id}
-          >
-            <EntryCard 
-              entry={entry} 
-              setSelectedEntryId={setSelectedEntryId} 
-            />
-          </div>
-        ))}
-      </div>
-    </div>
+      <AnimatePresence>
+        <motion.div 
+          className="space-y-2 mobile-scroll" 
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'none',
+            touchAction: 'pan-y pinch-zoom',
+          }}
+        >
+          {entries.map((entry) => (
+            <motion.div
+              key={entry.id}
+              id={`entry-${entry.id}`}
+              className="bg-white"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              data-entry-id={entry.id}
+            >
+              <EntryCard 
+                entry={entry} 
+                setSelectedEntryId={setSelectedEntryId} 
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 }

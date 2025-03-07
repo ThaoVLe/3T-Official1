@@ -4,13 +4,15 @@ import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [isExiting, setIsExiting] = useState(false);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -19,38 +21,41 @@ export default function EntryView() {
 
   useEffect(() => {
     let touchStartX = 0;
+    let touchStartY = 0;
     let touchStartTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
       const touchEndTime = Date.now();
       const swipeDistance = touchEndX - touchStartX;
+      const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
 
-      // Only trigger for quick swipes (less than 300ms) and sufficient distance
-      if (swipeDistance > 100 && swipeTime < 300) {
+      // Only trigger for quick horizontal swipes (less than 300ms) 
+      // and sufficient distance, with minimal vertical movement
+      if (swipeDistance > 100 && swipeTime < 300 && verticalDistance < 50) {
         // Get the scrollable element from the home page
-        const container = document.querySelector('.diary-content') || document.body;
-        
-        // Save the current entry ID to find it later - use sessionStorage for better session handling
+        const container = document.querySelector('.diary-content');
+
+        // Save the current entry ID before navigation
         if (id) {
           console.log('Saving last viewed entry ID:', id);
           sessionStorage.setItem('lastViewedEntryId', id);
-          
-          // We'll retrieve the scroll position from session storage
-          // which is saved when the home page unmounts
-          
-          // Force a small delay before navigation to ensure everything is saved
+
+          // Trigger exit animation
+          setIsExiting(true);
+
+          // Navigate after animation
           setTimeout(() => {
             navigate('/');
-          }, 10);
-        } else {
-          navigate('/');
+          }, 200);
         }
       }
     };
@@ -89,15 +94,22 @@ export default function EntryView() {
   };
 
   return (
-    <div className="min-h-screen bg-white overflow-auto" style={{
-      WebkitOverflowScrolling: 'touch',
-      overscrollBehavior: 'none',
-      msOverflowStyle: 'none',
-      scrollbarWidth: 'none',
-      touchAction: 'pan-y pinch-zoom',
-      WebkitTapHighlightColor: 'transparent',
-      WebkitUserSelect: 'none',
-    }}>
+    <motion.div 
+      initial={{ opacity: 0, x: 300 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 300 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className={`min-h-screen bg-white overflow-auto ${isExiting ? 'pointer-events-none' : ''}`}
+      style={{
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'none',
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+        touchAction: 'pan-y pinch-zoom',
+        WebkitTapHighlightColor: 'transparent',
+        WebkitUserSelect: 'none',
+      }}
+    >
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="container px-4 py-2 flex items-center">
@@ -105,16 +117,13 @@ export default function EntryView() {
             variant="ghost"
             size="icon"
             onClick={() => {
-              // Save the current entry ID using sessionStorage instead of localStorage
               if (id) {
-                console.log('Saving last viewed entry ID (back button):', id);
                 sessionStorage.setItem('lastViewedEntryId', id);
+                setIsExiting(true);
+                setTimeout(() => {
+                  navigate('/');
+                }, 200);
               }
-              
-              // Navigate back to home
-              setTimeout(() => {
-                navigate('/');
-              }, 10);
             }}
             className="mr-2"
           >
@@ -126,14 +135,13 @@ export default function EntryView() {
 
       {/* Content */}
       <div className="container px-4 py-6">
-        <ScrollArea className="h-[calc(100vh-80px)]" style={{
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'none',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none',
-          touchAction: 'pan-y pinch-zoom',
-        }}>
-          <div className="space-y-4 diary-content">
+        <ScrollArea className="h-[calc(100vh-80px)]">
+          <motion.div 
+            className="space-y-4 diary-content"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
             <h1 className="text-[24px] font-semibold">
               {entry.title || "Untitled Entry"}
             </h1>
@@ -167,55 +175,64 @@ export default function EntryView() {
             )}
 
             {/* Content */}
-            <div
+            <motion.div
               className="prose max-w-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
               dangerouslySetInnerHTML={{ __html: entry.content }}
             />
 
             {/* Media */}
             {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-              <div className="space-y-4 mt-6">
-                {entry.mediaUrls.map((url, i) => {
-                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+              <motion.div 
+                className="space-y-4 mt-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <AnimatePresence>
+                  {entry.mediaUrls.map((url, i) => {
+                    const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                    const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
 
-                  if (isVideo) {
                     return (
-                      <div key={i} className="w-full" ref={el => mediaRefs.current[i] = el}>
-                        <video
-                          src={url}
-                          controls
-                          playsInline
-                          className="w-full aspect-video object-cover rounded-lg"
-                        />
-                      </div>
+                      <motion.div
+                        key={i}
+                        ref={el => mediaRefs.current[i] = el}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ delay: i * 0.1 }}
+                      >
+                        {isVideo ? (
+                          <video
+                            src={url}
+                            controls
+                            playsInline
+                            className="w-full aspect-video object-cover rounded-lg"
+                          />
+                        ) : isAudio ? (
+                          <div className="w-full bg-muted rounded-lg p-4">
+                            <audio src={url} controls className="w-full" />
+                          </div>
+                        ) : (
+                          <img
+                            src={url}
+                            alt={`Media ${i + 1}`}
+                            className="w-full rounded-lg"
+                            loading="lazy"
+                          />
+                        )}
+                      </motion.div>
                     );
-                  }
-
-                  if (isAudio) {
-                    return (
-                      <div key={i} className="w-full bg-muted rounded-lg p-4" ref={el => mediaRefs.current[i] = el}>
-                        <audio src={url} controls className="w-full" />
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div key={i} className="w-full" ref={el => mediaRefs.current[i] = el}>
-                      <img
-                        src={url}
-                        alt={`Media ${i + 1}`}
-                        className="w-full rounded-lg"
-                        loading="lazy"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+                  })}
+                </AnimatePresence>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         </ScrollArea>
       </div>
-    </div>
+    </motion.div>
   );
 }

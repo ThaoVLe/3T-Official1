@@ -54,7 +54,7 @@ export default function EntryView() {
   };
 
   return (
-    <div className="min-h-screen bg-white no-scrollbar">
+    <div className="min-h-screen bg-white overflow-auto" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="container px-4 py-2 flex items-center">
@@ -72,7 +72,7 @@ export default function EntryView() {
 
       {/* Content */}
       <div className="container px-4 py-6">
-        <ScrollArea className="h-[calc(100vh-80px)] no-scrollbar">
+        <ScrollArea className="h-[calc(100vh-80px)] no-scrollbar" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
           <div className="space-y-4">
             <h1 className="text-[24px] font-semibold">
               {entry.title || "Untitled Entry"}

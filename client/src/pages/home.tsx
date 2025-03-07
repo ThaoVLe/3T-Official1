@@ -13,7 +13,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 no-scrollbar">
+      <div className="min-h-screen bg-[#f0f2f5] overflow-auto" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
         <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
           <Skeleton className="h-10 w-48" />
         </div>
@@ -46,7 +46,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] no-scrollbar">
+    <div className="min-h-screen bg-[#f0f2f5] overflow-auto" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="flex justify-between items-center px-4 py-3">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">

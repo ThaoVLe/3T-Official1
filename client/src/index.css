@@ -35,10 +35,14 @@
 /* Container and page styles */
 .container-page {
   @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
 }
 
 .editor-page {
   @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
 }
 
 /* TipTap editor styles */

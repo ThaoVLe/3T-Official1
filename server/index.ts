@@ -39,51 +39,61 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
+  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    const status = (err as any).status || (err as any).statusCode || 500;
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    throw err;
+    console.error('Server error:', err);
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // Try to serve on port 5000 first, then fall back to other ports
-  const tryListen = (port = 5000, maxAttempts = 3) => {
-    const tryPort = (attempt = 0) => {
-      if (attempt >= maxAttempts) {
-        log(`Failed to bind to any port after ${maxAttempts} attempts`);
-        process.exit(1);
-        return;
-      }
-      
+  // Improved sequential port binding
+  const startServer = async (port = 5000, maxAttempts = 3) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const currentPort = port + attempt;
-      server.listen({
-        port: currentPort,
-        host: "0.0.0.0",
-      }, () => {
-        log(`Server started successfully on port ${currentPort}`);
-      }).on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-          log(`Port ${currentPort} is busy, trying next port...`);
-          tryPort(attempt + 1);
-        } else {
-          log(`Error starting server: ${err.message}`);
+      try {
+        await new Promise((resolve, reject) => {
+          server.listen({
+            port: currentPort,
+            host: "0.0.0.0",
+          })
+          .once('listening', () => {
+            log(`Server started successfully on port ${currentPort}`);
+            resolve(true);
+          })
+          .once('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+              log(`Port ${currentPort} is in use, trying next port...`);
+              resolve(false);
+            } else {
+              reject(err);
+            }
+          });
+        });
+
+        // If we get here without an error, the server started successfully
+        return;
+      } catch (err) {
+        log(`Error starting server on port ${currentPort}: ${(err as Error).message}`);
+        if (attempt === maxAttempts - 1) {
           throw err;
         }
-      });
-    };
-    
-    tryPort();
+      }
+    }
+
+    throw new Error(`Failed to bind to any port after ${maxAttempts} attempts`);
   };
-  
-  tryListen();
+
+  try {
+    await startServer();
+  } catch (err) {
+    log(`Fatal error starting server: ${(err as Error).message}`);
+    process.exit(1);
+  }
 })();

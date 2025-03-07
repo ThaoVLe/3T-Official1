@@ -4,12 +4,13 @@ import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
+  const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -27,7 +28,6 @@ export default function EntryView() {
       const touchEndX = e.changedTouches[0].clientX;
       const swipeDistance = touchEndX - touchStartX;
 
-      // If swiped right more than 100px, go back
       if (swipeDistance > 100) {
         navigate('/');
       }
@@ -42,6 +42,19 @@ export default function EntryView() {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    const mediaParam = new URLSearchParams(window.location.search).get('media');
+    if (mediaParam !== null) {
+      const mediaIndex = parseInt(mediaParam);
+      const mediaElement = mediaRefs.current[mediaIndex];
+      if (mediaElement) {
+        setTimeout(() => {
+          mediaElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
+  }, [entry]);
+
   if (!entry) return null;
 
   const feeling = entry.feeling ? {
@@ -55,14 +68,14 @@ export default function EntryView() {
 
   return (
     <div className="min-h-screen bg-white overflow-auto" style={{
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'none',
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-        touchAction: 'pan-y pinch-zoom',
-        WebkitTapHighlightColor: 'transparent',
-        WebkitUserSelect: 'none',
-      }}>
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'none',
+      msOverflowStyle: 'none',
+      scrollbarWidth: 'none',
+      touchAction: 'pan-y pinch-zoom',
+      WebkitTapHighlightColor: 'transparent',
+      WebkitUserSelect: 'none',
+    }}>
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="container px-4 py-2 flex items-center">
@@ -81,12 +94,12 @@ export default function EntryView() {
       {/* Content */}
       <div className="container px-4 py-6">
         <ScrollArea className="h-[calc(100vh-80px)]" style={{
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'none',
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-            touchAction: 'pan-y pinch-zoom',
-          }}>
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'none',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+          touchAction: 'pan-y pinch-zoom',
+        }}>
           <div className="space-y-4">
             <h1 className="text-[24px] font-semibold">
               {entry.title || "Untitled Entry"}
@@ -135,7 +148,7 @@ export default function EntryView() {
 
                   if (isVideo) {
                     return (
-                      <div key={i} className="w-full">
+                      <div key={i} className="w-full" ref={el => mediaRefs.current[i] = el}>
                         <video
                           src={url}
                           controls
@@ -148,14 +161,14 @@ export default function EntryView() {
 
                   if (isAudio) {
                     return (
-                      <div key={i} className="w-full bg-muted rounded-lg p-4">
+                      <div key={i} className="w-full bg-muted rounded-lg p-4" ref={el => mediaRefs.current[i] = el}>
                         <audio src={url} controls className="w-full" />
                       </div>
                     );
                   }
 
                   return (
-                    <div key={i} className="w-full">
+                    <div key={i} className="w-full" ref={el => mediaRefs.current[i] = el}>
                       <img
                         src={url}
                         alt={`Media ${i + 1}`}

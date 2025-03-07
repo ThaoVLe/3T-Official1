@@ -70,6 +70,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     if (container) {
       sessionStorage.setItem('homeScrollPosition', String(container.scrollTop));
       sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
+      console.log('Saving last viewed entry ID:', entry.id.toString());
     }
 
     // Also update state if the function is provided
@@ -77,8 +78,10 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       setSelectedEntryId(entry.id.toString());
     }
 
-    // Navigate to the entry view with media parameter
-    navigate(`/entry/${entry.id}?media=${mediaIndex}`);
+    // Clear any existing params and navigate to the entry view with media parameter
+    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
+    console.log('Navigating to media at index:', mediaIndex);
+    navigate(cleanUrl);
   };
 
   return (

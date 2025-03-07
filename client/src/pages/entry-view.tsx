@@ -170,17 +170,16 @@ export default function EntryView() {
               dangerouslySetInnerHTML={{ __html: entry.content }}
             />
 
+            {/* Media gallery */}
             {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-              <div className="space-y-4 mt-6">
-                {entry.mediaUrls.map((url, i) => {
+              <div className="space-y-2 my-4">
+                {entry.mediaUrls.map((url, index) => {
                   const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
-
                   return (
-                    <div
-                      key={i}
-                      ref={el => mediaRefs.current[i] = el}
-                      className="w-full"
+                    <div 
+                      key={index} 
+                      className="rounded-lg overflow-hidden border"
+                      ref={el => mediaRefs.current[index] = el}
                     >
                       {isVideo ? (
                         <video
@@ -189,14 +188,10 @@ export default function EntryView() {
                           playsInline
                           className="w-full aspect-video object-cover rounded-lg"
                         />
-                      ) : isAudio ? (
-                        <div className="w-full bg-muted rounded-lg p-4">
-                          <audio src={url} controls className="w-full" />
-                        </div>
                       ) : (
                         <img
                           src={url}
-                          alt={`Media ${i + 1}`}
+                          alt={`Media ${index + 1}`}
                           className="w-full rounded-lg"
                           loading="lazy"
                         />

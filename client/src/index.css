@@ -3,81 +3,42 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
   * {
-    @apply border-border;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
   }
 
-  html {
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+    -webkit-appearance: none !important;
+  }
+
+  html, body {
     scroll-behavior: smooth;
-  }
-
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
-  }
-
-  /* Hide scrollbar for all elements */
-  ::-webkit-scrollbar {
-    width: 0;
-    display: none;
-    background-color: transparent;
-  }
-
-  ::-webkit-scrollbar-track {
-    background-color: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background-color: transparent;
-    border: none;
-  }
-
-  /* Additional webkit scrollbar components */
-  ::-webkit-scrollbar-button {
-    display: none;
-    background-color: transparent;
-  }
-
-  ::-webkit-scrollbar-corner {
-    background-color: transparent;
-  }
-
-  ::-webkit-resizer {
-    background-color: transparent;
-  }
-}
-
-@layer utilities {
-  .no-scrollbar {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    overflow-y: auto;
-  }
-
-  .no-scrollbar::-webkit-scrollbar,
-  .no-scrollbar::-webkit-scrollbar-track,
-  .no-scrollbar::-webkit-scrollbar-thumb,
-  .no-scrollbar::-webkit-scrollbar-button,
-  .no-scrollbar::-webkit-scrollbar-corner,
-  .no-scrollbar::-webkit-resizer {
-    width: 0;
-    height: 0;
-    display: none;
-    background-color: transparent;
-    border: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    overflow: auto;
+    @apply bg-background text-foreground antialiased;
   }
 }
 
 /* Container and page styles */
 .container-page {
-  @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden no-scrollbar;
+  @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
 }
 
 .editor-page {
-  @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background no-scrollbar;
+  @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
 }
 
 /* TipTap editor styles */

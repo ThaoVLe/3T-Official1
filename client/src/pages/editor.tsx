@@ -291,6 +291,18 @@ export default function Editor() {
             />
           </div>
 
+          {/* Media Preview moved here */}
+          {form.watch("mediaUrls")?.length > 0 && (
+            <div className="p-4 pb-[30px]"> {/* Added padding */}
+              <MediaPreview
+                urls={form.watch("mediaUrls")}
+                onRemove={onMediaRemove}
+                loading={isUploading}
+                uploadProgress={uploadProgress}
+              />
+            </div>
+          )}
+
           {/* Media Controls - Now in floating bar */}
           <div 
             className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t p-2 z-50"
@@ -315,17 +327,6 @@ export default function Editor() {
                 }}
               />
             </div>
-
-            {form.watch("mediaUrls")?.length > 0 && (
-              <div className="pt-2">
-                <MediaPreview
-                  urls={form.watch("mediaUrls")}
-                  onRemove={onMediaRemove}
-                  loading={isUploading}
-                  uploadProgress={uploadProgress}
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>

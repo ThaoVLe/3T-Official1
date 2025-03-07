@@ -6,18 +6,23 @@ import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Import Input component
 import {
   Bold,
   Italic,
   List,
   ListOrdered,
+  Link as LinkIcon,
   Smile,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
   Type,
+  Palette,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Placeholder from '@tiptap/extension-placeholder';
-import React from 'react';
+import Placeholder from '@tiptap/extension-placeholder'; //Import Placeholder extension
 
 interface TipTapEditorProps {
   value: string;
@@ -62,7 +67,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal'
+        class: 'focus:outline-none min-h-[200px] px-4 prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal'
       }
     }
   });
@@ -73,38 +78,55 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     }
   }, [editor, value]);
 
-  const editorRef = useRef<HTMLDivElement>(null);
+  if (!editor) {
+    return null;
+  }
 
-  // Auto-expand functionality
+  const colors = [
+    '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
+    '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
+    '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc',
+  ];
+
+  const emojiCategories = {
+    'Smileys': ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '😉', '😌', '😍', '🥰', '😘'],
+    'Gestures': ['👍', '👎', '👌', '✌️', '🤞', '🤝', '👊', '✊', '🤛', '🤜', '🤚', '👋', '🖐️', '✋', '🖖'],
+    'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗'],
+    'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
+  };
+
+  const editorRef = useRef<HTMLDivElement>(null);
+  const contentHeight = useRef<number>(200); // Initial minimum height
+
   useEffect(() => {
     if (!editor || !editorRef.current) return;
 
+    // Function to adjust editor height based on content
     const adjustHeight = () => {
-      const proseMirror = editorRef.current?.querySelector('.ProseMirror');
-      if (!proseMirror) return;
+      if (!editorRef.current) return;
 
-      // Reset height to auto to get the correct scrollHeight
-      (proseMirror as HTMLElement).style.height = 'auto';
+      // Reset height first to get proper scrollHeight
+      editorRef.current.style.height = 'auto';
 
-      // Get the content height
-      const contentHeight = proseMirror.scrollHeight;
+      // Get the actual content height
+      const scrollHeight = editorRef.current.querySelector('.ProseMirror')?.scrollHeight || 200;
 
-      // Set the new height with a minimum of 200px
-      (proseMirror as HTMLElement).style.height = `${Math.max(200, contentHeight)}px`;
+      // Only grow, never shrink below the minimum or current height
+      contentHeight.current = Math.max(contentHeight.current, scrollHeight);
+
+      // Set the height
+      editorRef.current.style.height = `${contentHeight.current}px`;
     };
 
     // Setup mutation observer for content changes
-    const observer = new MutationObserver(() => {
-      requestAnimationFrame(adjustHeight);
-    });
+    const observer = new MutationObserver(adjustHeight);
 
     const proseMirror = editorRef.current.querySelector('.ProseMirror');
     if (proseMirror) {
-      observer.observe(proseMirror, {
-        childList: true,
+      observer.observe(proseMirror, { 
+        childList: true, 
         subtree: true,
-        characterData: true,
-        attributes: true
+        characterData: true
       });
 
       // Initial adjustment
@@ -114,172 +136,220 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     return () => observer.disconnect();
   }, [editor]);
 
-  // Fix for mobile focus issues
-  useEffect(() => {
-    const handleFocus = () => {
-      // Scroll a bit to ensure the editor is in view when focused on mobile
-      setTimeout(() => window.scrollTo(0, window.scrollY + 1), 100);
-    };
 
-    const editorElement = document.querySelector('.ProseMirror');
-    if (editorElement) {
-      editorElement.addEventListener('focus', handleFocus);
-    }
-
-    return () => {
-      if (editorElement) {
-        editorElement.removeEventListener('focus', handleFocus);
-      }
-    };
-  }, []);
-
-
-  if (!editor) {
-    return null;
-  }
-
-  const emojiCategories = {
-    'Smileys': ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '😉', '😌', '😍', '🥰', '😘'],
-    'Gestures': ['👍', '👎', '👌', '✌️', '🤞', '🤝', '👊', '✊', '🤛', '🤜', '🤚', '👋', '🖐️', '✋', '🖖'],
-    'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗'],
-    'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
-  };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Toolbar - Fixed at top */}
-      <div className="flex-none flex flex-wrap items-center gap-1 p-2 bg-white border-b">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          data-active={editor.isActive("bold")}
-          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          data-active={editor.isActive("italic")}
-          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
+    <div className="h-full flex flex-col bg-white rounded-lg w-full tiptap-container">
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-white w-full">
+        <div className="flex flex-wrap items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            data-active={editor.isActive("bold")}
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            data-active={editor.isActive("italic")}
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
 
-        <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 px-0"
-            >
-              <Type className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-40 p-2">
-            <div className="flex flex-col gap-1">
+          <Popover>
+            <PopoverTrigger asChild>
               <Button
+                type="button"
                 variant="ghost"
-                className="justify-start text-left data-[active=true]:bg-slate-100"
-                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                data-active={editor.isActive('heading', { level: 1 })}
+                size="sm"
+                className="h-8 w-8 px-0"
               >
-                <span style={{ fontSize: '30px', fontWeight: 'bold' }}>Large Text</span>
+                <Type className="h-4 w-4" />
               </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-2">
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  className="justify-start text-left data-[active=true]:bg-slate-100"
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                  data-active={editor.isActive('heading', { level: 1 })}
+                >
+                  <span style={{ fontSize: '30px', fontWeight: 'bold' }}>Large Text</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="justify-start text-left data-[active=true]:bg-slate-100"
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                  data-active={editor.isActive('heading', { level: 2 })}
+                >
+                  <span style={{ fontSize: '20px', fontWeight: 'semibold' }}>Medium Text</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="justify-start text-left data-[active=true]:bg-slate-100"
+                  onClick={() => editor.chain().focus().setParagraph().run()}
+                  data-active={!editor.isActive('heading')}
+                >
+                  <span style={{ fontSize: '16px' }}>Small Text</span>
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            data-active={editor.isActive("bulletList")}
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            data-active={editor.isActive("orderedList")}
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const url = window.prompt('URL');
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run();
+              }
+            }}
+            data-active={editor.isActive("link")}
+            className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
+          >
+            <LinkIcon className="h-4 w-4" />
+          </Button>
+
+          <Popover>
+            <PopoverTrigger asChild>
               <Button
+                type="button"
                 variant="ghost"
-                className="justify-start text-left data-[active=true]:bg-slate-100"
-                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                data-active={editor.isActive('heading', { level: 2 })}
+                size="sm"
+                className="h-8 w-8 px-0"
               >
-                <span style={{ fontSize: '20px', fontWeight: 'semibold' }}>Medium Text</span>
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-[10px]">A</span>
+                  <div className="h-1 w-4 bg-red-500 rounded-sm" />
+                </div>
               </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <div className="grid grid-cols-10 gap-1">
+                {colors.map((color) => (
+                  <Button
+                    key={color}
+                    variant="ghost"
+                    className="h-6 w-6 p-0"
+                    style={{ backgroundColor: color }}
+                    onClick={() => editor.chain().focus().setColor(color).run()}
+                  />
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
               <Button
+                type="button"
                 variant="ghost"
-                className="justify-start text-left data-[active=true]:bg-slate-100"
-                onClick={() => editor.chain().focus().setParagraph().run()}
-                data-active={!editor.isActive('heading')}
+                size="sm"
+                className="h-8 w-8 px-0"
               >
-                <span style={{ fontSize: '16px' }}>Small Text</span>
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-[10px] bg-yellow-200 px-1">A</span>
+                </div>
               </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <div className="grid grid-cols-10 gap-1">
+                {colors.map((color) => (
+                  <Button
+                    key={color}
+                    variant="ghost"
+                    className="h-6 w-6 p-0"
+                    style={{ backgroundColor: color }}
+                    onClick={() => editor.chain().focus().setHighlight({ color }).run()}
+                  />
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
 
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          data-active={editor.isActive("bulletList")}
-          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          data-active={editor.isActive("orderedList")}
-          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 flex items-center gap-1 px-2"
-            >
-              <Smile className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72 p-2">
-            {Object.entries(emojiCategories).map(([category, emojis]) => (
-              <div key={category} className="mb-2">
-                <h3 className="text-sm font-medium mb-1">{category}</h3>
-                <div className="grid grid-cols-6 gap-1">
-                  {emojis.map((emoji) => (
-                    <Button
-                      key={emoji}
-                      variant="ghost"
-                      className="h-8 w-8 p-0"
-                      onClick={() => {
-                        editor.chain().focus().insertContent(emoji).run();
-                      }}
-                    >
-                      {emoji}
-                    </Button>
-                  ))}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 flex items-center gap-1 px-2"
+              >
+                <Smile className="h-4 w-4 mr-1" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-2">
+              <div className="mb-3">
+                {/* Emotion selector content */}
+                <div className="grid grid-cols-3 gap-1">
+                  {/* Emotion buttons will go here */}
                 </div>
               </div>
-            ))}
-          </PopoverContent>
-        </Popover>
+
+              {/* Standard emoji categories */}
+              {Object.entries(emojiCategories).map(([category, emojis]) => (
+                <div key={category} className="mb-2">
+                  <h3 className="text-sm font-medium mb-1">{category}</h3>
+                  <div className="grid grid-cols-6 gap-1">
+                    {emojis.map((emoji) => (
+                      <Button
+                        key={emoji}
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          editor.chain().focus().insertContent(emoji).run();
+                        }}
+                      >
+                        {emoji}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
-      {/* Editor Content */}
-      <div className="flex-1 overflow-y-auto p-4"> {/* Added padding */}
-        <EditorContent 
-          ref={editorRef}
-          editor={editor} 
-          className="h-full ProseMirror-focused relative z-10" {/* Added z-index */}
-        />
+      <div className="flex-1 w-full">
+        <EditorContent ref={editorRef} editor={editor} className="h-full w-full" />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function EntryView() {
   const { id } = useParams();
@@ -53,10 +54,10 @@ export default function EntryView() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col no-scrollbar">
+    <div className="min-h-screen bg-white overflow-auto" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b flex-none">
-        <div className="px-4 py-2 flex items-center">
+      <div className="sticky top-0 z-10 bg-white border-b">
+        <div className="container px-4 py-2 flex items-center">
           <Button
             variant="ghost"
             size="icon"
@@ -70,88 +71,90 @@ export default function EntryView() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 py-6 overflow-y-auto no-scrollbar">
-        <div className="space-y-4">
-          <h1 className="text-[24px] font-semibold">
-            {entry.title || "Untitled Entry"}
-          </h1>
+      <div className="container px-4 py-6">
+        <ScrollArea className="h-[calc(100vh-80px)] no-scrollbar" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'none' }}>
+          <div className="space-y-4">
+            <h1 className="text-[24px] font-semibold">
+              {entry.title || "Untitled Entry"}
+            </h1>
 
-          <div className="text-sm text-muted-foreground">
-            {formatDate(entry.createdAt)}
-          </div>
-
-          {(feeling || entry.location) && (
-            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              {feeling && (
-                <div className="flex items-center">
-                  {feeling.label.includes(',') ? (
-                    <span>
-                      feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                      while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                    </span>
-                  ) : (
-                    <span>
-                      feeling {feeling.label} {feeling.emoji}
-                    </span>
-                  )}
-                </div>
-              )}
-              {entry.location && (
-                <div className="flex items-center">
-                  <span>at {entry.location} 📍</span>
-                </div>
-              )}
+            <div className="text-sm text-muted-foreground">
+              {formatDate(entry.createdAt)}
             </div>
-          )}
 
-          {/* Content */}
-          <div
-            className="prose max-w-none"
-            dangerouslySetInnerHTML={{ __html: entry.content }}
-          />
+            {(feeling || entry.location) && (
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                {feeling && (
+                  <div className="flex items-center">
+                    {feeling.label.includes(',') ? (
+                      <span>
+                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                      </span>
+                    ) : (
+                      <span>
+                        feeling {feeling.label} {feeling.emoji}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {entry.location && (
+                  <div className="flex items-center">
+                    <span>at {entry.location} 📍</span>
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* Media */}
-          {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-            <div className="space-y-4 mt-6">
-              {entry.mediaUrls.map((url, i) => {
-                const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+            {/* Content */}
+            <div
+              className="prose max-w-none"
+              dangerouslySetInnerHTML={{ __html: entry.content }}
+            />
 
-                if (isVideo) {
+            {/* Media */}
+            {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+              <div className="space-y-4 mt-6">
+                {entry.mediaUrls.map((url, i) => {
+                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                  const isAudio = url.match(/\.(mp3|wav|ogg)$/i);
+
+                  if (isVideo) {
+                    return (
+                      <div key={i} className="w-full">
+                        <video
+                          src={url}
+                          controls
+                          playsInline
+                          className="w-full aspect-video object-cover rounded-lg"
+                        />
+                      </div>
+                    );
+                  }
+
+                  if (isAudio) {
+                    return (
+                      <div key={i} className="w-full bg-muted rounded-lg p-4">
+                        <audio src={url} controls className="w-full" />
+                      </div>
+                    );
+                  }
+
                   return (
                     <div key={i} className="w-full">
-                      <video
+                      <img
                         src={url}
-                        controls
-                        playsInline
-                        className="w-full aspect-video object-cover rounded-lg"
+                        alt={`Media ${i + 1}`}
+                        className="w-full rounded-lg"
+                        loading="lazy"
                       />
                     </div>
                   );
-                }
-
-                if (isAudio) {
-                  return (
-                    <div key={i} className="w-full bg-muted rounded-lg p-4">
-                      <audio src={url} controls className="w-full" />
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={i} className="w-full">
-                    <img
-                      src={url}
-                      alt={`Media ${i + 1}`}
-                      className="w-full rounded-lg"
-                      loading="lazy"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                })}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );

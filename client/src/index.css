@@ -1,280 +1,171 @@
-@import './styles/embla.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
   * {
-    @apply border-border;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
   }
 
-  html {
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+    -webkit-appearance: none !important;
+  }
+
+  html, body {
     scroll-behavior: smooth;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-    height: 100%;
-    overflow: hidden;
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
     overscroll-behavior-y: none;
-  }
-
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  body::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* For divs that need scrolling but hidden scrollbar */
-  .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
-    overflow-y: auto;
-    overscroll-behavior-y: none;
-  }
-
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  #root {
-    height: 100%;
-    overflow: hidden;
-  }
-}
-
-@layer components {
-  .container-page {
-    @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden no-scrollbar;
-  }
-
-  .editor-page {
-    @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background no-scrollbar;
-  }
-  /* Auto-expanding editor styles */
-  .tiptap-container .ProseMirror {
-    transition: min-height 0.2s ease;
-    height: auto;
-    overflow-y: hidden;
-  }
-
-  .ProseMirror {
-    @apply min-h-[200px];
-  }
-
-  /* Ensure editor container grows properly */
-  .tiptap-container {
-    transition: height 0.2s ease;
-    overflow: hidden;
-  }
-
-  /* Custom emotion styles */
-  .custom-emotion {
-    color: #880000;
-    font-weight: 500;
-  }
-
-  .tiptap-container {
-    @apply flex flex-col;
-  }
-
-  /* Fix for bottom menu bar */
-  .mobile-bottom-menu {
-    @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
-  }
-
-  .card {
-    @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
-  }
-
-  /* Text sizes for consistency across the app */
-  .heading-1 {
-    @apply text-[24px] font-bold tracking-tight text-foreground mb-4;
-  }
-
-  .heading-2 {
-    @apply text-[18px] font-semibold text-foreground mb-3;
-  }
-
-  .text-default {
-    @apply text-[11px] text-foreground;
-  }
-
-  .subtitle {
-    @apply text-[11px] text-muted-foreground mb-6;
-  }
-
-  .form-container {
-    @apply flex flex-col space-y-4 mb-6;
-  }
-
-  .button-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors;
-  }
-
-  .button-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors;
-  }
-
-  .button-outline {
-    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md;
-  }
-
-  .drop-zone {
-    @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted;
-  }
-
-  .mobile-friendly-button {
-    @apply w-full sm:w-auto;
-  }
-
-  .responsive-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
-  }
-
-  .full-width {
-    @apply w-full min-w-0;
-  }
-
-  /* Embla Carousel Styles - Facebook-like */
-  .embla {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
+    -webkit-overflow-scrolling: touch;
+    overflow: auto;
+    @apply bg-background text-foreground antialiased;
     touch-action: pan-y pinch-zoom;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .embla__container {
-    display: flex;
-    will-change: transform;
-    touch-action: pan-y pinch-zoom;
-    cursor: grab;
-  }
-
-  .embla__container:active {
-    cursor: grabbing;
-  }
-
-  .embla__slide {
-    flex: 0 0 100%;
-    min-width: 0;
-    position: relative;
-  }
-
-  .embla__slide img,
-  .embla__slide video {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16/9;
-    object-fit: cover;
-    -webkit-user-drag: none;
-    -khtml-user-drag: none;
-    -moz-user-drag: none;
-    -o-user-drag: none;
-    user-drag: none;
-  }
-
-  .embla__slide audio {
-    width: 100%;
-    margin: 0.5rem 0;
-  }
-
-  /* Facebook-like media grid styles */
-  .media-grid {
-    display: grid;
-    gap: 1px;
-    background-color: #f0f2f5;
-    transition: all 0.3s ease;
-  }
-
-  .media-item {
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-  }
-
-  .media-item img,
-  .media-item video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.2s ease;
-  }
-
-  .media-item:hover img,
-  .media-item:hover video {
-    transform: scale(1.02);
-  }
-
-  .media-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-
-  /* Modal styles */
-  .media-modal {
-    @apply fixed inset-0 z-50 bg-black/90 flex items-center justify-center;
-  }
-
-  .media-modal-content {
-    @apply max-w-[95vw] max-h-[90vh] relative;
-  }
-
-  .media-modal-content img,
-  .media-modal-content video {
-    @apply max-w-full max-h-[90vh] object-contain;
-  }
-
-  /* Mobile-specific styles */
-  @media (max-width: 640px) {
-    .card {
-      @apply border-0 shadow-sm rounded-lg;
-      margin-bottom: 0.75rem;
-      background-color: white;
-    }
-
-    .media-grid {
-      margin: 0 -1rem;
+  /* Additional mobile-optimized scrolling */
+  @supports (-webkit-touch-callout: none) {
+    body {
+      /* Momentum scrolling for iOS */
+      -webkit-overflow-scrolling: touch;
     }
   }
 }
 
-@layer utilities {
-  /* Additional responsive fixes */
-  @media (max-width: 640px) {
-    .sm-stack {
-      @apply flex flex-col;
-    }
+/* Container and page styles */
+.container-page {
+  @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+}
 
-    .sm-full-width {
-      @apply w-full;
-    }
+.editor-page {
+  @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+}
 
-    .container-page {
-      width: 100vw !important;
-      max-width: 100vw !important;
-      padding-left: 0.75rem !important;
-      padding-right: 0.75rem !important;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
+/* TipTap editor styles */
+.tiptap-container .ProseMirror {
+  transition: min-height 0.2s ease;
+  height: auto;
+  overflow-y: hidden;
+}
 
-    body {
-      width: 100vw;
-      max-width: 100%;
-      overflow-x: hidden;
-    }
+.ProseMirror {
+  @apply min-h-[200px];
+}
+
+.tiptap-container {
+  @apply flex flex-col;
+  transition: height 0.2s ease;
+  overflow: hidden;
+}
+
+/* Custom styles */
+.custom-emotion {
+  color: #880000;
+  font-weight: 500;
+}
+
+.mobile-bottom-menu {
+  @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
+}
+
+.card {
+  @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
+}
+
+/* Typography */
+.heading-1 { @apply text-[24px] font-bold tracking-tight text-foreground mb-4; }
+.heading-2 { @apply text-[18px] font-semibold text-foreground mb-3; }
+.text-default { @apply text-[11px] text-foreground; }
+.subtitle { @apply text-[11px] text-muted-foreground mb-6; }
+
+/* Form and button styles */
+.form-container { @apply flex flex-col space-y-4 mb-6; }
+.button-primary { @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors; }
+.button-secondary { @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors; }
+.button-outline { @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md; }
+
+/* Layout components */
+.drop-zone { @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted; }
+.mobile-friendly-button { @apply w-full sm:w-auto; }
+.responsive-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }
+.full-width { @apply w-full min-w-0; }
+
+/* Media related styles */
+.media-grid {
+  display: grid;
+  gap: 1px;
+  background-color: #f0f2f5;
+  transition: all 0.3s ease;
+}
+
+.media-item {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.media-item img,
+.media-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.media-item:hover img,
+.media-item:hover video {
+  transform: scale(1.02);
+}
+
+.media-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Modal styles */
+.media-modal {
+  @apply fixed inset-0 z-50 bg-black/90 flex items-center justify-center;
+}
+
+.media-modal-content {
+  @apply max-w-[95vw] max-h-[90vh] relative;
+}
+
+.media-modal-content img,
+.media-modal-content video {
+  @apply max-w-full max-h-[90vh] object-contain;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 640px) {
+  .card {
+    @apply border-0 shadow-sm rounded-lg;
+    margin-bottom: 0.75rem;
+    background-color: white;
+  }
+
+  .media-grid {
+    margin: 0 -1rem;
   }
 }

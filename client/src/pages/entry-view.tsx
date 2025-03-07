@@ -65,12 +65,14 @@ export default function EntryView() {
     const mediaParam = new URLSearchParams(window.location.search).get('media');
     if (mediaParam !== null && entry?.mediaUrls) {
       const mediaIndex = parseInt(mediaParam);
-      const mediaElement = mediaRefs.current[mediaIndex];
-      if (mediaElement) {
-        requestAnimationFrame(() => {
-          mediaElement.scrollIntoView({ behavior: 'instant', block: 'center' });
-        });
-      }
+      // Wait for the component to fully render
+      setTimeout(() => {
+        const mediaElement = mediaRefs.current[mediaIndex];
+        if (mediaElement) {
+          // Force immediate scroll to the element
+          mediaElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+        }
+      }, 100);
     }
   }, [entry?.mediaUrls]);
 

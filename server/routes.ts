@@ -13,6 +13,17 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// Update video MIME types support
+const validVideoTypes = [
+  'video/mp4',
+  'video/quicktime',
+  'video/x-m4v',
+  'video/webm',
+  'video/3gpp',
+  'video/x-matroska',
+  'video/mov'  // Add explicit MOV support
+];
+
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.diskStorage({
@@ -34,19 +45,10 @@ const upload = multer({
       'image/heif'
     ];
 
-    const validVideoTypes = [
-      'video/mp4',
-      'video/quicktime',
-      'video/x-m4v',
-      'video/webm',
-      'video/3gpp',
-      'video/x-matroska'
-    ];
-
     const allowedTypes = [...validImageTypes, ...validVideoTypes];
 
     if (!allowedTypes.includes(file.mimetype)) {
-      cb(new Error('Invalid file type'));
+      cb(new Error('Invalid file type. Please upload an image or video file.'));
       return;
     }
 

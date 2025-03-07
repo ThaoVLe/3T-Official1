@@ -1,9 +1,10 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -13,6 +14,7 @@ import {
   Smile,
   Type,
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Placeholder from '@tiptap/extension-placeholder';
 
@@ -34,13 +36,23 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           HTMLAttributes: {
             class: 'list-decimal pl-4'
           }
+        },
+        heading: {
+          levels: [1, 2],
+          HTMLAttributes: {
+            class: '',
+          }
         }
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+        alignments: ['left', 'center', 'right'],
       }),
       TextStyle,
       Color,
       Highlight.configure({ multicolor: true }),
       Placeholder.configure({
-        placeholder: "What's on your mind?",
+        placeholder: 'What are you doing today?',
       }),
     ],
     content: value || '',
@@ -49,63 +61,10 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-lg focus:outline-none text-[18px] text-black min-h-[150px]',
+        class: 'focus:outline-none prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal'
       }
     }
   });
-
-  const editorRef = useRef<HTMLDivElement>(null);
-
-  // Auto-expand functionality
-  useEffect(() => {
-    if (!editor || !editorRef.current) return;
-
-    const adjustHeight = () => {
-      const proseMirror = editorRef.current?.querySelector('.ProseMirror');
-      if (!proseMirror) return;
-
-      // Reset height to auto to get the correct scrollHeight
-      (proseMirror as HTMLElement).style.height = 'auto';
-
-      // Get the content height
-      const contentHeight = proseMirror.scrollHeight;
-
-      // Set the new height with a minimum of 150px
-      (proseMirror as HTMLElement).style.height = `${Math.max(150, contentHeight)}px`;
-    };
-
-    // Setup mutation observer for content changes
-    const observer = new MutationObserver(() => {
-      requestAnimationFrame(adjustHeight);
-    });
-
-    const proseMirror = editorRef.current.querySelector('.ProseMirror');
-    if (proseMirror) {
-      observer.observe(proseMirror, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributes: true
-      });
-
-      // Initial adjustment
-      adjustHeight();
-    }
-
-    // Handle viewport changes for mobile
-    const handleResize = () => {
-      requestAnimationFrame(adjustHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.visualViewport?.addEventListener('resize', handleResize);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', handleResize);
-      window.visualViewport?.removeEventListener('resize', handleResize);
-    };
-  }, [editor]);
 
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
@@ -119,23 +78,15 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   const emojiCategories = {
     'Smileys': ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '😉', '😌', '😍', '🥰', '😘'],
-    'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗'],
     'Gestures': ['👍', '👎', '👌', '✌️', '🤞', '🤝', '👊', '✊', '🤛', '🤜', '🤚', '👋', '🖐️', '✋', '🖖'],
+    'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗'],
+    'Activities': ['🎉', '🎊', '🎈', '🎂', '🎁', '🎮', '🎲', '⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱'],
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Editor Content */}
-      <div className="flex-1">
-        <EditorContent 
-          ref={editorRef}
-          editor={editor}
-          className="w-full py-2"
-        />
-      </div>
-
-      {/* Formatting Toolbar */}
-      <div className="flex items-center gap-1 py-2 border-t bg-white">
+    <div className="h-full flex flex-col">
+      {/* Toolbar - Fixed at top */}
+      <div className="flex-none flex flex-wrap items-center gap-1 p-2 bg-white border-b">
         <Button
           type="button"
           variant="ghost"
@@ -156,26 +107,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
         >
           <Italic className="h-4 w-4" />
         </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          data-active={editor.isActive("bulletList")}
-          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          data-active={editor.isActive("orderedList")}
-          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
 
         <Popover>
           <PopoverTrigger asChild>
@@ -218,13 +151,38 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           </PopoverContent>
         </Popover>
 
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          data-active={editor.isActive("bulletList")}
+          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
+        >
+          <List className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          data-active={editor.isActive("orderedList")}
+          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
+        >
+          <ListOrdered className="h-4 w-4" />
+        </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
         <Popover>
           <PopoverTrigger asChild>
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 w-8 px-0"
+              className="h-8 flex items-center gap-1 px-2"
             >
               <Smile className="h-4 w-4" />
             </Button>
@@ -251,6 +209,14 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             ))}
           </PopoverContent>
         </Popover>
+      </div>
+
+      {/* Editor Content */}
+      <div className="flex-1 overflow-y-auto">
+        <EditorContent 
+          editor={editor} 
+          className="h-full"
+        />
       </div>
     </div>
   );

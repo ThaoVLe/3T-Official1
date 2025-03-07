@@ -3,17 +3,23 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertEntrySchema, type DiaryEntry, type InsertEntry } from "@shared/schema";
 import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
-import { X, Image } from "lucide-react";
-import React, { useState } from 'react';
+import { Save, X } from "lucide-react";
+import React, { useState, useCallback } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
-import { Avatar } from "@/components/ui/avatar";
+
+// Simulate useIsMobile hook - replace with actual implementation
+const useIsMobile = () => {
+  return window.innerWidth < 768;
+};
 
 export default function Editor() {
   const { id } = useParams();
@@ -21,6 +27,8 @@ export default function Editor() {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
+  const isMobile = useIsMobile();
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -70,32 +78,63 @@ export default function Editor() {
 
   const onMediaUpload = async (file: File) => {
     setIsUploading(true);
+    setUploadProgress(0);
+
+    const tempUrl = URL.createObjectURL(file);
+    const currentUrls = form.getValues("mediaUrls") || [];
+    const tempUrls = [...currentUrls, tempUrl];
+    setTempMediaUrls(tempUrls);
+    form.setValue("mediaUrls", tempUrls);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const uploadPromise = new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append("file", file);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const progress = Math.round((e.loaded * 100) / e.total);
+            setUploadProgress(progress);
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status === 200) {
+            const { url } = JSON.parse(xhr.responseText);
+            const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
+            form.setValue("mediaUrls", finalUrls);
+            setTempMediaUrls([]);
+            resolve(url);
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed"));
+        });
+
+        xhr.open("POST", "/api/upload");
+        xhr.send(formData);
       });
 
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const { url } = await response.json();
-      const currentUrls = form.getValues("mediaUrls") || [];
-      form.setValue("mediaUrls", [...currentUrls, url]);
+      await uploadPromise;
 
     } catch (error) {
       console.error('Upload error:', error);
+      const currentUrls = form.getValues("mediaUrls") || [];
+      const finalUrls = currentUrls.filter(url => url !== tempUrl);
+      form.setValue("mediaUrls", finalUrls);
+      setTempMediaUrls([]);
+
       toast({
         title: "Upload Error",
         description: "Failed to upload media. Please try again.",
         variant: "destructive"
       });
     } finally {
+      URL.revokeObjectURL(tempUrl);
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -107,6 +146,16 @@ export default function Editor() {
     newUrls.splice(index, 1);
     form.setValue("mediaUrls", newUrls);
   };
+
+  // Function to hide keyboard on mobile devices
+  const hideKeyboard = useCallback(() => {
+    if (!isMobile) return;
+
+    // Focus any active element to lose focus
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  }, [isMobile]);
 
   // Add swipe to go back gesture
   React.useEffect(() => {
@@ -120,6 +169,7 @@ export default function Editor() {
       const touchEndX = e.changedTouches[0].clientX;
       const swipeDistance = touchEndX - touchStartX;
 
+      // If swiped right more than 100px, go back
       if (swipeDistance > 100) {
         navigate('/');
       }
@@ -135,105 +185,106 @@ export default function Editor() {
   }, [navigate]);
 
   return (
-    <div className="fixed inset-0 bg-white">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 flex items-center justify-between px-4 py-2 border-b bg-white z-20">
-        <div className="flex items-center gap-3">
+    <div className="fixed inset-0 bg-white flex flex-col">
+      {/* Header - Fixed at top */}
+      <div className="flex-none px-4 sm:px-6 py-3 border-b bg-white z-10">
+        <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={() => navigate("/")}
-            className="rounded-full"
+            className="whitespace-nowrap"
           >
-            <X className="h-6 w-6" />
+            <X className="h-4 w-4 mr-1" />
+            Cancel
           </Button>
-          <h1 className="text-xl font-semibold">
-            Create post
-          </h1>
+          <Button
+            type="button"
+            size="sm"
+            onClick={form.handleSubmit((data) => mutation.mutate(data))}
+            disabled={mutation.isPending}
+            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            {id ? "Update" : "Create"}
+          </Button>
         </div>
-        <Button
-          onClick={form.handleSubmit((data) => mutation.mutate(data))}
-          disabled={mutation.isPending}
-          className="bg-primary font-semibold px-4"
-        >
-          Post
-        </Button>
-      </div>
-
-      {/* Content Area */}
-      <div className="mt-14 mb-32 h-[calc(100vh-8.5rem)] overflow-y-auto">
-        <div className="max-w-full sm:max-w-2xl mx-auto px-4">
-          {/* User Info */}
-          <div className="flex items-center gap-3 py-4">
-            <Avatar className="h-10 w-10" />
-            <div className="flex flex-col">
-              <span className="font-semibold text-sm">Your Name</span>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                {form.watch("feeling") && (
-                  <span>{form.watch("feeling")?.label} {form.watch("feeling")?.emoji}</span>
-                )}
-                {form.watch("location") && (
-                  <span>at {form.watch("location")} 📍</span>
+        <div className="max-w-full sm:max-w-2xl pr-24">
+          <Input
+            {...form.register("title")}
+            className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+            placeholder="Untitled Entry..."
+          />
+          {form.watch("feeling") && (
+            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+              <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                {form.watch("feeling")?.label.includes(',') ? (
+                  <>
+                    {form.watch("feeling")?.label.split(',')[0].trim()} {form.watch("feeling")?.emoji.split(' ')[0]}
+                    {' - '}{form.watch("feeling")?.label.split(',')[1].trim()} {form.watch("feeling")?.emoji.split(' ')[1]}
+                  </>
+                ) : (
+                  <>
+                    {form.watch("feeling")?.label} {form.watch("feeling")?.emoji}
+                  </>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Editor */}
-          <div className="py-2">
-            <TipTapEditor
-              value={form.watch("content")}
-              onChange={(value) => form.setValue("content", value)}
-            />
-          </div>
-
-          {/* Media Preview */}
-          {form.watch("mediaUrls")?.length > 0 && (
-            <div className="mt-4">
-              <MediaPreview
-                urls={form.watch("mediaUrls")}
-                onRemove={onMediaRemove}
-                loading={isUploading}
-                uploadProgress={uploadProgress}
-              />
             </div>
           )}
         </div>
       </div>
 
-      {/* Footer Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-white z-20" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
-        <div className="max-w-full sm:max-w-2xl mx-auto px-4">
-          <div className="grid grid-cols-4 gap-1 py-2">
-            <MediaRecorder onCapture={onMediaUpload}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full h-12 flex flex-col items-center justify-center gap-1 hover:bg-transparent"
-              >
-                <Image className="h-6 w-6 text-green-500" />
-                <span className="text-xs">Photo/video</span>
-              </Button>
-            </MediaRecorder>
+      {/* Content Area - Scrollable */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6">
+          <TipTapEditor
+            value={form.watch("content")}
+            onChange={(value) => form.setValue("content", value)}
+          />
+        </div>
+      </div>
+
+      {/* Footer - Fixed at bottom */}
+      <div className="flex-none border-t bg-white" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
+        <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 py-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">How are you feeling today?</span>
             <FeelingSelector
               selectedFeeling={form.getValues("feeling")}
-              onSelect={(feeling) => form.setValue("feeling", feeling)}
+              onSelect={async (feeling) => {
+                await hideKeyboard();
+                form.setValue("feeling", feeling);
+              }}
             />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Checking in at:</span>
             <LocationSelector
               selectedLocation={form.getValues("location")}
-              onSelect={(location) => form.setValue("location", location)}
+              onSelect={(location) => {
+                hideKeyboard();
+                form.setValue("location", location);
+              }}
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full h-12 flex flex-col items-center justify-center gap-1 hover:bg-transparent"
-              disabled
-            >
-              <span className="h-6 w-6 rounded-full bg-slate-200" />
-              <span className="text-xs">More</span>
-            </Button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Add media:</span>
+            <MediaRecorder onCapture={onMediaUpload} />
           </div>
         </div>
+
+        {form.watch("mediaUrls")?.length > 0 && (
+          <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 pt-2 pb-4">
+            <MediaPreview
+              urls={form.watch("mediaUrls")}
+              onRemove={onMediaRemove}
+              loading={isUploading}
+              uploadProgress={uploadProgress}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

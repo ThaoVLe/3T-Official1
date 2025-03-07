@@ -16,9 +16,24 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
   const [selectedIndex, setSelectedIndex] = useState<number>();
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
   const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
+  const [videoKeyFrames, setVideoKeyFrames] = useState<{[key: number]: number[]}>({});
   const mediaUrls = urls || [];
 
-  // Load video thumbnails and rotate frames
+  // Generate random key frames for each video
+  useEffect(() => {
+    mediaUrls.forEach((url, index) => {
+      if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i)) {
+        // Generate 3 random frames between 0 and 10 seconds for each video
+        const randomFrames = Array(3).fill(0).map(() => Math.random() * 10);
+        setVideoKeyFrames(prev => ({
+          ...prev,
+          [index]: randomFrames
+        }));
+      }
+    });
+  }, [mediaUrls]);
+
+  // Load video thumbnails and prepare to show key frames
   useEffect(() => {
     mediaUrls.forEach((url, index) => {
       if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) && videoRefs.current[index]) {
@@ -26,28 +41,35 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
 
         // Listen for metadata to load before seeking
         const handleLoadedMetadata = () => {
-          video.currentTime = 0; // Start with first frame
+          // Set to first key frame or 0 if no key frames yet
+          const frames = videoKeyFrames[index] || [0];
+          video.currentTime = frames[0];
         };
 
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
         return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       }
     });
-  }, [mediaUrls]);
+  }, [mediaUrls, videoKeyFrames]);
 
-  // Rotate through frames every 2 seconds
+  // Rotate through the random key frames every 2 seconds
   useEffect(() => {
-    const frames = [0, 1, 2]; // The three keyframe timestamps
+    // Only proceed if we have videos with key frames
+    if (Object.keys(videoKeyFrames).length === 0) return;
+    
     const interval = setInterval(() => {
       setFrameIndices(prev => {
         const newIndices = { ...prev };
-        Object.keys(videoRefs.current).forEach(index => {
-          const video = videoRefs.current[Number(index)];
-          if (video) {
-            const currentFrame = prev[Number(index)] || 0;
-            const nextFrame = (currentFrame + 1) % frames.length;
-            video.currentTime = frames[nextFrame];
-            newIndices[Number(index)] = nextFrame;
+        Object.keys(videoRefs.current).forEach(indexStr => {
+          const index = Number(indexStr);
+          const video = videoRefs.current[index];
+          const frames = videoKeyFrames[index];
+          
+          if (video && frames) {
+            const currentFrameIndex = prev[index] || 0;
+            const nextFrameIndex = (currentFrameIndex + 1) % frames.length;
+            video.currentTime = frames[nextFrameIndex];
+            newIndices[index] = nextFrameIndex;
           }
         });
         return newIndices;
@@ -55,7 +77,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
     }, 2000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [videoKeyFrames]);
 
   if (!mediaUrls.length && !loading) return null;
 

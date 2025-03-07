@@ -1,26 +1,33 @@
 import React, { useState, useRef } from 'react';
-import { useToast } from '@chakra-ui/react';
+import { Button } from "@/components/ui/button";
+import { Image, Video, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-export default function MediaUploader({ onUpload, disabled }) {
+interface MediaUploaderProps {
+  onUpload: (file: File) => Promise<void>;
+  disabled?: boolean;
+  triggerClassName?: string;
+  triggerContent?: React.ReactNode;
+}
+
+export default function MediaUploader({ onUpload, disabled, triggerClassName, triggerContent }: MediaUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const fileInputRef = useRef(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Function to hide keyboard on mobile devices
   const hideKeyboard = () => {
-    // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
-    // iOS specific fix - create and remove an input to force keyboard dismissal
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
     temporaryInput.style.position = 'absolute';
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
-    temporaryInput.style.fontSize = '16px'; // iOS won't zoom in on inputs with font size >= 16px
+    temporaryInput.style.fontSize = '16px';
 
     document.body.appendChild(temporaryInput);
     temporaryInput.focus();
@@ -28,13 +35,116 @@ export default function MediaUploader({ onUpload, disabled }) {
     document.body.removeChild(temporaryInput);
   };
 
-  const handleFileChange = async (event) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     hideKeyboard();
+
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
-      // ... rest of the handleFileChange function remains unchanged ...
+
+      // Validate file type
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+
+      if (!isImage && !isVideo) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image or video file",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Validate file size (max 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select a file smaller than 50MB",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setIsUploading(true);
+      try {
+        await onUpload(file);
+        toast({
+          title: "Success",
+          description: "Media uploaded successfully",
+        });
+      } catch (error) {
+        console.error('Upload error:', error);
+        toast({
+          title: "Upload failed",
+          description: "Please try again",
+          variant: "destructive"
+        });
+      } finally {
+        setIsUploading(false);
+        // Reset file input
+        event.target.value = '';
+      }
     }
   };
 
-  // ... rest of the MediaUploader component remains unchanged ...
+  return (
+    <>
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={disabled || isUploading}
+      />
+      <input
+        ref={videoInputRef}
+        type="file"
+        accept="video/*"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={disabled || isUploading}
+      />
+
+      {isUploading ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled
+          className={triggerClassName || "h-10 w-10 rounded-full"}
+        >
+          <Loader2 className="h-5 w-5 animate-spin" />
+        </Button>
+      ) : (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              hideKeyboard();
+              imageInputRef.current?.click();
+            }}
+            disabled={disabled}
+            className={triggerClassName || "h-10 w-10 rounded-full"}
+            title="Upload image"
+          >
+            <Image className="h-5 w-5" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              hideKeyboard();
+              videoInputRef.current?.click();
+            }}
+            disabled={disabled}
+            className={triggerClassName || "h-10 w-10 rounded-full"}
+            title="Upload video"
+          >
+            <Video className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+    </>
+  );
 }

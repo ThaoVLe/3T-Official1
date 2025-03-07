@@ -32,15 +32,23 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
 
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
-    temporaryInput.style.position = 'absolute';
+    temporaryInput.style.position = 'fixed';
+    temporaryInput.style.top = '-100px';
+    temporaryInput.style.left = '0';
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
+    temporaryInput.style.width = '100%';
     temporaryInput.style.fontSize = '16px';
 
     document.body.appendChild(temporaryInput);
-    temporaryInput.focus();
-    temporaryInput.blur();
-    document.body.removeChild(temporaryInput);
+
+    setTimeout(() => {
+      temporaryInput.focus();
+      setTimeout(() => {
+        temporaryInput.blur();
+        document.body.removeChild(temporaryInput);
+      }, 50);
+    }, 50);
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,10 +150,23 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
             <Button
               variant="ghost"
               size="icon"
-              className={triggerClassName || "h-10 w-10 rounded-full"}
+              className={triggerClassName || "h-10 w-10 rounded-full bg-transparent hover:bg-accent"}
               disabled={disabled}
             >
-              {triggerContent || <Image className="h-5 w-5" />}
+              {triggerContent || (
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 3C12.5523 3 13 3.44772 13 4V11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H13V20C13 20.5523 12.5523 21 12 21C11.4477 21 11 20.5523 11 20V13H4C3.44772 13 3 12.5523 3 12C3 11.4477 3.44772 11 4 11H11V4C11 3.44772 11.4477 3 12 3Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

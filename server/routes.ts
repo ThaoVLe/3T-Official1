@@ -4,7 +4,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { insertEntrySchema } from "@shared/schema";
+import { insertEntrySchema, insertCommentSchema } from "@shared/schema";
 import express from 'express';
 
 // Ensure uploads directory exists
@@ -147,6 +147,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileUrl = `/uploads/${req.file.filename}`;
       res.json({ url: fileUrl });
     });
+  });
+
+  // Comment routes
+  app.get("/api/entries/:id/comments", async (req, res) => {
+    try {
+      const comments = await storage.getComments(parseInt(req.params.id));
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post("/api/entries/:id/comments", async (req, res) => {
+    try {
+      const result = insertCommentSchema.safeParse({
+        entryId: parseInt(req.params.id),
+        content: req.body.content
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid comment data", 
+          errors: result.error.errors 
+        });
+      }
+
+      const comment = await storage.addComment(result.data);
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  app.delete("/api/entries/:id/comments/:commentId", async (req, res) => {
+    try {
+      const success = await storage.deleteComment(parseInt(req.params.commentId));
+      if (!success) return res.status(404).json({ message: "Comment not found" });
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
   });
 
   const httpServer = createServer(app);

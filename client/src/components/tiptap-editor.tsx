@@ -4,7 +4,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -71,6 +71,47 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       editor.commands.setContent(value || '', false);
     }
   }, [editor, value]);
+
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  // Auto-expand functionality
+  useEffect(() => {
+    if (!editor || !editorRef.current) return;
+
+    const adjustHeight = () => {
+      const proseMirror = editorRef.current?.querySelector('.ProseMirror');
+      if (!proseMirror) return;
+
+      // Reset height to auto to get the correct scrollHeight
+      (proseMirror as HTMLElement).style.height = 'auto';
+
+      // Get the content height
+      const contentHeight = proseMirror.scrollHeight;
+
+      // Set the new height with a minimum of 200px
+      (proseMirror as HTMLElement).style.height = `${Math.max(200, contentHeight)}px`;
+    };
+
+    // Setup mutation observer for content changes
+    const observer = new MutationObserver(() => {
+      requestAnimationFrame(adjustHeight);
+    });
+
+    const proseMirror = editorRef.current.querySelector('.ProseMirror');
+    if (proseMirror) {
+      observer.observe(proseMirror, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true
+      });
+
+      // Initial adjustment
+      adjustHeight();
+    }
+
+    return () => observer.disconnect();
+  }, [editor]);
 
   if (!editor) {
     return null;
@@ -214,8 +255,9 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       {/* Editor Content */}
       <div className="flex-1 overflow-y-auto">
         <EditorContent 
+          ref={editorRef}
           editor={editor} 
-          className="h-full"
+          className="h-full ProseMirror-focused"
         />
       </div>
     </div>

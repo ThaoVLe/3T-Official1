@@ -55,6 +55,7 @@
   .editor-page {
     @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background no-scrollbar;
   }
+
   /* Auto-expanding editor styles */
   .tiptap-container .ProseMirror {
     transition: min-height 0.2s ease;
@@ -72,6 +73,10 @@
     overflow: hidden;
   }
 
+  /* Toolbar transition */
+  .tiptap-container > div:first-child {
+    transition: all 0.2s ease-in-out;
+  }
   /* Custom emotion styles */
   .custom-emotion {
     color: #880000;
@@ -83,6 +88,7 @@
   }
 
   /* Bottom menu bar removed */
+
 
   .card {
     @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;

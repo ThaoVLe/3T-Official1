@@ -4,7 +4,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -24,6 +24,28 @@ interface TipTapEditorProps {
 }
 
 export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const lastScreenHeight = useRef(window.visualViewport?.height || window.innerHeight);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const currentHeight = window.visualViewport?.height || window.innerHeight;
+      const heightDiff = lastScreenHeight.current - currentHeight;
+      const threshold = 150; // Typical keyboard height threshold
+
+      setIsKeyboardVisible(heightDiff > threshold);
+      lastScreenHeight.current = currentHeight;
+    };
+
+    window.visualViewport?.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -117,8 +139,12 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   return (
     <div className="h-full flex flex-col tiptap-container">
-      {/* Toolbar - Fixed at top */}
-      <div className="flex-none flex flex-wrap items-center gap-1 p-2 bg-white border-b">
+      {/* Toolbar - Fixed at top, hidden when keyboard is visible on mobile */}
+      <div 
+        className={`flex-none flex flex-wrap items-center gap-1 p-2 bg-white border-b transition-all duration-200 ${
+          isKeyboardVisible ? 'h-0 overflow-hidden p-0 border-none' : ''
+        }`}
+      >
         <Button
           type="button"
           variant="ghost"
@@ -138,6 +164,29 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
           className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
         >
           <Italic className="h-4 w-4" />
+        </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          data-active={editor.isActive("bulletList")}
+          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
+        >
+          <List className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          data-active={editor.isActive("orderedList")}
+          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
+        >
+          <ListOrdered className="h-4 w-4" />
         </Button>
 
         <Separator orientation="vertical" className="mx-1 h-6" />
@@ -182,29 +231,6 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
             </div>
           </PopoverContent>
         </Popover>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          data-active={editor.isActive("bulletList")}
-          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          data-active={editor.isActive("orderedList")}
-          className="h-8 w-8 px-0 data-[active=true]:bg-slate-100"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 

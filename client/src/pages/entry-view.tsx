@@ -18,7 +18,6 @@ export default function EntryView() {
   const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isExiting, setIsExiting] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [commentCount, setCommentCount] = useState(0);
   const { toast } = useToast();
 
   // Check URL parameters for showComments
@@ -43,6 +42,12 @@ export default function EntryView() {
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
+    enabled: !!id,
+  });
+
+  // Fetch comments
+  const { data: comments = [] } = useQuery({
+    queryKey: [`/api/entries/${id}/comments`],
     enabled: !!id,
   });
 
@@ -82,13 +87,13 @@ export default function EntryView() {
       if (swipeDistance > 50 && swipeTime < 300 && verticalDistance < 30) {
         if (id) {
           sessionStorage.setItem('lastViewedEntryId', id);
-          const container = document.querySelector('.diary-content');
-          if (container) {
-            sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
-          }
-          setIsExiting(true);
-          setTimeout(() => navigate('/'), 100);
         }
+        const container = document.querySelector('.diary-content');
+        if (container) {
+          sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+        }
+        setIsExiting(true);
+        setTimeout(() => navigate('/'), 100);
       }
     };
 
@@ -99,7 +104,7 @@ export default function EntryView() {
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [navigate, id]);
+  }, [id, navigate]);
 
   useEffect(() => {
     const mediaParam = new URLSearchParams(window.location.search).get('media');
@@ -153,181 +158,187 @@ export default function EntryView() {
     }
   };
 
-
   return (
     <PageTransition direction={1}>
-      <div className="sticky top-0 z-10 bg-white border-b">
-        <div className="container px-4 py-2 flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              if (id) {
-                sessionStorage.setItem('lastViewedEntryId', id);
+      <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white border-b">
+          <div className="container px-4 py-2 flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                if (id) {
+                  sessionStorage.setItem('lastViewedEntryId', id);
+                }
                 setIsExiting(true);
                 setTimeout(() => navigate('/'), 100);
-              }
-            }}
-            className="mr-2"
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-lg font-semibold truncate max-w-[75%]">
-            {entry.title || "Untitled Entry"}
-          </h1>
+              }}
+              className="mr-2"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-lg font-semibold truncate max-w-[75%]">
+              {entry.title || "Untitled Entry"}
+            </h1>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col overflow-auto w-full">
+          <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+            <AnimatePresence mode="wait">
+              <motion.div 
+                className="space-y-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="text-sm text-muted-foreground">
+                  {formatDate(entry.createdAt)}
+                </div>
+
+                {(feeling || entry.location) && (
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                    {feeling && (
+                      <div className="flex items-center">
+                        {feeling.label.includes(',') ? (
+                          <span>
+                            feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                            while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                          </span>
+                        ) : (
+                          <span>
+                            feeling {feeling.label} {feeling.emoji}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {entry.location && (
+                      <div className="flex items-center">
+                        <span>at {entry.location} 📍</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div
+                  className="prose max-w-none"
+                  dangerouslySetInnerHTML={{ __html: entry.content }}
+                />
+
+                {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+                  <div className="space-y-2 my-4">
+                    {entry.mediaUrls.map((url, index) => {
+                      const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                      return (
+                        <motion.div 
+                          key={index} 
+                          className="rounded-lg overflow-hidden border"
+                          ref={el => mediaRefs.current[index] = el}
+                          variants={mediaPreviewVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          {isVideo ? (
+                            <video
+                              src={url}
+                              controls
+                              playsInline
+                              className="w-full aspect-video object-cover rounded-lg"
+                            />
+                          ) : (
+                            <img
+                              src={url}
+                              alt={`Media ${index + 1}`}
+                              className="w-full rounded-lg"
+                              loading="lazy"
+                            />
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between mt-4 pt-3 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCommentsClick}
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-2"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    {comments.length > 0 ? (
+                      <span className="font-medium">{comments.length} Comments</span>
+                    ) : (
+                      <span>Comments</span>
+                    )}
+                  </Button>
+
+                  <div className="flex gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: entry.title || "My Diary Entry",
+                            text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                            url: window.location.href,
+                          }).catch(err => console.log('Error sharing:', err));
+                        } else {
+                          navigator.clipboard.writeText(window.location.href)
+                            .then(() => toast({
+                              title: "Link copied",
+                              description: "Entry link copied to clipboard"
+                            }))
+                            .catch(err => console.error('Could not copy text:', err));
+                        }
+                      }}
+                      className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
+                    >
+                      <Share className="h-4 w-4"/>
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => navigate(`/edit/${entry.id}`)}
+                      className="h-8 w-8 hover:bg-muted"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => deleteMutation.mutate()}
+                      disabled={deleteMutation.isPending}
+                      className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Comments Section */}
+                {showComments && (
+                  <div className="mt-4 pb-16" id="comments-section">
+                    <Comments 
+                      entryId={entry.id} 
+                      onCommentCountChange={(count) => {
+                        queryClient.invalidateQueries({ queryKey: [`/api/entries/${id}/comments`] });
+                      }}
+                    />
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
-
-      <ScrollArea className="h-[calc(100vh-56px)]">
-        <div className="container px-4 py-6 diary-content">
-          <AnimatePresence mode="wait">
-            <motion.div 
-              className="space-y-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="text-sm text-muted-foreground">
-                {formatDate(entry.createdAt)}
-              </div>
-
-              {(feeling || entry.location) && (
-                <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  {feeling && (
-                    <div className="flex items-center">
-                      {feeling.label.includes(',') ? (
-                        <span>
-                          feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                          while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                        </span>
-                      ) : (
-                        <span>
-                          feeling {feeling.label} {feeling.emoji}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {entry.location && (
-                    <div className="flex items-center">
-                      <span>at {entry.location} 📍</span>
-                    </div>
-                  )}
-                </div>
-              )}
-              <div
-                className="prose max-w-none"
-                dangerouslySetInnerHTML={{ __html: entry.content }}
-              />
-
-              {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-                <div className="space-y-2 my-4">
-                  {entry.mediaUrls.map((url, index) => {
-                    const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                    return (
-                      <motion.div 
-                        key={index} 
-                        className="rounded-lg overflow-hidden border"
-                        ref={el => mediaRefs.current[index] = el}
-                        variants={mediaPreviewVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        {isVideo ? (
-                          <video
-                            src={url}
-                            controls
-                            playsInline
-                            className="w-full aspect-video object-cover rounded-lg"
-                          />
-                        ) : (
-                          <img
-                            src={url}
-                            alt={`Media ${index + 1}`}
-                            className="w-full rounded-lg"
-                            loading="lazy"
-                          />
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between mt-4 pt-3 border-t">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCommentsClick}
-                  className="text-muted-foreground hover:text-foreground flex items-center gap-2"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  {commentCount > 0 && (
-                    <span className="font-medium">{commentCount} Comments</span>
-                  )}
-                  {!commentCount && <span>Comments</span>}
-                </Button>
-
-                <div className="flex gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: entry.title || "My Diary Entry",
-                          text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
-                          url: window.location.href,
-                        }).catch(err => console.log('Error sharing:', err));
-                      } else {
-                        navigator.clipboard.writeText(window.location.href)
-                          .then(() => toast({
-                            title: "Link copied",
-                            description: "Entry link copied to clipboard"
-                          }))
-                          .catch(err => console.error('Could not copy text:', err));
-                      }
-                    }}
-                    className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
-                  >
-                    <Share className="h-4 w-4"/>
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => navigate(`/edit/${entry.id}`)}
-                    className="h-8 w-8 hover:bg-muted"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => deleteMutation.mutate()}
-                    disabled={deleteMutation.isPending}
-                    className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Comments Section */}
-              {showComments && (
-                <div className="mt-4 pb-16" id="comments-section">
-                  <Comments 
-                    entryId={entry.id} 
-                    onCommentCountChange={setCommentCount}
-                  />
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </ScrollArea>
     </PageTransition>
   );
 }

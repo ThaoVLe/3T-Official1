@@ -3,69 +3,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, Share, MessageCircle } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
-
-// Component for video thumbnails that play in a continuous loop
-const VideoThumbnail = ({ url, className }: { url: string; className?: string }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Set up the video to autoplay and loop when component mounts
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    // Pre-load a frame at 0.1s to avoid initial white flash
-    video.currentTime = 0.1;
-
-    const handleCanPlay = () => {
-      if (!video) return;
-      
-      // Ensure the video starts playing
-      video.play().catch(err => {
-        console.log("Auto-play was prevented:", err);
-        video.currentTime = 0.1;
-      });
-    };
-
-    const handleLoadedData = () => {
-      setIsLoaded(true);
-    };
-
-    video.addEventListener('canplay', handleCanPlay);
-    video.addEventListener('loadeddata', handleLoadedData);
-
-    return () => {
-      if (video) {
-        video.removeEventListener('canplay', handleCanPlay);
-        video.removeEventListener('loadeddata', handleLoadedData);
-        video.pause();
-      }
-    };
-  }, []);
-
-  return (
-    <div className="relative w-full h-full bg-neutral-100">
-      <video
-        ref={videoRef}
-        src={url}
-        className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-        playsInline
-        muted
-        loop
-        autoPlay
-        preload="auto"
-        crossOrigin="anonymous"
-      />
-    </div>
-  );
-};
-
-
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -207,7 +149,11 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 onClick={() => handleMediaClick(0)}
               >
                 {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
-                  <VideoThumbnail url={entry.mediaUrls[0]} className="w-full h-full object-cover" />
+                  <video
+                    src={entry.mediaUrls[0]}
+                    className="w-full h-full object-cover"
+                    playsInline
+                  />
                 ) : (
                   <img
                     src={entry.mediaUrls[0]}
@@ -233,7 +179,11 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                       onClick={() => handleMediaClick(mediaIndex)}
                     >
                       {isVideo ? (
-                        <VideoThumbnail url={url} className="w-full h-full object-cover" />
+                        <video
+                          src={url}
+                          className="w-full h-full object-cover"
+                          playsInline
+                        />
                       ) : (
                         <img
                           src={url}

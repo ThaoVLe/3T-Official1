@@ -14,43 +14,47 @@ interface MediaPreviewProps {
 export default function MediaPreview({ urls, onRemove, loading, uploadProgress = 0 }: MediaPreviewProps) {
   const [selectedIndex, setSelectedIndex] = useState<number>();
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
+  const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
   const mediaUrls = urls || [];
 
-  // Track loaded state of videos
-  const [loadedVideos, setLoadedVideos] = useState<{[key: number]: boolean}>({});
-
-  // Set up video playback for thumbnails
+  // Load video thumbnails and rotate frames
   useEffect(() => {
     mediaUrls.forEach((url, index) => {
       if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) && videoRefs.current[index]) {
         const video = videoRefs.current[index];
-        
-        // Pre-load a frame at 0.1s to avoid initial white flash
-        video.currentTime = 0.1;
 
-        // Listen for when video can be played
-        const handleCanPlay = () => {
-          // Start playing the video in a loop
-          video.play().catch(err => {
-            console.log("Auto-play was prevented:", err);
-            video.currentTime = 0.1;
-          });
+        // Listen for metadata to load before seeking
+        const handleLoadedMetadata = () => {
+          video.currentTime = 0; // Start with first frame
         };
 
-        const handleLoadedData = () => {
-          setLoadedVideos(prev => ({...prev, [index]: true}));
-        };
-
-        video.addEventListener('canplay', handleCanPlay);
-        video.addEventListener('loadeddata', handleLoadedData);
-        return () => {
-          video.removeEventListener('canplay', handleCanPlay);
-          video.removeEventListener('loadeddata', handleLoadedData);
-          video.pause();
-        };
+        video.addEventListener('loadedmetadata', handleLoadedMetadata);
+        return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       }
     });
   }, [mediaUrls]);
+
+  // Rotate through frames every 2 seconds
+  useEffect(() => {
+    const frames = [0, 1, 2]; // The three keyframe timestamps
+    const interval = setInterval(() => {
+      setFrameIndices(prev => {
+        const newIndices = { ...prev };
+        Object.keys(videoRefs.current).forEach(index => {
+          const video = videoRefs.current[Number(index)];
+          if (video) {
+            const currentFrame = prev[Number(index)] || 0;
+            const nextFrame = (currentFrame + 1) % frames.length;
+            video.currentTime = frames[nextFrame];
+            newIndices[Number(index)] = nextFrame;
+          }
+        });
+        return newIndices;
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   if (!mediaUrls.length && !loading) return null;
 
@@ -93,19 +97,14 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
               onClick={() => setSelectedIndex(index)}
             >
               {isVideo && (
-                <div className="relative w-full h-full bg-neutral-100">
-                  <video
-                    ref={el => el && (videoRefs.current[index] = el)}
-                    src={url}
-                    className={`w-full h-full object-cover ${loadedVideos[index] ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-                    muted
-                    playsInline
-                    loop
-                    autoPlay
-                    preload="auto"
-                    crossOrigin="anonymous"
-                  />
-                </div>
+                <video
+                  ref={el => el && (videoRefs.current[index] = el)}
+                  src={url}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                  preload="metadata"
+                />
               )}
               {!isVideo && (
                 <img

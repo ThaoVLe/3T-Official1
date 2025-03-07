@@ -188,17 +188,11 @@ export default function Editor() {
     form.setValue("mediaUrls", newUrls);
   };
 
-  // Function to hide keyboard on mobile devices
   const hideKeyboard = useCallback(() => {
     if (!isMobile()) return;
-
-    // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-
-    // More aggressive iOS keyboard dismissal
-    // Create an offscreen input and force it to focus and blur
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
     temporaryInput.style.position = 'fixed';
@@ -207,12 +201,8 @@ export default function Editor() {
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
     temporaryInput.style.width = '100%';
-    temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
-
-    // Append to body, focus, then blur and remove
+    temporaryInput.style.fontSize = '16px';
     document.body.appendChild(temporaryInput);
-
-    // Force focus then immediately blur
     setTimeout(() => {
       temporaryInput.focus();
       setTimeout(() => {
@@ -220,17 +210,51 @@ export default function Editor() {
         document.body.removeChild(temporaryInput);
       }, 50);
     }, 50);
-
-    // Additional fix - add a slight delay before showing sheet
     return new Promise(resolve => setTimeout(resolve, 100));
   }, []);
 
   return (
     <PageTransition direction={1}>
       <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
-        {/* Header */}
-        <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
-          <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
+        {/* Title Input */}
+        <div className="px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10">
+          <Input
+            {...form.register("title")}
+            className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+            placeholder="Untitled Entry..."
+          />
+          {form.watch("feeling") && (
+            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+              <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                {form.watch("feeling").label.includes(',') ? (
+                  <>
+                    {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
+                    {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
+                  </>
+                ) : (
+                  <>
+                    {form.watch("feeling").label} {form.watch("feeling").emoji}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col overflow-auto w-full">
+          <div className="flex-1 p-4 sm:p-6 w-full max-w-full pb-32">
+            <TipTapEditor
+              value={form.watch("content")}
+              onChange={(value) => form.setValue("content", value)}
+            />
+          </div>
+        </div>
+
+        {/* Bottom Sheet Style Controls */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          {/* Action Buttons */}
+          <div className="px-4 py-2 flex justify-between items-center border-b">
             <Button
               variant="ghost"
               size="sm"
@@ -241,7 +265,7 @@ export default function Editor() {
                 setIsExiting(true);
                 setTimeout(() => navigate("/"), 100);
               }}
-              className="whitespace-nowrap"
+              className="text-red-500 hover:text-red-600 hover:bg-red-50"
             >
               <X className="h-4 w-4 mr-1" />
               Cancel
@@ -251,78 +275,44 @@ export default function Editor() {
               size="sm"
               onClick={form.handleSubmit((data) => mutation.mutate(data))}
               disabled={mutation.isPending}
-              className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+              className="bg-primary hover:bg-primary/90"
             >
               <Save className="h-4 w-4 mr-1" />
               {id ? "Update" : "Create"}
             </Button>
           </div>
-          <div className="max-w-full sm:max-w-2xl pr-24">
-            <Input
-              {...form.register("title")}
-              className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
-              placeholder="Untitled Entry..."
-            />
-            {form.watch("feeling") && (
-              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                  {form.watch("feeling").label.includes(',') ? (
-                    <>
-                      {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
-                      {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
-                    </>
-                  ) : (
-                    <>
-                      {form.watch("feeling").label} {form.watch("feeling").emoji}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Content Area */}
-        <div className="flex-1 flex flex-col overflow-auto w-full">
-          <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
-            <TipTapEditor
-              value={form.watch("content")}
-              onChange={(value) => form.setValue("content", value)}
-            />
-          </div>
-
-          {/* Media Controls - Fixed at bottom */}
-          <div className="border-t bg-white sticky bottom-0 w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}> {/*Added paddingBottom for safe area*/}
-            <div className="px-4 sm:px-6 py-3 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">How are you feeling today?</span>
-                <FeelingSelector
-                  selectedFeeling={form.getValues("feeling")}
-                  onSelect={async (feeling) => {
-                    await hideKeyboard();
-                    form.setValue("feeling", feeling);
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Checking in at:</span>
-                <LocationSelector
-                  selectedLocation={form.getValues("location")}
-                  onSelect={(location) => {
-                    hideKeyboard();
-                    form.setValue("location", location);
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Add media:</span>
-                <MediaRecorder onCapture={onMediaUpload} />
-              </div>
+          {/* Media and Metadata Controls */}
+          <div className="px-4 py-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">How are you feeling?</span>
+              <FeelingSelector
+                selectedFeeling={form.getValues("feeling")}
+                onSelect={async (feeling) => {
+                  await hideKeyboard();
+                  form.setValue("feeling", feeling);
+                }}
+              />
             </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Location:</span>
+              <LocationSelector
+                selectedLocation={form.getValues("location")}
+                onSelect={(location) => {
+                  hideKeyboard();
+                  form.setValue("location", location);
+                }}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Add media:</span>
+              <MediaRecorder onCapture={onMediaUpload} />
+            </div>
+
             {form.watch("mediaUrls")?.length > 0 && (
-              <div className="px-4 sm:px-6 pt-2 pb-4 overflow-x-auto">
+              <div className="overflow-x-auto">
                 <MediaPreview
                   urls={form.watch("mediaUrls")}
                   onRemove={onMediaRemove}

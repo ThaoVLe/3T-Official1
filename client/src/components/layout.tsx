@@ -1,6 +1,5 @@
-
 import * as React from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -20,33 +19,36 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   // Check if the screen is small (mobile)
   const [isMobile, setIsMobile] = React.useState(false);
-  
+  const [location] = useLocation();
+
   React.useEffect(() => {
     // Check initial size
     setIsMobile(window.innerWidth < 768);
-    
+
     // Add resize listener
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Only show bottom navigation on home page
+  const showBottomNav = isMobile && location === '/';
+
   return isMobile ? (
-    // Mobile layout with bottom navigation
+    // Mobile layout with conditional bottom navigation
     <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 pb-16">
+      <main className={`flex-1 ${showBottomNav ? 'pb-16' : ''}`}>
         {children}
       </main>
-      <BottomNavigation />
+      {showBottomNav && <BottomNavigation />}
     </div>
   ) : (
     // Desktop layout with sidebar
     <SidebarProvider defaultOpen={true}>
       <div className="grid lg:grid-cols-[280px_1fr] min-h-screen">
-        {/* Sidebar */}
         <Sidebar className="border-r">
           <SidebarHeader className="border-b px-2 py-4">
             <Link href="/">
@@ -55,7 +57,7 @@ export function Layout({ children }: LayoutProps) {
               </h1>
             </Link>
           </SidebarHeader>
-          
+
           <SidebarContent>
             <div className="space-y-4 py-4">
               <div className="px-3 py-2">
@@ -81,7 +83,6 @@ export function Layout({ children }: LayoutProps) {
           </SidebarContent>
         </Sidebar>
 
-        {/* Main content */}
         <main className="p-4 pt-0">
           {children}
         </main>

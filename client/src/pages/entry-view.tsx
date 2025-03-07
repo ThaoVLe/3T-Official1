@@ -1,67 +1,50 @@
-import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeftIcon } from "@radix-ui/react-icons";
-import { Entry } from "@/types/entry";
-import { format } from 'date-fns';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ChevronLeft, Share, MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useEntryById } from '@/hooks/useEntries';
+import { Skeleton } from '@/components/ui/skeleton';
+import DeleteEntryButton from '@/components/delete-entry-button';
+import { formatDate } from '@/lib/utils';
 
-export default function EntryView() {
+export function EntryView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [entry, setEntry] = useState<Entry | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { isLoading, entry } = useEntryById(id || '');
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number; time: number } | null>(null);
 
-  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
-
+  // Handle back swipe gesture
   useEffect(() => {
-    const fetchEntry = async () => {
-      try {
-        const response = await fetch(`/api/entries/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch entry');
-        const data = await response.json();
-        setEntry(data);
-      } catch (error) {
-        console.error('Error fetching entry:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!id) return;
 
-    if (id) {
-      fetchEntry();
-    }
-  }, [id]);
-
-  // Handle swipe back gesture
-  useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      touchStartRef.current = {
-        x: touch.clientX,
-        y: touch.clientY,
+      setTouchStart({
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
         time: Date.now(),
-      };
+      });
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!touchStartRef.current) return;
+      if (!touchStart) return;
 
-      const touch = e.changedTouches[0];
-      const endX = touch.clientX;
-      const endY = touch.clientY;
-      const startX = touchStartRef.current.x;
-      const startY = touchStartRef.current.y;
-      const swipeDistance = endX - startX;
-      const verticalDistance = Math.abs(endY - touchStartRef.current.y);
-      const swipeTime = Date.now() - touchStartRef.current.time;
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const swipeDistance = touchEndX - touchStart.x;
+      const verticalDistance = Math.abs(touchEndY - touchStart.y);
+      const swipeTime = Date.now() - touchStart.time;
 
-      // Only trigger for swipes that are more horizontal than vertical
-      if (swipeDistance > 100 && swipeTime < 300 && verticalDistance < 100) {
-        console.log('Saving last viewed entry ID:', id);
-        sessionStorage.setItem('lastViewedEntryId', id || '');
-        navigate('/');
+      // Only trigger for quick horizontal swipes without much vertical movement
+      if (swipeDistance > 100 && swipeTime < 300 && verticalDistance < 50) {
+        console.log('Detected back swipe gesture');
+
+        // Navigate back with state to restore scroll position
+        navigate('/', { 
+          state: { 
+            shouldRestoreScroll: true,
+            lastViewedEntryId: id
+          }
+        });
       }
     };
 
@@ -72,101 +55,69 @@ export default function EntryView() {
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [navigate, id]);
+  }, [id, navigate, touchStart]);
 
-  const handleBack = () => {
-    // Save the current entry ID before navigating back
-    if (id) {
-      console.log('Saving last viewed entry ID from back button:', id);
-      sessionStorage.setItem('lastViewedEntryId', id);
-    }
-    navigate('/');
-  };
-
-  if (loading) {
+  if (isLoading || !entry) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <p>Loading entry...</p>
+      <div className="min-h-screen bg-white p-4">
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="ghost" size="icon">
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="icon">
+              <Share className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+        <Skeleton className="h-8 w-3/4 mb-2" />
+        <Skeleton className="h-4 w-1/2 mb-8" />
+        <div className="space-y-4">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
       </div>
     );
   }
-
-  if (!entry) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p>Entry not found</p>
-      </div>
-    );
-  }
-
-  const renderMediaContent = () => {
-    if (!entry.media || entry.media.length === 0) return null;
-
-    return (
-      <div className="flex flex-col gap-4 mt-6">
-        {entry.media.map((url, i) => {
-          const fileExt = url.split('.').pop()?.toLowerCase() || '';
-          const isVideo = ['mp4', 'mov', 'webm'].includes(fileExt);
-          const isAudio = ['mp3', 'wav', 'ogg', 'm4a'].includes(fileExt);
-
-          if (isVideo) {
-            return (
-              <div key={i} className="w-full" ref={el => mediaRefs.current[i] = el}>
-                <video
-                  src={url}
-                  controls
-                  playsInline
-                  className="w-full aspect-video object-cover rounded-lg"
-                />
-              </div>
-            );
-          }
-
-          if (isAudio) {
-            return (
-              <div key={i} className="w-full bg-muted rounded-lg p-4" ref={el => mediaRefs.current[i] = el}>
-                <audio src={url} controls className="w-full" />
-              </div>
-            );
-          }
-
-          return (
-            <div key={i} className="w-full" ref={el => mediaRefs.current[i] = el}>
-              <img
-                src={url}
-                alt={`Media ${i + 1}`}
-                className="w-full rounded-lg"
-                loading="lazy"
-              />
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
 
   return (
-    <div className="relative flex h-full w-full flex-col">
-      <div className="sticky top-0 z-10 flex items-center border-b bg-background px-4 py-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleBack}
-        >
-          <ChevronLeftIcon className="h-5 w-5" />
-        </Button>
-        <h1 className="ml-2 text-lg font-medium">
-          {format(new Date(entry.created_at), 'PPP')}
-        </h1>
-      </div>
-      <div className="h-[calc(100vh-56px)] w-full">
-        <ScrollArea className="h-full w-full">
-          <div className="p-4">
-            <h2 className="text-xl font-semibold">{entry.title}</h2>
-            <p className="mt-4 whitespace-pre-wrap">{entry.content}</p>
-            {renderMediaContent()}
+    <div className="min-h-screen bg-white">
+      <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              // Navigate back with state to restore scroll position
+              navigate('/', { 
+                state: { 
+                  shouldRestoreScroll: true,
+                  lastViewedEntryId: id
+                } 
+              });
+            }}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="icon">
+              <Share className="h-5 w-5" />
+            </Button>
+            <DeleteEntryButton id={entry.id} />
           </div>
-        </ScrollArea>
+        </div>
+      </div>
+      <div className="p-4">
+        <h1 className="text-2xl font-semibold mb-1">{entry.title}</h1>
+        <p className="text-sm text-gray-500 mb-6">{formatDate(new Date())}</p>
+        <div
+          className="prose max-w-none"
+          dangerouslySetInnerHTML={{ __html: entry.content }}
+        />
       </div>
     </div>
   );

@@ -135,7 +135,9 @@ export default function EntryView() {
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <h1 className="text-lg font-semibold">Entry</h1>
+          <h1 className="text-lg font-semibold truncate max-w-[75%]">
+            {entry.title || "Untitled Entry"}
+          </h1>
         </div>
       </div>
 

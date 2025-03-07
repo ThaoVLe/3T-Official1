@@ -101,7 +101,7 @@ export default function EntryView() {
                 localStorage.setItem('homeScrollPosition', container.scrollTop.toString());
               }
               // Save the current entry ID to find it later
-              localStorage.setItem('lastViewedEntryId', params.id || '');
+              localStorage.setItem('lastViewedEntryId', id || '');
               navigate('/');
             }}
             className="mr-2"

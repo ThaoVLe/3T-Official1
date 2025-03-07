@@ -18,27 +18,38 @@ export default function Home() {
 
   useEffect(() => {
     // Only try to restore scroll if we have entries and haven't restored yet
-    if (entries && !scrollRestoredRef.current && selectedEntryId) {
+    if (entries && !scrollRestoredRef.current) {
       const savedScrollPosition = localStorage.getItem('homeScrollPosition');
-      const entryElement = containerRef.current?.querySelector(`#entry-${selectedEntryId}`);
+      const lastViewedEntryId = localStorage.getItem('lastViewedEntryId');
+      const entryElement = lastViewedEntryId 
+        ? document.querySelector(`#entry-${lastViewedEntryId}`)
+        : null;
 
-      if (savedScrollPosition && containerRef.current && entryElement) {
+      if (savedScrollPosition && containerRef.current) {
         // Use requestAnimationFrame to ensure DOM is ready
         requestAnimationFrame(() => {
-          if (containerRef.current) {
+          if (containerRef.current && entryElement) {
+            // Get the entry's position relative to the viewport
+            const entryRect = entryElement.getBoundingClientRect();
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const relativeTop = entryRect.top - containerRect.top;
+
+            // Scroll to the entry's position
             containerRef.current.scrollTo({
-              top: entryElement.getBoundingClientRect().top + containerRef.current.scrollTop,
-              behavior: 'smooth' // Use smooth scrolling for better UX
+              top: parseInt(savedScrollPosition),
+              behavior: 'instant'
             });
-            // Mark as restored and clear the saved position
+
+            // Mark as restored and clear saved data
             scrollRestoredRef.current = true;
             localStorage.removeItem('homeScrollPosition');
-            setSelectedEntryId(null); // Clear selectedEntryId after scrolling
+            localStorage.removeItem('lastViewedEntryId');
+            setSelectedEntryId(null);
           }
         });
       }
     }
-  }, [entries, selectedEntryId]); // Run when entries are loaded
+  }, [entries]); // Run when entries are loaded
 
   // Reset the restoration flag when unmounting
   useEffect(() => {

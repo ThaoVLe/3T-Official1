@@ -13,7 +13,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f0f2f5] overflow-auto mobile-scroll" style={{
+      <div className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll" style={{
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'none',
         msOverflowStyle: 'none',
@@ -54,7 +54,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] overflow-auto mobile-scroll diary-content" style={{
+    <div className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll" style={{
       WebkitOverflowScrolling: 'touch',
       overscrollBehavior: 'none',
       msOverflowStyle: 'none',

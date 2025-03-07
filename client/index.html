@@ -3,20 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script>
-      // Check for dark mode preference on page load
-      (function() {
-        const darkModePreference = localStorage.getItem('darkMode');
-        if (darkModePreference === 'true') {
-          document.documentElement.classList.add('dark');
-          document.documentElement.style.colorScheme = 'dark';
-        } else if (darkModePreference === null && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          // If user hasn't set preference but browser/OS is set to dark mode
-          document.documentElement.classList.add('dark');
-          document.documentElement.style.colorScheme = 'dark';
-        }
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>

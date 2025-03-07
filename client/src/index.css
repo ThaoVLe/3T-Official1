@@ -86,19 +86,6 @@
   @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
 }
 
-/* Dark mode specific adjustments */
-.dark {
-  color-scheme: dark;
-}
-
-.dark .card {
-  @apply bg-card border-border;
-}
-
-.dark .ProseMirror {
-  @apply bg-card border-border;
-}
-
 /* Typography */
 .heading-1 { @apply text-[24px] font-bold tracking-tight text-foreground mb-4; }
 .heading-2 { @apply text-[18px] font-semibold text-foreground mb-3; }

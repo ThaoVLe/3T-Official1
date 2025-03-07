@@ -96,26 +96,26 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   };
 
   const editorRef = useRef<HTMLDivElement>(null);
-  const contentHeight = useRef<number>(200); // Initial minimum height
 
   useEffect(() => {
     if (!editor || !editorRef.current) return;
 
-    // Function to adjust editor height based on content
     const adjustHeight = () => {
       if (!editorRef.current) return;
 
-      // Reset height first to get proper scrollHeight
-      editorRef.current.style.height = 'auto';
+      const proseMirror = editorRef.current.querySelector('.ProseMirror');
+      if (!proseMirror) return;
 
-      // Get the actual content height
-      const scrollHeight = editorRef.current.querySelector('.ProseMirror')?.scrollHeight || 200;
+      // Reset the height temporarily to get the proper scrollHeight
+      proseMirror.style.height = 'auto';
+      const scrollHeight = proseMirror.scrollHeight;
 
-      // Only grow, never shrink below the minimum or current height
-      contentHeight.current = Math.max(contentHeight.current, scrollHeight);
+      // Set a minimum height (200px) but allow growing beyond that
+      const minHeight = 200;
+      const newHeight = Math.max(minHeight, scrollHeight);
 
-      // Set the height
-      editorRef.current.style.height = `${contentHeight.current}px`;
+      // Apply the new height
+      proseMirror.style.height = `${newHeight}px`;
     };
 
     // Setup mutation observer for content changes
@@ -131,9 +131,17 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
       // Initial adjustment
       adjustHeight();
+
+      // Also adjust on window resize and editor update
+      window.addEventListener('resize', adjustHeight);
+      editor.on('update', adjustHeight);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', adjustHeight);
+      editor.off('update', adjustHeight);
+    };
   }, [editor]);
 
 

@@ -270,6 +270,10 @@
   }
 
   /* Added styles from edited snippet */
+  .entry-editor {
+    @apply flex flex-col h-screen bg-white;
+  }
+
   .entry-editor-header {
     @apply sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b;
   }
@@ -286,29 +290,32 @@
     @apply text-sm text-muted-foreground/80 font-medium;
   }
 
-  .mood-selector-pill {
-    @apply flex items-center gap-2 bg-muted/30 rounded-full px-3 py-1.5 transition-colors hover:bg-muted/40;
+  .mood-location-pill {
+    @apply flex items-center gap-1 bg-muted/30 rounded-full px-3 py-1.5 transition-colors hover:bg-muted/40;
   }
 
   .entry-content-area {
-    @apply w-full min-h-[200px] p-4 rounded-lg border-0 focus:ring-0 resize-none focus:outline-none text-base leading-relaxed transition-all;
+    @apply w-full min-h-[200px] p-4 text-base leading-relaxed border-0 focus:ring-0 resize-none focus:outline-none transition-all;
   }
 
   .entry-content-area::placeholder {
     @apply text-muted-foreground/60;
   }
 
-  /* Add smooth transitions */
+  /* Bottom action bar */
+  .entry-action-bar {
+    @apply border-t bg-white flex-none px-4 py-3;
+  }
+
+  .entry-action-button {
+    @apply flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-muted/10 transition-colors;
+  }
   .entry-transition {
     @apply transition-all duration-200 ease-in-out;
   }
-
-  /* Facebook-like hover effects */
   .social-hover {
     @apply hover:bg-muted/10 transition-colors duration-150;
   }
-
-  /* Mobile-friendly touch targets */
   .touch-target {
     @apply min-h-[44px] min-w-[44px];
   }

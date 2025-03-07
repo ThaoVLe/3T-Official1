@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
-import { formatTimeAgo } from "@/utils/date";
 
 interface MediaPreviewProps {
   urls: string[];
@@ -22,7 +21,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
   // Generate random key frames for each video
   useEffect(() => {
     mediaUrls.forEach((url, index) => {
-      if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i)) {
+      if (url.match(/\.(mp4|webm|mov|MOV)$/i)) {
         // Generate 3 random frames between 0 and 10 seconds for each video
         const randomFrames = Array(3).fill(0).map(() => Math.random() * 10);
         setVideoKeyFrames(prev => ({
@@ -36,7 +35,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
   // Load video thumbnails and prepare to show key frames
   useEffect(() => {
     mediaUrls.forEach((url, index) => {
-      if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) && videoRefs.current[index]) {
+      if (url.match(/\.(mp4|webm|mov|MOV)$/i) && videoRefs.current[index]) {
         const video = videoRefs.current[index];
 
         // Listen for metadata to load before seeking
@@ -52,7 +51,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
     });
   }, [mediaUrls, videoKeyFrames]);
 
-  // Rotate through the random key frames every 2 seconds
+  // Rotate through the random key frames every second
   useEffect(() => {
     // Only proceed if we have videos with key frames
     if (Object.keys(videoKeyFrames).length === 0) return;
@@ -74,7 +73,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
         });
         return newIndices;
       });
-    }, 2000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [videoKeyFrames]);
@@ -97,7 +96,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
           return null;
         }
 
-        const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
+        const isVideo = url.match(/\.(mp4|webm|mov|MOV)$/i);
         const isLastItem = index === mediaUrls.length - 1;
         const isUploading = loading && isLastItem;
 
@@ -126,15 +125,14 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
                   className="w-full h-full object-cover"
                   muted
                   playsInline
-                  preload="auto"
-                  crossOrigin="anonymous"
-                  poster={isUploading ? undefined : url + '#t=0.1'} // Add a poster as fallback
+                  preload="metadata"
                 />
               ) : (
                 <img
                   src={url}
                   alt={`Media ${index + 1}`}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               )}
 

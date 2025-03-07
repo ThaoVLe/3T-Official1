@@ -293,7 +293,7 @@ export default function Editor() {
 
           {/* Media Preview moved here */}
           {form.watch("mediaUrls")?.length > 0 && (
-            <div className="p-4 pb-[30px]"> {/* Added padding */}
+            <div className="p-4 pb-[50px]"> {/* Increased padding to 50px */}
               <MediaPreview
                 urls={form.watch("mediaUrls")}
                 onRemove={onMediaRemove}

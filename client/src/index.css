@@ -169,3 +169,32 @@
     margin: 0 -1rem;
   }
 }
+/* Fix for mobile editor issues */
+.mobile-editor-fix {
+  position: relative;
+  z-index: 10;
+}
+
+.mobile-editor-fix .ProseMirror {
+  min-height: 200px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.mobile-editor-fix .ProseMirror::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+/* Add extra space below the editor to prevent overlap on mobile */
+@media (max-width: 768px) {
+  .mobile-editor-fix {
+    padding-bottom: 50px;
+  }
+  
+  /* Ensure the editor stays visible when focused */
+  .mobile-editor-fix .ProseMirror:focus {
+    position: relative;
+    z-index: 50;
+  }
+}

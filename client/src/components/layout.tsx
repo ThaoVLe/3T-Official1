@@ -14,9 +14,10 @@ import {
 
 interface LayoutProps {
   children: React.ReactNode;
+  hideBottomNav?: boolean;
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, hideBottomNav }: LayoutProps) {
   // Check if the screen is small (mobile)
   const [isMobile, setIsMobile] = React.useState(false);
   const [location] = useLocation();
@@ -34,8 +35,8 @@ export function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Only show bottom navigation on home page
-  const showBottomNav = isMobile && location === '/';
+  // Only show bottom navigation on home page and when not explicitly hidden
+  const showBottomNav = isMobile && location === '/' && !hideBottomNav;
 
   return isMobile ? (
     // Mobile layout with conditional bottom navigation

@@ -85,7 +85,7 @@ export function Comments({ entryId, onCommentCountChange }: CommentsProps) {
       </div>
 
       {/* Add comment form */}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
+      <form onSubmit={handleSubmit} className="fixed bottom-0 left-0 right-0 bg-background border-t p-2 flex items-center gap-2">
         <Input
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}

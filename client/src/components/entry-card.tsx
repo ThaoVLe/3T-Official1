@@ -267,7 +267,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
         </div>
 
         {showComments && (
-          <div className="mt-4">
+          <div className="mt-4 pb-20">
             <Comments 
               entryId={entry.id} 
               onCommentCountChange={setCommentCount}

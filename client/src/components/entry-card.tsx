@@ -222,6 +222,21 @@ export default function EntryCard({ entry }: EntryCardProps) {
             )}
           </div>
         )}
+        
+        {/* Edit button at the bottom of the card */}
+        <div className="px-4 pb-3 pt-1 flex justify-end">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click event from firing
+              navigate(`/editor/${entry.id}`);
+            }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Edit
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

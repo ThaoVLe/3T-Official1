@@ -2,7 +2,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
-import { ArrowLeft, MessageCircle, Share, Edit2, Trash2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, Share, Edit2, Trash2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -250,7 +250,7 @@ export default function EntryView() {
                       return (
                         <motion.div 
                           key={index} 
-                          className="rounded-lg overflow-hidden border"
+                          className="rounded-lg overflow-hidden border relative"
                           ref={el => mediaRefs.current[index] = el}
                           variants={mediaPreviewVariants}
                           initial="initial"
@@ -259,12 +259,25 @@ export default function EntryView() {
                           transition={{ delay: index * 0.1 }}
                         >
                           {isVideo ? (
-                            <video
-                              src={url}
-                              controls
-                              playsInline
-                              className="w-full aspect-video object-cover rounded-lg"
-                            />
+                            <div className="relative w-full">
+                              <video
+                                src={url}
+                                controls
+                                playsInline
+                                preload="metadata"
+                                poster={url + '#t=0.5'}
+                                className="w-full aspect-video object-cover rounded-lg"
+                                onLoadStart={(e) => {
+                                  const video = e.target as HTMLVideoElement;
+                                  video.currentTime = 0.5; // Set to 0.5 seconds for thumbnail
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+                                <div className="rounded-full bg-white/30 p-3">
+                                  <Play className="h-6 w-6 text-white" />
+                                </div>
+                              </div>
+                            </div>
                           ) : (
                             <img
                               src={url}

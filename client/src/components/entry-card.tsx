@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share, MessageCircle } from "lucide-react";
+import { Edit2, Trash2, Share, MessageCircle, Play } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -145,15 +145,25 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
           <div className="mt-3 -mx-4">
             {entry.mediaUrls[0] && (
               <div 
-                className="aspect-[16/9] w-full cursor-pointer overflow-hidden"
+                className="aspect-[16/9] w-full cursor-pointer overflow-hidden relative"
                 onClick={() => handleMediaClick(0)}
               >
                 {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
-                  <video
-                    src={entry.mediaUrls[0]}
-                    className="w-full h-full object-cover"
-                    playsInline
-                  />
+                  <div className="relative w-full h-full">
+                    <video
+                      src={entry.mediaUrls[0]}
+                      className="w-full h-full object-cover"
+                      playsInline
+                      preload="metadata"
+                      muted
+                      poster={entry.mediaUrls[0] + '#t=0.5'} // Get frame at 0.5 seconds as poster
+                    />
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                      <div className="rounded-full bg-white/30 p-3">
+                        <Play className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <img
                     src={entry.mediaUrls[0]}
@@ -179,11 +189,21 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                       onClick={() => handleMediaClick(mediaIndex)}
                     >
                       {isVideo ? (
-                        <video
-                          src={url}
-                          className="w-full h-full object-cover"
-                          playsInline
-                        />
+                        <div className="relative w-full h-full">
+                          <video
+                            src={url}
+                            className="w-full h-full object-cover"
+                            playsInline
+                            preload="metadata"
+                            muted
+                            poster={url + '#t=0.5'}
+                          />
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                            <div className="rounded-full bg-white/30 p-3">
+                              <Play className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                        </div>
                       ) : (
                         <img
                           src={url}

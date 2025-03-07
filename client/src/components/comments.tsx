@@ -19,6 +19,7 @@ export function Comments({ entryId, onCommentCountChange }: CommentsProps) {
 
   const { data: comments = [] } = useQuery<Comment[]>({
     queryKey: [`/api/entries/${entryId}/comments`],
+    enabled: !!entryId,
     onSuccess: (data) => {
       if (onCommentCountChange) {
         onCommentCountChange(data.length);

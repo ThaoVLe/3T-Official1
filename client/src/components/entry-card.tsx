@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit2, Trash2, Share, MessageCircle } from "lucide-react";
@@ -7,7 +7,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -17,16 +17,12 @@ interface EntryCardProps {
 export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [commentCount, setCommentCount] = useState(0);
   const [, navigate] = useLocation();
 
   // Fetch comment count
   const { data: comments = [] } = useQuery({
     queryKey: [`/api/entries/${entry.id}/comments`],
-    queryFn: () => apiRequest("GET", `/api/entries/${entry.id}/comments`),
-    onSuccess: (data) => {
-      setCommentCount(data.length);
-    }
+    enabled: !!entry.id,
   });
 
   const deleteMutation = useMutation({
@@ -173,7 +169,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
               <div className="grid grid-cols-2 gap-[1px] mt-[1px]">
                 {entry.mediaUrls.slice(1, 3).map((url, i) => {
                   const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                  const isLastVisible = i === 1 && entry.mediaUrls?.length > 3;
+                  const isLastVisible = i === 1 && entry.mediaUrls && entry.mediaUrls.length > 3;
                   const mediaIndex = i + 1;
 
                   return (
@@ -228,10 +224,11 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             className="text-muted-foreground hover:text-foreground flex items-center gap-2"
           >
             <MessageCircle className="h-4 w-4" />
-            {commentCount > 0 && (
-              <span className="font-medium">{commentCount} Comments</span>
+            {comments.length > 0 ? (
+              <span className="font-medium">{comments.length} Comments</span>
+            ) : (
+              <span>Comments</span>
             )}
-            {!commentCount && <span>Comments</span>}
           </Button>
 
           <div className="flex gap-1">
@@ -258,11 +255,14 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             >
               <Share className="h-4 w-4"/>
             </Button>
-            <Link href={`/edit/${entry.id}`}>
-              <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-muted">
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </Link>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => navigate(`/edit/${entry.id}`)}
+              className="h-8 w-8 hover:bg-muted"
+            >
+              <Edit2 className="h-4 w-4" />
+            </Button>
             <Button
               size="icon"
               variant="ghost"

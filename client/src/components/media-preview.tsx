@@ -119,7 +119,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
               className="w-full h-full overflow-hidden cursor-pointer"
               onClick={() => setSelectedIndex(index)}
             >
-              {isVideo && (
+              {isVideo ? (
                 <video
                   ref={el => el && (videoRefs.current[index] = el)}
                   src={url}
@@ -130,8 +130,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
                   crossOrigin="anonymous"
                   poster={isUploading ? undefined : url + '#t=0.1'} // Add a poster as fallback
                 />
-              )}
-              {!isVideo && (
+              ) : (
                 <img
                   src={url}
                   alt={`Media ${index + 1}`}

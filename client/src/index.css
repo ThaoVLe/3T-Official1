@@ -268,6 +268,50 @@
       margin: 0 -1rem;
     }
   }
+
+  /* Added styles from edited snippet */
+  .entry-editor-header {
+    @apply sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b;
+  }
+
+  .entry-editor-input {
+    @apply text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full transition-colors;
+  }
+
+  .entry-editor-input::placeholder {
+    @apply text-muted-foreground/60;
+  }
+
+  .entry-editor-timestamp {
+    @apply text-sm text-muted-foreground/80 font-medium;
+  }
+
+  .mood-selector-pill {
+    @apply flex items-center gap-2 bg-muted/30 rounded-full px-3 py-1.5 transition-colors hover:bg-muted/40;
+  }
+
+  .entry-content-area {
+    @apply w-full min-h-[200px] p-4 rounded-lg border-0 focus:ring-0 resize-none focus:outline-none text-base leading-relaxed transition-all;
+  }
+
+  .entry-content-area::placeholder {
+    @apply text-muted-foreground/60;
+  }
+
+  /* Add smooth transitions */
+  .entry-transition {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  /* Facebook-like hover effects */
+  .social-hover {
+    @apply hover:bg-muted/10 transition-colors duration-150;
+  }
+
+  /* Mobile-friendly touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
 }
 
 @layer utilities {

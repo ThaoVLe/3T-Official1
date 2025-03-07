@@ -28,11 +28,16 @@ export default function EntryView() {
       setShowComments(true);
       // Scroll to comments section after a short delay to ensure content is loaded
       setTimeout(() => {
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: 'instant' // Changed from smooth to instant for immediate scroll
-        });
-      }, 100);
+        const commentsSection = document.getElementById('comments-section');
+        if (commentsSection) {
+          commentsSection.scrollIntoView({ behavior: 'instant', block: 'start' });
+        } else {
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'instant'
+          });
+        }
+      }, 300); // Increased timeout to ensure DOM is fully loaded
     }
   }, []);
 

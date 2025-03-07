@@ -4,7 +4,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -61,7 +61,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal'
+        class: 'focus:outline-none prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal min-h-[200px] px-4'
       }
     }
   });
@@ -71,6 +71,38 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       editor.commands.setContent(value || '', false);
     }
   }, [editor, value]);
+
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!editor || !editorRef.current) return;
+
+    const container = editorRef.current;
+    const proseMirror = container.querySelector('.ProseMirror');
+    if (!proseMirror) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (proseMirror instanceof HTMLElement) {
+        const newHeight = proseMirror.scrollHeight;
+        proseMirror.style.height = 'auto'; // Reset height first
+        proseMirror.style.height = `${Math.max(200, newHeight)}px`;
+
+        // Update container height if needed
+        container.style.height = `${Math.max(200, newHeight)}px`;
+      }
+    });
+
+    resizeObserver.observe(proseMirror);
+
+    // Initial height adjustment
+    if (proseMirror instanceof HTMLElement) {
+      proseMirror.style.height = `${Math.max(200, proseMirror.scrollHeight)}px`;
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [editor]);
 
   if (!editor) {
     return null;
@@ -84,7 +116,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col tiptap-container">
       {/* Toolbar - Fixed at top */}
       <div className="flex-none flex flex-wrap items-center gap-1 p-2 bg-white border-b">
         <Button
@@ -211,11 +243,12 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
         </Popover>
       </div>
 
-      {/* Editor Content */}
+      {/* Editor Content - Auto-expanding */}
       <div className="flex-1 overflow-y-auto">
         <EditorContent 
+          ref={editorRef}
           editor={editor} 
-          className="h-full"
+          className="min-h-full tiptap-container"
         />
       </div>
     </div>

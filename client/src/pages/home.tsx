@@ -1,107 +1,97 @@
-import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
-import EntryCard from "@/components/entry-card";
-import type { DiaryEntry } from "@shared/schema";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { PlusIcon } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useEntries } from '@/hooks/useEntries';
+import EntryCard from '@/components/entry-card';
 
-export default function Home() {
-  const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
-    queryKey: ["/api/entries"],
-  });
+export function Home() {
+  const { isLoading, entries } = useEntries();
+  const location = useLocation();
 
+  // Create references
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollRestoredRef = useRef(false);
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  
-  // Store scroll position when component is unmounted or before navigation
-  useEffect(() => {
-    const storeScrollPosition = () => {
-      const container = document.querySelector('.diary-content');
-      if (container) {
-        // Use sessionStorage instead of localStorage for better session handling
-        sessionStorage.setItem('homeScrollPosition', String(container.scrollTop));
-        console.log('Stored scroll position before unload:', container.scrollTop);
-      }
-    };
-    
-    // Add event listener for page visibility change and beforeunload
-    window.addEventListener('visibilitychange', storeScrollPosition);
-    window.addEventListener('beforeunload', storeScrollPosition);
-    
-    return () => {
-      storeScrollPosition(); // Store position when component unmounts
-      window.removeEventListener('visibilitychange', storeScrollPosition);
-      window.removeEventListener('beforeunload', storeScrollPosition);
-    };
-  }, []);
-  
-  // Handle scroll restoration
-  useEffect(() => {
-    if (!entries || entries.length === 0 || scrollRestoredRef.current) return;
-    
-    const restoreScroll = () => {
-      const savedPosition = sessionStorage.getItem('homeScrollPosition');
-      const lastViewedEntryId = sessionStorage.getItem('lastViewedEntryId');
-      const container = document.querySelector('.diary-content');
-      
-      if (savedPosition && container) {
-        const position = parseInt(savedPosition, 10);
-        console.log('Attempting to restore scroll to position:', position);
-        
-        // Force reflow to ensure DOM is ready
-        container.scrollTop = 0;
-        setTimeout(() => {
-          container.scrollTop = position;
-          console.log('Scroll position restored to:', position);
-          
-          // If we have a specific entry ID, ensure it's visible
-          if (lastViewedEntryId) {
-            const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
-            if (entryElement) {
-              console.log('Found and scrolled to entry:', lastViewedEntryId);
-            }
-          }
-          
-          // Mark as restored
-          scrollRestoredRef.current = true;
-        }, 150);
-      }
-    };
-    
-    // Try multiple times with increasing delays to ensure DOM is ready
-    restoreScroll();
-    const t1 = setTimeout(restoreScroll, 100);
-    const t2 = setTimeout(restoreScroll, 300);
-    const t3 = setTimeout(restoreScroll, 600);
-    
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
-  }, [entries]); // Run when entries are loaded
+  const scrollPositionRef = useRef<number>(0);
+  const lastViewedEntryIdRef = useRef<string | null>(null);
+  const hasRestoredRef = useRef(false);
 
-  // Reset the restoration flag when unmounting
+  // Save scroll position when navigating away
   useEffect(() => {
+    const saveScrollPosition = () => {
+      if (containerRef.current) {
+        scrollPositionRef.current = containerRef.current.scrollTop;
+        console.log('Saved scroll position:', scrollPositionRef.current);
+      }
+    };
+
+    // Save scroll position before unmounting
     return () => {
-      scrollRestoredRef.current = false;
+      saveScrollPosition();
     };
   }, []);
+
+  // Try to restore scroll position when returning or when entries load
+  useEffect(() => {
+    if (!entries || entries.length === 0 || hasRestoredRef.current) return;
+
+    // Get the last viewed entry ID from URL state or sessionStorage
+    lastViewedEntryIdRef.current = location.state?.lastViewedEntryId || 
+                                 sessionStorage.getItem('lastViewedEntryId');
+
+    // Check if we need to restore scroll
+    const needsRestore = location.state?.shouldRestoreScroll || 
+                        sessionStorage.getItem('shouldRestoreScroll') === 'true';
+
+    if (needsRestore && !hasRestoredRef.current) {
+      // Try multiple times with increasing delays to ensure DOM is ready
+      const attemptRestore = (delay: number) => {
+        setTimeout(() => {
+          if (containerRef.current) {
+            const savedPosition = location.state?.scrollPosition || 
+                                scrollPositionRef.current ||
+                                parseInt(sessionStorage.getItem('scrollPosition') || '0');
+
+            console.log('Attempting to restore scroll to:', savedPosition);
+
+            // Force a reflow first
+            containerRef.current.scrollTop = 0;
+
+            // Then set to saved position
+            containerRef.current.scrollTop = savedPosition;
+
+            // If we have a specific entry to scroll to
+            if (lastViewedEntryIdRef.current) {
+              const targetEntry = document.getElementById(`entry-${lastViewedEntryIdRef.current}`);
+              if (targetEntry) {
+                targetEntry.scrollIntoView({ behavior: 'auto', block: 'start' });
+                console.log('Scrolled to entry:', lastViewedEntryIdRef.current);
+              }
+            }
+
+            hasRestoredRef.current = true;
+            sessionStorage.removeItem('shouldRestoreScroll');
+            sessionStorage.removeItem('lastViewedEntryId');
+          }
+        }, delay);
+      };
+
+      // Try multiple times with increasing delays
+      attemptRestore(50);
+      attemptRestore(150);
+      attemptRestore(300);
+      attemptRestore(600);
+    }
+  }, [entries, location]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll" style={{
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'none',
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-        touchAction: 'pan-y pinch-zoom',
-        WebkitTapHighlightColor: 'transparent',
-        WebkitUserSelect: 'none',
-      }}>
+      <div className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content" 
+           style={{
+             WebkitOverflowScrolling: 'touch',
+             overscrollBehavior: 'none',
+             touchAction: 'pan-y pinch-zoom',
+           }}>
         <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
           <Skeleton className="h-10 w-48" />
         </div>
@@ -114,71 +104,44 @@ export default function Home() {
     );
   }
 
-  if (!entries?.length) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          Welcome to Your Diary
-        </h1>
-        <p className="text-muted-foreground mb-8 max-w-md">
-          Start capturing your memories with text, photos, videos, and audio recordings.
-        </p>
-        <Link href="/new">
-          <Button size="lg" className="flex gap-2">
-            <PlusCircle className="w-5 h-5" />
-            Create Your First Entry
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content mobile-scroll"
+      className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content"
       style={{
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'none',
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-        touchAction: 'pan-y pinch-zoom',
-        WebkitTapHighlightColor: 'transparent',
-        WebkitUserSelect: 'none',
-      }}
-    >
-      <div className="sticky top-0 z-10 bg-white border-b">
-        <div className="flex justify-between items-center px-4 py-3">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            My Diary
-          </h1>
-          <Link href="/new">
-            <Button className="flex gap-2">
-              <PlusCircle className="w-4 h-4" />
-              New Entry
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      <div className="space-y-2 mobile-scroll" style={{
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'none',
         touchAction: 'pan-y pinch-zoom',
       }}>
-        {entries.map((entry) => (
-          <div 
-            key={entry.id} 
-            id={`entry-${entry.id}`} 
-            className="bg-white"
-            data-entry-id={entry.id}
-          >
-            <EntryCard 
-              entry={entry} 
-              setSelectedEntryId={setSelectedEntryId} 
-            />
-          </div>
-        ))}
+      <div className="relative">
+        <div className="sticky top-0 z-10 bg-white border-b px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-semibold">Daily Journal</h1>
+          <Link to="/new">
+            <Button variant="outline" size="icon">
+              <PlusIcon className="h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
+        <div className="p-4 space-y-2 pb-24">
+          {entries.map((entry) => (
+            <div key={entry.id} id={`entry-${entry.id}`} data-entry-id={entry.id}>
+              <EntryCard
+                entry={entry}
+                onEntryClick={() => {
+                  // Save the current scroll position for when we return
+                  if (containerRef.current) {
+                    const currentPosition = containerRef.current.scrollTop;
+                    console.log('Saving scroll position before navigation:', currentPosition);
+                    scrollPositionRef.current = currentPosition;
+                    sessionStorage.setItem('scrollPosition', currentPosition.toString());
+                    sessionStorage.setItem('lastViewedEntryId', entry.id);
+                    sessionStorage.setItem('shouldRestoreScroll', 'true');
+                  }
+                }}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

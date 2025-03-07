@@ -13,21 +13,35 @@ export default function Home() {
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRestoredRef = useRef(false);
 
   useEffect(() => {
-    // Restore scroll position if it exists
-    const savedScrollPosition = localStorage.getItem('homeScrollPosition');
-    if (savedScrollPosition && containerRef.current) {
-      setTimeout(() => {
-        containerRef.current?.scrollTo({
-          top: parseInt(savedScrollPosition),
-          behavior: 'instant'
+    // Only try to restore scroll if we have entries and haven't restored yet
+    if (entries && !scrollRestoredRef.current) {
+      const savedScrollPosition = localStorage.getItem('homeScrollPosition');
+      if (savedScrollPosition && containerRef.current) {
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTo({
+              top: parseInt(savedScrollPosition),
+              behavior: 'instant'
+            });
+            // Mark as restored and clear the saved position
+            scrollRestoredRef.current = true;
+            localStorage.removeItem('homeScrollPosition');
+          }
         });
-      }, 100);
-      // Clear the saved position after restoring
-      localStorage.removeItem('homeScrollPosition');
+      }
     }
   }, [entries]); // Run when entries are loaded
+
+  // Reset the restoration flag when unmounting
+  useEffect(() => {
+    return () => {
+      scrollRestoredRef.current = false;
+    };
+  }, []);
 
   if (isLoading) {
     return (

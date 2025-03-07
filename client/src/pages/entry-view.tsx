@@ -19,16 +19,26 @@ export default function EntryView() {
 
   useEffect(() => {
     let touchStartX = 0;
+    let touchStartTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
+      touchStartTime = Date.now();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       const touchEndX = e.changedTouches[0].clientX;
+      const touchEndTime = Date.now();
       const swipeDistance = touchEndX - touchStartX;
+      const swipeTime = touchEndTime - touchStartTime;
 
-      if (swipeDistance > 100) {
+      // Only trigger for quick swipes (less than 300ms) and sufficient distance
+      if (swipeDistance > 100 && swipeTime < 300) {
+        // Save scroll position before navigation
+        const container = document.querySelector('.diary-content');
+        if (container) {
+          localStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+        }
         navigate('/');
       }
     };
@@ -82,7 +92,14 @@ export default function EntryView() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/')}
+            onClick={() => {
+              // Save scroll position before navigation
+              const container = document.querySelector('.diary-content');
+              if (container) {
+                localStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+              }
+              navigate('/');
+            }}
             className="mr-2"
           >
             <ArrowLeft className="h-6 w-6" />
@@ -100,7 +117,7 @@ export default function EntryView() {
           scrollbarWidth: 'none',
           touchAction: 'pan-y pinch-zoom',
         }}>
-          <div className="space-y-4">
+          <div className="space-y-4 diary-content"> {/* Added diary-content class here */}
             <h1 className="text-[24px] font-semibold">
               {entry.title || "Untitled Entry"}
             </h1>

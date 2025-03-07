@@ -31,6 +31,7 @@
     @apply bg-background text-foreground antialiased;
     touch-action: pan-y pinch-zoom;
     -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
   }
 
   /* Additional mobile-optimized scrolling */
@@ -47,12 +48,51 @@
   @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
-.editor-page {
-  @apply w-full h-full py-6 min-h-[calc(100vh-64px)] flex flex-col bg-background;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
+.container-page::-webkit-scrollbar,
+.container-page *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* Force hide scrollbars everywhere with !important */
+.scrollarea-viewport::-webkit-scrollbar,
+.ProseMirror::-webkit-scrollbar,
+.tiptap-container::-webkit-scrollbar,
+*[class*="scroll"]::-webkit-scrollbar,
+.diary-content::-webkit-scrollbar,
+div::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  -webkit-appearance: none !important;
+}
+
+.scrollarea-viewport,
+.ProseMirror,
+.tiptap-container,
+*[class*="scroll"],
+.diary-content,
+div {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Ensure smooth mobile scrolling */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: none !important;
+  touch-action: pan-y pinch-zoom !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
 }
 
 /* TipTap editor styles */
@@ -70,6 +110,19 @@
   @apply flex flex-col;
   transition: height 0.2s ease;
   overflow: hidden;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 640px) {
+  .card {
+    @apply border-0 shadow-sm rounded-lg;
+    margin-bottom: 0.75rem;
+    background-color: white;
+  }
+
+  .media-grid {
+    margin: 0 -1rem;
+  }
 }
 
 /* Custom styles */
@@ -155,17 +208,4 @@
 .media-modal-content img,
 .media-modal-content video {
   @apply max-w-full max-h-[90vh] object-contain;
-}
-
-/* Mobile-specific styles */
-@media (max-width: 640px) {
-  .card {
-    @apply border-0 shadow-sm rounded-lg;
-    margin-bottom: 0.75rem;
-    background-color: white;
-  }
-
-  .media-grid {
-    margin: 0 -1rem;
-  }
 }

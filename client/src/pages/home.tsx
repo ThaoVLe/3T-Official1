@@ -13,11 +13,14 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f0f2f5] overflow-auto" style={{
+      <div className="min-h-screen bg-[#f0f2f5] overflow-auto mobile-scroll" style={{
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'none',
         msOverflowStyle: 'none',
         scrollbarWidth: 'none',
+        touchAction: 'pan-y pinch-zoom',
+        WebkitTapHighlightColor: 'transparent',
+        WebkitUserSelect: 'none',
       }}>
         <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
           <Skeleton className="h-10 w-48" />
@@ -51,13 +54,14 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] overflow-auto" style={{
+    <div className="min-h-screen bg-[#f0f2f5] overflow-auto mobile-scroll diary-content" style={{
       WebkitOverflowScrolling: 'touch',
       overscrollBehavior: 'none',
       msOverflowStyle: 'none',
       scrollbarWidth: 'none',
       touchAction: 'pan-y pinch-zoom',
       WebkitTapHighlightColor: 'transparent',
+      WebkitUserSelect: 'none',
     }}>
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="flex justify-between items-center px-4 py-3">
@@ -73,7 +77,11 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 mobile-scroll" style={{
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'none',
+        touchAction: 'pan-y pinch-zoom',
+      }}>
         {entries.map((entry) => (
           <div key={entry.id} className="bg-white">
             <EntryCard entry={entry} />

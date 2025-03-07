@@ -30,7 +30,7 @@ export default function EntryView() {
       setTimeout(() => {
         window.scrollTo({
           top: document.body.scrollHeight,
-          behavior: 'smooth'
+          behavior: 'instant' // Changed from smooth to instant for immediate scroll
         });
       }, 100);
     }

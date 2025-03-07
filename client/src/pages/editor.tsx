@@ -87,39 +87,22 @@ export default function Editor() {
     form.setValue("mediaUrls", tempUrls);
 
     try {
-      const uploadPromise = new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        const formData = new FormData();
-        formData.append("file", file);
+      const formData = new FormData();
+      formData.append("file", file);
 
-        xhr.upload.addEventListener("progress", (e) => {
-          if (e.lengthComputable) {
-            const progress = Math.round((e.loaded * 100) / e.total);
-            setUploadProgress(progress);
-          }
-        });
-
-        xhr.addEventListener("load", () => {
-          if (xhr.status === 200) {
-            const { url } = JSON.parse(xhr.responseText);
-            const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
-            form.setValue("mediaUrls", finalUrls);
-            setTempMediaUrls([]);
-            resolve(url);
-          } else {
-            reject(new Error("Upload failed"));
-          }
-        });
-
-        xhr.addEventListener("error", () => {
-          reject(new Error("Upload failed"));
-        });
-
-        xhr.open("POST", "/api/upload");
-        xhr.send(formData);
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
 
-      await uploadPromise;
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const { url } = await response.json();
+      const finalUrls = tempUrls.map(u => u === tempUrl ? url : u);
+      form.setValue("mediaUrls", finalUrls);
+      setTempMediaUrls([]);
 
     } catch (error) {
       console.error('Upload error:', error);
@@ -147,11 +130,9 @@ export default function Editor() {
     form.setValue("mediaUrls", newUrls);
   };
 
-  // Function to hide keyboard on mobile devices
   const hideKeyboard = useCallback(() => {
     if (!isMobile) return;
 
-    // Focus any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
@@ -169,7 +150,6 @@ export default function Editor() {
       const touchEndX = e.changedTouches[0].clientX;
       const swipeDistance = touchEndX - touchStartX;
 
-      // If swiped right more than 100px, go back
       if (swipeDistance > 100) {
         navigate('/');
       }
@@ -185,9 +165,9 @@ export default function Editor() {
   }, [navigate]);
 
   return (
-    <div className="fixed inset-0 bg-white flex flex-col">
+    <div className="fixed inset-0 flex flex-col bg-white">
       {/* Header - Fixed at top */}
-      <div className="flex-none px-4 sm:px-6 py-3 border-b bg-white z-10">
+      <div className="flex-none px-4 sm:px-6 py-3 border-b bg-white z-20">
         <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
           <Button
             variant="ghost"
@@ -218,16 +198,7 @@ export default function Editor() {
           {form.watch("feeling") && (
             <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
               <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                {form.watch("feeling")?.label.includes(',') ? (
-                  <>
-                    {form.watch("feeling")?.label.split(',')[0].trim()} {form.watch("feeling")?.emoji.split(' ')[0]}
-                    {' - '}{form.watch("feeling")?.label.split(',')[1].trim()} {form.watch("feeling")?.emoji.split(' ')[1]}
-                  </>
-                ) : (
-                  <>
-                    {form.watch("feeling")?.label} {form.watch("feeling")?.emoji}
-                  </>
-                )}
+                {form.watch("feeling")?.label} {form.watch("feeling")?.emoji}
               </div>
             </div>
           )}
@@ -235,17 +206,19 @@ export default function Editor() {
       </div>
 
       {/* Content Area - Scrollable */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6">
-          <TipTapEditor
-            value={form.watch("content")}
-            onChange={(value) => form.setValue("content", value)}
-          />
+      <div className="flex-1 relative bg-white z-10">
+        <div className="absolute inset-0 overflow-auto">
+          <div className="h-full max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6">
+            <TipTapEditor
+              value={form.watch("content")}
+              onChange={(value) => form.setValue("content", value)}
+            />
+          </div>
         </div>
       </div>
 
       {/* Footer - Fixed at bottom */}
-      <div className="flex-none border-t bg-white" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
+      <div className="flex-none border-t bg-white z-20" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
         <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 py-3 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">How are you feeling today?</span>

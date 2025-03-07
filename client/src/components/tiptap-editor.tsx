@@ -61,7 +61,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal'
+        class: 'prose prose-h1:text-[30px] prose-h1:font-bold prose-h2:text-[20px] prose-h2:font-semibold prose-p:text-base prose-p:font-normal min-h-[200px] focus:outline-none px-0',
       }
     }
   });
@@ -110,7 +110,19 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       adjustHeight();
     }
 
-    return () => observer.disconnect();
+    // Add viewport change listener for mobile keyboard
+    const handleResize = () => {
+      requestAnimationFrame(adjustHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('resize', handleResize);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('resize', handleResize);
+    };
   }, [editor]);
 
   if (!editor) {
@@ -125,8 +137,8 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Toolbar - Fixed at top */}
+    <div className="flex flex-col h-full">
+      {/* Toolbar */}
       <div className="flex-none flex flex-wrap items-center gap-1 p-2 bg-white border-b">
         <Button
           type="button"
@@ -253,11 +265,11 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       </div>
 
       {/* Editor Content */}
-      <div className="flex-1 overflow-y-auto">
-        <EditorContent 
+      <div className="flex-1 relative">
+        <EditorContent
           ref={editorRef}
-          editor={editor} 
-          className="h-full ProseMirror-focused"
+          editor={editor}
+          className="h-full py-4"
         />
       </div>
     </div>

@@ -11,7 +11,7 @@ import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
-import { Save, X } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import React, { useState, useCallback } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
@@ -165,99 +165,77 @@ export default function Editor() {
   }, [navigate]);
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-white">
-      {/* Header - Fixed at top */}
-      <div className="flex-none px-4 sm:px-6 py-3 border-b bg-white z-20">
-        <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
+    <div className="fixed inset-0 bg-white">
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 flex items-center justify-between px-4 py-2 border-b bg-white z-20">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => navigate("/")}
-            className="whitespace-nowrap"
+            className="rounded-full"
           >
-            <X className="h-4 w-4 mr-1" />
-            Cancel
+            <ArrowLeft className="h-6 w-6" />
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={form.handleSubmit((data) => mutation.mutate(data))}
-            disabled={mutation.isPending}
-            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
-          >
-            <Save className="h-4 w-4 mr-1" />
-            {id ? "Update" : "Create"}
-          </Button>
+          <h1 className="text-xl font-semibold">
+            {id ? "Edit Entry" : "Create Entry"}
+          </h1>
         </div>
-        <div className="max-w-full sm:max-w-2xl pr-24">
-          <Input
-            {...form.register("title")}
-            className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
-            placeholder="Untitled Entry..."
-          />
-          {form.watch("feeling") && (
-            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-              <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                {form.watch("feeling")?.label} {form.watch("feeling")?.emoji}
-              </div>
-            </div>
-          )}
-        </div>
+        <Button
+          onClick={form.handleSubmit((data) => mutation.mutate(data))}
+          disabled={mutation.isPending}
+          className="bg-primary font-semibold px-4"
+        >
+          {id ? "Update" : "Post"}
+        </Button>
       </div>
 
-      {/* Content Area - Scrollable */}
-      <div className="flex-1 relative bg-white z-10">
-        <div className="absolute inset-0 overflow-auto">
-          <div className="h-full max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6">
+      {/* Content Area */}
+      <div className="mt-14 mb-32 h-[calc(100vh-8.5rem)] overflow-y-auto">
+        <div className="max-w-full sm:max-w-2xl mx-auto px-4">
+          <div className="py-4">
+            <Input
+              {...form.register("title")}
+              className="text-xl font-normal border-0 px-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground"
+              placeholder="Entry title..."
+            />
+          </div>
+
+          <div className="relative">
             <TipTapEditor
               value={form.watch("content")}
               onChange={(value) => form.setValue("content", value)}
             />
           </div>
+
+          {form.watch("mediaUrls")?.length > 0 && (
+            <div className="mt-4">
+              <MediaPreview
+                urls={form.watch("mediaUrls")}
+                onRemove={onMediaRemove}
+                loading={isUploading}
+                uploadProgress={uploadProgress}
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Footer - Fixed at bottom */}
-      <div className="flex-none border-t bg-white z-20" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
-        <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 py-3 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">How are you feeling today?</span>
+      {/* Footer */}
+      <div className="fixed bottom-0 left-0 right-0 border-t bg-white z-20" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
+        <div className="max-w-full sm:max-w-2xl mx-auto px-4">
+          <div className="py-2 flex items-center gap-4">
             <FeelingSelector
               selectedFeeling={form.getValues("feeling")}
-              onSelect={async (feeling) => {
-                await hideKeyboard();
-                form.setValue("feeling", feeling);
-              }}
+              onSelect={(feeling) => form.setValue("feeling", feeling)}
             />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Checking in at:</span>
             <LocationSelector
               selectedLocation={form.getValues("location")}
-              onSelect={(location) => {
-                hideKeyboard();
-                form.setValue("location", location);
-              }}
+              onSelect={(location) => form.setValue("location", location)}
             />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Add media:</span>
             <MediaRecorder onCapture={onMediaUpload} />
           </div>
         </div>
-
-        {form.watch("mediaUrls")?.length > 0 && (
-          <div className="max-w-full sm:max-w-2xl mx-auto px-4 sm:px-6 pt-2 pb-4">
-            <MediaPreview
-              urls={form.watch("mediaUrls")}
-              onRemove={onMediaRemove}
-              loading={isUploading}
-              uploadProgress={uploadProgress}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

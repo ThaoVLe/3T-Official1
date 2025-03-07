@@ -1,7 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Image, Video, Loader2 } from "lucide-react";
+import { Image, Video, Loader2, Camera, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MediaUploaderProps {
   onUpload: (file: File) => Promise<void>;
@@ -12,8 +18,7 @@ interface MediaUploaderProps {
 
 export default function MediaUploader({ onUpload, disabled, triggerClassName, triggerContent }: MediaUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Function to hide keyboard on mobile devices
@@ -88,20 +93,36 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
     }
   };
 
+  const triggerFileInput = (type: 'image' | 'video' | 'capture-image' | 'capture-video') => {
+    if (!fileInputRef.current) return;
+
+    switch (type) {
+      case 'image':
+        fileInputRef.current.accept = 'image/*';
+        fileInputRef.current.capture = undefined;
+        break;
+      case 'video':
+        fileInputRef.current.accept = 'video/mp4,video/quicktime,video/webm,.mov,.MOV';
+        fileInputRef.current.capture = undefined;
+        break;
+      case 'capture-image':
+        fileInputRef.current.accept = 'image/*';
+        fileInputRef.current.capture = 'environment';
+        break;
+      case 'capture-video':
+        fileInputRef.current.accept = 'video/*';
+        fileInputRef.current.capture = 'environment';
+        break;
+    }
+
+    fileInputRef.current.click();
+  };
+
   return (
     <>
       <input
-        ref={imageInputRef}
+        ref={fileInputRef}
         type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-        disabled={disabled || isUploading}
-      />
-      <input
-        ref={videoInputRef}
-        type="file"
-        accept="video/mp4,video/quicktime,video/webm,.mov,.MOV"
         className="hidden"
         onChange={handleFileChange}
         disabled={disabled || isUploading}
@@ -117,35 +138,36 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
           <Loader2 className="h-5 w-5 animate-spin" />
         </Button>
       ) : (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              hideKeyboard();
-              imageInputRef.current?.click();
-            }}
-            disabled={disabled}
-            className={triggerClassName || "h-10 w-10 rounded-full"}
-            title="Upload image"
-          >
-            <Image className="h-5 w-5" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              hideKeyboard();
-              videoInputRef.current?.click();
-            }}
-            disabled={disabled}
-            className={triggerClassName || "h-10 w-10 rounded-full"}
-            title="Upload video"
-          >
-            <Video className="h-5 w-5" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={triggerClassName || "h-10 w-10 rounded-full"}
+              disabled={disabled}
+            >
+              {triggerContent || <Image className="h-5 w-5" />}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => triggerFileInput('image')}>
+              <Image className="mr-2 h-4 w-4" />
+              <span>Upload Image</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => triggerFileInput('video')}>
+              <Video className="mr-2 h-4 w-4" />
+              <span>Upload Video</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => triggerFileInput('capture-image')}>
+              <Camera className="mr-2 h-4 w-4" />
+              <span>Take Photo</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => triggerFileInput('capture-video')}>
+              <Camera className="mr-2 h-4 w-4" />
+              <span>Record Video</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
     </>
   );

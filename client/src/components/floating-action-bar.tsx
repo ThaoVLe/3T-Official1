@@ -28,6 +28,7 @@ export function FloatingActionBar({
         <MediaUploader
           onUpload={onMediaUpload}
           triggerClassName="h-10 w-10 rounded-full"
+          triggerContent={<Image className="h-5 w-5" />}
         />
 
         <FeelingSelector

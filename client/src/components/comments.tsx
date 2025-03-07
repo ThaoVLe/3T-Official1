@@ -84,13 +84,17 @@ export function Comments({ entryId, onCommentCountChange }: CommentsProps) {
         ))}
       </div>
 
-      {/* Add comment form */}
-      <form onSubmit={handleSubmit} className="fixed bottom-0 left-0 right-0 bg-background border-t p-2 flex items-center gap-2">
+      {/* Add comment form - Fixed at bottom */}
+      <form 
+        onSubmit={handleSubmit} 
+        className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t p-2 flex items-center gap-2 z-50"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
+      >
         <Input
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Write a comment..."
-          className="flex-1"
+          className="flex-1 bg-muted"
         />
         <Button 
           type="submit" 

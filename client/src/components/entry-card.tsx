@@ -213,13 +213,19 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowComments(!showComments)}
+            onClick={() => {
+              setShowComments(!showComments);
+              const event = new CustomEvent('toggleComments', { 
+                detail: { show: !showComments } 
+              });
+              window.dispatchEvent(event);
+            }}
             className="text-muted-foreground hover:text-foreground flex items-center gap-2"
           >
             <MessageCircle className="h-4 w-4" />
             <span>Comments</span>
             {commentCount > 0 && (
-              <span className="text-xs bg-muted rounded-full px-2 py-0.5 ml-1">
+              <span className="text-xs bg-muted rounded-full px-2 py-0.5">
                 {commentCount}
               </span>
             )}
@@ -267,7 +273,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
         </div>
 
         {showComments && (
-          <div className="mt-4 pb-20">
+          <div className="mt-4 pb-16">
             <Comments 
               entryId={entry.id} 
               onCommentCountChange={setCommentCount}

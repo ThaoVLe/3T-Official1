@@ -265,7 +265,7 @@ export default function EntryView() {
                   className="text-muted-foreground hover:text-foreground flex items-center gap-2"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  <span>{commentCount > 0 ? `Comments (${commentCount})` : "Comments"}</span>
+                  <span>{commentCount > 0 ? `${commentCount} Comments` : "Comments"}</span>
                 </Button>
 
                 <div className="flex gap-1">

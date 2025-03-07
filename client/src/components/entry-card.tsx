@@ -168,7 +168,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             {entry.mediaUrls.length > 1 && (
               <div className="grid grid-cols-2 gap-[1px] mt-[1px]">
                 {entry.mediaUrls.slice(1, 3).map((url, i) => {
-                  const isVideo = url.match(/\.(mp4|webm|MOV|mov|m4v|3gp|mkv)$/i);
+                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
                   const isLastVisible = i === 1 && entry.mediaUrls && entry.mediaUrls.length > 3;
                   const mediaIndex = i + 1;
 

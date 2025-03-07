@@ -309,7 +309,7 @@ export default function Editor() {
               <h3 className="text-sm font-medium text-muted-foreground">Attached Media</h3>
               <div className="flex flex-wrap gap-4">
                 {form.watch("mediaUrls").map((url, i) => {
-                  const isVideo = url.match(/\.(mp4|webm|mov|MOV)$/i);
+                  const isVideo = /\.(mp4|webm|mov|MOV)$/i.test(url);
                   const currentTime = new Date();
                   // Calculate width as half of viewport minus 10px
                   return (
@@ -322,7 +322,9 @@ export default function Editor() {
                         <video
                           src={url}
                           className="w-full object-cover"
+                          controls
                           playsInline
+                          preload="metadata"
                           style={{ aspectRatio: '1/1' }}
                         />
                       ) : (

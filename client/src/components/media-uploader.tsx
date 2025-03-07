@@ -41,9 +41,11 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
 
-      // Validate file type
+      // Validate file type with broader video format support
       const isImage = file.type.startsWith('image/');
-      const isVideo = file.type.startsWith('video/');
+      const isVideo = /\.(mp4|webm|mov|MOV|quicktime)$/i.test(file.name) || 
+                     file.type.startsWith('video/') || 
+                     file.type === 'video/quicktime';
 
       if (!isImage && !isVideo) {
         toast({
@@ -54,11 +56,12 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
         return;
       }
 
-      // Validate file size (max 50MB)
-      if (file.size > 50 * 1024 * 1024) {
+      // Validate file size (max 100MB for videos, 20MB for images)
+      const maxSize = isVideo ? 100 * 1024 * 1024 : 20 * 1024 * 1024;
+      if (file.size > maxSize) {
         toast({
           title: "File too large",
-          description: "Please select a file smaller than 50MB",
+          description: `Please select a file smaller than ${isVideo ? '100MB' : '20MB'}`,
           variant: "destructive"
         });
         return;
@@ -69,7 +72,7 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
         await onUpload(file);
         toast({
           title: "Success",
-          description: "Media uploaded successfully",
+          description: `${isVideo ? 'Video' : 'Image'} uploaded successfully`,
         });
       } catch (error) {
         console.error('Upload error:', error);
@@ -80,7 +83,6 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
         });
       } finally {
         setIsUploading(false);
-        // Reset file input
         event.target.value = '';
       }
     }
@@ -99,7 +101,7 @@ export default function MediaUploader({ onUpload, disabled, triggerClassName, tr
       <input
         ref={videoInputRef}
         type="file"
-        accept="video/*"
+        accept="video/mp4,video/quicktime,video/webm,.mov,.MOV"
         className="hidden"
         onChange={handleFileChange}
         disabled={disabled || isUploading}

@@ -1,23 +1,43 @@
 import { useParams, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageCircle, Share, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, mediaPreviewVariants } from "@/components/animations";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Comments } from "@/components/comments";
 
 export default function EntryView() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isExiting, setIsExiting] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
+  const { toast } = useToast();
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
     enabled: !!id,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/entries/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+      toast({
+        title: "Success",
+        description: "Entry deleted",
+      });
+      navigate("/");
+    },
   });
 
   useEffect(() => {
@@ -65,11 +85,9 @@ export default function EntryView() {
     const mediaParam = new URLSearchParams(window.location.search).get('media');
     if (mediaParam !== null && entry?.mediaUrls) {
       const mediaIndex = parseInt(mediaParam);
-      // Wait for the component to fully render
       setTimeout(() => {
         const mediaElement = mediaRefs.current[mediaIndex];
         if (mediaElement) {
-          // Force immediate scroll to the element
           mediaElement.scrollIntoView({ behavior: 'auto', block: 'center' });
         }
       }, 100);
@@ -186,6 +204,93 @@ export default function EntryView() {
                       </motion.div>
                     );
                   })}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between mt-4 pt-3 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowComments(!showComments);
+                    const event = new CustomEvent('toggleComments', { 
+                      detail: { show: !showComments } 
+                    });
+                    window.dispatchEvent(event);
+
+                    // Scroll to comments section when opening
+                    if (!showComments) {
+                      setTimeout(() => {
+                        window.scrollTo({
+                          top: document.body.scrollHeight,
+                          behavior: 'smooth'
+                        });
+                      }, 100);
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-foreground flex items-center gap-2"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>Comments</span>
+                  {commentCount > 0 && (
+                    <span className="text-xs bg-muted rounded-full px-2 py-0.5">
+                      {commentCount}
+                    </span>
+                  )}
+                </Button>
+
+                <div className="flex gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: entry.title || "My Diary Entry",
+                          text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                          url: window.location.href,
+                        }).catch(err => console.log('Error sharing:', err));
+                      } else {
+                        navigator.clipboard.writeText(window.location.href)
+                          .then(() => toast({
+                            title: "Link copied",
+                            description: "Entry link copied to clipboard"
+                          }))
+                          .catch(err => console.error('Could not copy text:', err));
+                      }
+                    }}
+                    className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
+                  >
+                    <Share className="h-4 w-4"/>
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => navigate(`/edit/${entry.id}`)}
+                    className="h-8 w-8 hover:bg-muted"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => deleteMutation.mutate()}
+                    disabled={deleteMutation.isPending}
+                    className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Comments Section */}
+              {showComments && (
+                <div className="mt-4 pb-16">
+                  <Comments 
+                    entryId={entry.id} 
+                    onCommentCountChange={setCommentCount}
+                  />
                 </div>
               )}
             </motion.div>

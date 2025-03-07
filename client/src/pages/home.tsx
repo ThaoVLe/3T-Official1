@@ -43,31 +43,47 @@ export default function Home() {
     if (!entries || entries.length === 0 || scrollRestoredRef.current) return;
     
     const restoreScroll = () => {
-      const savedPosition = sessionStorage.getItem('homeScrollPosition');
       const lastViewedEntryId = sessionStorage.getItem('lastViewedEntryId');
       const container = document.querySelector('.diary-content');
       
-      if (savedPosition && container) {
-        const position = parseInt(savedPosition, 10);
-        console.log('Attempting to restore scroll to position:', position);
+      if (container) {
+        console.log('Attempting to scroll to entry:', lastViewedEntryId);
         
-        // Force reflow to ensure DOM is ready
-        container.scrollTop = 0;
-        setTimeout(() => {
-          container.scrollTop = position;
-          console.log('Scroll position restored to:', position);
-          
-          // If we have a specific entry ID, ensure it's visible
-          if (lastViewedEntryId) {
-            const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
-            if (entryElement) {
-              console.log('Found and scrolled to entry:', lastViewedEntryId);
-            }
+        // If we have a specific entry ID, prioritize scrolling to that element
+        if (lastViewedEntryId) {
+          const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
+          if (entryElement) {
+            // Reset scroll position first
+            container.scrollTop = 0;
+            
+            // Scroll the entry into view with a small delay to ensure DOM is ready
+            setTimeout(() => {
+              entryElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+              console.log('Scrolled to entry card:', lastViewedEntryId);
+              
+              // Mark as restored
+              scrollRestoredRef.current = true;
+            }, 250);
+            return;
           }
+        }
+        
+        // Fallback to position-based scrolling if entry not found
+        const savedPosition = sessionStorage.getItem('homeScrollPosition');
+        if (savedPosition) {
+          const position = parseInt(savedPosition, 10);
+          console.log('Falling back to position-based scroll:', position);
           
-          // Mark as restored
-          scrollRestoredRef.current = true;
-        }, 150);
+          // Force reflow to ensure DOM is ready
+          container.scrollTop = 0;
+          setTimeout(() => {
+            container.scrollTop = position;
+            console.log('Scroll position restored to:', position);
+            
+            // Mark as restored
+            scrollRestoredRef.current = true;
+          }, 150);
+        }
       }
     };
     

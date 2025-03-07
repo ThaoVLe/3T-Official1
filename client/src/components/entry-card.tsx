@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -82,7 +82,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   };
 
   return (
-    <Card className="group bg-white shadow-none border-0 w-full mb-4">
+    <Card id={`entry-${entry.id}`} className="group bg-white shadow-none border-0 w-full mb-4">
       <CardHeader className="space-y-0 pb-2 pt-3 px-0">
         <div className="flex justify-between items-start px-4">
           <div className="flex flex-col space-y-1.5">

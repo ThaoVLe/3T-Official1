@@ -14,47 +14,32 @@ interface MediaPreviewProps {
 export default function MediaPreview({ urls, onRemove, loading, uploadProgress = 0 }: MediaPreviewProps) {
   const [selectedIndex, setSelectedIndex] = useState<number>();
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
-  const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
   const mediaUrls = urls || [];
 
-  // Load video thumbnails and rotate frames
+  // Set up video playback for thumbnails
   useEffect(() => {
     mediaUrls.forEach((url, index) => {
       if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) && videoRefs.current[index]) {
         const video = videoRefs.current[index];
 
-        // Listen for metadata to load before seeking
-        const handleLoadedMetadata = () => {
-          video.currentTime = 0; // Start with first frame
+        // Listen for metadata to load before playing
+        const handleLoadedData = () => {
+          // Start playing the video in a loop
+          video.play().catch(err => {
+            console.log("Auto-play was prevented:", err);
+            // If autoplay is blocked, at least show a frame from the video
+            video.currentTime = 0.1;
+          });
         };
 
-        video.addEventListener('loadedmetadata', handleLoadedMetadata);
-        return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        video.addEventListener('loadeddata', handleLoadedData);
+        return () => {
+          video.removeEventListener('loadeddata', handleLoadedData);
+          video.pause();
+        };
       }
     });
   }, [mediaUrls]);
-
-  // Rotate through frames every 2 seconds
-  useEffect(() => {
-    const frames = [0, 1, 2]; // The three keyframe timestamps
-    const interval = setInterval(() => {
-      setFrameIndices(prev => {
-        const newIndices = { ...prev };
-        Object.keys(videoRefs.current).forEach(index => {
-          const video = videoRefs.current[Number(index)];
-          if (video) {
-            const currentFrame = prev[Number(index)] || 0;
-            const nextFrame = (currentFrame + 1) % frames.length;
-            video.currentTime = frames[nextFrame];
-            newIndices[Number(index)] = nextFrame;
-          }
-        });
-        return newIndices;
-      });
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   if (!mediaUrls.length && !loading) return null;
 
@@ -103,7 +88,11 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
                   className="w-full h-full object-cover"
                   muted
                   playsInline
-                  preload="metadata"
+                  loop
+                  autoPlay
+                  preload="auto"
+                  crossOrigin="anonymous"
+                  poster={`${url}#t=0.1`}
                 />
               )}
               {!isVideo && (

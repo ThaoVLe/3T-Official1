@@ -100,21 +100,7 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
 
   useEffect(() => {
     if (!editor || !editorRef.current) return;
-    
-    // Handle mobile focus issues
-    const handleFocus = () => {
-      // Ensure the element stays in view when focused on mobile
-      setTimeout(() => {
-        // Small scroll to ensure virtual keyboard doesn't cover the editor
-        window.scrollTo(0, window.scrollY);
-      }, 100);
-    };
-    
-    const editorElement = editorRef.current.querySelector('.ProseMirror');
-    if (editorElement) {
-      editorElement.addEventListener('focus', handleFocus);
-    }
-    
+
     // Function to adjust editor height based on content
     const adjustHeight = () => {
       if (!editorRef.current) return;
@@ -147,19 +133,13 @@ export default function TipTapEditor({ value, onChange }: TipTapEditorProps) {
       adjustHeight();
     }
 
-    return () => {
-      observer.disconnect();
-      const editorElement = editorRef.current?.querySelector('.ProseMirror');
-      if (editorElement) {
-        editorElement.removeEventListener('focus', handleFocus);
-      }
-    };
+    return () => observer.disconnect();
   }, [editor]);
 
 
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg w-full tiptap-container mobile-editor-fix">
+    <div className="h-full flex flex-col bg-white rounded-lg w-full tiptap-container">
       <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-white w-full">
         <div className="flex flex-wrap items-center gap-1">
           <Button

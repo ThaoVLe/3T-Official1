@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { BottomNavigation } from "./bottom-navigation";
 import {
@@ -21,26 +21,15 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
 
   React.useEffect(() => {
-    // Check initial size
     setIsMobile(window.innerWidth < 768);
-
-    // Add resize listener
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Only show bottom navigation on home page
   const showBottomNav = isMobile && location === '/';
 
   return isMobile ? (
-    // Mobile layout with conditional bottom navigation
     <div className="min-h-screen bg-background flex flex-col">
       <main className={`flex-1 ${showBottomNav ? 'pb-16' : ''}`}>
         {children}
@@ -48,7 +37,6 @@ export function Layout({ children }: LayoutProps) {
       {showBottomNav && <BottomNavigation />}
     </div>
   ) : (
-    // Desktop layout with sidebar
     <SidebarProvider defaultOpen={true}>
       <div className="grid lg:grid-cols-[280px_1fr] min-h-screen">
         <Sidebar className="border-r">
@@ -83,6 +71,15 @@ export function Layout({ children }: LayoutProps) {
               </div>
             </div>
           </SidebarContent>
+
+          <SidebarFooter className="border-t p-4">
+            <Link href="/settings">
+              <Button variant="ghost" className="w-full justify-start">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+            </Link>
+          </SidebarFooter>
         </Sidebar>
 
         <main className="p-4 pt-0">

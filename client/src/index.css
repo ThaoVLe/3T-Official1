@@ -81,6 +81,15 @@
 
   .keyboard-visible .fixed-bar {
     transform: translateY(calc(-1 * var(--keyboard-height))) !important;
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+  
+  .no-gray-space {
+    padding-bottom: env(safe-area-inset-bottom);
+    min-height: 100%;
   }
 
   .mobile-vh {

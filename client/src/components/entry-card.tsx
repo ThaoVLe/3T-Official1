@@ -59,13 +59,19 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     const dx = currentX - startX;
     const dy = currentY - startY;
 
+    // Wait for a minimum movement before deciding direction
+    const minMovement = 5;
+    if (Math.abs(dx) < minMovement && Math.abs(dy) < minMovement) {
+      return;
+    }
+
     // Calculate the angle of the swipe
     const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
 
-    // If this is a horizontal swipe (angle < 45 degrees)
-    if (angle < 45) {
+    // If this is a horizontal swipe (angle < 30 degrees) and movement is significant
+    if (angle < 30 && Math.abs(dx) > minMovement) {
       setIsSwiping(true);
-      e.preventDefault(); // Prevent vertical scroll only during horizontal swipe
+      e.preventDefault(); // Prevent scroll only for confirmed horizontal swipes
 
       // Apply immediate scroll response
       const scrollOffset = -dx;
@@ -233,9 +239,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 WebkitOverflowScrolling: 'touch',
                 scrollBehavior: 'smooth',
                 msOverflowStyle: 'none',
-                scrollbarWidth: 'none',
-                overscrollBehaviorX: 'contain',
-                overscrollBehaviorY: 'auto'
+                scrollbarWidth: 'none'
               }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}

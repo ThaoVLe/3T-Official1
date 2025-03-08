@@ -8,44 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
-import { useLazyEntries } from "@/lib/use-lazy-entries"; // Placeholder import
+import { useLazyEntries } from "@/lib/use-lazy-entries";
 
-
-// Placeholder for Entry type and useLazyEntries hook
+// Type definition for entries
 type Entry = DiaryEntry;
-
-const useLazyEntries = (allEntries: Entry[]) => {
-  const [visibleEntries, setVisibleEntries] = useState<Entry[]>([]);
-  const loadingRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    // Placeholder lazy loading logic - replace with actual implementation
-    const visibleCount = Math.min(10, allEntries.length);
-    setVisibleEntries(allEntries.slice(0, visibleCount));
-    
-    const observer = new IntersectionObserver(entries => {
-      const target = entries[0];
-      if (target.isIntersecting && allEntries.length > visibleEntries.length) {
-          setIsLoading(true);
-          setTimeout(() => { //Simulate fetching more data
-            const newVisibleCount = Math.min(visibleEntries.length + 10, allEntries.length);
-            setVisibleEntries(allEntries.slice(0, newVisibleCount));
-            setIsLoading(false);
-          }, 500); //Simulate a delay for fetching
-      }
-    }, { threshold: 1 });
-
-    if (loadingRef.current) {
-      observer.observe(loadingRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [allEntries, visibleEntries]);
-
-
-  return { visibleEntries, loadingRef, isLoading };
-};
 
 
 export default function Home() {

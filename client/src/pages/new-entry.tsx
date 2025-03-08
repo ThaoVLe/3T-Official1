@@ -270,7 +270,7 @@ const NewEntry: React.FC = () => {
             </div>
 
             {/* Floating Bar */}
-            <div className="floating-bar">
+            <div className="floating-bar not-scrollable" style={{ position: 'fixed', bottom: 0 }}> {/* Added position: fixed */}
               <div className="flex items-center justify-between gap-4">
                 <FeelingSelector
                   selectedFeeling={form.getValues("feeling")}

@@ -108,3 +108,79 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
     </div>
   );
 }
+import React, { useEffect, useRef, useState } from 'react';
+
+interface KeyboardAwareProps {
+  contentRef?: React.RefObject<HTMLDivElement>;
+  children: React.ReactNode;
+}
+
+export const KeyboardAware: React.FC<KeyboardAwareProps> = ({ contentRef, children }) => {
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const lastVisualViewportHeight = useRef<number>(window.visualViewport?.height || window.innerHeight);
+
+  useEffect(() => {
+    if (!window.visualViewport) {
+      return;
+    }
+
+    // Store initial viewport height
+    lastVisualViewportHeight.current = window.visualViewport.height;
+    
+    const handleResize = () => {
+      if (!window.visualViewport) {
+        return;
+      }
+
+      const currentHeight = window.visualViewport.height;
+      const heightDifference = lastVisualViewportHeight.current - currentHeight;
+      
+      // Check if keyboard is visible (height decreases significantly)
+      if (heightDifference > 150) {
+        // Keyboard is likely visible
+        const calculatedKeyboardHeight = heightDifference;
+        setKeyboardHeight(calculatedKeyboardHeight);
+        setIsKeyboardVisible(true);
+        
+        document.documentElement.style.setProperty('--keyboard-height', `${calculatedKeyboardHeight}px`);
+        document.documentElement.classList.add('keyboard-visible');
+        
+        // Ensure the floating bar stays in position
+        const floatingBar = document.querySelector('.floating-bar');
+        if (floatingBar) {
+          floatingBar.classList.add('keyboard-fixed');
+        }
+      } else {
+        // Keyboard is likely hidden
+        setIsKeyboardVisible(false);
+        setKeyboardHeight(0);
+        document.documentElement.style.setProperty('--keyboard-height', '0px');
+        document.documentElement.classList.remove('keyboard-visible');
+        
+        // Reset floating bar position
+        const floatingBar = document.querySelector('.floating-bar');
+        if (floatingBar) {
+          floatingBar.classList.remove('keyboard-fixed');
+        }
+      }
+
+      lastVisualViewportHeight.current = currentHeight;
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+
+    // Initial application of viewport height
+    document.documentElement.style.setProperty('--viewport-height', `${window.visualViewport.height}px`);
+    
+    return () => {
+      window.visualViewport.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return (
+    <div className="keyboard-adjustable-content" style={{ position: 'relative' }}>
+      {children}
+    </div>
+  );
+};

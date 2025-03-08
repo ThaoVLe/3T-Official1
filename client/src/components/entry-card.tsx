@@ -288,11 +288,11 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                           <div className="relative w-full h-full">
                             <video
                               src={url}
+                              poster={`${url}#t=0.5`}  {/* Added poster attribute */}
                               className="h-full w-full object-cover"
                               playsInline
                               preload="metadata"
                               muted
-                              poster={url + '#t=0.5'}
                             />
                             <motion.div 
                               className="absolute inset-0 bg-black/20 flex items-center justify-center"

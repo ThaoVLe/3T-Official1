@@ -7,7 +7,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -18,6 +19,49 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [, navigate] = useLocation();
+  const mediaScrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+
+  useEffect(() => {
+    const container = mediaScrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const index = Math.round(container.scrollLeft / container.offsetWidth);
+      setActiveMediaIndex(index);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.pageX - (mediaScrollRef.current?.offsetLeft || 0));
+    setScrollLeft(mediaScrollRef.current?.scrollLeft || 0);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    if (!mediaScrollRef.current) return;
+
+    const x = e.pageX - (mediaScrollRef.current.offsetLeft || 0);
+    const walk = (x - startX) * 2;
+    mediaScrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
 
   // Fetch comment count
   const { data: comments = [] } = useQuery({
@@ -142,58 +186,95 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
         )}
 
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <div className="mt-3 -mx-4 relative">
+          <motion.div 
+            className="mt-3 -mx-4 relative"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <div 
+              ref={mediaScrollRef}
               className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory touch-pan-x scrollbar-none"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              style={{ 
+                WebkitOverflowScrolling: 'touch',
+                scrollBehavior: 'smooth',
+                msOverflowStyle: 'none',
+                scrollbarWidth: 'none'
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
             >
-              {entry.mediaUrls.map((url, index) => {
-                const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+              <AnimatePresence mode="popLayout">
+                {entry.mediaUrls.map((url, index) => {
+                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
 
-                return (
-                  <div
-                    key={index}
-                    className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
-                    style={{
-                      width: 'auto',
-                      maxWidth: '66.666667vw', 
-                      height: '300px', 
-                      minWidth: '200px' 
-                    }}
-                    onClick={() => handleMediaClick(index)}
-                  >
-                    <div className="h-full w-full relative rounded-xl overflow-hidden bg-muted">
-                      {isVideo ? (
-                        <div className="h-full w-full relative">
-                          <video
-                            src={url}
-                            className="h-full w-full object-cover"
-                            playsInline
-                            preload="metadata"
-                            muted
-                            poster={url + '#t=0.5'}
-                          />
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                            <div className="rounded-full bg-white/30 p-3">
-                              <Play className="h-6 w-6 text-white" />
-                            </div>
+                  return (
+                    <motion.div
+                      key={index}
+                      className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
+                      style={{
+                        width: 'auto',
+                        maxWidth: '66.666667vw',
+                        height: '300px',
+                        minWidth: '200px'
+                      }}
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      onClick={() => !isDragging && handleMediaClick(index)}
+                    >
+                      <motion.div 
+                        className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {isVideo ? (
+                          <div className="h-full w-full relative">
+                            <video
+                              src={url}
+                              className="h-full w-full object-cover"
+                              playsInline
+                              preload="metadata"
+                              muted
+                              poster={url + '#t=0.5'}
+                            />
+                            <motion.div 
+                              className="absolute inset-0 bg-black/20 flex items-center justify-center"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <motion.div 
+                                className="rounded-full bg-white/30 p-3"
+                                whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
+                              >
+                                <Play className="h-6 w-6 text-white" />
+                              </motion.div>
+                            </motion.div>
                           </div>
-                        </div>
-                      ) : (
-                        <img
-                          src={url}
-                          alt={`Media ${index + 1}`}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                          sizes="(max-width: 768px) 66.66vw, 512px"
-                        />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                        ) : (
+                          <motion.img
+                            src={url}
+                            alt={`Media ${index + 1}`}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                            sizes="(max-width: 768px) 66.66vw, 512px"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        )}
+                      </motion.div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
         )}
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t">

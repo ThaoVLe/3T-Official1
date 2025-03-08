@@ -62,6 +62,31 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     mediaScrollRef.current.scrollLeft = scrollLeft - walk;
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!mediaScrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.touches[0].clientX - (mediaScrollRef.current.offsetLeft || 0));
+    setScrollLeft(mediaScrollRef.current.scrollLeft);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !mediaScrollRef.current) return;
+
+    const x = e.touches[0].clientX - (mediaScrollRef.current.offsetLeft || 0);
+    const dx = x - startX;
+    const dy = e.touches[0].clientY - e.touches[0].clientY;
+
+    // Only prevent default if the swipe is more horizontal than vertical
+    if (Math.abs(dx) > Math.abs(dy)) {
+      e.preventDefault();
+      mediaScrollRef.current.scrollLeft = scrollLeft - dx;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
 
   // Fetch comment count
   const { data: comments = [] } = useQuery({
@@ -205,6 +230,9 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
               onMouseLeave={handleMouseLeave}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
               <AnimatePresence mode="popLayout">
                 {entry.mediaUrls.map((url, index) => {

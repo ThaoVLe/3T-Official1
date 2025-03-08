@@ -1,9 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Play } from "lucide-react";
+import { X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
-import { cn } from "@/lib/utils";
 
 interface MediaPreviewProps {
   urls: string[];

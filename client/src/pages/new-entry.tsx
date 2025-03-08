@@ -16,7 +16,29 @@ import { Save, X } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
-import { KeyboardAware } from "@/components/keyboard-aware";
+
+// Added KeyboardAware component
+const KeyboardAware = ({ children }: { children: React.ReactNode }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+      const keyboardIsShown = vh < window.innerHeight;
+      setKeyboardHeight(keyboardIsShown ? window.innerHeight - vh : 0);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ marginBottom: keyboardHeight }} className="relative">
+      {children}
+    </div>
+  );
+};
 
 export default function NewEntry() {
   const [, navigate] = useLocation();
@@ -59,6 +81,47 @@ export default function NewEntry() {
       document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [navigate]);
+
+  const isMobile = () => {
+    return window.innerWidth < 768;
+  };
+
+  // Function to hide keyboard on mobile devices
+  const hideKeyboard = useCallback(() => {
+    if (!isMobile()) return;
+
+    // Force any active element to lose focus
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    // More aggressive iOS keyboard dismissal
+    // Create an offscreen input and force it to focus and blur
+    const temporaryInput = document.createElement('input');
+    temporaryInput.setAttribute('type', 'text');
+    temporaryInput.style.position = 'fixed';
+    temporaryInput.style.top = '-100px';
+    temporaryInput.style.left = '0';
+    temporaryInput.style.opacity = '0';
+    temporaryInput.style.height = '0';
+    temporaryInput.style.width = '100%';
+    temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
+
+    // Append to body, focus, then blur and remove
+    document.body.appendChild(temporaryInput);
+
+    // Force focus then immediately blur
+    setTimeout(() => {
+      temporaryInput.focus();
+      setTimeout(() => {
+        temporaryInput.blur();
+        document.body.removeChild(temporaryInput);
+      }, 50);
+    }, 50);
+
+    // Additional fix - add a slight delay before showing sheet
+    return new Promise(resolve => setTimeout(resolve, 100));
+  }, []);
 
   const form = useForm<InsertEntry>({
     resolver: zodResolver(insertEntrySchema),
@@ -155,40 +218,6 @@ export default function NewEntry() {
     newUrls.splice(index, 1);
     form.setValue("mediaUrls", newUrls);
   };
-
-  const isMobile = () => {
-    return window.innerWidth < 768;
-  };
-
-  const hideKeyboard = useCallback(() => {
-    if (!isMobile()) return;
-
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-
-    const temporaryInput = document.createElement('input');
-    temporaryInput.setAttribute('type', 'text');
-    temporaryInput.style.position = 'fixed';
-    temporaryInput.style.top = '-100px';
-    temporaryInput.style.left = '0';
-    temporaryInput.style.opacity = '0';
-    temporaryInput.style.height = '0';
-    temporaryInput.style.width = '100%';
-    temporaryInput.style.fontSize = '16px';
-
-    document.body.appendChild(temporaryInput);
-
-    setTimeout(() => {
-      temporaryInput.focus();
-      setTimeout(() => {
-        temporaryInput.blur();
-        document.body.removeChild(temporaryInput);
-      }, 50);
-    }, 50);
-
-    return new Promise(resolve => setTimeout(resolve, 100));
-  }, []);
 
   return (
     <PageTransition direction={1}>

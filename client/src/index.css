@@ -46,7 +46,6 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 56px);
   }
 
   .floating-bar {
@@ -82,7 +81,6 @@
     height: stretch;
   }
 
-
   /* Diary content specific styles */
   .diary-content {
     scrollbar-width: none !important;
@@ -108,6 +106,7 @@
       -webkit-overflow-scrolling: touch;
     }
   }
+
   /* Container and page styles */
   .container-page {
     @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
@@ -142,90 +141,6 @@
     @apply flex flex-col;
     transition: height 0.2s ease;
     overflow: hidden;
-  }
-
-  /* Media related styles */
-  .media-grid {
-    display: grid;
-    gap: 1px;
-    background-color: #f0f2f5;
-    transition: all 0.3s ease;
-  }
-
-  .media-item {
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-  }
-
-  .media-item img,
-  .media-item video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.2s ease;
-  }
-
-  .media-item:hover img,
-  .media-item:hover video {
-    transform: scale(1.02);
-  }
-
-  .media-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-
-  /* Modal styles */
-  .media-modal {
-    @apply fixed inset-0 z-50 bg-black/90 flex items-center justify-center;
-  }
-
-  .media-modal-content {
-    @apply max-w-[95vw] max-h-[90vh] relative;
-  }
-
-  .media-modal-content img,
-  .media-modal-content video {
-    @apply max-w-full max-h-[90vh] object-contain;
-  }
-
-  /* Mobile-specific styles */
-  @media (max-width: 640px) {
-    .card {
-      @apply border-0 shadow-sm rounded-lg;
-      margin-bottom: 0.75rem;
-      background-color: white;
-
-      /* Floating bar above keyboard styles */
-      .floating-bar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        background-color: var(--background);
-        border-top: 1px solid var(--border);
-        padding: 8px;
-        transition: bottom 0.3s ease;
-      }
-
-      /* When keyboard is visible */
-      .keyboard-visible .floating-bar {
-        bottom: var(--keyboard-height, 0px);
-      }
-    }
-
-    .media-grid {
-      margin: 0 -1rem;
-    }
   }
 
   /* Custom styles */

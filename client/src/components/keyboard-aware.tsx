@@ -21,12 +21,16 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
 
         // Set CSS variable for the keyboard height
         document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
-        document.body.style.height = `${visualViewportHeight}px`;
         document.documentElement.classList.add('keyboard-visible');
+
+        // Prevent scrolling on the floating bar
+        const floatingBar = document.querySelector('.floating-bar');
+        if (floatingBar) {
+          floatingBar.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        }
       } else {
         setIsKeyboardVisible(false);
         document.documentElement.style.setProperty('--keyboard-height', '0px');
-        document.body.style.height = '';
         document.documentElement.classList.remove('keyboard-visible');
       }
     }
@@ -50,7 +54,12 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
       }
       window.removeEventListener('resize', handleResize);
       document.documentElement.classList.remove('keyboard-visible');
-      document.body.style.height = '';
+
+      // Cleanup touch event listeners
+      const floatingBar = document.querySelector('.floating-bar');
+      if (floatingBar) {
+        floatingBar.removeEventListener('touchmove', (e) => e.preventDefault());
+      }
     };
   }, []);
 

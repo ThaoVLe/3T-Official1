@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { type Server } from "http";
+import path from 'path';
 
 const app = express();
 app.use(express.json());
@@ -60,6 +61,26 @@ const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunct
     log('Setting up Vite middleware...');
     await setupVite(app, server);
     log('Vite middleware setup complete');
+
+    // Support for dynamic image resizing and quality adjustment
+    app.get('/uploads/:filename', (req, res) => {
+      const { filename } = req.params;
+      const { quality, width } = req.query;
+
+      // Just send the original file if no transformations are requested
+      if (!quality && !width) {
+        return res.sendFile(path.join(__dirname, '../uploads', filename));
+      }
+
+      // For now, just send the original file but in production you would
+      // implement image resizing using sharp or another library
+      // This is a placeholder for where you would implement image resizing
+
+      // Set Cache-Control header to cache images
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
+      return res.sendFile(path.join(__dirname, '../uploads', filename));
+    });
+
 
     const port = 5000;
     log(`Attempting to bind to port ${port}...`);

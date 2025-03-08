@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
+import { ProgressiveImage } from './progressive-image';
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -276,8 +277,15 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                         whileTap={{ scale: 0.98 }}
                         transition={{ duration: 0.2 }}
                       >
-                        {isVideo ? (
-                          <div className="h-full w-full relative">
+                        {!isVideo ? (
+                          <ProgressiveImage
+                            src={url}
+                            alt={`Media ${index + 1}`}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            sizes="(max-width: 768px) 66.66vw, 512px"
+                          />
+                        ) : (
+                          <div className="relative w-full h-full">
                             <video
                               src={url}
                               className="h-full w-full object-cover"
@@ -300,17 +308,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                               </motion.div>
                             </motion.div>
                           </div>
-                        ) : (
-                          <motion.img
-                            src={url}
-                            alt={`Media ${index + 1}`}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                            sizes="(max-width: 768px) 66.66vw, 512px"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                          />
                         )}
                       </motion.div>
                     </motion.div>

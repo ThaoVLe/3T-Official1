@@ -17,7 +17,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
   const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
   const mediaUrls = urls || [];
 
-  // Load video thumbnails and rotate frames
+  // Load video thumbnails and set up for frame rotation
   useEffect(() => {
     mediaUrls.forEach((url, index) => {
       if (url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) && videoRefs.current[index]) {
@@ -25,7 +25,8 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
 
         // Listen for metadata to load before seeking
         const handleLoadedMetadata = () => {
-          video.currentTime = 0; // Start with first frame
+          // Start with second 1 (not 0) to show a better initial thumbnail
+          video.currentTime = 1;
         };
 
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -34,24 +35,26 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
     });
   }, [mediaUrls]);
 
-  // Rotate through frames every 2 seconds
+  // Rotate through frames every second (1 keyframe per second)
   useEffect(() => {
-    const frames = [0, 1, 2]; // The three keyframe timestamps
     const interval = setInterval(() => {
       setFrameIndices(prev => {
         const newIndices = { ...prev };
         Object.keys(videoRefs.current).forEach(index => {
           const video = videoRefs.current[Number(index)];
           if (video) {
+            // Get duration of video to determine max frames
+            const duration = video.duration || 10; // Default to 10 seconds if duration not available
             const currentFrame = prev[Number(index)] || 0;
-            const nextFrame = (currentFrame + 1) % frames.length;
-            video.currentTime = frames[nextFrame];
+            // Move to next second, loop back to start if reached end
+            const nextFrame = (currentFrame + 1) % Math.floor(duration);
+            video.currentTime = nextFrame;
             newIndices[Number(index)] = nextFrame;
           }
         });
         return newIndices;
       });
-    }, 2000);
+    }, 1000); // Change every second
 
     return () => clearInterval(interval);
   }, []);

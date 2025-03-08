@@ -18,27 +18,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
 
 // Added KeyboardAware component
-const KeyboardAware = ({ children }: { children: React.ReactNode }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-      const keyboardIsShown = vh < window.innerHeight;
-      setKeyboardHeight(keyboardIsShown ? window.innerHeight - vh : 0);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  return (
-    <div ref={ref} style={{ marginBottom: keyboardHeight }} className="relative">
-      {children}
-    </div>
-  );
-};
+// Use the improved KeyboardAware component from components/keyboard-aware.tsx
+import { KeyboardAware } from "../components/keyboard-aware";
 
 export default function NewEntry() {
   const [, navigate] = useLocation();
@@ -311,6 +292,25 @@ export default function NewEntry() {
                 />
               </div>
             </div>
+          </div>
+        </div>
+      {/* Ensure the floating toolbar is properly positioned */}
+        <div className="floating-bar">
+          <div className="flex justify-between items-center">
+            <Button variant="outline" size="sm" onClick={handleCancel}>
+              <X className="h-4 w-4 mr-1" />
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              size="sm"
+              onClick={form.handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <Save className="h-4 w-4 mr-1" />
+              Save
+            </Button>
           </div>
         </div>
       </KeyboardAware>

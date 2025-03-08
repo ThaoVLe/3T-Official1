@@ -67,7 +67,12 @@
   }
 
   .keyboard-visible .floating-bar {
+    position: fixed;
+    bottom: 0;
     transform: translateY(calc(-1 * var(--keyboard-height)));
+    z-index: 100;
+    transition: transform 0.15s ease;
+    will-change: transform;
   }
 
   .keyboard-visible .keyboard-adjustable-content {

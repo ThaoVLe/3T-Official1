@@ -67,6 +67,8 @@
     transform: translateY(0) !important;
     position: sticky;
     bottom: 0;
+    touch-action: none; /* Disable touch actions on the floating bar */
+    user-select: none; /* Prevent selection */
   }
 
   .keyboard-visible .floating-bar {

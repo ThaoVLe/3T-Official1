@@ -49,19 +49,34 @@ export default function Editor() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
+  let isDragging = false; // Added isDragging variable
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
 
   useEffect(() => {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchStartTime = 0;
-
     const handleTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      const isInsideEditor = target.closest('.tiptap-container, .ProseMirror') !== null;
+      const isInsideFloatingBar = target.closest('.floating-bar') !== null;
+
+      if (isInsideEditor || isInsideFloatingBar) {
+        isDragging = false;
+        if (isInsideFloatingBar) {
+          e.stopPropagation(); // Stop event propagation for floating bar
+        }
+        return;
+      }
+
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
+      isDragging = true;
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
+      if (!isDragging) return; // Ignore if not dragging
+
       const touchEndX = e.changedTouches[0].clientX;
       const touchEndY = e.changedTouches[0].clientY;
       const touchEndTime = Date.now();
@@ -330,7 +345,7 @@ export default function Editor() {
 
             {/* Media Controls - Now in floating bar */}
             <div 
-              className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-2 z-50"
+              className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-2 z-50 floating-bar"
               style={{ 
                 paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)',
                 position: 'fixed',

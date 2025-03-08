@@ -75,11 +75,10 @@ export default function Home() {
     window.scrollTo(0, 0);
   }, []);
 
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content">
-        <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
+      <div className="min-h-screen bg-background overflow-auto diary-content">
+        <div className="sticky top-0 z-10 bg-background border-b px-4 py-4">
           <Skeleton className="h-10 w-48" />
         </div>
         <div className="space-y-2">
@@ -94,7 +93,7 @@ export default function Home() {
   if (!entries?.length) {
     return (
       <PageTransition direction={-1}>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4 bg-background">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -122,14 +121,14 @@ export default function Home() {
     <PageTransition direction={-1}>
       <div 
         ref={containerRef}
-        className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content"
+        className="min-h-screen bg-background overflow-auto diary-content"
         style={{
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'none',
           touchAction: 'pan-y pinch-zoom',
         }}
       >
-        <div className="sticky top-0 z-10 bg-white border-b">
+        <div className="sticky top-0 z-10 bg-card border-b">
           <div className="flex justify-between items-center px-4 py-3">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               My Diary
@@ -149,7 +148,7 @@ export default function Home() {
               <motion.div
                 key={entry.id}
                 id={`entry-${entry.id}`}
-                className="bg-white"
+                className="bg-card"
                 variants={cardVariants}
                 initial="initial"
                 animate="animate"

@@ -193,11 +193,11 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   };
 
   return (
-    <Card className="group bg-white shadow-none border-0 w-full mb-4">
+    <Card className="group bg-card border-border shadow-none w-full mb-4">
       <CardHeader className="space-y-0 pb-2 pt-3 px-0">
         <div className="flex justify-between items-start px-4">
           <div className="flex flex-col space-y-1.5">
-            <CardTitle className="text-[18px] font-semibold">
+            <CardTitle className="text-[18px] font-semibold text-foreground">
               {entry.title || "Untitled Entry"}
             </CardTitle>
 
@@ -235,13 +235,13 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       <CardContent className="px-4 pt-0 pb-3">
         <div 
           onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
-          className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
+          className={`prose max-w-none text-foreground ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
           dangerouslySetInnerHTML={{ __html: entry.content }}
         />
         {needsExpansion(entry.content) && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-sm text-blue-600 hover:text-blue-700 mt-1 font-medium"
+            className="text-sm text-primary hover:text-primary/90 mt-1 font-medium"
           >
             {isExpanded ? 'See less' : 'See more'}
           </button>
@@ -343,7 +343,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
           </motion.div>
         )}
 
-        <div className="flex items-center justify-between mt-4 pt-3 border-t">
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
           <Button
             variant="ghost"
             size="sm"

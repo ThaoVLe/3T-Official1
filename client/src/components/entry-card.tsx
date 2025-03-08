@@ -28,7 +28,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const [touchStartTime, setTouchStartTime] = useState(0);
   const [lastTouchX, setLastTouchX] = useState(0);
   const [touchVelocity, setTouchVelocity] = useState(0);
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   useEffect(() => {
     const container = mediaScrollRef.current;
@@ -52,7 +51,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     setScrollLeft(mediaScrollRef.current.scrollLeft);
     setTouchStartTime(Date.now());
     setLastTouchX(e.touches[0].clientX);
-    setTouchVelocity(0);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -65,39 +63,27 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     const currentTime = Date.now();
     const timeDiff = currentTime - touchStartTime;
 
-    // Calculate velocity (pixels per millisecond)
+    // Calculate velocity
     if (timeDiff > 0) {
-      const velocity = (lastTouchX - currentX) / timeDiff;
+      const velocity = (currentX - lastTouchX) / timeDiff;
       setTouchVelocity(velocity);
       setLastTouchX(currentX);
     }
 
     // Determine scroll direction only on initial movement
     if (!isScrollingHorizontally && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
-      const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
-      setIsScrollingHorizontally(isHorizontal);
-
-      // If vertical scroll, release touch capture
-      if (!isHorizontal) {
-        setIsDragging(false);
-        return;
-      }
+      setIsScrollingHorizontally(Math.abs(deltaX) > Math.abs(deltaY));
     }
 
     // Only handle horizontal scrolling
     if (isScrollingHorizontally) {
       e.preventDefault();
-      const sensitivity = 1.2; // Adjust for smoother scrolling
-      mediaScrollRef.current.scrollLeft = scrollLeft + (deltaX * sensitivity);
+      mediaScrollRef.current.scrollLeft = scrollLeft + deltaX;
     }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!mediaScrollRef.current || !isScrollingHorizontally) {
-      setIsDragging(false);
-      setIsScrollingHorizontally(false);
-      return;
-    }
+    if (!mediaScrollRef.current || !isScrollingHorizontally) return;
 
     const container = mediaScrollRef.current;
     const itemWidth = container.offsetWidth;
@@ -105,9 +91,8 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     const currentIndex = Math.round(currentScroll / itemWidth);
 
     // Add momentum based on velocity
-    const momentumThreshold = 0.5;
-    const targetIndex = currentIndex + (Math.abs(touchVelocity) > momentumThreshold ? Math.sign(touchVelocity) : 0);
-    const targetScroll = Math.max(0, Math.min(targetIndex * itemWidth, container.scrollWidth - itemWidth));
+    const momentum = touchVelocity * 200; // Adjust multiplier for desired momentum effect
+    const targetScroll = itemWidth * (currentIndex - Math.sign(momentum));
 
     // Smooth scroll to the target position
     container.scrollTo({
@@ -120,30 +105,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     setTouchVelocity(0);
   };
 
-  const handleMediaClick = (mediaIndex: number) => {
-    if (isDragging) return; // Don't navigate if we're in the middle of a drag
-
-    // Store scroll position
-    const container = document.querySelector('.diary-content');
-    if (container) {
-      sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
-    }
-
-    // Store entry ID for restoration
-    if (entry.id) {
-      sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
-    }
-
-    // Update selected entry ID if callback provided
-    if (setSelectedEntryId) {
-      setSelectedEntryId(entry.id.toString());
-    }
-
-    // Navigate to entry view with media index
-    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
-    navigate(cleanUrl);
-  };
-
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   // Fetch comment count
   const { data: comments = [] } = useQuery({
     queryKey: [`/api/entries/${entry.id}/comments`],
@@ -195,6 +157,21 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     return textContent.length > 200;
   };
 
+  const handleMediaClick = (mediaIndex: number) => {
+    const container = document.querySelector('.diary-content');
+    if (container) {
+      sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+      sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
+    }
+
+    if (setSelectedEntryId) {
+      setSelectedEntryId(entry.id.toString());
+    }
+
+    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
+    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
+    navigate(cleanUrl);
+  };
 
   return (
     <Card className="group bg-white shadow-none border-0 w-full mb-4">
@@ -291,7 +268,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.9, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      onClick={() => handleMediaClick(index)}
+                      onClick={() => !isDragging && handleMediaClick(index)}
                     >
                       <motion.div 
                         className="h-full w-full relative rounded-xl overflow-hidden bg-muted"

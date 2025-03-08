@@ -6,18 +6,14 @@ interface ProgressiveImageProps {
   alt: string;
   className?: string;
   sizes?: string;
-  quality?: number;
 }
 
-export function ProgressiveImage({ src, alt, className = '', sizes, quality = 50 }: ProgressiveImageProps) {
+export function ProgressiveImage({ src, alt, className = '', sizes }: ProgressiveImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentSrc, setCurrentSrc] = useState('');
 
-  // Generate low quality placeholder URL with both size and quality reduction
+  // Generate low quality placeholder URL
   const placeholderUrl = `${src}?w=20&q=10`;
-
-  // Generate preview quality URL for main display
-  const previewUrl = `${src}?q=${quality}`;
 
   useEffect(() => {
     // Reset state when src changes
@@ -30,14 +26,14 @@ export function ProgressiveImage({ src, alt, className = '', sizes, quality = 50
       setCurrentSrc(placeholderUrl);
     };
 
-    // Load preview quality image
-    const previewImage = new Image();
-    previewImage.src = previewUrl;
-    previewImage.onload = () => {
-      setCurrentSrc(previewUrl);
+    // Load high quality image
+    const highQualityImage = new Image();
+    highQualityImage.src = src;
+    highQualityImage.onload = () => {
+      setCurrentSrc(src);
       setIsLoaded(true);
     };
-  }, [src, placeholderUrl, previewUrl]);
+  }, [src, placeholderUrl]);
 
   return (
     <div className="relative w-full h-full overflow-hidden">
@@ -52,7 +48,7 @@ export function ProgressiveImage({ src, alt, className = '', sizes, quality = 50
           />
         )}
       </AnimatePresence>
-
+      
       <motion.img
         src={currentSrc}
         alt={alt}

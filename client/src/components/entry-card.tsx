@@ -14,16 +14,9 @@ import { ProgressiveImage } from './progressive-image';
 interface EntryCardProps {
   entry: DiaryEntry;
   setSelectedEntryId?: (id: string) => void;
-  previewQuality?: number;
-  videoQuality?: number;
 }
 
-export default function EntryCard({ 
-  entry, 
-  setSelectedEntryId,
-  previewQuality = 50,
-  videoQuality = 360 
-}: EntryCardProps) {
+export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
   const [, navigate] = useLocation();
@@ -182,11 +175,6 @@ export default function EntryCard({
     navigate(cleanUrl);
   };
 
-  const getVideoUrl = (url: string) => {
-    const baseUrl = url.split('?')[0];
-    return `${baseUrl}?quality=${videoQuality}`;
-  };
-
   return (
     <Card className="group bg-white shadow-none border-0 w-full mb-4">
       <CardHeader className="space-y-0 pb-2 pt-3 px-0">
@@ -295,12 +283,11 @@ export default function EntryCard({
                             alt={`Media ${index + 1}`}
                             className="absolute inset-0 w-full h-full object-cover"
                             sizes="(max-width: 768px) 66.66vw, 512px"
-                            quality={previewQuality}
                           />
                         ) : (
                           <div className="relative w-full h-full">
                             <video
-                              src={getVideoUrl(url)}
+                              src={url}
                               className="h-full w-full object-cover"
                               playsInline
                               preload="metadata"

@@ -143,9 +143,9 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
 
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
           <div className="mt-3 -mx-4">
-            {entry.mediaUrls[0] && (
+            {entry.mediaUrls.length === 1 && (
               <div 
-                className="aspect-[16/9] w-full cursor-pointer overflow-hidden relative"
+                className="aspect-[4/3] w-full cursor-pointer overflow-hidden relative"
                 onClick={() => handleMediaClick(0)}
               >
                 {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
@@ -156,7 +156,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                       playsInline
                       preload="metadata"
                       muted
-                      poster={entry.mediaUrls[0] + '#t=0.5'} // Get frame at 0.5 seconds as poster
+                      poster={entry.mediaUrls[0] + '#t=0.5'}
                     />
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                       <div className="rounded-full bg-white/30 p-3">
@@ -167,7 +167,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 ) : (
                   <img
                     src={entry.mediaUrls[0]}
-                    alt="Media 1"
+                    alt="Media"
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
@@ -175,18 +175,15 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
               </div>
             )}
 
-            {entry.mediaUrls.length > 1 && (
-              <div className="grid grid-cols-2 gap-[1px] mt-[1px]">
-                {entry.mediaUrls.slice(1, 3).map((url, i) => {
+            {entry.mediaUrls.length === 2 && (
+              <div className="grid grid-cols-2 gap-[2px]">
+                {entry.mediaUrls.map((url, i) => {
                   const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                  const isLastVisible = i === 1 && entry.mediaUrls && entry.mediaUrls.length > 3;
-                  const mediaIndex = i + 1;
-
                   return (
                     <div 
-                      key={i} 
+                      key={i}
                       className="aspect-square relative cursor-pointer overflow-hidden"
-                      onClick={() => handleMediaClick(mediaIndex)}
+                      onClick={() => handleMediaClick(i)}
                     >
                       {isVideo ? (
                         <div className="relative w-full h-full">
@@ -199,29 +196,172 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                             poster={url + '#t=0.5'}
                           />
                           <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                            <div className="rounded-full bg-white/30 p-3">
-                              <Play className="h-6 w-6 text-white" />
+                            <div className="rounded-full bg-white/30 p-2">
+                              <Play className="h-4 w-4 text-white" />
                             </div>
                           </div>
                         </div>
                       ) : (
                         <img
                           src={url}
-                          alt={`Media ${mediaIndex + 1}`}
+                          alt={`Media ${i + 1}`}
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />
                       )}
-                      {isLastVisible && (
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                          <span className="text-white text-xl font-semibold">
-                            +{entry.mediaUrls.length - 3}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {entry.mediaUrls.length === 3 && (
+              <div className="grid grid-cols-2 gap-[2px]">
+                <div 
+                  className="aspect-[4/3] relative cursor-pointer overflow-hidden"
+                  onClick={() => handleMediaClick(0)}
+                >
+                  {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
+                    <div className="relative w-full h-full">
+                      <video
+                        src={entry.mediaUrls[0]}
+                        className="w-full h-full object-cover"
+                        playsInline
+                        preload="metadata"
+                        muted
+                        poster={entry.mediaUrls[0] + '#t=0.5'}
+                      />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <div className="rounded-full bg-white/30 p-3">
+                          <Play className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={entry.mediaUrls[0]}
+                      alt="Media 1"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+                <div className="grid grid-rows-2 gap-[2px]">
+                  {entry.mediaUrls.slice(1, 3).map((url, i) => {
+                    const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                    return (
+                      <div 
+                        key={i}
+                        className="aspect-[4/3] relative cursor-pointer overflow-hidden"
+                        onClick={() => handleMediaClick(i + 1)}
+                      >
+                        {isVideo ? (
+                          <div className="relative w-full h-full">
+                            <video
+                              src={url}
+                              className="w-full h-full object-cover"
+                              playsInline
+                              preload="metadata"
+                              muted
+                              poster={url + '#t=0.5'}
+                            />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                              <div className="rounded-full bg-white/30 p-2">
+                                <Play className="h-4 w-4 text-white" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <img
+                            src={url}
+                            alt={`Media ${i + 2}`}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {entry.mediaUrls.length > 3 && (
+              <div className="grid grid-cols-2 gap-[2px]">
+                <div 
+                  className="aspect-[4/3] relative cursor-pointer overflow-hidden"
+                  onClick={() => handleMediaClick(0)}
+                >
+                  {entry.mediaUrls[0].match(/\.(mp4|webm|MOV|mov)$/i) ? (
+                    <div className="relative w-full h-full">
+                      <video
+                        src={entry.mediaUrls[0]}
+                        className="w-full h-full object-cover"
+                        playsInline
+                        preload="metadata"
+                        muted
+                        poster={entry.mediaUrls[0] + '#t=0.5'}
+                      />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <div className="rounded-full bg-white/30 p-3">
+                          <Play className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={entry.mediaUrls[0]}
+                      alt="Media 1"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+                <div className="grid grid-rows-2 gap-[2px]">
+                  {entry.mediaUrls.slice(1, 3).map((url, i) => {
+                    const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                    const isLast = i === 1;
+                    return (
+                      <div 
+                        key={i}
+                        className="aspect-[4/3] relative cursor-pointer overflow-hidden"
+                        onClick={() => handleMediaClick(i + 1)}
+                      >
+                        {isVideo ? (
+                          <div className="relative w-full h-full">
+                            <video
+                              src={url}
+                              className="w-full h-full object-cover"
+                              playsInline
+                              preload="metadata"
+                              muted
+                              poster={url + '#t=0.5'}
+                            />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                              <div className="rounded-full bg-white/30 p-2">
+                                <Play className="h-4 w-4 text-white" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <img
+                            src={url}
+                            alt={`Media ${i + 2}`}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        )}
+                        {isLast && entry.mediaUrls.length > 3 && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="text-white text-lg font-semibold">
+                              +{entry.mediaUrls.length - 3}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

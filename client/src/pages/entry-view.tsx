@@ -280,23 +280,10 @@ export default function EntryView() {
                             </div>
                           ) : (
                             <img
-                              src={`${url}?quality=low&width=300`} 
-                              data-full-src={url}
+                              src={url}
                               alt={`Media ${index + 1}`}
-                              className="w-full rounded-lg transition-opacity duration-500"
+                              className="w-full rounded-lg"
                               loading="lazy"
-                              onLoad={(e) => {
-                                // After low res version loads, load high res version
-                                const img = e.currentTarget;
-                                const fullSrc = img.getAttribute('data-full-src');
-                                if (fullSrc && img.src !== fullSrc) {
-                                  const highResImg = new Image();
-                                  highResImg.onload = () => {
-                                    img.src = fullSrc;
-                                  };
-                                  highResImg.src = fullSrc;
-                                }
-                              }}
                             />
                           )}
                         </motion.div>

@@ -310,17 +310,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.3 }}
-                            onLoad={(e) => {
-                              // Upgrade from low quality to high quality
-                              if (e.currentTarget.src.includes('?quality=low')) {
-                                e.currentTarget.src = url;
-                              }
-                            }}
-                            style={{ 
-                              backgroundSize: 'cover',
-                              backgroundPosition: 'center'
-                            }}
-                            srcSet={`${url}?quality=low&width=100 100w, ${url}?width=400 400w, ${url} 800w`}
                           />
                         )}
                       </motion.div>

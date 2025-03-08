@@ -318,7 +318,7 @@ export default function Editor() {
 
             {/* Media Preview */}
             {form.watch("mediaUrls")?.length > 0 && (
-              <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+88px)]">
+              <div className="px-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}>
                 <MediaPreview
                   urls={form.watch("mediaUrls")}
                   onRemove={onMediaRemove}
@@ -328,8 +328,8 @@ export default function Editor() {
               </div>
             )}
 
-            {/* Media Controls - Fixed at bottom */}
-            <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-2 z-50 fixed-bar" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)', position: 'fixed', bottom: 0, transform: 'translateZ(0)', willChange: 'transform', backfaceVisibility: 'hidden' }}>
+            {/* Media Controls */}
+            <div className="fixed-bar">
               <div className="flex items-center justify-between gap-4 w-full">
                 <FeelingSelector
                   selectedFeeling={form.getValues("feeling")}

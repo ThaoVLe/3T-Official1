@@ -6,7 +6,6 @@
   :root {
     --scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    --keyboard-height: 0px;
   }
 
   * {
@@ -39,7 +38,6 @@
     flex-direction: column;
     position: relative;
     @apply bg-background;
-    height: auto;
   }
 
   .keyboard-adjustable-content {
@@ -59,7 +57,6 @@
 
   .tiptap-container .ProseMirror {
     @apply min-h-[300px] bg-background dark:bg-background text-foreground;
-    transition: min-height 0.2s ease;
     height: auto;
     overflow-y: hidden;
   }
@@ -70,7 +67,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 50;
+    z-index: 100;
     transform: translateZ(0);
     will-change: transform;
     backface-visibility: hidden;
@@ -81,15 +78,6 @@
 
   .keyboard-visible .fixed-bar {
     transform: translateY(calc(-1 * var(--keyboard-height))) !important;
-    position: fixed !important;
-    bottom: 0;
-    left: 0;
-    right: 0;
-  }
-  
-  .no-gray-space {
-    padding-bottom: env(safe-area-inset-bottom);
-    min-height: 100%;
   }
 
   .mobile-vh {
@@ -98,34 +86,14 @@
     height: stretch;
   }
 
-  .diary-content {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
-    width: 100%;
-    height: 100%;
-    touch-action: pan-y pinch-zoom;
-  }
-
-  .diary-content::-webkit-scrollbar,
-  .diary-content *::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    background: transparent !important;
-  }
-
   .heading-1 { @apply text-[24px] font-bold tracking-tight text-foreground mb-4; }
   .heading-2 { @apply text-[18px] font-semibold text-foreground mb-3; }
   .text-default { @apply text-[11px] text-foreground; }
   .subtitle { @apply text-[11px] text-muted-foreground mb-6; }
-
   .form-container { @apply flex flex-col space-y-4 mb-6; }
   .button-primary { @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors; }
   .button-secondary { @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors; }
   .button-outline { @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md; }
-
   .drop-zone { @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted; }
   .mobile-friendly-button { @apply w-full sm:w-auto; }
   .responsive-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }

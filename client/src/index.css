@@ -46,6 +46,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
+    padding-bottom: 72px; /* Height of floating bar + safe area */
   }
 
   .floating-bar {
@@ -66,6 +67,7 @@
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
   }
 
+  /* When keyboard is visible */
   .keyboard-visible .floating-bar {
     position: fixed;
     bottom: 0;

@@ -22,11 +22,11 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
       if (heightDifference > 100) {
         setIsKeyboardVisible(true);
         setKeyboardHeight(heightDifference);
-        
+
         // Set the keyboard height CSS variable
         document.documentElement.style.setProperty('--keyboard-height', `${heightDifference}px`);
         document.documentElement.classList.add('keyboard-visible');
-        
+
         // Also set the viewport offset for better positioning
         const offsetTop = window.visualViewport.offsetTop || 0;
         document.documentElement.style.setProperty('--keyboard-offset', `${offsetTop}px`);
@@ -97,8 +97,7 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
           flex: 1,
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
-          position: 'relative',
-          paddingBottom: isKeyboardVisible ? '72px' : '56px' // Extra padding when keyboard is visible
+          position: 'relative'
         }}
       >
         {children}

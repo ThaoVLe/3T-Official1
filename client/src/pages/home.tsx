@@ -71,6 +71,11 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content">

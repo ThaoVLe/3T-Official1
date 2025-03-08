@@ -17,6 +17,35 @@ export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRestoredRef = useRef(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 10 });
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const entryIndex = Number(entry.target.getAttribute('data-index'));
+          if (entry.isIntersecting) {
+            // Update visible range when entries come into view
+            setVisibleRange(prev => ({
+              start: Math.max(0, Math.min(entryIndex - 5, (entries?.length || 0) - 10)),
+              end: Math.min(entryIndex + 5, entries?.length || 0)
+            }));
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: '100px 0px',
+        threshold: 0.1
+      }
+    );
+
+    // Observe all entry elements
+    const entryElements = document.querySelectorAll('.entry-card');
+    entryElements.forEach((element) => observer.observe(element));
+
+    return () => observer.disconnect();
+  }, [entries?.length]);
 
   useEffect(() => {
     const storeScrollPosition = () => {
@@ -140,11 +169,12 @@ export default function Home() {
 
         <AnimatePresence>
           <div className="space-y-2">
-            {entries.map((entry, index) => (
+            {entries.slice(visibleRange.start, visibleRange.end).map((entry, index) => (
               <motion.div
                 key={entry.id}
                 id={`entry-${entry.id}`}
-                className="bg-white"
+                className="entry-card bg-white"
+                data-index={visibleRange.start + index}
                 variants={cardVariants}
                 initial="initial"
                 animate="animate"
@@ -155,6 +185,8 @@ export default function Home() {
                 <EntryCard 
                   entry={entry} 
                   setSelectedEntryId={setSelectedEntryId} 
+                  previewQuality={50}
+                  videoQuality={360}
                 />
               </motion.div>
             ))}

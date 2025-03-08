@@ -8,7 +8,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { ProgressiveImage } from './progressive-image';
 
 interface EntryCardProps {
@@ -28,6 +28,12 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchStartTimeRef = useRef<number>(0);
+  const lastTouchX = useRef<number>(0);
+  const lastTouchY = useRef<number>(0);
+  const velocityX = useRef<number>(0);
+  const velocityY = useRef<number>(0);
+  const lastTimestamp = useRef<number>(0);
+  const controls = useAnimation();
 
   useEffect(() => {
     const container = mediaScrollRef.current;
@@ -42,6 +48,20 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const updateVelocity = (e: TouchEvent | React.TouchEvent, timestamp: number) => {
+    const touch = 'touches' in e ? e.touches[0] : e;
+    const dt = timestamp - lastTimestamp.current;
+
+    if (dt > 0) {
+      velocityX.current = (touch.clientX - lastTouchX.current) / dt;
+      velocityY.current = (touch.clientY - lastTouchY.current) / dt;
+    }
+
+    lastTouchX.current = touch.clientX;
+    lastTouchY.current = touch.clientY;
+    lastTimestamp.current = timestamp;
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!mediaScrollRef.current) return;
 
@@ -50,10 +70,18 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     setStartX(e.touches[0].clientX);
     setStartY(e.touches[0].clientY);
     setScrollLeft(mediaScrollRef.current.scrollLeft);
+
+    lastTouchX.current = e.touches[0].clientX;
+    lastTouchY.current = e.touches[0].clientY;
+    lastTimestamp.current = e.timeStamp;
+    velocityX.current = 0;
+    velocityY.current = 0;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!mediaScrollRef.current) return;
+
+    updateVelocity(e, e.timeStamp);
 
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
@@ -69,18 +97,15 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     // Calculate the angle of the swipe
     const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
 
-    // Only handle horizontal swipes and only prevent default for horizontal
     // If this is a horizontal swipe (angle < 30 degrees) and movement is significant
     if (angle < 30 && Math.abs(dx) > minMovement) {
       setIsSwiping(true);
       e.preventDefault(); // Prevent scroll only for confirmed horizontal swipes
 
-      // Apply immediate scroll response
+      // Apply smooth scroll with spring effect
       const scrollOffset = -dx;
-      mediaScrollRef.current.scrollLeft = scrollLeft + scrollOffset;
-    } else {
-      // Let vertical swipes pass through without interference
-      setIsSwiping(false);
+      const springFactor = 0.8; // Adjust for more or less springiness
+      mediaScrollRef.current.scrollLeft = scrollLeft + (scrollOffset * springFactor);
     }
   };
 
@@ -89,24 +114,40 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
 
     const touchEndTime = Date.now();
     const touchDuration = touchEndTime - touchStartTimeRef.current;
-
-    // Calculate the current scroll position and container width
     const containerWidth = mediaScrollRef.current.offsetWidth;
     const currentScrollLeft = mediaScrollRef.current.scrollLeft;
+    const itemWidth = containerWidth * 0.6667;
 
-    // Calculate the target scroll position based on the current position
-    const itemWidth = containerWidth * 0.6667; // 66.67vw
-    const currentIndex = Math.round(currentScrollLeft / itemWidth);
+    // Use velocity to determine swipe direction and force
+    const swipeVelocity = Math.abs(velocityX.current);
+    const velocityThreshold = 0.5; // Adjust this threshold as needed
+    const momentumDistance = swipeVelocity * 100; // Adjust multiplier for momentum effect
 
-    // Smooth scroll to the nearest snap point
+    let targetIndex = Math.round(currentScrollLeft / itemWidth);
+
+    // Apply momentum-based scrolling
+    if (swipeVelocity > velocityThreshold) {
+      const direction = velocityX.current > 0 ? -1 : 1;
+      targetIndex += direction;
+    }
+
+    // Ensure target index is within bounds
+    targetIndex = Math.max(0, Math.min(targetIndex, entry.mediaUrls?.length - 1 || 0));
+
+    // Animate to target position with spring effect
     mediaScrollRef.current.scrollTo({
-      left: currentIndex * itemWidth,
+      left: targetIndex * itemWidth,
       behavior: 'smooth'
+    });
+
+    // Add a subtle bounce effect using Framer Motion
+    controls.start({
+      scale: [1, 0.98, 1],
+      transition: { duration: 0.3, type: "spring", stiffness: 300, damping: 30 }
     });
 
     setIsSwiping(false);
   };
-
 
   // Fetch comment count
   const { data: comments = [] } = useQuery({
@@ -239,13 +280,13 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
           >
             <div 
               ref={mediaScrollRef}
-              className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory"
+              className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory touch-pan-x"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 scrollBehavior: 'smooth',
                 msOverflowStyle: 'none',
                 scrollbarWidth: 'none',
-                overscrollBehavior: 'auto'
+                overscrollBehavior: 'none'
               }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
@@ -266,16 +307,19 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                         minWidth: '200px'
                       }}
                       initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
+                      animate={controls}
                       exit={{ scale: 0.9, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => !isSwiping && handleMediaClick(index)}
                     >
                       <motion.div 
                         className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
                         whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30
+                        }}
                       >
                         {!isVideo ? (
                           <ProgressiveImage

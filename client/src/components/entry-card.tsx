@@ -8,7 +8,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -28,6 +28,8 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const [touchStartTime, setTouchStartTime] = useState(0);
   const [lastTouchX, setLastTouchX] = useState(0);
   const [touchVelocity, setTouchVelocity] = useState(0);
+  const [overscrollAmount, setOverscrollAmount] = useState(0);
+  const controls = useAnimation();
 
   useEffect(() => {
     const container = mediaScrollRef.current;
@@ -35,7 +37,16 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
 
     const handleScroll = () => {
       const index = Math.round(container.scrollLeft / container.offsetWidth);
-      setActiveMediaIndex(index);
+      const maxScroll = container.scrollWidth - container.offsetWidth;
+
+      // Add resistance at edges
+      if (container.scrollLeft < 0) {
+        setOverscrollAmount(container.scrollLeft);
+      } else if (container.scrollLeft > maxScroll) {
+        setOverscrollAmount(container.scrollLeft - maxScroll);
+      } else {
+        setOverscrollAmount(0);
+      }
     };
 
     container.addEventListener('scroll', handleScroll);
@@ -51,6 +62,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     setScrollLeft(mediaScrollRef.current.scrollLeft);
     setTouchStartTime(Date.now());
     setLastTouchX(e.touches[0].clientX);
+    setOverscrollAmount(0);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -63,7 +75,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     const currentTime = Date.now();
     const timeDiff = currentTime - touchStartTime;
 
-    // Calculate velocity
+    // Calculate velocity for smooth momentum scrolling
     if (timeDiff > 0) {
       const velocity = (currentX - lastTouchX) / timeDiff;
       setTouchVelocity(velocity);
@@ -75,10 +87,24 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       setIsScrollingHorizontally(Math.abs(deltaX) > Math.abs(deltaY));
     }
 
-    // Only handle horizontal scrolling
+    // Handle horizontal scrolling with resistance at edges
     if (isScrollingHorizontally) {
       e.preventDefault();
-      mediaScrollRef.current.scrollLeft = scrollLeft + deltaX;
+      const container = mediaScrollRef.current;
+      const maxScroll = container.scrollWidth - container.offsetWidth;
+      let newScrollLeft = scrollLeft + deltaX;
+
+      // Add resistance when scrolling past edges
+      if (newScrollLeft < 0) {
+        newScrollLeft = newScrollLeft / 3; // Reduce scroll amount for resistance
+        setOverscrollAmount(newScrollLeft);
+      } else if (newScrollLeft > maxScroll) {
+        const overscroll = newScrollLeft - maxScroll;
+        newScrollLeft = maxScroll + (overscroll / 3); // Reduce scroll amount for resistance
+        setOverscrollAmount(overscroll / 3);
+      }
+
+      container.scrollLeft = newScrollLeft;
     }
   };
 
@@ -88,24 +114,43 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     const container = mediaScrollRef.current;
     const itemWidth = container.offsetWidth;
     const currentScroll = container.scrollLeft;
-    const currentIndex = Math.round(currentScroll / itemWidth);
+    const maxScroll = container.scrollWidth - container.offsetWidth;
 
-    // Add momentum based on velocity
-    const momentum = touchVelocity * 200; // Adjust multiplier for desired momentum effect
-    const targetScroll = itemWidth * (currentIndex - Math.sign(momentum));
+    // Calculate target scroll position based on momentum
+    let targetScroll = currentScroll;
+    const momentum = touchVelocity * 500; // Increased multiplier for more pronounced momentum effect
 
-    // Smooth scroll to the target position
+    if (Math.abs(momentum) > itemWidth * 0.1) { // Only apply momentum if significant
+      targetScroll = currentScroll - momentum;
+    } else {
+      // Snap to closest item if momentum is low
+      targetScroll = Math.round(currentScroll / itemWidth) * itemWidth;
+    }
+
+    // Bound the target scroll within valid range
+    targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+
+    // Animate scroll to target position
     container.scrollTo({
       left: targetScroll,
       behavior: 'smooth'
     });
 
+    // Reset states
     setIsDragging(false);
     setIsScrollingHorizontally(false);
     setTouchVelocity(0);
+    setOverscrollAmount(0);
+
+    // Animate any overscroll back to bounds
+    if (overscrollAmount !== 0) {
+      controls.start({
+        x: 0,
+        transition: { type: "spring", stiffness: 400, damping: 40 }
+      });
+    }
   };
 
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   // Fetch comment count
   const { data: comments = [] } = useQuery({
     queryKey: [`/api/entries/${entry.id}/comments`],
@@ -150,14 +195,9 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     }
   };
 
-  const needsExpansion = (content: string) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
-    const textContent = tempDiv.textContent || '';
-    return textContent.length > 200;
-  };
-
   const handleMediaClick = (mediaIndex: number) => {
+    if (isDragging) return; // Prevent navigation if we were dragging
+
     const container = document.querySelector('.diary-content');
     if (container) {
       sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
@@ -169,8 +209,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     }
 
     sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
-    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
-    navigate(cleanUrl);
+    navigate(`/entry/${entry.id}?media=${mediaIndex}`);
   };
 
   return (
@@ -190,16 +229,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 {feeling && (
                   <div className="flex items-center">
-                    {feeling.label.includes(',') ? (
-                      <span>
-                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                      </span>
-                    ) : (
-                      <span>
-                        feeling {feeling.label} {feeling.emoji}
-                      </span>
-                    )}
+                    {feeling.label}
                   </div>
                 )}
                 {entry.location && (
@@ -214,20 +244,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       </CardHeader>
 
       <CardContent className="px-4 pt-0 pb-3">
-        <div 
-          onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
-          className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
-          dangerouslySetInnerHTML={{ __html: entry.content }}
-        />
-        {needsExpansion(entry.content) && (
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-sm text-blue-600 hover:text-blue-700 mt-1 font-medium"
-          >
-            {isExpanded ? 'See less' : 'See more'}
-          </button>
-        )}
-
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
           <motion.div 
             className="mt-3 -mx-4 relative"
@@ -235,7 +251,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div 
+            <motion.div 
               ref={mediaScrollRef}
               className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory touch-pan-x scrollbar-none"
               style={{ 
@@ -246,6 +262,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 overscrollBehavior: 'none',
                 touchAction: 'pan-y pinch-zoom',
               }}
+              animate={controls}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -260,21 +277,26 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                       className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
                       style={{
                         width: 'auto',
-                        maxWidth: '66.666667vw',
-                        height: '300px',
+                        maxWidth: '66.666667vw', 
+                        height: '300px', 
                         minWidth: '200px'
                       }}
-                      initial={{ scale: 0.9, opacity: 0 }}
+                      initial={{ scale: 0.95, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.9, opacity: 0 }}
+                      exit={{ scale: 0.95, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      onClick={() => !isDragging && handleMediaClick(index)}
+                      onClick={() => handleMediaClick(index)}
                     >
                       <motion.div 
                         className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ 
+                          duration: 0.2,
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30
+                        }}
                       >
                         {isVideo ? (
                           <div className="h-full w-full relative">
@@ -294,7 +316,15 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                             >
                               <motion.div 
                                 className="rounded-full bg-white/30 p-3"
-                                whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
+                                whileHover={{ 
+                                  scale: 1.1,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.4)'
+                                }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 400,
+                                  damping: 25
+                                }}
                               >
                                 <Play className="h-6 w-6 text-white" />
                               </motion.div>
@@ -317,7 +347,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                   );
                 })}
               </AnimatePresence>
-            </div>
+            </motion.div>
           </motion.div>
         )}
 

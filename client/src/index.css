@@ -7,6 +7,8 @@
     --scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     --keyboard-height: 0px;
+    --keyboard-offset: 0px;
+    --viewport-height: 100vh;
   }
 
   * {
@@ -69,10 +71,16 @@
   .keyboard-visible .floating-bar {
     position: fixed;
     bottom: 0;
+    left: 0;
+    right: 0;
     transform: translateY(calc(-1 * var(--keyboard-height)));
-    z-index: 100;
+    z-index: 1000;
     transition: transform 0.15s ease;
     will-change: transform;
+    background-color: var(--background);
+    border-top: 1px solid var(--border);
+    padding: 8px 12px;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .keyboard-visible .keyboard-adjustable-content {

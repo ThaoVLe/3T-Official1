@@ -86,12 +86,12 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
             {onRemove && (
               <Button
                 type="button"
-                variant="ghost"
+                variant="secondary"
                 size="icon"
-                className="h-6 w-6 absolute -top-2 -right-2 bg-white shadow-sm rounded-full z-10"
+                className="h-6 w-6 absolute -top-2 -right-2 bg-background border border-border shadow-sm rounded-full z-10"
                 onClick={() => onRemove(index)}
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 text-foreground" />
               </Button>
             )}
 

@@ -38,7 +38,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    background-color: var(--background);
+    @apply bg-background;
   }
 
   .keyboard-adjustable-content {
@@ -54,7 +54,7 @@
     left: 0;
     right: 0;
     z-index: 999;
-    background-color: var(--background);
+    @apply bg-background/80 border-border;
     border-top: 1px solid var(--border);
     padding: 8px;
     transform: translateZ(0);
@@ -63,7 +63,6 @@
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
     transition: transform 0.3s ease;
     backdrop-filter: blur(8px);
-    background-color: var(--background)/80;
     pointer-events: auto;
   }
 
@@ -126,33 +125,25 @@
     will-change: bottom !important;
   }
 
+  .tiptap-container {
+    @apply flex flex-col bg-card dark:bg-card border border-border;
+    transition: height 0.2s ease;
+    overflow: hidden;
+  }
+
   .tiptap-container .ProseMirror {
+    @apply min-h-[300px] bg-background dark:bg-background text-foreground;
     transition: min-height 0.2s ease;
     height: auto;
     overflow-y: hidden;
   }
 
-  .ProseMirror {
-    @apply min-h-[300px];
-  }
-
-  .tiptap-container {
-    @apply flex flex-col;
-    transition: height 0.2s ease;
-    overflow: hidden;
-  }
-
-  .custom-emotion {
-    color: #880000;
-    font-weight: 500;
-  }
-
-  .mobile-bottom-menu {
-    @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
-  }
-
-  .card {
-    @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
+  .ProseMirror p.is-editor-empty:first-child::before {
+    @apply text-muted-foreground;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
   }
 
   .heading-1 { @apply text-[24px] font-bold tracking-tight text-foreground mb-4; }

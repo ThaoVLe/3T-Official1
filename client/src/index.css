@@ -64,10 +64,14 @@
     transition: transform 0.3s ease;
     backdrop-filter: blur(8px);
     pointer-events: auto;
+    transform: translateY(0) !important;
+    position: sticky;
+    bottom: 0;
   }
 
   .keyboard-visible .floating-bar {
-    transform: translateY(calc(-1 * var(--keyboard-height)));
+    transform: translateY(calc(-1 * var(--keyboard-height))) !important;
+    position: fixed;
   }
 
   .mobile-vh {
@@ -84,6 +88,7 @@
     width: 100%;
     height: 100%;
     touch-action: pan-y pinch-zoom;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
   }
 
   .diary-content::-webkit-scrollbar,

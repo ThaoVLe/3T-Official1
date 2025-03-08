@@ -7,10 +7,10 @@ import Home from "@/pages/home";
 import Editor from "@/pages/editor";
 import EntryView from "@/pages/entry-view";
 import NotFound from "@/pages/not-found";
-import { BrowserRouter as Router } from "react-router-dom";
-import { ScrollToTop } from "./components/scroll-to-top"; // Import the ScrollToTop component
+import { BrowserRouter } from "react-router-dom";
+import { ScrollToTop } from "./components/scroll-to-top";
 
-function Router() {
+function AppRoutes() {
   return (
     <Layout>
       <Switch>
@@ -30,28 +30,13 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <ScrollToTop /> {/* Add ScrollToTop component here */}
-        <Router />
-      </Router>
+      <BrowserRouter>
+        <ScrollToTop />
+        <AppRoutes />
+      </BrowserRouter>
       <Toaster />
     </QueryClientProvider>
   );
 }
 
 export default App;
-
-
-// Added ScrollToTop component
-import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
-
-export const ScrollToTop = () => {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
-  return null;
-};

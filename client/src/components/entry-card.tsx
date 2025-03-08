@@ -75,8 +75,12 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       setIsSwiping(true);
       e.preventDefault(); // Prevent scroll only for confirmed horizontal swipes
 
-      // Apply immediate scroll response
-      const scrollOffset = -dx;
+      // Calculate velocity for smooth scrolling
+      const time = Date.now() - touchStartTimeRef.current;
+      const velocity = dx / time;
+
+      // Apply immediate scroll response with velocity-based offset
+      const scrollOffset = -dx * (1 + Math.abs(velocity) * 0.1);
       mediaScrollRef.current.scrollLeft = scrollLeft + scrollOffset;
     } else {
       // Let vertical swipes pass through without interference
@@ -89,19 +93,32 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
 
     const touchEndTime = Date.now();
     const touchDuration = touchEndTime - touchStartTimeRef.current;
+    const currentX = e.changedTouches[0].clientX;
+    const totalSwipeDistance = currentX - startX;
+    const swipeVelocity = Math.abs(totalSwipeDistance / touchDuration);
 
     // Calculate the current scroll position and container width
     const containerWidth = mediaScrollRef.current.offsetWidth;
     const currentScrollLeft = mediaScrollRef.current.scrollLeft;
-
-    // Calculate the target scroll position based on the current position
     const itemWidth = containerWidth * 0.6667; // 66.67vw
-    const currentIndex = Math.round(currentScrollLeft / itemWidth);
 
-    // Smooth scroll to the nearest snap point
+    // Determine the target index based on swipe velocity and direction
+    let targetIndex = Math.round(currentScrollLeft / itemWidth);
+    if (swipeVelocity > 0.5) { // If swipe was fast enough
+      targetIndex += totalSwipeDistance < 0 ? 1 : -1;
+    }
+
+    // Ensure target index is within bounds
+    targetIndex = Math.max(0, Math.min(targetIndex, (entry.mediaUrls?.length || 1) - 1));
+
+    // Smooth scroll to the target position with dynamic duration
+    const targetScrollLeft = targetIndex * itemWidth;
+    const scrollDistance = Math.abs(targetScrollLeft - currentScrollLeft);
+    const duration = Math.min(scrollDistance / (swipeVelocity * 1000), 300); // Cap at 300ms
+
     mediaScrollRef.current.scrollTo({
-      left: currentIndex * itemWidth,
-      behavior: 'smooth'
+      left: targetScrollLeft,
+      behavior: scrollDistance < 50 ? 'smooth' : 'auto' // Use instant for small adjustments
     });
 
     setIsSwiping(false);

@@ -60,15 +60,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     const currentY = e.touches[0].clientY;
     const deltaX = startX - currentX;
     const deltaY = startY - currentY;
-    const currentTime = Date.now();
-    const timeDiff = currentTime - touchStartTime;
-
-    // Calculate velocity
-    if (timeDiff > 0) {
-      const velocity = (currentX - lastTouchX) / timeDiff;
-      setTouchVelocity(velocity);
-      setLastTouchX(currentX);
-    }
 
     // Determine scroll direction only on initial movement
     if (!isScrollingHorizontally && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
@@ -90,13 +81,9 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     const currentScroll = container.scrollLeft;
     const currentIndex = Math.round(currentScroll / itemWidth);
 
-    // Add momentum based on velocity
-    const momentum = touchVelocity * 200; // Adjust multiplier for desired momentum effect
-    const targetScroll = itemWidth * (currentIndex - Math.sign(momentum));
-
-    // Smooth scroll to the target position
+    // Always snap to the nearest item
     container.scrollTo({
-      left: targetScroll,
+      left: currentIndex * itemWidth,
       behavior: 'smooth'
     });
 
@@ -158,6 +145,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   };
 
   const handleMediaClick = (mediaIndex: number) => {
+    // Store scroll position and entry ID for back navigation
     const container = document.querySelector('.diary-content');
     if (container) {
       sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
@@ -168,9 +156,8 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       setSelectedEntryId(entry.id.toString());
     }
 
-    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
-    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
-    navigate(cleanUrl);
+    // Navigate to entry view with media index
+    navigate(`/entry/${entry.id}?media=${mediaIndex}`);
   };
 
   return (
@@ -243,7 +230,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 scrollBehavior: 'smooth',
                 msOverflowStyle: 'none',
                 scrollbarWidth: 'none',
-                overscrollBehavior: 'none',
+                overscrollBehavior: 'contain',
                 touchAction: 'pan-y pinch-zoom',
               }}
               onTouchStart={handleTouchStart}
@@ -259,8 +246,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                       key={index}
                       className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
                       style={{
-                        width: 'auto',
-                        maxWidth: '66.666667vw',
+                        width: '66.666667vw',
                         height: '300px',
                         minWidth: '200px'
                       }}

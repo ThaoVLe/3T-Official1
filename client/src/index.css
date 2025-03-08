@@ -133,7 +133,7 @@
   }
 
   .ProseMirror {
-    @apply min-h-[200px];
+    @apply min-h-[300px];
   }
 
   .tiptap-container {

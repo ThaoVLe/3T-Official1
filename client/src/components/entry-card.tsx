@@ -22,8 +22,11 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const mediaScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchStartTimeRef = useRef<number>(0);
 
   useEffect(() => {
     const container = mediaScrollRef.current;
@@ -38,53 +41,59 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setStartX(e.pageX - (mediaScrollRef.current?.offsetLeft || 0));
-    setScrollLeft(mediaScrollRef.current?.scrollLeft || 0);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    if (!mediaScrollRef.current) return;
-
-    const x = e.pageX - (mediaScrollRef.current.offsetLeft || 0);
-    const walk = (x - startX) * 2;
-    mediaScrollRef.current.scrollLeft = scrollLeft - walk;
-  };
-
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!mediaScrollRef.current) return;
-    setIsDragging(true);
-    setStartX(e.touches[0].clientX - (mediaScrollRef.current.offsetLeft || 0));
+
+    touchStartTimeRef.current = Date.now();
+    setIsSwiping(false);
+    setStartX(e.touches[0].clientX);
+    setStartY(e.touches[0].clientY);
     setScrollLeft(mediaScrollRef.current.scrollLeft);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !mediaScrollRef.current) return;
+    if (!mediaScrollRef.current) return;
 
-    const x = e.touches[0].clientX - (mediaScrollRef.current.offsetLeft || 0);
-    const dx = x - startX;
-    const dy = e.touches[0].clientY - e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const dx = currentX - startX;
+    const dy = currentY - startY;
 
-    // Only prevent default if the swipe is more horizontal than vertical
-    if (Math.abs(dx) > Math.abs(dy)) {
-      e.preventDefault();
-      mediaScrollRef.current.scrollLeft = scrollLeft - dx;
+    // Calculate the angle of the swipe
+    const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
+
+    // If this is a horizontal swipe (angle < 45 degrees)
+    if (angle < 45) {
+      setIsSwiping(true);
+      e.preventDefault(); // Prevent vertical scroll only during horizontal swipe
+
+      // Apply immediate scroll response
+      const scrollOffset = -dx;
+      mediaScrollRef.current.scrollLeft = scrollLeft + scrollOffset;
     }
   };
 
-  const handleTouchEnd = () => {
-    setIsDragging(false);
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!mediaScrollRef.current || !isSwiping) return;
+
+    const touchEndTime = Date.now();
+    const touchDuration = touchEndTime - touchStartTimeRef.current;
+
+    // Calculate the current scroll position and container width
+    const containerWidth = mediaScrollRef.current.offsetWidth;
+    const currentScrollLeft = mediaScrollRef.current.scrollLeft;
+
+    // Calculate the target scroll position based on the current position
+    const itemWidth = containerWidth * 0.6667; // 66.67vw
+    const currentIndex = Math.round(currentScrollLeft / itemWidth);
+
+    // Smooth scroll to the nearest snap point
+    mediaScrollRef.current.scrollTo({
+      left: currentIndex * itemWidth,
+      behavior: 'smooth'
+    });
+
+    setIsSwiping(false);
   };
 
 
@@ -219,17 +228,15 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
           >
             <div 
               ref={mediaScrollRef}
-              className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory touch-pan-x scrollbar-none"
+              className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory touch-pan-x"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 scrollBehavior: 'smooth',
                 msOverflowStyle: 'none',
-                scrollbarWidth: 'none'
+                scrollbarWidth: 'none',
+                overscrollBehaviorX: 'contain',
+                overscrollBehaviorY: 'auto'
               }}
-              onMouseDown={handleMouseDown}
-              onMouseLeave={handleMouseLeave}
-              onMouseUp={handleMouseUp}
-              onMouseMove={handleMouseMove}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -252,7 +259,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.9, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      onClick={() => !isDragging && handleMediaClick(index)}
+                      onClick={() => !isSwiping && handleMediaClick(index)}
                     >
                       <motion.div 
                         className="h-full w-full relative rounded-xl overflow-hidden bg-muted"

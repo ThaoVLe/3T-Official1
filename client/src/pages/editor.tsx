@@ -16,6 +16,8 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
+import { useKeyboard } from "@/hooks/use-keyboard"; // Added import
+
 
 // Added KeyboardAware component
 const KeyboardAware = ({ children }: { children: React.ReactNode }) => {
@@ -49,6 +51,7 @@ export default function Editor() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
+  const keyboardHeight = useKeyboard(); // Get keyboard height
 
   useEffect(() => {
     let touchStartX = 0;
@@ -309,12 +312,18 @@ export default function Editor() {
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col overflow-auto w-full bg-background">
-            <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
-              <TipTapEditor
-                value={form.watch("content")}
-                onChange={(value) => form.setValue("content", value)}
-              />
-            </div>
+            <div 
+                className="flex-1 overflow-auto p-4 sm:p-6 mb-[72px]"
+                style={{ 
+                  height: keyboardHeight > 0 ? `calc(100% - ${keyboardHeight}px)` : 'auto',
+                  paddingBottom: keyboardHeight > 0 ? `${Math.min(72, keyboardHeight)}px` : '72px'
+                }}
+              >
+                <TipTapEditor
+                  value={form.watch("content")}
+                  onChange={(value) => form.setValue("content", value)}
+                />
+              </div>
 
             {/* Media Preview */}
             {form.watch("mediaUrls")?.length > 0 && (

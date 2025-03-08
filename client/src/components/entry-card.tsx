@@ -279,12 +279,12 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                         {isVideo ? (
                           <div className="h-full w-full relative">
                             <video
-                              src={url}
+                              src={url + '#t=0.5&height=360'}
                               className="h-full w-full object-cover"
                               playsInline
                               preload="metadata"
                               muted
-                              poster={url + '#t=0.5'}
+                              poster={url + '#t=0.5&height=360'}
                             />
                             <motion.div 
                               className="absolute inset-0 bg-black/20 flex items-center justify-center"
@@ -302,7 +302,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                           </div>
                         ) : (
                           <motion.img
-                            src={url}
+                            src={`${url}?quality=50&width=400`}
                             alt={`Media ${index + 1}`}
                             className="h-full w-full object-cover"
                             loading="lazy"
@@ -312,7 +312,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                             transition={{ duration: 0.3 }}
                             onLoad={(e) => {
                               // Upgrade from low quality to high quality
-                              if (e.currentTarget.src.includes('?quality=low')) {
+                              if (e.currentTarget.src.includes('?quality=50')) {
                                 e.currentTarget.src = url;
                               }
                             }}

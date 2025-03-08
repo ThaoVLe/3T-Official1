@@ -8,10 +8,53 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
+import { useLazyEntries } from "@/lib/use-lazy-entries"; // Placeholder import
+
+
+// Placeholder for Entry type and useLazyEntries hook
+type Entry = DiaryEntry;
+
+const useLazyEntries = (allEntries: Entry[]) => {
+  const [visibleEntries, setVisibleEntries] = useState<Entry[]>([]);
+  const loadingRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Placeholder lazy loading logic - replace with actual implementation
+    const visibleCount = Math.min(10, allEntries.length);
+    setVisibleEntries(allEntries.slice(0, visibleCount));
+    
+    const observer = new IntersectionObserver(entries => {
+      const target = entries[0];
+      if (target.isIntersecting && allEntries.length > visibleEntries.length) {
+          setIsLoading(true);
+          setTimeout(() => { //Simulate fetching more data
+            const newVisibleCount = Math.min(visibleEntries.length + 10, allEntries.length);
+            setVisibleEntries(allEntries.slice(0, newVisibleCount));
+            setIsLoading(false);
+          }, 500); //Simulate a delay for fetching
+      }
+    }, { threshold: 1 });
+
+    if (loadingRef.current) {
+      observer.observe(loadingRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [allEntries, visibleEntries]);
+
+
+  return { visibleEntries, loadingRef, isLoading };
+};
+
 
 export default function Home() {
-  const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
+  const [allEntries, setAllEntries] = useState<Entry[]>([]);
+  const { visibleEntries: entries, loadingRef, isLoading } = useLazyEntries(allEntries);
+
+  const { data: initialEntries, isLoading: initialLoading } = useQuery<DiaryEntry[]>({
     queryKey: ["/api/entries"],
+    onSuccess: data => setAllEntries(data)
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,7 +80,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!entries || entries.length === 0 || scrollRestoredRef.current) return;
+    if (!initialEntries || initialEntries.length === 0 || scrollRestoredRef.current) return;
 
     const restoreScroll = () => {
       const lastViewedEntryId = sessionStorage.getItem('lastViewedEntryId');
@@ -63,7 +106,7 @@ export default function Home() {
     };
 
     setTimeout(restoreScroll, 50);
-  }, [entries]);
+  }, [initialEntries]);
 
   useEffect(() => {
     return () => {
@@ -71,7 +114,7 @@ export default function Home() {
     };
   }, []);
 
-  if (isLoading) {
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-[#f0f2f5] overflow-auto diary-content">
         <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
@@ -86,7 +129,7 @@ export default function Home() {
     );
   }
 
-  if (!entries?.length) {
+  if (!allEntries?.length) {
     return (
       <PageTransition direction={-1}>
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
@@ -158,6 +201,11 @@ export default function Home() {
                 />
               </motion.div>
             ))}
+            {isLoading && allEntries.length > entries.length && (
+              <div className="flex justify-center py-4">
+                <div className="animate-pulse">Loading more entries...</div>
+              </div>
+            )}
           </div>
         </AnimatePresence>
       </div>

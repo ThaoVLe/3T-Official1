@@ -316,9 +316,9 @@ export default function Editor() {
               />
             </div>
 
-            {/* Media Preview moved here */}
+            {/* Media Preview */}
             {form.watch("mediaUrls")?.length > 0 && (
-              <div className="p-4 pb-[100px]"> {/* Increased padding to account for floating bar */}
+              <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+88px)]">
                 <MediaPreview
                   urls={form.watch("mediaUrls")}
                   onRemove={onMediaRemove}
@@ -328,19 +328,9 @@ export default function Editor() {
               </div>
             )}
 
-            {/* Media Controls - Now in floating bar */}
-            <div 
-              className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-2 z-50"
-              style={{ 
-                paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)',
-                position: 'fixed',
-                bottom: 0,
-                transform: 'translateZ(0)',
-                willChange: 'transform',
-                backfaceVisibility: 'hidden'
-              }}
-            >
-              <div className="flex items-center justify-between gap-4">
+            {/* Media Controls - Fixed at bottom */}
+            <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-2 z-50 fixed-bar" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)', position: 'fixed', bottom: 0, transform: 'translateZ(0)', willChange: 'transform', backfaceVisibility: 'hidden' }}>
+              <div className="flex items-center justify-between gap-4 w-full">
                 <FeelingSelector
                   selectedFeeling={form.getValues("feeling")}
                   onSelect={async (feeling) => {

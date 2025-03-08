@@ -63,25 +63,28 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     const deltaX = startX - currentX;
     const deltaY = startY - currentY;
     const moveDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const currentTime = Date.now();
-    const timeDiff = currentTime - touchStartTime;
 
-    // If we haven't determined the touch intent yet and the user has moved enough
-    if (!touchIntent && moveDistance > 5) {
-      setTouchIntent(Math.abs(deltaX) > Math.abs(deltaY) ? 'scroll' : 'tap');
+    // More precise touch intent detection
+    if (!touchIntent && moveDistance > 10) { // Increased threshold for better accuracy
+      if (Math.abs(deltaX) > Math.abs(deltaY) * 1.2) { // Require more horizontal movement
+        setTouchIntent('scroll');
+        setIsDragging(true);
+      } else {
+        setTouchIntent('tap');
+      }
     }
 
     // Calculate velocity for momentum scrolling
+    const timeDiff = Date.now() - touchStartTime;
     if (timeDiff > 0) {
       const velocity = (currentX - lastTouchX) / timeDiff;
-      setTouchVelocity(velocity);
+      setTouchVelocity(velocity * 1.5); // Increased multiplier for smoother momentum
       setLastTouchX(currentX);
     }
 
     // Only handle horizontal scrolling if that's the determined intent
     if (touchIntent === 'scroll') {
       e.preventDefault();
-      setIsDragging(true);
       mediaScrollRef.current.scrollLeft = scrollLeft + deltaX;
     }
   };
@@ -91,31 +94,36 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
 
     const container = mediaScrollRef.current;
     const timeDiff = Date.now() - touchStartTime;
-    const isQuickTouch = timeDiff < 300 && !isDragging;
+    const moveDistance = Math.sqrt(
+      Math.pow(e.changedTouches[0].clientX - startX, 2) +
+      Math.pow(e.changedTouches[0].clientY - startY, 2)
+    );
 
-    // Handle tap
+    // Enhanced tap detection
+    const isQuickTouch = timeDiff < 200 && moveDistance < 10;
+
     if (isQuickTouch || touchIntent === 'tap') {
       const index = Math.round(container.scrollLeft / container.offsetWidth);
       handleMediaClick(index);
       return;
     }
 
-    // Handle scroll end with momentum
+    // Improved scroll end behavior with momentum
     if (touchIntent === 'scroll') {
       const itemWidth = container.offsetWidth;
       const currentScroll = container.scrollLeft;
       let targetIndex = Math.round(currentScroll / itemWidth);
 
-      // Apply momentum effect
-      const momentum = touchVelocity * 300; // Increased for more pronounced effect
-      if (Math.abs(momentum) > itemWidth * 0.1) { // Threshold for momentum to trigger
+      // Enhanced momentum effect
+      const momentum = touchVelocity * 400; // Increased for smoother scrolling
+      if (Math.abs(momentum) > itemWidth * 0.15) { // Adjusted threshold
         targetIndex += momentum > 0 ? 1 : -1;
       }
 
       // Clamp target index
       targetIndex = Math.max(0, Math.min(targetIndex, entry.mediaUrls?.length - 1 || 0));
 
-      // Smooth scroll to target
+      // Smooth scroll to target with easing
       container.scrollTo({
         left: targetIndex * itemWidth,
         behavior: 'smooth'

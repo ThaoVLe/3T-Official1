@@ -58,17 +58,17 @@
     border-top: 1px solid var(--border);
     padding: 8px;
     transform: translateZ(0);
-    will-change: bottom;
+    will-change: transform;
     backface-visibility: hidden;
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
-    transition: bottom 0.3s ease;
+    transition: transform 0.3s ease;
     backdrop-filter: blur(8px);
     background-color: var(--background)/80;
     pointer-events: auto;
   }
 
   .keyboard-visible .floating-bar {
-    bottom: var(--keyboard-height);
+    transform: translateY(calc(-1 * var(--keyboard-height)));
   }
 
   .mobile-vh {
@@ -117,7 +117,7 @@
     -webkit-user-select: none !important;
     user-select: none !important;
   }
-  
+
   .not-scrollable {
     position: fixed !important;
     touch-action: none !important;

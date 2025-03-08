@@ -27,8 +27,6 @@ const NewEntry: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
-
-  // Reference to track swipe animation
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,18 +34,12 @@ const NewEntry: React.FC = () => {
     let touchStartY = 0;
     let touchStartTime = 0;
     let isDragging = false;
-    let currentTranslateX = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
       isDragging = true;
-
-      // Reset transition during drag
-      if (containerRef.current) {
-        containerRef.current.style.transition = 'none';
-      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -57,24 +49,14 @@ const NewEntry: React.FC = () => {
       const touchMoveY = e.touches[0].clientY;
       const verticalDistance = Math.abs(touchMoveY - touchStartY);
 
-      // Prevent vertical scrolling interference
       if (verticalDistance > 30) return;
 
-      // Calculate the horizontal distance moved
       const moveDistance = touchMoveX - touchStartX;
 
-      // Only allow right swipes (positive distance)
       if (moveDistance > 0) {
-        currentTranslateX = moveDistance;
-
-        // Apply transform with damping effect (using sqrt for more natural feel)
         if (containerRef.current) {
           const dampenedDistance = Math.sqrt(moveDistance) * 6;
           containerRef.current.style.transform = `translateX(${Math.min(dampenedDistance, 100)}px)`;
-
-          // Gradually increase opacity of backdrop as user swipes
-          const opacity = Math.min(moveDistance / 150, 0.5);
-          containerRef.current.style.boxShadow = `-5px 0 15px rgba(0, 0, 0, ${opacity})`;
         }
       }
     };
@@ -90,26 +72,18 @@ const NewEntry: React.FC = () => {
       const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
 
-      // Add transition for smooth animation back to original position
       if (containerRef.current) {
-        containerRef.current.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease-out';
+        containerRef.current.style.transition = 'transform 0.3s ease-out';
       }
 
-      // If swiped far enough or fast enough (distance > 80px or > 50px with time < 300ms, not too much vertical movement)
       if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
-        // Show save dialog
         setShowSaveDialog(true);
-
-        // Animate back to original position
         if (containerRef.current) {
           containerRef.current.style.transform = 'translateX(0)';
-          containerRef.current.style.boxShadow = 'none';
         }
       } else {
-        // Not swiped far enough, animate back to original position
         if (containerRef.current) {
           containerRef.current.style.transform = 'translateX(0)';
-          containerRef.current.style.boxShadow = 'none';
         }
       }
     };
@@ -231,9 +205,9 @@ const NewEntry: React.FC = () => {
 
   return (
     <PageTransition direction={1}>
-      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-        <form ref={formRef} onSubmit={form.handleSubmit((data) => mutation.mutate(data))}>
-          <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+      <div ref={containerRef} className="relative min-h-screen">
+        <form ref={formRef} >
+          <div className={`flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
             {/* Header */}
             <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
               <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
@@ -247,8 +221,9 @@ const NewEntry: React.FC = () => {
                   Cancel
                 </Button>
                 <Button
-                  type="submit"
+                  type="button"
                   size="sm"
+                  onClick={form.handleSubmit((data) => mutation.mutate(data))}
                   disabled={mutation.isPending}
                   className="bg-primary hover:bg-primary/90 whitespace-nowrap"
                 >
@@ -292,31 +267,28 @@ const NewEntry: React.FC = () => {
                   />
                 </div>
               )}
+            </div>
 
-              {/* Floating Bar */}
-              <div 
-                className="floating-bar"
-                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <FeelingSelector
-                    selectedFeeling={form.getValues("feeling")}
-                    onSelect={(feeling) => {
-                      setFeeling(feeling);
-                      form.setValue("feeling", feeling);
-                    }}
-                  />
+            {/* Floating Bar */}
+            <div className="floating-bar">
+              <div className="flex items-center justify-between gap-4">
+                <FeelingSelector
+                  selectedFeeling={form.getValues("feeling")}
+                  onSelect={(feeling) => {
+                    setFeeling(feeling);
+                    form.setValue("feeling", feeling);
+                  }}
+                />
 
-                  <MediaRecorder onCapture={onMediaUpload} />
+                <MediaRecorder onCapture={onMediaUpload} />
 
-                  <LocationSelector
-                    selectedLocation={form.getValues("location")}
-                    onSelect={(location) => {
-                      setLocation(location);
-                      form.setValue("location", location);
-                    }}
-                  />
-                </div>
+                <LocationSelector
+                  selectedLocation={form.getValues("location")}
+                  onSelect={(location) => {
+                    setLocation(location);
+                    form.setValue("location", location);
+                  }}
+                />
               </div>
             </div>
           </div>

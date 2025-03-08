@@ -46,7 +46,6 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    padding-bottom: 56px; /* Height of floating bar */
   }
 
   .floating-bar {
@@ -63,14 +62,12 @@
     backface-visibility: hidden;
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
     transition: transform 0.3s ease;
+    backdrop-filter: blur(8px);
+    background-color: var(--background)/80;
   }
 
   .keyboard-visible .floating-bar {
     transform: translateY(calc(-1 * var(--keyboard-height)));
-  }
-
-  .keyboard-visible .keyboard-adjustable-content {
-    padding-bottom: calc(56px + var(--keyboard-height)); /* Adjust padding when keyboard is visible */
   }
 
   .mobile-vh {

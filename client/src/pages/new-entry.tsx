@@ -47,6 +47,16 @@ const NewEntry: React.FC = () => {
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging) return;
 
+      // Check if we're touching an editor element during the move
+      const target = e.target as HTMLElement;
+      const isInsideEditor = target.closest('.tiptap-container, .ProseMirror') !== null;
+
+      // Don't process swipe if inside editor
+      if (isInsideEditor) {
+        isDragging = false;
+        return;
+      }
+
       const touchMoveX = e.touches[0].clientX;
       const touchMoveY = e.touches[0].clientY;
       const verticalDistance = Math.abs(touchMoveY - touchStartY);

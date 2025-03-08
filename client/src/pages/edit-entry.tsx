@@ -34,7 +34,7 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
 
   // Reference to track swipe animation
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
@@ -43,11 +43,22 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
     let currentTranslateX = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
+      // Check if touch started inside the editing area or floating bar
+      const target = e.target as HTMLElement;
+      const isInsideEditor = target.closest('.tiptap-container, .ProseMirror') !== null;
+      const isInsideFloatingBar = target.closest('.floating-bar') !== null;
+
+      // Only allow swipe if touch is NOT inside editor area
+      if (isInsideEditor || isInsideFloatingBar) {
+        isDragging = false;
+        return;
+      }
+
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
       isDragging = true;
-      
+
       // Reset transition during drag
       if (containerRef.current) {
         containerRef.current.style.transition = 'none';
@@ -56,26 +67,26 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging) return;
-      
+
       const touchMoveX = e.touches[0].clientX;
       const touchMoveY = e.touches[0].clientY;
       const verticalDistance = Math.abs(touchMoveY - touchStartY);
-      
+
       // Prevent vertical scrolling interference
       if (verticalDistance > 30) return;
-      
+
       // Calculate the horizontal distance moved
       const moveDistance = touchMoveX - touchStartX;
-      
+
       // Only allow right swipes (positive distance)
       if (moveDistance > 0) {
         currentTranslateX = moveDistance;
-        
+
         // Apply transform with damping effect (using sqrt for more natural feel)
         if (containerRef.current) {
           const dampenedDistance = Math.sqrt(moveDistance) * 6;
           containerRef.current.style.transform = `translateX(${Math.min(dampenedDistance, 100)}px)`;
-          
+
           // Gradually increase opacity of backdrop as user swipes
           const opacity = Math.min(moveDistance / 150, 0.5);
           containerRef.current.style.boxShadow = `-5px 0 15px rgba(0, 0, 0, ${opacity})`;
@@ -86,14 +97,14 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
     const handleTouchEnd = (e: TouchEvent) => {
       if (!isDragging) return;
       isDragging = false;
-      
+
       const touchEndX = e.changedTouches[0].clientX;
       const touchEndY = e.changedTouches[0].clientY;
       const touchEndTime = Date.now();
       const swipeDistance = touchEndX - touchStartX;
       const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
-      
+
       // Add transition for smooth animation back to original position
       if (containerRef.current) {
         containerRef.current.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease-out';
@@ -103,7 +114,7 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
       if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
         // Show save dialog
         setShowSaveDialog(true);
-        
+
         // Animate back to original position
         if (containerRef.current) {
           containerRef.current.style.transform = 'translateX(0)';
@@ -154,7 +165,7 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
       setTimeout(() => navigate('/'), 100);
     }
   };
-  
+
   const handleSaveConfirm = () => {
     if (formRef.current) {
       // Trigger the form submission
@@ -162,7 +173,7 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
       formRef.current.dispatchEvent(event);
     }
     setShowSaveDialog(false);
-    
+
     // Add exit animation similar to the entry-view
     if (containerRef.current) {
       containerRef.current.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';

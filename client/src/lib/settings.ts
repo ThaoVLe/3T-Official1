@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+type Theme = 'light' | 'dark' | 'system';
+
 interface Settings {
-  theme: 'light' | 'dark' | 'system';
+  theme: Theme;
   isCompactMode: boolean;
   isLargeText: boolean;
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  setTheme: (theme: Theme) => void;
   setCompactMode: (isCompact: boolean) => void;
   setLargeText: (isLarge: boolean) => void;
 }

@@ -16,7 +16,7 @@ import { Save, X } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
-import { KeyboardAware } from "@/components/keyboard-aware";
+import { KeyboardAware } from "@/components/keyboard-aware"; //Import added
 
 const NewEntry: React.FC = () => {
   const [feeling, setFeeling] = useState<{ emoji: string; label: string } | null>(null);
@@ -29,7 +29,7 @@ const NewEntry: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(''); // Added state for content
 
   useEffect(() => {
     let touchStartX = 0;
@@ -38,20 +38,6 @@ const NewEntry: React.FC = () => {
     let isDragging = false;
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Check if touch started inside the editing area or floating bar
-      const target = e.target as HTMLElement;
-      const isInsideEditor = target.closest('.tiptap-container, .ProseMirror') !== null;
-      const isInsideFloatingBar = target.closest('.floating-bar') !== null;
-
-      // Only allow swipe if touch is NOT inside editor area or floating bar
-      if (isInsideEditor || isInsideFloatingBar) {
-        isDragging = false;
-        if (isInsideFloatingBar) {
-          e.stopPropagation();
-        }
-        return;
-      }
-
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
@@ -231,7 +217,7 @@ const NewEntry: React.FC = () => {
 
   return (
     <PageTransition direction={1}>
-      <KeyboardAware>
+      <KeyboardAware> {/* KeyboardAware wrapper added */}
         <div ref={containerRef} className="relative min-h-screen">
           <form ref={formRef} >
             <div className={`flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
@@ -276,7 +262,7 @@ const NewEntry: React.FC = () => {
 
               {/* Content Area - This matches the editor page layout */}
               <div className="flex-1 p-4 sm:p-6 mb-[72px] overflow-auto">
-                <TipTapEditor
+                <TipTapEditor // Replaced EntryEditor with TipTapEditor to maintain consistency
                   value={form.watch("content")}
                   onChange={(value) => form.setValue("content", value)}
                 />
@@ -317,7 +303,6 @@ const NewEntry: React.FC = () => {
             </div>
           </form>
         </div>
-      </KeyboardAware>
     </PageTransition>
   );
 };

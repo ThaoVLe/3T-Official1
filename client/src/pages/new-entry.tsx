@@ -17,10 +17,6 @@ import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
 
-// Added KeyboardAware component
-// Use the improved KeyboardAware component from components/keyboard-aware.tsx
-import { KeyboardAware } from "../components/keyboard-aware";
-
 export default function NewEntry() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -28,19 +24,63 @@ export default function NewEntry() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Reference to track swipe animation
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
+    let isDragging = false;
+    let currentTranslateX = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
+      isDragging = true;
+
+      // Reset transition during drag
+      if (containerRef.current) {
+        containerRef.current.style.transition = 'none';
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging) return;
+
+      const touchMoveX = e.touches[0].clientX;
+      const touchMoveY = e.touches[0].clientY;
+      const verticalDistance = Math.abs(touchMoveY - touchStartY);
+
+      // Prevent vertical scrolling interference
+      if (verticalDistance > 30) return;
+
+      // Calculate the horizontal distance moved
+      const moveDistance = touchMoveX - touchStartX;
+
+      // Only allow right swipes (positive distance)
+      if (moveDistance > 0) {
+        currentTranslateX = moveDistance;
+
+        // Apply transform with damping effect (using sqrt for more natural feel)
+        if (containerRef.current) {
+          const dampenedDistance = Math.sqrt(moveDistance) * 6;
+          containerRef.current.style.transform = `translateX(${Math.min(dampenedDistance, 100)}px)`;
+
+          // Gradually increase opacity of backdrop as user swipes
+          const opacity = Math.min(moveDistance / 150, 0.5);
+          containerRef.current.style.boxShadow = `-5px 0 15px rgba(0, 0, 0, ${opacity})`;
+        }
+      }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
+      if (!isDragging) return;
+      isDragging = false;
+
       const touchEndX = e.changedTouches[0].clientX;
       const touchEndY = e.changedTouches[0].clientY;
       const touchEndTime = Date.now();
@@ -48,61 +88,34 @@ export default function NewEntry() {
       const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
 
-      if (swipeDistance > 50 && swipeTime < 300 && verticalDistance < 30) {
+      // Add transition for smooth animation back to original position
+      if (containerRef.current) {
+        containerRef.current.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease-out';
+      }
+
+      // If swiped far enough or fast enough (distance > 50px, time < 300ms, not too much vertical movement)
+      if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
         setIsExiting(true);
         setTimeout(() => navigate('/'), 100);
+      } else {
+        // Not swiped far enough, animate back to original position
+        if (containerRef.current) {
+          containerRef.current.style.transform = 'translateX(0)';
+          containerRef.current.style.boxShadow = 'none';
+        }
       }
     };
 
     document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [navigate]);
-
-  const isMobile = () => {
-    return window.innerWidth < 768;
-  };
-
-  // Function to hide keyboard on mobile devices
-  const hideKeyboard = useCallback(() => {
-    if (!isMobile()) return;
-
-    // Force any active element to lose focus
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-
-    // More aggressive iOS keyboard dismissal
-    // Create an offscreen input and force it to focus and blur
-    const temporaryInput = document.createElement('input');
-    temporaryInput.setAttribute('type', 'text');
-    temporaryInput.style.position = 'fixed';
-    temporaryInput.style.top = '-100px';
-    temporaryInput.style.left = '0';
-    temporaryInput.style.opacity = '0';
-    temporaryInput.style.height = '0';
-    temporaryInput.style.width = '100%';
-    temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
-
-    // Append to body, focus, then blur and remove
-    document.body.appendChild(temporaryInput);
-
-    // Force focus then immediately blur
-    setTimeout(() => {
-      temporaryInput.focus();
-      setTimeout(() => {
-        temporaryInput.blur();
-        document.body.removeChild(temporaryInput);
-      }, 50);
-    }, 50);
-
-    // Additional fix - add a slight delay before showing sheet
-    return new Promise(resolve => setTimeout(resolve, 100));
-  }, []);
 
   const form = useForm<InsertEntry>({
     resolver: zodResolver(insertEntrySchema),
@@ -202,7 +215,7 @@ export default function NewEntry() {
 
   return (
     <PageTransition direction={1}>
-      <KeyboardAware>
+      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
         <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
           {/* Header */}
           <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
@@ -275,8 +288,7 @@ export default function NewEntry() {
               <div className="flex items-center justify-between gap-4">
                 <FeelingSelector
                   selectedFeeling={form.getValues("feeling")}
-                  onSelect={async (feeling) => {
-                    await hideKeyboard();
+                  onSelect={(feeling) => {
                     form.setValue("feeling", feeling);
                   }}
                 />
@@ -286,7 +298,6 @@ export default function NewEntry() {
                 <LocationSelector
                   selectedLocation={form.getValues("location")}
                   onSelect={(location) => {
-                    hideKeyboard();
                     form.setValue("location", location);
                   }}
                 />
@@ -294,26 +305,7 @@ export default function NewEntry() {
             </div>
           </div>
         </div>
-      {/* Ensure the floating toolbar is properly positioned */}
-        <div className="floating-bar">
-          <div className="flex justify-between items-center">
-            <Button variant="outline" size="sm" onClick={handleCancel}>
-              <X className="h-4 w-4 mr-1" />
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              size="sm"
-              onClick={form.handleSubmit(onSubmit)}
-              disabled={isSubmitting}
-              className="bg-primary hover:bg-primary/90"
-            >
-              <Save className="h-4 w-4 mr-1" />
-              Save
-            </Button>
-          </div>
-        </div>
-      </KeyboardAware>
+      </div>
     </PageTransition>
   );
 }

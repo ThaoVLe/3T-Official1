@@ -30,6 +30,7 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
         }
       } else {
         setIsKeyboardVisible(false);
+        setKeyboardHeight(0);
         document.documentElement.style.setProperty('--keyboard-height', '0px');
         document.documentElement.classList.remove('keyboard-visible');
       }
@@ -64,8 +65,27 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
   }, []);
 
   return (
-    <div className={`editor-container ${isKeyboardVisible ? 'keyboard-visible' : ''}`}>
-      <div className="keyboard-adjustable-content">
+    <div 
+      className={`editor-container ${isKeyboardVisible ? 'keyboard-visible' : ''}`}
+      style={{ 
+        minHeight: '100vh',
+        minHeight: '-webkit-fill-available',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        paddingBottom: isKeyboardVisible ? `${keyboardHeight}px` : '0px'
+      }}
+    >
+      <div 
+        className="keyboard-adjustable-content"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          position: 'relative',
+          paddingBottom: isKeyboardVisible ? '56px' : '0px' // For floating bar
+        }}
+      >
         {children}
       </div>
     </div>

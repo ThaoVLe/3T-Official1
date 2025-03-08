@@ -42,6 +42,42 @@
     height: 100%;
   }
 
+  .editor-container {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background-color: var(--background);
+  }
+
+  .keyboard-adjustable-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  .floating-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background-color: var(--background);
+    border-top: 1px solid var(--border);
+    padding: 8px;
+    transition: transform 0.3s ease;
+    touch-action: none;
+    pointer-events: auto;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .keyboard-visible .floating-bar {
+    transform: translateY(calc(-1 * var(--keyboard-height, 0px)));
+  }
+
   /* Mobile viewport height fix */
   .mobile-vh {
     height: 100vh;
@@ -49,54 +85,12 @@
     height: stretch;
   }
 
-  /* Editor container */
-  .editor-container {
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    min-height: stretch;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-  }
 
   /* Content area that adjusts for keyboard */
-  .keyboard-adjustable-content {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    position: relative;
-    padding-bottom: calc(var(--keyboard-height, 0px) + 56px); /* 56px for floating bar */
-    transition: padding-bottom 0.3s ease;
-  }
 
   /* Floating bar that stays above keyboard */
-  .floating-bar {
-    position: fixed;
-    bottom: var(--keyboard-height, 0px);
-    left: 0;
-    right: 0;
-    z-index: 50;
-    background-color: var(--background);
-    border-top: 1px solid var(--border);
-    padding: 8px;
-    transition: bottom 0.3s ease;
-    touch-action: none; /* Prevent touch events on floating bar */
-    pointer-events: auto; /* Ensure buttons are clickable */
-    transform: translateZ(0); /* Force GPU acceleration */
-    will-change: transform; /* Optimize for animations */
-  }
 
   /* Ensure content scrolls properly when keyboard is visible */
-  .keyboard-visible .floating-bar {
-    position: fixed;
-    bottom: var(--keyboard-height, 0px);
-    transform: translateZ(0);
-  }
-
-  /* Ensure content scrolls properly when keyboard is visible */
-  .keyboard-visible .keyboard-adjustable-content {
-    padding-bottom: calc(var(--keyboard-height, 0px) + 56px); /* 56px for floating bar */
-  }
 
   /* Diary content specific styles */
   .diary-content {

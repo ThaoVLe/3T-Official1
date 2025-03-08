@@ -7,8 +7,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { useState, useRef } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -17,139 +17,12 @@ interface EntryCardProps {
 
 export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
   const { toast } = useToast();
-  const [isExpanded, setIsExpanded] = useState(false);
   const [, navigate] = useLocation();
   const mediaScrollRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [startY, setStartY] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [isScrollingHorizontally, setIsScrollingHorizontally] = useState(false);
-  const [touchStartTime, setTouchStartTime] = useState(0);
-  const [lastTouchX, setLastTouchX] = useState(0);
-  const [touchVelocity, setTouchVelocity] = useState(0);
-  const [overscrollAmount, setOverscrollAmount] = useState(0);
-  const controls = useAnimation();
-
-  useEffect(() => {
-    const container = mediaScrollRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const index = Math.round(container.scrollLeft / container.offsetWidth);
-      const maxScroll = container.scrollWidth - container.offsetWidth;
-
-      // Add resistance at edges
-      if (container.scrollLeft < 0) {
-        setOverscrollAmount(container.scrollLeft);
-      } else if (container.scrollLeft > maxScroll) {
-        setOverscrollAmount(container.scrollLeft - maxScroll);
-      } else {
-        setOverscrollAmount(0);
-      }
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!mediaScrollRef.current) return;
-    setIsDragging(true);
-    setIsScrollingHorizontally(false);
-    setStartX(e.touches[0].clientX);
-    setStartY(e.touches[0].clientY);
-    setScrollLeft(mediaScrollRef.current.scrollLeft);
-    setTouchStartTime(Date.now());
-    setLastTouchX(e.touches[0].clientX);
-    setOverscrollAmount(0);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !mediaScrollRef.current) return;
-
-    const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
-    const deltaX = startX - currentX;
-    const deltaY = startY - currentY;
-    const currentTime = Date.now();
-    const timeDiff = currentTime - touchStartTime;
-
-    // Calculate velocity for smooth momentum scrolling
-    if (timeDiff > 0) {
-      const velocity = (currentX - lastTouchX) / timeDiff;
-      setTouchVelocity(velocity);
-      setLastTouchX(currentX);
-    }
-
-    // Determine scroll direction only on initial movement
-    if (!isScrollingHorizontally && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
-      setIsScrollingHorizontally(Math.abs(deltaX) > Math.abs(deltaY));
-    }
-
-    // Handle horizontal scrolling with resistance at edges
-    if (isScrollingHorizontally) {
-      e.preventDefault();
-      const container = mediaScrollRef.current;
-      const maxScroll = container.scrollWidth - container.offsetWidth;
-      let newScrollLeft = scrollLeft + deltaX;
-
-      // Add resistance when scrolling past edges
-      if (newScrollLeft < 0) {
-        newScrollLeft = newScrollLeft / 3; // Reduce scroll amount for resistance
-        setOverscrollAmount(newScrollLeft);
-      } else if (newScrollLeft > maxScroll) {
-        const overscroll = newScrollLeft - maxScroll;
-        newScrollLeft = maxScroll + (overscroll / 3); // Reduce scroll amount for resistance
-        setOverscrollAmount(overscroll / 3);
-      }
-
-      container.scrollLeft = newScrollLeft;
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!mediaScrollRef.current || !isScrollingHorizontally) return;
-
-    const container = mediaScrollRef.current;
-    const itemWidth = container.offsetWidth;
-    const currentScroll = container.scrollLeft;
-    const maxScroll = container.scrollWidth - container.offsetWidth;
-
-    // Calculate target scroll position based on momentum
-    let targetScroll = currentScroll;
-    const momentum = touchVelocity * 500; // Increased multiplier for more pronounced momentum effect
-
-    if (Math.abs(momentum) > itemWidth * 0.1) { // Only apply momentum if significant
-      targetScroll = currentScroll - momentum;
-    } else {
-      // Snap to closest item if momentum is low
-      targetScroll = Math.round(currentScroll / itemWidth) * itemWidth;
-    }
-
-    // Bound the target scroll within valid range
-    targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
-
-    // Animate scroll to target position
-    container.scrollTo({
-      left: targetScroll,
-      behavior: 'smooth'
-    });
-
-    // Reset states
-    setIsDragging(false);
-    setIsScrollingHorizontally(false);
-    setTouchVelocity(0);
-    setOverscrollAmount(0);
-
-    // Animate any overscroll back to bounds
-    if (overscrollAmount !== 0) {
-      controls.start({
-        x: 0,
-        transition: { type: "spring", stiffness: 400, damping: 40 }
-      });
-    }
-  };
+  const [isDragging, setIsDragging] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
 
   // Fetch comment count
   const { data: comments = [] } = useQuery({
@@ -195,8 +68,32 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setStartX(e.touches[0].clientX);
+    setStartY(e.touches[0].clientY);
+    setIsDragging(true);
+    setHasScrolled(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !mediaScrollRef.current) return;
+
+    const deltaX = startX - e.touches[0].clientX;
+    const deltaY = Math.abs(startY - e.touches[0].clientY);
+
+    // Only handle horizontal scrolling if the movement is more horizontal than vertical
+    // and we haven't started vertical scrolling
+    if (Math.abs(deltaX) > deltaY && !hasScrolled) {
+      e.preventDefault();
+      mediaScrollRef.current.scrollLeft += deltaX;
+      setStartX(e.touches[0].clientX);
+    } else {
+      setHasScrolled(true);
+    }
+  };
+
   const handleMediaClick = (mediaIndex: number) => {
-    if (isDragging) return; // Prevent navigation if we were dragging
+    if (isDragging) return;
 
     const container = document.querySelector('.diary-content');
     if (container) {
@@ -208,7 +105,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       setSelectedEntryId(entry.id.toString());
     }
 
-    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
     navigate(`/entry/${entry.id}?media=${mediaIndex}`);
   };
 
@@ -251,21 +147,18 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <motion.div 
+            <div 
               ref={mediaScrollRef}
-              className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory touch-pan-x scrollbar-none"
+              className="flex overflow-x-auto snap-x snap-mandatory touch-pan-x scrollbar-none"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 scrollBehavior: 'smooth',
                 msOverflowStyle: 'none',
                 scrollbarWidth: 'none',
-                overscrollBehavior: 'none',
-                touchAction: 'pan-y pinch-zoom',
               }}
-              animate={controls}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              onTouchEnd={() => setIsDragging(false)}
             >
               <AnimatePresence mode="popLayout">
                 {entry.mediaUrls.map((url, index) => {
@@ -274,21 +167,15 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                   return (
                     <motion.div
                       key={index}
-                      className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
-                      style={{
-                        width: 'auto',
-                        maxWidth: '66.666667vw', 
-                        height: '300px', 
-                        minWidth: '200px'
-                      }}
-                      initial={{ scale: 0.95, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.95, opacity: 0 }}
+                      className="flex-none w-full snap-center px-4"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
                       onClick={() => handleMediaClick(index)}
                     >
                       <motion.div 
-                        className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
+                        className="w-full aspect-[4/3] relative rounded-xl overflow-hidden bg-muted"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         transition={{ 
@@ -320,26 +207,18 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                                   scale: 1.1,
                                   backgroundColor: 'rgba(255, 255, 255, 0.4)'
                                 }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 400,
-                                  damping: 25
-                                }}
                               >
                                 <Play className="h-6 w-6 text-white" />
                               </motion.div>
                             </motion.div>
                           </div>
                         ) : (
-                          <motion.img
+                          <img
                             src={url}
                             alt={`Media ${index + 1}`}
                             className="h-full w-full object-cover"
                             loading="lazy"
-                            sizes="(max-width: 768px) 66.66vw, 512px"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
+                            sizes="(max-width: 768px) 100vw, 768px"
                           />
                         )}
                       </motion.div>
@@ -347,7 +226,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                   );
                 })}
               </AnimatePresence>
-            </motion.div>
+            </div>
           </motion.div>
         )}
 

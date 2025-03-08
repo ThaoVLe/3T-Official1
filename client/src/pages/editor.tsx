@@ -12,10 +12,34 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
+
+// Added KeyboardAware component
+const KeyboardAware = ({ children }: { children: React.ReactNode }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+      const keyboardIsShown = vh < window.innerHeight;
+      setKeyboardHeight(keyboardIsShown ? window.innerHeight - vh : 0);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ marginBottom: keyboardHeight }} className="relative">
+      {children}
+    </div>
+  );
+};
+
 
 export default function Editor() {
   const { id } = useParams();
@@ -227,109 +251,111 @@ export default function Editor() {
 
   return (
     <PageTransition direction={1}>
-      <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
-        {/* Header */}
-        <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
-          <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (id) {
-                  sessionStorage.setItem('lastViewedEntryId', id);
-                }
-                setIsExiting(true);
-                setTimeout(() => navigate("/"), 100);
-              }}
-              className="whitespace-nowrap"
-            >
-              <X className="h-4 w-4 mr-1" />
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={form.handleSubmit((data) => mutation.mutate(data))}
-              disabled={mutation.isPending}
-              className="bg-primary hover:bg-primary/90 whitespace-nowrap"
-            >
-              <Save className="h-4 w-4 mr-1" />
-              {id ? "Update" : "Create"}
-            </Button>
-          </div>
-          <div className="max-w-full sm:max-w-2xl pr-24">
-            <Input
-              {...form.register("title")}
-              className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
-              placeholder="Untitled Entry..."
-            />
-            {form.watch("feeling") && (
-              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                  {form.watch("feeling").label.includes(',') ? (
-                    <>
-                      {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
-                      {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
-                    </>
-                  ) : (
-                    <>
-                      {form.watch("feeling").label} {form.watch("feeling").emoji}
-                    </>
-                  )}
+      <KeyboardAware>
+        <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+          {/* Header */}
+          <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
+            <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (id) {
+                    sessionStorage.setItem('lastViewedEntryId', id);
+                  }
+                  setIsExiting(true);
+                  setTimeout(() => navigate("/"), 100);
+                }}
+                className="whitespace-nowrap"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={form.handleSubmit((data) => mutation.mutate(data))}
+                disabled={mutation.isPending}
+                className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+              >
+                <Save className="h-4 w-4 mr-1" />
+                {id ? "Update" : "Create"}
+              </Button>
+            </div>
+            <div className="max-w-full sm:max-w-2xl pr-24">
+              <Input
+                {...form.register("title")}
+                className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+                placeholder="Untitled Entry..."
+              />
+              {form.watch("feeling") && (
+                <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                  <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                    {form.watch("feeling").label.includes(',') ? (
+                      <>
+                        {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
+                        {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
+                      </>
+                    ) : (
+                      <>
+                        {form.watch("feeling").label} {form.watch("feeling").emoji}
+                      </>
+                    )}
+                  </div>
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 flex flex-col overflow-auto w-full">
+            <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+              <TipTapEditor
+                value={form.watch("content")}
+                onChange={(value) => form.setValue("content", value)}
+              />
+            </div>
+
+            {/* Media Preview moved here */}
+            {form.watch("mediaUrls")?.length > 0 && (
+              <div className="p-4 pb-[80px]"> {/* Increased padding to 80px */}
+                <MediaPreview
+                  urls={form.watch("mediaUrls")}
+                  onRemove={onMediaRemove}
+                  loading={isUploading}
+                  uploadProgress={uploadProgress}
+                />
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Content Area */}
-        <div className="flex-1 flex flex-col overflow-auto w-full">
-          <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
-            <TipTapEditor
-              value={form.watch("content")}
-              onChange={(value) => form.setValue("content", value)}
-            />
-          </div>
+            {/* Media Controls - Now in floating bar */}
+            <div 
+              className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t p-2 z-50 floating-bar"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <FeelingSelector
+                  selectedFeeling={form.getValues("feeling")}
+                  onSelect={async (feeling) => {
+                    await hideKeyboard();
+                    form.setValue("feeling", feeling);
+                  }}
+                />
 
-          {/* Media Preview moved here */}
-          {form.watch("mediaUrls")?.length > 0 && (
-            <div className="p-4 pb-[80px]"> {/* Increased padding to 80px */}
-              <MediaPreview
-                urls={form.watch("mediaUrls")}
-                onRemove={onMediaRemove}
-                loading={isUploading}
-                uploadProgress={uploadProgress}
-              />
-            </div>
-          )}
+                <MediaRecorder onCapture={onMediaUpload} />
 
-          {/* Media Controls - Now in floating bar */}
-          <div 
-            className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t p-2 z-50"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
-          >
-            <div className="flex items-center justify-between gap-4">
-              <FeelingSelector
-                selectedFeeling={form.getValues("feeling")}
-                onSelect={async (feeling) => {
-                  await hideKeyboard();
-                  form.setValue("feeling", feeling);
-                }}
-              />
-
-              <MediaRecorder onCapture={onMediaUpload} />
-
-              <LocationSelector
-                selectedLocation={form.getValues("location")}
-                onSelect={(location) => {
-                  hideKeyboard();
-                  form.setValue("location", location);
-                }}
-              />
+                <LocationSelector
+                  selectedLocation={form.getValues("location")}
+                  onSelect={(location) => {
+                    hideKeyboard();
+                    form.setValue("location", location);
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </KeyboardAware>
     </PageTransition>
   );
 }

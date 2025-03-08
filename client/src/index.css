@@ -164,6 +164,25 @@
     @apply border-0 shadow-sm rounded-lg;
     margin-bottom: 0.75rem;
     background-color: white;
+
+/* Floating bar above keyboard styles */
+.floating-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: var(--background);
+  border-top: 1px solid var(--border);
+  padding: 8px;
+  transition: bottom 0.3s ease;
+}
+
+/* When keyboard is visible */
+.keyboard-visible .floating-bar {
+  bottom: var(--keyboard-height, 0px);
+}
+
   }
 
   .media-grid {

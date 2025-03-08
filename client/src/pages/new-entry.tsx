@@ -26,6 +26,7 @@ export default function NewEntry() {
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const keyboardHeight = useRef(0);
 
   useEffect(() => {
     let touchStartX = 0;
@@ -199,9 +200,13 @@ export default function NewEntry() {
     form.setValue("mediaUrls", newUrls);
   };
 
+  const handleKeyboardShow = (keyboardHeightValue: number) => {
+    keyboardHeight.current = keyboardHeightValue;
+  };
+
   return (
     <PageTransition direction={1}>
-      <KeyboardAware>
+      <KeyboardAware onKeyboardShow={handleKeyboardShow}>
         <div 
           ref={contentRef}
           className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}
@@ -275,10 +280,10 @@ export default function NewEntry() {
 
             {/* Media Controls - Now in floating bar */}
             <div 
-              className="floating-bar"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
+              className="floating-bar fixed bottom-0 left-0 right-0 z-10"
+              style={{ paddingBottom: `calc(env(safe-area-inset-bottom) + 8px)`, marginBottom: `${keyboardHeight.current}px` }}
             >
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between gap-4 px-4">
                 <FeelingSelector
                   selectedFeeling={form.getValues("feeling")}
                   onSelect={(feeling) => {

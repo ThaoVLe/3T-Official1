@@ -6,6 +6,7 @@
   :root {
     --scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    --keyboard-height: 0px;
   }
 
   * {
@@ -41,6 +42,51 @@
     height: 100%;
   }
 
+  /* Mobile viewport height fix */
+  .mobile-vh {
+    height: 100vh;
+    height: -webkit-fill-available;
+    height: stretch;
+  }
+
+  /* Editor container */
+  .editor-container {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    min-height: stretch;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-bottom: var(--keyboard-height, 0px);
+  }
+
+  /* Content area that adjusts for keyboard */
+  .keyboard-adjustable-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    transition: padding-bottom 0.3s ease;
+  }
+
+  /* Floating bar that stays above keyboard */
+  .floating-bar {
+    position: fixed;
+    bottom: var(--keyboard-height, 0px);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background-color: var(--background);
+    border-top: 1px solid var(--border);
+    padding: 8px;
+    transition: bottom 0.3s ease;
+  }
+
+  /* Ensure content scrolls properly when keyboard is visible */
+  .keyboard-visible .keyboard-adjustable-content {
+    padding-bottom: calc(var(--keyboard-height, 0px) + 56px); /* 56px for floating bar */
+  }
+
   /* Diary content specific styles */
   .diary-content {
     scrollbar-width: none !important;
@@ -66,158 +112,155 @@
       -webkit-overflow-scrolling: touch;
     }
   }
-}
-
-/* Container and page styles */
-.container-page {
-  @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: none !important;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-
-/* Ensure smooth mobile scrolling */
-.mobile-scroll {
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: none !important;
-  touch-action: pan-y pinch-zoom !important;
-  -webkit-tap-highlight-color: transparent !important;
-  -webkit-user-select: none !important;
-  user-select: none !important;
-}
-
-/* TipTap editor styles */
-.tiptap-container .ProseMirror {
-  transition: min-height 0.2s ease;
-  height: auto;
-  overflow-y: hidden;
-}
-
-.ProseMirror {
-  @apply min-h-[200px];
-}
-
-.tiptap-container {
-  @apply flex flex-col;
-  transition: height 0.2s ease;
-  overflow: hidden;
-}
-
-/* Media related styles */
-.media-grid {
-  display: grid;
-  gap: 1px;
-  background-color: #f0f2f5;
-  transition: all 0.3s ease;
-}
-
-.media-item {
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.media-item img,
-.media-item video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.2s ease;
-}
-
-.media-item:hover img,
-.media-item:hover video {
-  transform: scale(1.02);
-}
-
-.media-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-/* Modal styles */
-.media-modal {
-  @apply fixed inset-0 z-50 bg-black/90 flex items-center justify-center;
-}
-
-.media-modal-content {
-  @apply max-w-[95vw] max-h-[90vh] relative;
-}
-
-.media-modal-content img,
-.media-modal-content video {
-  @apply max-w-full max-h-[90vh] object-contain;
-}
-
-/* Mobile-specific styles */
-@media (max-width: 640px) {
-  .card {
-    @apply border-0 shadow-sm rounded-lg;
-    margin-bottom: 0.75rem;
-    background-color: white;
-
-/* Floating bar above keyboard styles */
-.floating-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background-color: var(--background);
-  border-top: 1px solid var(--border);
-  padding: 8px;
-  transition: bottom 0.3s ease;
-}
-
-/* When keyboard is visible */
-.keyboard-visible .floating-bar {
-  bottom: var(--keyboard-height, 0px);
-}
-
+  /* Container and page styles */
+  .container-page {
+    @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: none !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
+  /* Ensure smooth mobile scrolling */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: none !important;
+    touch-action: pan-y pinch-zoom !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+
+  /* TipTap editor styles */
+  .tiptap-container .ProseMirror {
+    transition: min-height 0.2s ease;
+    height: auto;
+    overflow-y: hidden;
+  }
+
+  .ProseMirror {
+    @apply min-h-[200px];
+  }
+
+  .tiptap-container {
+    @apply flex flex-col;
+    transition: height 0.2s ease;
+    overflow: hidden;
+  }
+
+  /* Media related styles */
   .media-grid {
-    margin: 0 -1rem;
+    display: grid;
+    gap: 1px;
+    background-color: #f0f2f5;
+    transition: all 0.3s ease;
   }
+
+  .media-item {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .media-item img,
+  .media-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+  }
+
+  .media-item:hover img,
+  .media-item:hover video {
+    transform: scale(1.02);
+  }
+
+  .media-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  /* Modal styles */
+  .media-modal {
+    @apply fixed inset-0 z-50 bg-black/90 flex items-center justify-center;
+  }
+
+  .media-modal-content {
+    @apply max-w-[95vw] max-h-[90vh] relative;
+  }
+
+  .media-modal-content img,
+  .media-modal-content video {
+    @apply max-w-full max-h-[90vh] object-contain;
+  }
+
+  /* Mobile-specific styles */
+  @media (max-width: 640px) {
+    .card {
+      @apply border-0 shadow-sm rounded-lg;
+      margin-bottom: 0.75rem;
+      background-color: white;
+
+      /* Floating bar above keyboard styles */
+      .floating-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background-color: var(--background);
+        border-top: 1px solid var(--border);
+        padding: 8px;
+        transition: bottom 0.3s ease;
+      }
+
+      /* When keyboard is visible */
+      .keyboard-visible .floating-bar {
+        bottom: var(--keyboard-height, 0px);
+      }
+    }
+
+    .media-grid {
+      margin: 0 -1rem;
+    }
+  }
+
+  /* Custom styles */
+  .custom-emotion {
+    color: #880000;
+    font-weight: 500;
+  }
+
+  .mobile-bottom-menu {
+    @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
+  }
+
+  .card {
+    @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
+  }
+
+  /* Typography */
+  .heading-1 { @apply text-[24px] font-bold tracking-tight text-foreground mb-4; }
+  .heading-2 { @apply text-[18px] font-semibold text-foreground mb-3; }
+  .text-default { @apply text-[11px] text-foreground; }
+  .subtitle { @apply text-[11px] text-muted-foreground mb-6; }
+
+  /* Form and button styles */
+  .form-container { @apply flex flex-col space-y-4 mb-6; }
+  .button-primary { @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors; }
+  .button-secondary { @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors; }
+  .button-outline { @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md; }
+
+  /* Layout components */
+  .drop-zone { @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted; }
+  .mobile-friendly-button { @apply w-full sm:w-auto; }
+  .responsive-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }
+  .full-width { @apply w-full min-w-0; }
 }
-
-/* Custom styles */
-.custom-emotion {
-  color: #880000;
-  font-weight: 500;
-}
-
-.mobile-bottom-menu {
-  @apply fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50;
-}
-
-.card {
-  @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
-}
-
-/* Typography */
-.heading-1 { @apply text-[24px] font-bold tracking-tight text-foreground mb-4; }
-.heading-2 { @apply text-[18px] font-semibold text-foreground mb-3; }
-.text-default { @apply text-[11px] text-foreground; }
-.subtitle { @apply text-[11px] text-muted-foreground mb-6; }
-
-/* Form and button styles */
-.form-container { @apply flex flex-col space-y-4 mb-6; }
-.button-primary { @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors; }
-.button-secondary { @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors; }
-.button-outline { @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md; }
-
-/* Layout components */
-.drop-zone { @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted; }
-.mobile-friendly-button { @apply w-full sm:w-auto; }
-.responsive-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }
-.full-width { @apply w-full min-w-0; }

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 
 interface KeyboardAwareProps {
@@ -13,18 +12,22 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
     function handleResize() {
       const visualViewportHeight = window.visualViewport?.height || window.innerHeight;
       const windowHeight = window.innerHeight;
-      
+
       // If visual viewport is smaller than window height, keyboard is likely visible
       if (visualViewportHeight < windowHeight) {
         const keyboardHeight = windowHeight - visualViewportHeight;
         setKeyboardHeight(keyboardHeight);
         setIsKeyboardVisible(true);
-        
+
         // Set CSS variable for the keyboard height
         document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+        document.body.style.height = `${visualViewportHeight}px`;
+        document.documentElement.classList.add('keyboard-visible');
       } else {
         setIsKeyboardVisible(false);
         document.documentElement.style.setProperty('--keyboard-height', '0px');
+        document.body.style.height = '';
+        document.documentElement.classList.remove('keyboard-visible');
       }
     }
 
@@ -33,10 +36,10 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
       window.visualViewport.addEventListener('resize', handleResize);
       window.visualViewport.addEventListener('scroll', handleResize);
     }
-    
+
     // Fallback for devices without visualViewport API
     window.addEventListener('resize', handleResize);
-    
+
     // Run once on mount to set initial state
     handleResize();
 
@@ -46,12 +49,16 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
         window.visualViewport.removeEventListener('scroll', handleResize);
       }
       window.removeEventListener('resize', handleResize);
+      document.documentElement.classList.remove('keyboard-visible');
+      document.body.style.height = '';
     };
   }, []);
 
   return (
-    <div className={`keyboard-aware ${isKeyboardVisible ? 'keyboard-visible' : ''}`}>
-      {children}
+    <div className={`editor-container ${isKeyboardVisible ? 'keyboard-visible' : ''}`}>
+      <div className="keyboard-adjustable-content">
+        {children}
+      </div>
     </div>
   );
 }

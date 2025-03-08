@@ -52,23 +52,19 @@ export default function NewEntry() {
 
       const target = e.target as HTMLElement;
       const isEditorArea = target.closest('.tiptap-container') !== null;
-      const isFloatingBar = target.closest('.floating-bar') !== null;
 
-      // Skip handling for editor area and floating bar
-      if (isEditorArea || isFloatingBar) {
-        return;
-      }
+      if (!isEditorArea) {
+        e.preventDefault(); // Prevent scrolling when swiping outside editor
 
-      e.preventDefault(); // Prevent scrolling when swiping outside editor and floating bar
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const dx = currentX - touchStartX;
+        const dy = Math.abs(currentY - touchStartY);
 
-      const currentX = e.touches[0].clientX;
-      const currentY = e.touches[0].clientY;
-      const dx = currentX - touchStartX;
-      const dy = Math.abs(currentY - touchStartY);
-
-      if (dx > 0 && dy < 30) { // Only handle right swipes with minimal vertical movement
-        if (contentRef.current) {
-          contentRef.current.style.transform = `translateX(${Math.min(dx * 0.5, 100)}px)`;
+        if (dx > 0 && dy < 30) { // Only handle right swipes with minimal vertical movement
+          if (contentRef.current) {
+            contentRef.current.style.transform = `translateX(${Math.min(dx * 0.5, 100)}px)`;
+          }
         }
       }
     };

@@ -24,11 +24,10 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const [startX, setStartX] = useState(0);
   const [startY, setStartY] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [isScrollingHorizontally, setIsScrollingHorizontally] = useState(false);
   const [touchStartTime, setTouchStartTime] = useState(0);
   const [lastTouchX, setLastTouchX] = useState(0);
   const [touchVelocity, setTouchVelocity] = useState(0);
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
-  const [touchIntent, setTouchIntent] = useState<'scroll' | 'tap' | null>(null);
 
   useEffect(() => {
     const container = mediaScrollRef.current;
@@ -45,9 +44,8 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!mediaScrollRef.current) return;
-
-    setIsDragging(false);
-    setTouchIntent(null);
+    setIsDragging(true);
+    setIsScrollingHorizontally(false);
     setStartX(e.touches[0].clientX);
     setStartY(e.touches[0].clientY);
     setScrollLeft(mediaScrollRef.current.scrollLeft);
@@ -56,100 +54,58 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!mediaScrollRef.current || !touchStartTime) return;
+    if (!isDragging || !mediaScrollRef.current) return;
 
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
     const deltaX = startX - currentX;
     const deltaY = startY - currentY;
-    const moveDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const currentTime = Date.now();
+    const timeDiff = currentTime - touchStartTime;
 
-    // More precise touch intent detection
-    if (!touchIntent && moveDistance > 10) { // Increased threshold for better accuracy
-      if (Math.abs(deltaX) > Math.abs(deltaY) * 1.2) { // Require more horizontal movement
-        setTouchIntent('scroll');
-        setIsDragging(true);
-      } else {
-        setTouchIntent('tap');
-      }
-    }
-
-    // Calculate velocity for momentum scrolling
-    const timeDiff = Date.now() - touchStartTime;
+    // Calculate velocity
     if (timeDiff > 0) {
       const velocity = (currentX - lastTouchX) / timeDiff;
-      setTouchVelocity(velocity * 1.5); // Increased multiplier for smoother momentum
+      setTouchVelocity(velocity);
       setLastTouchX(currentX);
     }
 
-    // Only handle horizontal scrolling if that's the determined intent
-    if (touchIntent === 'scroll') {
+    // Determine scroll direction only on initial movement
+    if (!isScrollingHorizontally && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+      setIsScrollingHorizontally(Math.abs(deltaX) > Math.abs(deltaY));
+    }
+
+    // Only handle horizontal scrolling
+    if (isScrollingHorizontally) {
       e.preventDefault();
       mediaScrollRef.current.scrollLeft = scrollLeft + deltaX;
     }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!mediaScrollRef.current) return;
+    if (!mediaScrollRef.current || !isScrollingHorizontally) return;
 
     const container = mediaScrollRef.current;
-    const timeDiff = Date.now() - touchStartTime;
-    const moveDistance = Math.sqrt(
-      Math.pow(e.changedTouches[0].clientX - startX, 2) +
-      Math.pow(e.changedTouches[0].clientY - startY, 2)
-    );
+    const itemWidth = container.offsetWidth;
+    const currentScroll = container.scrollLeft;
+    const currentIndex = Math.round(currentScroll / itemWidth);
 
-    // Enhanced tap detection
-    const isQuickTouch = timeDiff < 200 && moveDistance < 10;
+    // Add momentum based on velocity
+    const momentum = touchVelocity * 200; // Adjust multiplier for desired momentum effect
+    const targetScroll = itemWidth * (currentIndex - Math.sign(momentum));
 
-    if (isQuickTouch || touchIntent === 'tap') {
-      const index = Math.round(container.scrollLeft / container.offsetWidth);
-      handleMediaClick(index);
-      return;
-    }
+    // Smooth scroll to the target position
+    container.scrollTo({
+      left: targetScroll,
+      behavior: 'smooth'
+    });
 
-    // Improved scroll end behavior with momentum
-    if (touchIntent === 'scroll') {
-      const itemWidth = container.offsetWidth;
-      const currentScroll = container.scrollLeft;
-      let targetIndex = Math.round(currentScroll / itemWidth);
-
-      // Enhanced momentum effect
-      const momentum = touchVelocity * 400; // Increased for smoother scrolling
-      if (Math.abs(momentum) > itemWidth * 0.15) { // Adjusted threshold
-        targetIndex += momentum > 0 ? 1 : -1;
-      }
-
-      // Clamp target index
-      targetIndex = Math.max(0, Math.min(targetIndex, entry.mediaUrls?.length - 1 || 0));
-
-      // Smooth scroll to target with easing
-      container.scrollTo({
-        left: targetIndex * itemWidth,
-        behavior: 'smooth'
-      });
-    }
-
-    // Reset states
     setIsDragging(false);
-    setTouchIntent(null);
+    setIsScrollingHorizontally(false);
     setTouchVelocity(0);
   };
 
-  const handleMediaClick = (index: number) => {
-    if (isDragging) return;
-
-    // Save scroll position
-    const container = document.querySelector('.diary-content');
-    if (container) {
-      sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
-      sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
-    }
-
-    // Navigate to entry view with media index
-    navigate(`/entry/${entry.id}?media=${index}`);
-  };
-
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   // Fetch comment count
   const { data: comments = [] } = useQuery({
     queryKey: [`/api/entries/${entry.id}/comments`],
@@ -201,6 +157,21 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     return textContent.length > 200;
   };
 
+  const handleMediaClick = (mediaIndex: number) => {
+    const container = document.querySelector('.diary-content');
+    if (container) {
+      sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+      sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
+    }
+
+    if (setSelectedEntryId) {
+      setSelectedEntryId(entry.id.toString());
+    }
+
+    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
+    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
+    navigate(cleanUrl);
+  };
 
   return (
     <Card className="group bg-white shadow-none border-0 w-full mb-4">
@@ -273,6 +244,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 msOverflowStyle: 'none',
                 scrollbarWidth: 'none',
                 overscrollBehavior: 'none',
+                touchAction: 'pan-y pinch-zoom',
               }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
@@ -292,18 +264,16 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                         height: '300px',
                         minWidth: '200px'
                       }}
-                      initial={{ scale: 0.95, opacity: 0 }}
-                      animate={{ 
-                        scale: 1, 
-                        opacity: 1,
-                        transition: { duration: 0.2 }
-                      }}
-                      exit={{ scale: 0.95, opacity: 0 }}
-                      whileTap={{ scale: 0.98 }}
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      onClick={() => !isDragging && handleMediaClick(index)}
                     >
                       <motion.div 
                         className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
                         whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         transition={{ duration: 0.2 }}
                       >
                         {isVideo ? (

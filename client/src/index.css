@@ -15,18 +15,8 @@
     -webkit-tap-highlight-color: transparent !important;
   }
 
-  *::-webkit-scrollbar,
-  *::-webkit-scrollbar-track,
-  *::-webkit-scrollbar-thumb,
-  *::-webkit-scrollbar-button,
-  *::-webkit-scrollbar-track-piece,
-  *::-webkit-scrollbar-corner,
-  *::-webkit-resizer {
+  *::-webkit-scrollbar {
     display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    background: transparent !important;
-    -webkit-appearance: none !important;
   }
 
   html, body {
@@ -56,6 +46,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 56px);
   }
 
   .floating-bar {
@@ -72,10 +63,16 @@
     pointer-events: auto;
     transform: translateZ(0);
     will-change: transform;
+    backface-visibility: hidden;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
   }
 
   .keyboard-visible .floating-bar {
-    transform: translateY(calc(-1 * var(--keyboard-height, 0px)));
+    transform: translateY(calc(-1 * var(--keyboard-height)));
+  }
+
+  .keyboard-visible .keyboard-adjustable-content {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 72px + var(--keyboard-height));
   }
 
   /* Mobile viewport height fix */
@@ -85,12 +82,6 @@
     height: stretch;
   }
 
-
-  /* Content area that adjusts for keyboard */
-
-  /* Floating bar that stays above keyboard */
-
-  /* Ensure content scrolls properly when keyboard is visible */
 
   /* Diary content specific styles */
   .diary-content {

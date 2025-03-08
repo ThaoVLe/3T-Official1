@@ -30,7 +30,7 @@ export function Layout({ children }: LayoutProps) {
   const showBottomNav = isMobile && location === '/';
 
   return isMobile ? (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       <main className={`flex-1 ${showBottomNav ? 'pb-16' : ''}`}>
         {children}
       </main>
@@ -38,7 +38,7 @@ export function Layout({ children }: LayoutProps) {
     </div>
   ) : (
     <SidebarProvider defaultOpen={true}>
-      <div className="grid lg:grid-cols-[280px_1fr] min-h-screen">
+      <div className="grid lg:grid-cols-[280px_1fr] min-h-screen bg-background">
         <Sidebar className="border-r">
           <SidebarHeader className="border-b px-2 py-4">
             <Link href="/">

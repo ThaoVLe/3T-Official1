@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Play } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
+import { cn } from "@/lib/utils";
 
 interface MediaPreviewProps {
   urls: string[];
@@ -82,53 +83,6 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
           <Card key={url} className="w-[70px] h-[70px] relative">
             {onRemove && (
               <Button
-
-        return (
-          <div 
-            key={index} 
-            className={cn(
-              "relative rounded-lg overflow-hidden bg-muted h-24 min-w-24",
-              isUploading && "animate-pulse"
-            )}
-          >
-            {/* Loading placeholder while image loads */}
-            <div className="absolute inset-0 bg-muted" />
-            
-            {isVideo ? (
-              <div className="relative w-full h-full">
-                <video 
-                  ref={(el) => el && (videoRefs.current[index] = el)}
-                  src={url}
-                  className="h-full w-full object-cover"
-                  muted
-                  playsInline
-                  preload="metadata"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="rounded-full bg-white/30 p-1">
-                    <Play className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <img
-                src={`${url}?quality=medium&width=200`} // Lower quality for thumbnails
-                data-src={url}
-                alt={`Media ${index + 1}`}
-                className="h-full w-full object-cover transition-opacity duration-300"
-                loading="lazy"
-                onLoad={(e) => {
-                  e.currentTarget.classList.add('opacity-100');
-                  e.currentTarget.classList.remove('opacity-0');
-                }}
-                onError={(e) => {
-                  console.error("Failed to load image:", url);
-                  e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNNDUgNDVINTVWNTVINDVWNDVaIiBmaWxsPSIjOTA5NUEwIi8+PC9zdmc+';
-                }}
-                style={{ opacity: 0 }}
-              />
-            )}
-
                 type="button"
                 variant="ghost"
                 size="icon"

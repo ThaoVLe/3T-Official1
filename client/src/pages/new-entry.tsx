@@ -1,13 +1,13 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
+import React, { useState, useEffect, useRef } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { insertEntrySchema, type InsertEntry } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form } from "@/components/ui/form";
-import { insertEntrySchema, type InsertEntry } from "@shared/schema";
 import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
@@ -17,80 +17,113 @@ import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
 
-// Added KeyboardAware component
-const KeyboardAware = ({ children }: { children: React.ReactNode }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-      const keyboardIsShown = vh < window.innerHeight;
-      setKeyboardHeight(keyboardIsShown ? window.innerHeight - vh : 0);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  return (
-    <div ref={ref} style={{ marginBottom: keyboardHeight }} className="relative">
-      {children}
-    </div>
-  );
-};
-
-export default function NewEntry() {
+const NewEntry: React.FC = () => {
+  const [feeling, setFeeling] = useState<{ emoji: string; label: string } | null>(null);
+  const [location, setLocation] = useState<string | null>(null);
   const [, navigate] = useLocation();
-  const { toast } = useToast();
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
-  const [isExiting, setIsExiting] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Reference to track swipe animation
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
+    let isDragging = false;
+    let currentTranslateX = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Only handle touches that start outside the editor area
-      const target = e.target as HTMLElement;
-      const isEditorArea = target.closest('.tiptap-container') !== null;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+      isDragging = true;
 
-      if (!isEditorArea) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        touchStartTime = Date.now();
+      // Reset transition during drag
+      if (containerRef.current) {
+        containerRef.current.style.transition = 'none';
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging) return;
+
+      const touchMoveX = e.touches[0].clientX;
+      const touchMoveY = e.touches[0].clientY;
+      const verticalDistance = Math.abs(touchMoveY - touchStartY);
+
+      // Prevent vertical scrolling interference
+      if (verticalDistance > 30) return;
+
+      // Calculate the horizontal distance moved
+      const moveDistance = touchMoveX - touchStartX;
+
+      // Only allow right swipes (positive distance)
+      if (moveDistance > 0) {
+        currentTranslateX = moveDistance;
+
+        // Apply transform with damping effect (using sqrt for more natural feel)
+        if (containerRef.current) {
+          const dampenedDistance = Math.sqrt(moveDistance) * 6;
+          containerRef.current.style.transform = `translateX(${Math.min(dampenedDistance, 100)}px)`;
+
+          // Gradually increase opacity of backdrop as user swipes
+          const opacity = Math.min(moveDistance / 150, 0.5);
+          containerRef.current.style.boxShadow = `-5px 0 15px rgba(0, 0, 0, ${opacity})`;
+        }
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      const isEditorArea = target.closest('.tiptap-container') !== null;
+      if (!isDragging) return;
+      isDragging = false;
 
-      if (!isEditorArea) {
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndTime = Date.now();
-        const swipeDistance = touchEndX - touchStartX;
-        const swipeTime = touchEndTime - touchStartTime;
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndTime = Date.now();
+      const swipeDistance = touchEndX - touchStartX;
+      const verticalDistance = Math.abs(touchEndY - touchStartY);
+      const swipeTime = touchEndTime - touchStartTime;
 
-        if (swipeDistance > 50 && swipeTime < 300) {
-          setIsExiting(true);
-          setTimeout(() => navigate('/'), 100);
+      // Add transition for smooth animation back to original position
+      if (containerRef.current) {
+        containerRef.current.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease-out';
+      }
+
+      // If swiped far enough or fast enough (distance > 80px or > 50px with time < 300ms, not too much vertical movement)
+      if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
+        // Show save dialog
+        setShowSaveDialog(true);
+
+        // Animate back to original position
+        if (containerRef.current) {
+          containerRef.current.style.transform = 'translateX(0)';
+          containerRef.current.style.boxShadow = 'none';
+        }
+      } else {
+        // Not swiped far enough, animate back to original position
+        if (containerRef.current) {
+          containerRef.current.style.transform = 'translateX(0)';
+          containerRef.current.style.boxShadow = 'none';
         }
       }
     };
 
     document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [navigate]);
+  }, []);
 
   const form = useForm<InsertEntry>({
     resolver: zodResolver(insertEntrySchema),
@@ -98,10 +131,12 @@ export default function NewEntry() {
       title: "",
       content: "",
       mediaUrls: [],
-      feeling: null,
-      location: null,
+      feeling: feeling,
+      location: location,
     },
   });
+
+  const { toast } = useToast();
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
@@ -116,6 +151,12 @@ export default function NewEntry() {
       navigate("/");
     },
   });
+
+  const handleCancel = () => {
+    setShowSaveDialog(false);
+    setIsExiting(true);
+    setTimeout(() => navigate('/'), 100);
+  };
 
   const onMediaUpload = async (file: File) => {
     setIsUploading(true);
@@ -190,117 +231,99 @@ export default function NewEntry() {
 
   return (
     <PageTransition direction={1}>
-      <KeyboardAware>
-        <div 
-          ref={contentRef}
-          className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}
-          style={{ 
-            transition: 'transform 0.3s ease-out',
-            touchAction: 'pan-y pinch-zoom'
-          }}
-        >
-          {/* Header */}
-          <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
-            <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setIsExiting(true);
-                  setTimeout(() => navigate("/"), 100);
-                }}
-                className="whitespace-nowrap"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={form.handleSubmit((data) => mutation.mutate(data))}
-                disabled={mutation.isPending}
-                className="bg-primary hover:bg-primary/90 whitespace-nowrap"
-              >
-                <Save className="h-4 w-4 mr-1" />
-                Create
-              </Button>
-            </div>
-            <div className="max-w-full sm:max-w-2xl pr-24">
-              <Input
-                {...form.register("title")}
-                className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
-                placeholder="Untitled Entry..."
-              />
-              {form.watch("feeling") && (
-                <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                  <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                    {form.watch("feeling").label} {form.watch("feeling").emoji}
+      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <form ref={formRef} onSubmit={form.handleSubmit((data) => mutation.mutate(data))}>
+          <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+            {/* Header */}
+            <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
+              <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancel}
+                  className="whitespace-nowrap"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={mutation.isPending}
+                  className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  Create
+                </Button>
+              </div>
+              <div className="max-w-full sm:max-w-2xl pr-24">
+                <Input
+                  {...form.register("title")}
+                  className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+                  placeholder="Untitled Entry..."
+                />
+                {form.watch("feeling") && (
+                  <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                    <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                      {form.watch("feeling").label} {form.watch("feeling").emoji}
+                    </div>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 flex flex-col overflow-auto w-full">
+              <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+                <TipTapEditor
+                  value={form.watch("content")}
+                  onChange={(value) => form.setValue("content", value)}
+                />
+              </div>
+
+              {/* Media Preview */}
+              {form.watch("mediaUrls")?.length > 0 && (
+                <div className="p-4 pb-[80px]">
+                  <MediaPreview
+                    urls={form.watch("mediaUrls")}
+                    onRemove={onMediaRemove}
+                    loading={isUploading}
+                    uploadProgress={uploadProgress}
+                  />
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Content Area */}
-          <div className="flex-1 flex flex-col overflow-auto w-full">
-            <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
-              <TipTapEditor
-                value={form.watch("content")}
-                onChange={(value) => form.setValue("content", value)}
-              />
-            </div>
+              {/* Floating Bar */}
+              <div 
+                className="floating-bar"
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <FeelingSelector
+                    selectedFeeling={form.getValues("feeling")}
+                    onSelect={(feeling) => {
+                      setFeeling(feeling);
+                      form.setValue("feeling", feeling);
+                    }}
+                  />
 
-            {/* Media Preview */}
-            {form.watch("mediaUrls")?.length > 0 && (
-              <div className="p-4 pb-[80px]">
-                <MediaPreview
-                  urls={form.watch("mediaUrls")}
-                  onRemove={onMediaRemove}
-                  loading={isUploading}
-                  uploadProgress={uploadProgress}
-                />
-              </div>
-            )}
+                  <MediaRecorder onCapture={onMediaUpload} />
 
-            {/* Floating Bar */}
-            <div 
-              className="floating-bar"
-              style={{ 
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: 50,
-                backgroundColor: 'var(--background)',
-                borderTop: '1px solid var(--border)',
-                padding: '8px',
-                paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)',
-                transform: 'translateZ(0)',
-                willChange: 'transform',
-                backfaceVisibility: 'hidden'
-              }}
-            >
-              <div className="flex items-center justify-between gap-4">
-                <FeelingSelector
-                  selectedFeeling={form.getValues("feeling")}
-                  onSelect={(feeling) => {
-                    form.setValue("feeling", feeling);
-                  }}
-                />
-
-                <MediaRecorder onCapture={onMediaUpload} />
-
-                <LocationSelector
-                  selectedLocation={form.getValues("location")}
-                  onSelect={(location) => {
-                    form.setValue("location", location);
-                  }}
-                />
+                  <LocationSelector
+                    selectedLocation={form.getValues("location")}
+                    onSelect={(location) => {
+                      setLocation(location);
+                      form.setValue("location", location);
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </KeyboardAware>
+        </form>
+      </div>
     </PageTransition>
   );
-}
+};
+
+export default NewEntry;

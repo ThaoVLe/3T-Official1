@@ -7,8 +7,6 @@
     --scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     --keyboard-height: 0px;
-    --keyboard-offset: 0px;
-    --viewport-height: 100vh;
   }
 
   * {
@@ -48,7 +46,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    padding-bottom: 72px; /* Height of floating bar + safe area */
+    padding-bottom: 56px; /* Height of floating bar */
   }
 
   .floating-bar {
@@ -72,7 +70,7 @@
   }
 
   .keyboard-visible .keyboard-adjustable-content {
-    padding-bottom: calc(72px + var(--keyboard-height));
+    padding-bottom: calc(56px + var(--keyboard-height)); /* Adjust padding when keyboard is visible */
   }
 
   .mobile-vh {

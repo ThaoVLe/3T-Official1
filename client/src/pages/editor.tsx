@@ -252,9 +252,9 @@ export default function Editor() {
   return (
     <PageTransition direction={1}>
       <KeyboardAware>
-        <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+        <div className={`min-h-screen flex flex-col bg-background w-full ${isExiting ? 'pointer-events-none' : ''}`}>
           {/* Header */}
-          <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
+          <div className="relative px-4 sm:px-6 py-3 border-b border-border bg-card sticky top-0 z-10 w-full">
             <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -285,7 +285,7 @@ export default function Editor() {
             <div className="max-w-full sm:max-w-2xl pr-24">
               <Input
                 {...form.register("title")}
-                className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full"
+                className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full bg-transparent text-foreground"
                 placeholder="Untitled Entry..."
               />
               {form.watch("feeling") && (
@@ -308,7 +308,7 @@ export default function Editor() {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 flex flex-col overflow-auto w-full">
+          <div className="flex-1 flex flex-col overflow-auto w-full bg-background">
             <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
               <TipTapEditor
                 value={form.watch("content")}
@@ -330,7 +330,7 @@ export default function Editor() {
 
             {/* Media Controls - Now in floating bar */}
             <div 
-              className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t p-2 z-50 floating-bar"
+              className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-2 z-50 floating-bar"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
             >
               <div className="flex items-center justify-between gap-4">

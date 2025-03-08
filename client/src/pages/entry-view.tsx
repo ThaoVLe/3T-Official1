@@ -176,9 +176,9 @@ export default function EntryView() {
 
   return (
     <PageTransition direction={1}>
-      <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+      <div className={`min-h-screen flex flex-col bg-background w-full ${isExiting ? 'pointer-events-none' : ''}`}>
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b">
+        <div className="sticky top-0 z-10 bg-card border-b border-border">
           <div className="container px-4 py-2 flex items-center">
             <Button
               variant="ghost"
@@ -194,14 +194,14 @@ export default function EntryView() {
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <h1 className="text-lg font-semibold truncate max-w-[75%]">
+            <h1 className="text-lg font-semibold truncate max-w-[75%] text-foreground">
               {entry.title || "Untitled Entry"}
             </h1>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col overflow-auto w-full">
+        <div className="flex-1 flex flex-col overflow-auto w-full bg-background">
           <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
             <AnimatePresence mode="wait">
               <motion.div 
@@ -239,7 +239,7 @@ export default function EntryView() {
                   </div>
                 )}
                 <div
-                  className="prose max-w-none"
+                  className="prose dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: entry.content }}
                 />
 

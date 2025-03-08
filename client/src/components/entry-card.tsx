@@ -68,18 +68,18 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     // Calculate the angle of the swipe
     const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
 
-    // If this is a horizontal swipe (angle < 45 degrees) and movement is significant
-    if (angle < 45 && Math.abs(dx) > minMovement) {
+    // Only handle horizontal swipes and only prevent default for horizontal
+    // If this is a horizontal swipe (angle < 30 degrees) and movement is significant
+    if (angle < 30 && Math.abs(dx) > minMovement) {
       setIsSwiping(true);
       e.preventDefault(); // Prevent scroll only for confirmed horizontal swipes
 
       // Apply immediate scroll response
       const scrollOffset = -dx;
       mediaScrollRef.current.scrollLeft = scrollLeft + scrollOffset;
-    }
-    //Added to allow vertical swiping
-    else if (angle >= 45 && Math.abs(dy) > minMovement){
-        //Do nothing, allow vertical scroll
+    } else {
+      // Let vertical swipes pass through without interference
+      setIsSwiping(false);
     }
   };
 
@@ -238,12 +238,13 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
           >
             <div 
               ref={mediaScrollRef}
-              className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory touch-pan-x"
+              className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 scrollBehavior: 'smooth',
                 msOverflowStyle: 'none',
-                scrollbarWidth: 'none'
+                scrollbarWidth: 'none',
+                overscrollBehavior: 'auto'
               }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}

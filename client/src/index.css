@@ -46,7 +46,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    padding-bottom: 72px; /* Height of floating bar + safe area */
+    padding-bottom: 72px; /* Height of floating bar */
   }
 
   .floating-bar {
@@ -58,13 +58,11 @@
     background-color: var(--background);
     border-top: 1px solid var(--border);
     padding: 8px;
-    transition: transform 0.3s ease;
-    touch-action: none;
-    pointer-events: auto;
     transform: translateZ(0);
     will-change: transform;
     backface-visibility: hidden;
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+    transition: transform 0.3s ease-out;
   }
 
   /* When keyboard is visible */
@@ -78,7 +76,7 @@
   }
 
   .keyboard-visible .keyboard-adjustable-content {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 72px + var(--keyboard-height));
+    padding-bottom: calc(72px + var(--keyboard-height));
   }
 
   /* Mobile viewport height fix */
@@ -181,4 +179,9 @@
   .mobile-friendly-button { @apply w-full sm:w-auto; }
   .responsive-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }
   .full-width { @apply w-full min-w-0; }
+
+  /* Prevent unwanted scrolling during swipe */
+  .swipe-active {
+    overflow: hidden !important;
+  }
 }

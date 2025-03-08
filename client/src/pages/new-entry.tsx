@@ -16,6 +16,7 @@ import { Save, X } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
+import { KeyboardAware } from "@/components/keyboard-aware";
 
 export default function NewEntry() {
   const [, navigate] = useLocation();
@@ -24,55 +25,45 @@ export default function NewEntry() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
-
-  // Reference to track swipe animation
-  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
     let isDragging = false;
-    let currentTranslateX = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
-      isDragging = true;
+      // Only handle touches that start outside the editor area
+      const target = e.target as HTMLElement;
+      const isEditorArea = target.closest('.tiptap-container') !== null;
 
-      // Reset transition during drag
-      if (containerRef.current) {
-        containerRef.current.style.transition = 'none';
+      if (!isEditorArea) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+        isDragging = true;
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging) return;
 
-      const touchMoveX = e.touches[0].clientX;
-      const touchMoveY = e.touches[0].clientY;
-      const verticalDistance = Math.abs(touchMoveY - touchStartY);
+      const target = e.target as HTMLElement;
+      const isEditorArea = target.closest('.tiptap-container') !== null;
 
-      // Prevent vertical scrolling interference
-      if (verticalDistance > 30) return;
+      if (!isEditorArea) {
+        e.preventDefault(); // Prevent scrolling when swiping outside editor
 
-      // Calculate the horizontal distance moved
-      const moveDistance = touchMoveX - touchStartX;
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const dx = currentX - touchStartX;
+        const dy = Math.abs(currentY - touchStartY);
 
-      // Only allow right swipes (positive distance)
-      if (moveDistance > 0) {
-        currentTranslateX = moveDistance;
-
-        // Apply transform with damping effect (using sqrt for more natural feel)
-        if (containerRef.current) {
-          const dampenedDistance = Math.sqrt(moveDistance) * 6;
-          containerRef.current.style.transform = `translateX(${Math.min(dampenedDistance, 100)}px)`;
-
-          // Gradually increase opacity of backdrop as user swipes
-          const opacity = Math.min(moveDistance / 150, 0.5);
-          containerRef.current.style.boxShadow = `-5px 0 15px rgba(0, 0, 0, ${opacity})`;
+        if (dx > 0 && dy < 30) { // Only handle right swipes with minimal vertical movement
+          if (contentRef.current) {
+            contentRef.current.style.transform = `translateX(${Math.min(dx * 0.5, 100)}px)`;
+          }
         }
       }
     };
@@ -81,32 +72,27 @@ export default function NewEntry() {
       if (!isDragging) return;
       isDragging = false;
 
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const touchEndTime = Date.now();
-      const swipeDistance = touchEndX - touchStartX;
-      const verticalDistance = Math.abs(touchEndY - touchStartY);
-      const swipeTime = touchEndTime - touchStartTime;
+      const target = e.target as HTMLElement;
+      const isEditorArea = target.closest('.tiptap-container') !== null;
 
-      // Add transition for smooth animation back to original position
-      if (containerRef.current) {
-        containerRef.current.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease-out';
-      }
+      if (!isEditorArea) {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndTime = Date.now();
+        const swipeDistance = touchEndX - touchStartX;
+        const swipeTime = touchEndTime - touchStartTime;
 
-      // If swiped far enough or fast enough (distance > 50px, time < 300ms, not too much vertical movement)
-      if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
-        setIsExiting(true);
-        setTimeout(() => navigate('/'), 100);
-      } else {
-        // Not swiped far enough, animate back to original position
-        if (containerRef.current) {
-          containerRef.current.style.transform = 'translateX(0)';
-          containerRef.current.style.boxShadow = 'none';
+        if (swipeDistance > 50 && swipeTime < 300) {
+          setIsExiting(true);
+          setTimeout(() => navigate('/'), 100);
+        } else {
+          if (contentRef.current) {
+            contentRef.current.style.transform = 'translateX(0)';
+          }
         }
       }
     };
 
-    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
 
@@ -215,8 +201,15 @@ export default function NewEntry() {
 
   return (
     <PageTransition direction={1}>
-      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-        <div className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+      <KeyboardAware>
+        <div 
+          ref={contentRef}
+          className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}
+          style={{ 
+            transition: 'transform 0.3s ease-out',
+            touchAction: 'pan-y pinch-zoom'
+          }}
+        >
           {/* Header */}
           <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
             <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
@@ -305,7 +298,7 @@ export default function NewEntry() {
             </div>
           </div>
         </div>
-      </div>
+      </KeyboardAware>
     </PageTransition>
   );
 }

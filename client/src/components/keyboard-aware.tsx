@@ -34,6 +34,14 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
         // Set the current viewport height for better positioning calculations
         document.documentElement.style.setProperty('--viewport-height', `${currentHeight}px`);
 
+        // Update floating bar position to be fixed relative to keyboard
+        const floatingBar = document.querySelector('.floating-bar');
+        if (floatingBar && isKeyboardVisible) {
+          floatingBar.classList.add('keyboard-fixed');
+        } else if (floatingBar) {
+          floatingBar.classList.remove('keyboard-fixed');
+        }
+
         // Ensure the content is scrolled into view when keyboard appears
         if (contentRef.current && document.activeElement instanceof HTMLElement) {
           const activeElement = document.activeElement;
@@ -50,6 +58,12 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
         setKeyboardHeight(0);
         document.documentElement.style.setProperty('--keyboard-height', '0px');
         document.documentElement.classList.remove('keyboard-visible');
+
+        // Update floating bar position to be fixed relative to keyboard
+        const floatingBar = document.querySelector('.floating-bar');
+        if (floatingBar) {
+          floatingBar.classList.remove('keyboard-fixed');
+        }
       }
 
       lastVisualViewportHeight.current = currentHeight;

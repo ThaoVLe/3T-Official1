@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
-import { ProgressiveImage } from './progressive-image';
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -277,22 +276,15 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                         whileTap={{ scale: 0.98 }}
                         transition={{ duration: 0.2 }}
                       >
-                        {!isVideo ? (
-                          <ProgressiveImage
-                            src={url}
-                            alt={`Media ${index + 1}`}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            sizes="(max-width: 768px) 66.66vw, 512px"
-                          />
-                        ) : (
-                          <div className="relative w-full h-full">
+                        {isVideo ? (
+                          <div className="h-full w-full relative">
                             <video
                               src={url}
-                              poster={`${url}#t=0.5`}  {/* Added poster attribute */}
                               className="h-full w-full object-cover"
                               playsInline
                               preload="metadata"
                               muted
+                              poster={url + '#t=0.5'}
                             />
                             <motion.div 
                               className="absolute inset-0 bg-black/20 flex items-center justify-center"
@@ -308,6 +300,28 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                               </motion.div>
                             </motion.div>
                           </div>
+                        ) : (
+                          <motion.img
+                            src={url}
+                            alt={`Media ${index + 1}`}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                            sizes="(max-width: 768px) 66.66vw, 512px"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                            onLoad={(e) => {
+                              // Upgrade from low quality to high quality
+                              if (e.currentTarget.src.includes('?quality=low')) {
+                                e.currentTarget.src = url;
+                              }
+                            }}
+                            style={{ 
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center'
+                            }}
+                            srcSet={`${url}?quality=low&width=100 100w, ${url}?width=400 400w, ${url} 800w`}
+                          />
                         )}
                       </motion.div>
                     </motion.div>

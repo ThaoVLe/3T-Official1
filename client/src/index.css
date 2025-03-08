@@ -48,7 +48,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    padding-bottom: 72px; /* Height of floating bar */
+    padding-bottom: 72px; /* Height of floating bar + safe area */
   }
 
   .floating-bar {
@@ -64,36 +64,23 @@
     will-change: transform;
     backface-visibility: hidden;
     padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
-    transition: transform 0.3s ease-out;
+    transition: transform 0.3s ease;
   }
 
-  /* When keyboard is visible */
   .keyboard-visible .floating-bar {
-    position: fixed;
-    bottom: var(--keyboard-height);
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    background-color: var(--background);
-    border-top: 1px solid var(--border);
-    padding: 8px 12px;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.05);
-    transition: bottom 0.15s ease;
-    will-change: transform, bottom;
+    transform: translateY(calc(-1 * var(--keyboard-height)));
   }
 
   .keyboard-visible .keyboard-adjustable-content {
     padding-bottom: calc(72px + var(--keyboard-height));
   }
 
-  /* Mobile viewport height fix */
   .mobile-vh {
     height: 100vh;
     height: -webkit-fill-available;
     height: stretch;
   }
 
-  /* Diary content specific styles */
   .diary-content {
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
@@ -112,14 +99,12 @@
     background: transparent !important;
   }
 
-  /* Mobile optimizations */
   @supports (-webkit-touch-callout: none) {
     .diary-content {
       -webkit-overflow-scrolling: touch;
     }
   }
 
-  /* Container and page styles */
   .container-page {
     @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
     -webkit-overflow-scrolling: touch !important;
@@ -128,7 +113,6 @@
     -ms-overflow-style: none !important;
   }
 
-  /* Ensure smooth mobile scrolling */
   .mobile-scroll {
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-y: none !important;
@@ -138,7 +122,6 @@
     user-select: none !important;
   }
 
-  /* TipTap editor styles */
   .tiptap-container .ProseMirror {
     transition: min-height 0.2s ease;
     height: auto;
@@ -155,7 +138,6 @@
     overflow: hidden;
   }
 
-  /* Custom styles */
   .custom-emotion {
     color: #880000;
     font-weight: 500;
@@ -169,25 +151,21 @@
     @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm p-6;
   }
 
-  /* Typography */
   .heading-1 { @apply text-[24px] font-bold tracking-tight text-foreground mb-4; }
   .heading-2 { @apply text-[18px] font-semibold text-foreground mb-3; }
   .text-default { @apply text-[11px] text-foreground; }
   .subtitle { @apply text-[11px] text-muted-foreground mb-6; }
 
-  /* Form and button styles */
   .form-container { @apply flex flex-col space-y-4 mb-6; }
   .button-primary { @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors; }
   .button-secondary { @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors; }
   .button-outline { @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md; }
 
-  /* Layout components */
   .drop-zone { @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted; }
   .mobile-friendly-button { @apply w-full sm:w-auto; }
   .responsive-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }
   .full-width { @apply w-full min-w-0; }
 
-  /* Prevent unwanted scrolling during swipe */
   .swipe-active {
     overflow: hidden !important;
   }

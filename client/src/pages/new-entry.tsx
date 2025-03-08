@@ -16,7 +16,29 @@ import { Save, X } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
-import { KeyboardAware } from "@/components/keyboard-aware";
+
+// Added KeyboardAware component
+const KeyboardAware = ({ children }: { children: React.ReactNode }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+      const keyboardIsShown = vh < window.innerHeight;
+      setKeyboardHeight(keyboardIsShown ? window.innerHeight - vh : 0);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ marginBottom: keyboardHeight }} className="relative">
+      {children}
+    </div>
+  );
+};
 
 export default function NewEntry() {
   const [, navigate] = useLocation();
@@ -26,13 +48,11 @@ export default function NewEntry() {
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const keyboardHeight = useRef(0);
 
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
-    let isDragging = false;
 
     const handleTouchStart = (e: TouchEvent) => {
       // Only handle touches that start outside the editor area
@@ -43,36 +63,10 @@ export default function NewEntry() {
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
         touchStartTime = Date.now();
-        isDragging = true;
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging) return;
-
-      const target = e.target as HTMLElement;
-      const isEditorArea = target.closest('.tiptap-container') !== null;
-
-      if (!isEditorArea) {
-        e.preventDefault(); // Prevent scrolling when swiping outside editor
-
-        const currentX = e.touches[0].clientX;
-        const currentY = e.touches[0].clientY;
-        const dx = currentX - touchStartX;
-        const dy = Math.abs(currentY - touchStartY);
-
-        if (dx > 0 && dy < 30) { // Only handle right swipes with minimal vertical movement
-          if (contentRef.current) {
-            contentRef.current.style.transform = `translateX(${Math.min(dx * 0.5, 100)}px)`;
-          }
-        }
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!isDragging) return;
-      isDragging = false;
-
       const target = e.target as HTMLElement;
       const isEditorArea = target.closest('.tiptap-container') !== null;
 
@@ -85,21 +79,15 @@ export default function NewEntry() {
         if (swipeDistance > 50 && swipeTime < 300) {
           setIsExiting(true);
           setTimeout(() => navigate('/'), 100);
-        } else {
-          if (contentRef.current) {
-            contentRef.current.style.transform = 'translateX(0)';
-          }
         }
       }
     };
 
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchstart', handleTouchStart);
     document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [navigate]);
@@ -200,13 +188,9 @@ export default function NewEntry() {
     form.setValue("mediaUrls", newUrls);
   };
 
-  const handleKeyboardShow = (keyboardHeightValue: number) => {
-    keyboardHeight.current = keyboardHeightValue;
-  };
-
   return (
     <PageTransition direction={1}>
-      <KeyboardAware onKeyboardShow={handleKeyboardShow}>
+      <KeyboardAware>
         <div 
           ref={contentRef}
           className={`min-h-screen flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}
@@ -278,12 +262,25 @@ export default function NewEntry() {
               </div>
             )}
 
-            {/* Media Controls - Now in floating bar */}
+            {/* Floating Bar */}
             <div 
-              className="floating-bar fixed bottom-0 left-0 right-0 z-10"
-              style={{ paddingBottom: `calc(env(safe-area-inset-bottom) + 8px)`, marginBottom: `${keyboardHeight.current}px` }}
+              className="floating-bar"
+              style={{ 
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                zIndex: 50,
+                backgroundColor: 'var(--background)',
+                borderTop: '1px solid var(--border)',
+                padding: '8px',
+                paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)',
+                transform: 'translateZ(0)',
+                willChange: 'transform',
+                backfaceVisibility: 'hidden'
+              }}
             >
-              <div className="flex items-center justify-between gap-4 px-4">
+              <div className="flex items-center justify-between gap-4">
                 <FeelingSelector
                   selectedFeeling={form.getValues("feeling")}
                   onSelect={(feeling) => {

@@ -22,8 +22,12 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const mediaScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [isScrollingHorizontally, setIsScrollingHorizontally] = useState(false);
+  const [touchStartTime, setTouchStartTime] = useState(0);
+  const [lastTouchX, setLastTouchX] = useState(0);
+  const [touchVelocity, setTouchVelocity] = useState(0);
 
   useEffect(() => {
     const container = mediaScrollRef.current;
@@ -38,56 +42,70 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setStartX(e.pageX - (mediaScrollRef.current?.offsetLeft || 0));
-    setScrollLeft(mediaScrollRef.current?.scrollLeft || 0);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    if (!mediaScrollRef.current) return;
-
-    const x = e.pageX - (mediaScrollRef.current.offsetLeft || 0);
-    const walk = (x - startX) * 2;
-    mediaScrollRef.current.scrollLeft = scrollLeft - walk;
-  };
-
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!mediaScrollRef.current) return;
     setIsDragging(true);
-    setStartX(e.touches[0].clientX - (mediaScrollRef.current.offsetLeft || 0));
+    setIsScrollingHorizontally(false);
+    setStartX(e.touches[0].clientX);
+    setStartY(e.touches[0].clientY);
     setScrollLeft(mediaScrollRef.current.scrollLeft);
+    setTouchStartTime(Date.now());
+    setLastTouchX(e.touches[0].clientX);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !mediaScrollRef.current) return;
 
-    const x = e.touches[0].clientX - (mediaScrollRef.current.offsetLeft || 0);
-    const dx = x - startX;
-    const dy = e.touches[0].clientY - e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const deltaX = startX - currentX;
+    const deltaY = startY - currentY;
+    const currentTime = Date.now();
+    const timeDiff = currentTime - touchStartTime;
 
-    // Only prevent default if the swipe is more horizontal than vertical
-    if (Math.abs(dx) > Math.abs(dy)) {
+    // Calculate velocity
+    if (timeDiff > 0) {
+      const velocity = (currentX - lastTouchX) / timeDiff;
+      setTouchVelocity(velocity);
+      setLastTouchX(currentX);
+    }
+
+    // Determine scroll direction only on initial movement
+    if (!isScrollingHorizontally && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+      setIsScrollingHorizontally(Math.abs(deltaX) > Math.abs(deltaY));
+    }
+
+    // Only handle horizontal scrolling
+    if (isScrollingHorizontally) {
       e.preventDefault();
-      mediaScrollRef.current.scrollLeft = scrollLeft - dx;
+      mediaScrollRef.current.scrollLeft = scrollLeft + deltaX;
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!mediaScrollRef.current || !isScrollingHorizontally) return;
+
+    const container = mediaScrollRef.current;
+    const itemWidth = container.offsetWidth;
+    const currentScroll = container.scrollLeft;
+    const currentIndex = Math.round(currentScroll / itemWidth);
+
+    // Add momentum based on velocity
+    const momentum = touchVelocity * 200; // Adjust multiplier for desired momentum effect
+    const targetScroll = itemWidth * (currentIndex - Math.sign(momentum));
+
+    // Smooth scroll to the target position
+    container.scrollTo({
+      left: targetScroll,
+      behavior: 'smooth'
+    });
+
     setIsDragging(false);
+    setIsScrollingHorizontally(false);
+    setTouchVelocity(0);
   };
 
-
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   // Fetch comment count
   const { data: comments = [] } = useQuery({
     queryKey: [`/api/entries/${entry.id}/comments`],
@@ -224,12 +242,10 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 WebkitOverflowScrolling: 'touch',
                 scrollBehavior: 'smooth',
                 msOverflowStyle: 'none',
-                scrollbarWidth: 'none'
+                scrollbarWidth: 'none',
+                overscrollBehavior: 'none',
+                touchAction: 'pan-y pinch-zoom',
               }}
-              onMouseDown={handleMouseDown}
-              onMouseLeave={handleMouseLeave}
-              onMouseUp={handleMouseUp}
-              onMouseMove={handleMouseMove}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}

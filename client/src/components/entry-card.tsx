@@ -7,7 +7,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 
 interface EntryCardProps {
@@ -17,13 +17,95 @@ interface EntryCardProps {
 
 export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
   const { toast } = useToast();
+  const [isExpanded, setIsExpanded] = useState(false);
   const [, navigate] = useLocation();
   const mediaScrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [startY, setStartY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [hasScrolled, setHasScrolled] = useState(false);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [isScrollingHorizontally, setIsScrollingHorizontally] = useState(false);
+  const [touchStartTime, setTouchStartTime] = useState(0);
+  const [lastTouchX, setLastTouchX] = useState(0);
+  const [touchVelocity, setTouchVelocity] = useState(0);
 
+  useEffect(() => {
+    const container = mediaScrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const index = Math.round(container.scrollLeft / container.offsetWidth);
+      setActiveMediaIndex(index);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!mediaScrollRef.current) return;
+    setIsDragging(true);
+    setIsScrollingHorizontally(false);
+    setStartX(e.touches[0].clientX);
+    setStartY(e.touches[0].clientY);
+    setScrollLeft(mediaScrollRef.current.scrollLeft);
+    setTouchStartTime(Date.now());
+    setLastTouchX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !mediaScrollRef.current) return;
+
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const deltaX = startX - currentX;
+    const deltaY = startY - currentY;
+    const currentTime = Date.now();
+    const timeDiff = currentTime - touchStartTime;
+
+    // Calculate velocity
+    if (timeDiff > 0) {
+      const velocity = (currentX - lastTouchX) / timeDiff;
+      setTouchVelocity(velocity);
+      setLastTouchX(currentX);
+    }
+
+    // Determine scroll direction only on initial movement
+    if (!isScrollingHorizontally && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+      setIsScrollingHorizontally(Math.abs(deltaX) > Math.abs(deltaY));
+    }
+
+    // Only handle horizontal scrolling
+    if (isScrollingHorizontally) {
+      e.preventDefault();
+      mediaScrollRef.current.scrollLeft = scrollLeft + deltaX;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!mediaScrollRef.current || !isScrollingHorizontally) return;
+
+    const container = mediaScrollRef.current;
+    const itemWidth = container.offsetWidth;
+    const currentScroll = container.scrollLeft;
+    const currentIndex = Math.round(currentScroll / itemWidth);
+
+    // Add momentum based on velocity
+    const momentum = touchVelocity * 200; // Adjust multiplier for desired momentum effect
+    const targetScroll = itemWidth * (currentIndex - Math.sign(momentum));
+
+    // Smooth scroll to the target position
+    container.scrollTo({
+      left: targetScroll,
+      behavior: 'smooth'
+    });
+
+    setIsDragging(false);
+    setIsScrollingHorizontally(false);
+    setTouchVelocity(0);
+  };
+
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   // Fetch comment count
   const { data: comments = [] } = useQuery({
     queryKey: [`/api/entries/${entry.id}/comments`],
@@ -68,33 +150,14 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     }
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setStartX(e.touches[0].clientX);
-    setStartY(e.touches[0].clientY);
-    setIsDragging(true);
-    setHasScrolled(false);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !mediaScrollRef.current) return;
-
-    const deltaX = startX - e.touches[0].clientX;
-    const deltaY = Math.abs(startY - e.touches[0].clientY);
-
-    // Only handle horizontal scrolling if the movement is more horizontal than vertical
-    // and we haven't started vertical scrolling
-    if (Math.abs(deltaX) > deltaY && !hasScrolled) {
-      e.preventDefault();
-      mediaScrollRef.current.scrollLeft += deltaX;
-      setStartX(e.touches[0].clientX);
-    } else {
-      setHasScrolled(true);
-    }
+  const needsExpansion = (content: string) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const textContent = tempDiv.textContent || '';
+    return textContent.length > 200;
   };
 
   const handleMediaClick = (mediaIndex: number) => {
-    if (isDragging) return;
-
     const container = document.querySelector('.diary-content');
     if (container) {
       sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
@@ -105,7 +168,9 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       setSelectedEntryId(entry.id.toString());
     }
 
-    navigate(`/entry/${entry.id}?media=${mediaIndex}`);
+    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
+    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
+    navigate(cleanUrl);
   };
 
   return (
@@ -125,7 +190,16 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 {feeling && (
                   <div className="flex items-center">
-                    {feeling.label}
+                    {feeling.label.includes(',') ? (
+                      <span>
+                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                      </span>
+                    ) : (
+                      <span>
+                        feeling {feeling.label} {feeling.emoji}
+                      </span>
+                    )}
                   </div>
                 )}
                 {entry.location && (
@@ -140,6 +214,20 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       </CardHeader>
 
       <CardContent className="px-4 pt-0 pb-3">
+        <div 
+          onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
+          className={`prose max-w-none ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
+          dangerouslySetInnerHTML={{ __html: entry.content }}
+        />
+        {needsExpansion(entry.content) && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-sm text-blue-600 hover:text-blue-700 mt-1 font-medium"
+          >
+            {isExpanded ? 'See less' : 'See more'}
+          </button>
+        )}
+
         {entry.mediaUrls && entry.mediaUrls.length > 0 && (
           <motion.div 
             className="mt-3 -mx-4 relative"
@@ -149,16 +237,18 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
           >
             <div 
               ref={mediaScrollRef}
-              className="flex overflow-x-auto snap-x snap-mandatory touch-pan-x scrollbar-none"
+              className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory touch-pan-x scrollbar-none"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
                 scrollBehavior: 'smooth',
                 msOverflowStyle: 'none',
                 scrollbarWidth: 'none',
+                overscrollBehavior: 'none',
+                touchAction: 'pan-y pinch-zoom',
               }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
-              onTouchEnd={() => setIsDragging(false)}
+              onTouchEnd={handleTouchEnd}
             >
               <AnimatePresence mode="popLayout">
                 {entry.mediaUrls.map((url, index) => {
@@ -167,23 +257,24 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                   return (
                     <motion.div
                       key={index}
-                      className="flex-none w-full snap-center px-4"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
+                      style={{
+                        width: 'auto',
+                        maxWidth: '66.666667vw',
+                        height: '300px',
+                        minWidth: '200px'
+                      }}
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      onClick={() => handleMediaClick(index)}
+                      onClick={() => !isDragging && handleMediaClick(index)}
                     >
                       <motion.div 
-                        className="w-full aspect-[4/3] relative rounded-xl overflow-hidden bg-muted"
+                        className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        transition={{ 
-                          duration: 0.2,
-                          type: "spring",
-                          stiffness: 300,
-                          damping: 30
-                        }}
+                        transition={{ duration: 0.2 }}
                       >
                         {isVideo ? (
                           <div className="h-full w-full relative">
@@ -203,22 +294,22 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                             >
                               <motion.div 
                                 className="rounded-full bg-white/30 p-3"
-                                whileHover={{ 
-                                  scale: 1.1,
-                                  backgroundColor: 'rgba(255, 255, 255, 0.4)'
-                                }}
+                                whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
                               >
                                 <Play className="h-6 w-6 text-white" />
                               </motion.div>
                             </motion.div>
                           </div>
                         ) : (
-                          <img
+                          <motion.img
                             src={url}
                             alt={`Media ${index + 1}`}
                             className="h-full w-full object-cover"
                             loading="lazy"
-                            sizes="(max-width: 768px) 100vw, 768px"
+                            sizes="(max-width: 768px) 66.66vw, 512px"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
                           />
                         )}
                       </motion.div>

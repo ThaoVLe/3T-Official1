@@ -27,12 +27,9 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
         document.documentElement.style.setProperty('--keyboard-height', `${heightDifference}px`);
         document.documentElement.classList.add('keyboard-visible');
         
-        // Calculate and set the viewport offset for better positioning
+        // Also set the viewport offset for better positioning
         const offsetTop = window.visualViewport.offsetTop || 0;
         document.documentElement.style.setProperty('--keyboard-offset', `${offsetTop}px`);
-        
-        // Update viewport dimensions for positioning
-        document.documentElement.style.setProperty('--viewport-height', `${currentHeight}px`);
 
         // Ensure the content is scrolled into view when keyboard appears
         if (contentRef.current && document.activeElement instanceof HTMLElement) {

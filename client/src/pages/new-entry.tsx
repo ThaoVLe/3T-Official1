@@ -294,24 +294,25 @@ export default function NewEntry() {
             </div>
           </div>
         </div>
-      <div className="floating-bar">
-        <div className="flex justify-between items-center">
-          <Button variant="outline" size="sm" onClick={handleCancel}>
-            <X className="h-4 w-4 mr-1" />
-            Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            size="sm"
-            onClick={form.handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <Save className="h-4 w-4 mr-1" />
-            Save
-          </Button>
+      {/* Ensure the floating toolbar is properly positioned */}
+        <div className="floating-bar">
+          <div className="flex justify-between items-center">
+            <Button variant="outline" size="sm" onClick={handleCancel}>
+              <X className="h-4 w-4 mr-1" />
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              size="sm"
+              onClick={form.handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <Save className="h-4 w-4 mr-1" />
+              Save
+            </Button>
+          </div>
         </div>
-      </div>
       </KeyboardAware>
     </PageTransition>
   );

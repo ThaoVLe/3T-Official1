@@ -7,7 +7,6 @@ import Home from "@/pages/home";
 import Editor from "@/pages/editor";
 import EntryView from "@/pages/entry-view";
 import NotFound from "@/pages/not-found";
-import { BrowserRouter } from "react-router-dom";
 import { ScrollToTop } from "./components/scroll-to-top";
 
 function AppRoutes() {
@@ -30,10 +29,8 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ScrollToTop />
-        <AppRoutes />
-      </BrowserRouter>
+      <ScrollToTop />
+      <AppRoutes />
       <Toaster />
     </QueryClientProvider>
   );

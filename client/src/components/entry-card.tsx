@@ -309,7 +309,15 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                               playsInline
                               preload="metadata"
                               muted
-                              poster={url + '#t=0.5'}
+                              ref={(el) => {
+                                if (el) {
+                                  const handleLoadedMetadata = () => {
+                                    el.currentTime = 1;
+                                    el.removeEventListener('loadedmetadata', handleLoadedMetadata);
+                                  };
+                                  el.addEventListener('loadedmetadata', handleLoadedMetadata);
+                                }
+                              }}
                             />
                             <motion.div 
                               className="absolute inset-0 bg-black/20 flex items-center justify-center"

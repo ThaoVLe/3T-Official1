@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share, MessageCircle, Play, Lock } from "lucide-react";
+import { Edit2, Trash2, Share, MessageCircle, Play, Lock, Unlock } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";

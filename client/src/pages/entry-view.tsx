@@ -236,12 +236,12 @@ export default function EntryView() {
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-semibold truncate max-w-[75%] text-foreground">
+            <div className="flex items-center gap-2 w-full">
+              <h1 className="text-lg font-semibold text-foreground flex-grow">
                 {entry.title || "Untitled Entry"}
               </h1>
               {entry.sensitive && settings.isPasswordProtectionEnabled && (
-                <Lock className="h-5 w-5 text-amber-600" />
+                <Lock className="h-5 w-5 text-amber-600 flex-shrink-0" />
               )}
             </div>
           </div>

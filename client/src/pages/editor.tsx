@@ -11,7 +11,7 @@ import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
-import { Save, X, SmilePlus, MapPin, ImagePlus } from "lucide-react";
+import { Save, X, SmilePlus, MapPin, ImagePlus, FileEdit, Edit } from "lucide-react";
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
@@ -282,16 +282,7 @@ const EditorContent = () => {
             <X className="h-4 w-4 mr-1" />
             Cancel
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={form.handleSubmit((data) => mutation.mutate(data))}
-            disabled={mutation.isPending}
-            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
-          >
-            <Save className="h-4 w-4 mr-1" />
-            {id ? "Update" : "Create"}
-          </Button>
+          {/*Removed Save button here */}
         </div>
         <div className="max-w-full sm:max-w-2xl pr-24">
           <Input

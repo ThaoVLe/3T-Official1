@@ -11,6 +11,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { ProgressiveImage } from './progressive-image';
 import { useSettings } from "@/lib/settings";
+import { PasswordDialog } from "@/components/password-dialog";
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -20,6 +21,8 @@ interface EntryCardProps {
 export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [, navigate] = useLocation();
   const mediaScrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -30,6 +33,27 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const [isSwiping, setIsSwiping] = useState(false);
   const touchStartTimeRef = useRef<number>(0);
   const settings = useSettings();
+
+  // Check if content should be blurred
+  const shouldBlurContent = entry.sensitive && settings.isPasswordProtectionEnabled && !isUnlocked;
+
+  const verifyPassword = async (password: string) => {
+    try {
+      await apiRequest("POST", "/api/verify-password", { password });
+      setShowPasswordDialog(false);
+      setIsUnlocked(true);
+      toast({
+        title: "Entry unlocked",
+        description: "You can now view the protected content",
+      });
+    } catch (error) {
+      toast({
+        title: "Invalid password",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const container = mediaScrollRef.current;
@@ -204,16 +228,18 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 {entry.title || "Untitled Entry"}
               </CardTitle>
               {entry.sensitive && settings.isPasswordProtectionEnabled && (
-                <div className="bg-amber-100 p-1 rounded-full ml-1">
-                  <Lock className="h-5 w-5 text-amber-600" />
+                <div className="bg-amber-100 p-1 rounded-full">
+                  <Lock className="h-4 w-4 text-amber-600" />
                 </div>
               )}
             </div>
 
+            {/* Date and metadata */}
             <div className="text-sm text-muted-foreground">
               {formatTimeAgo(entry.createdAt)}
             </div>
 
+            {/* Feeling and location info */}
             {(feeling || entry.location) && (
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 {feeling && (
@@ -242,116 +268,136 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       </CardHeader>
 
       <CardContent className="px-4 pt-0 pb-3">
-        <div 
-          onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
-          className={`prose max-w-none text-foreground ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
-          dangerouslySetInnerHTML={{ __html: entry.content }}
-        />
-        {needsExpansion(entry.content) && (
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-sm text-primary hover:text-primary/90 mt-1 font-medium"
-          >
-            {isExpanded ? 'See less' : 'See more'}
-          </button>
-        )}
-
-        {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-          <motion.div 
-            className="mt-3 -mx-4 relative"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div 
-              ref={mediaScrollRef}
-              className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory"
-              style={{ 
-                WebkitOverflowScrolling: 'touch',
-                scrollBehavior: 'smooth',
-                msOverflowStyle: 'none',
-                scrollbarWidth: 'none',
-                overscrollBehavior: 'auto'
-              }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+        {/* Content section with conditional blur */}
+        <div className={`relative ${shouldBlurContent ? 'filter blur-md pointer-events-none' : ''}`}>
+          <div 
+            onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
+            className={`prose max-w-none text-foreground ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
+            dangerouslySetInnerHTML={{ __html: entry.content }}
+          />
+          {needsExpansion(entry.content) && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-sm text-primary hover:text-primary/90 mt-1 font-medium"
             >
-              <AnimatePresence mode="popLayout">
-                {entry.mediaUrls.map((url, index) => {
-                  const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+              {isExpanded ? 'See less' : 'See more'}
+            </button>
+          )}
 
-                  return (
-                    <motion.div
-                      key={index}
-                      className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
-                      style={{
-                        width: 'auto',
-                        maxWidth: '66.666667vw',
-                        height: '300px',
-                        minWidth: '200px'
-                      }}
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.9, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      onClick={() => !isSwiping && handleMediaClick(index)}
-                    >
-                      <motion.div 
-                        className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+          {/* Media section */}
+          {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+            <motion.div 
+              className="mt-3 -mx-4 relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div 
+                ref={mediaScrollRef}
+                className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory"
+                style={{ 
+                  WebkitOverflowScrolling: 'touch',
+                  scrollBehavior: 'smooth',
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none',
+                  overscrollBehavior: 'auto'
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <AnimatePresence mode="popLayout">
+                  {entry.mediaUrls.map((url, index) => {
+                    const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+
+                    return (
+                      <motion.div
+                        key={index}
+                        className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
+                        style={{
+                          width: 'auto',
+                          maxWidth: '66.666667vw',
+                          height: '300px',
+                          minWidth: '200px'
+                        }}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
                         transition={{ duration: 0.2 }}
+                        onClick={() => !isSwiping && handleMediaClick(index)}
                       >
-                        {!isVideo ? (
-                          <ProgressiveImage
-                            src={url}
-                            alt={`Media ${index + 1}`}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            sizes="(max-width: 768px) 66.66vw, 512px"
-                          />
-                        ) : (
-                          <div className="relative w-full h-full">
-                            <video
+                        <motion.div 
+                          className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {!isVideo ? (
+                            <ProgressiveImage
                               src={url}
-                              className="h-full w-full object-cover"
-                              playsInline
-                              preload="metadata"
-                              muted
-                              ref={(el) => {
-                                if (el) {
-                                  const handleLoadedMetadata = () => {
-                                    el.currentTime = 1;
-                                    el.removeEventListener('loadedmetadata', handleLoadedMetadata);
-                                  };
-                                  el.addEventListener('loadedmetadata', handleLoadedMetadata);
-                                }
-                              }}
+                              alt={`Media ${index + 1}`}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              sizes="(max-width: 768px) 66.66vw, 512px"
                             />
-                            <motion.div 
-                              className="absolute inset-0 bg-black/20 flex items-center justify-center"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
+                          ) : (
+                            <div className="relative w-full h-full">
+                              <video
+                                src={url}
+                                className="h-full w-full object-cover"
+                                playsInline
+                                preload="metadata"
+                                muted
+                                ref={(el) => {
+                                  if (el) {
+                                    const handleLoadedMetadata = () => {
+                                      el.currentTime = 1;
+                                      el.removeEventListener('loadedmetadata', handleLoadedMetadata);
+                                    };
+                                    el.addEventListener('loadedmetadata', handleLoadedMetadata);
+                                  }
+                                }}
+                              />
                               <motion.div 
-                                className="rounded-full bg-white/30 p-3"
-                                whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
+                                className="absolute inset-0 bg-black/20 flex items-center justify-center"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.3 }}
                               >
-                                <Play className="h-6 w-6 text-white" />
+                                <motion.div 
+                                  className="rounded-full bg-white/30 p-3"
+                                  whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
+                                >
+                                  <Play className="h-6 w-6 text-white" />
+                                </motion.div>
                               </motion.div>
-                            </motion.div>
-                          </div>
-                        )}
+                            </div>
+                          )}
+                        </motion.div>
                       </motion.div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Unlock button for sensitive content */}
+        {shouldBlurContent && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/5 rounded-lg">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPasswordDialog(true)}
+              className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+            >
+              <Lock className="mr-2 h-4 w-4" />
+              Unlock to view
+            </Button>
+          </div>
         )}
 
+        {/* Action buttons */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
           <Button
             variant="ghost"
@@ -416,6 +462,16 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
           </div>
         </div>
       </CardContent>
+
+      {/* Password verification dialog */}
+      <PasswordDialog
+        open={showPasswordDialog}
+        onOpenChange={setShowPasswordDialog}
+        onSubmit={verifyPassword}
+        mode="verify"
+        title="Protected Entry"
+        description="This entry is password protected. Please enter your password to view it."
+      />
     </Card>
   );
 }

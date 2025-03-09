@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import type { DiaryEntry, Comment } from "@shared/schema"; // Add Comment type import
+import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
 import { ArrowLeft, MessageCircle, Share2, FileEdit, Trash2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export default function EntryView() {
   });
 
   // Fetch comments
-  const { data: comments = [] } = useQuery<Comment[]>({ // Update comments query with proper type
+  const { data: comments = [] } = useQuery({
     queryKey: [`/api/entries/${id}/comments`],
     enabled: !!id,
   });

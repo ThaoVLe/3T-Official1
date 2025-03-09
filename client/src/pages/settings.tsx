@@ -10,55 +10,110 @@ import {
   Moon,
   Sun,
   Lock,
+  Bell,
   Database,
   ArrowLeft,
 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
-import { getAllEntries, getDatabaseStats } from "@/lib/indexedDB";
-import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Placeholder for toast function - replace with your actual implementation
+const toast = ({ title, description, variant }: { title: string; description: string; variant?: string }) => {
+  console.log(`Toast: ${title} - ${description} (${variant || 'info'})`);
+};
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
   const settings = useSettings();
-  const [localEntries, setLocalEntries] = React.useState<any[]>([]);
-  const [showDebug, setShowDebug] = React.useState(false);
-  const { toast } = useToast();
-  const [dbStats, setDbStats] = React.useState<{
-    entriesCount: number;
-    lastModifiedEntry: Date | null;
-  }>({
-    entriesCount: 0,
-    lastModifiedEntry: null
-  });
 
-  // Load local entries and database stats for debug view
-  const loadDatabaseInfo = async () => {
-    try {
-      const [entries, stats] = await Promise.all([
-        getAllEntries(),
-        getDatabaseStats()
-      ]);
-      setLocalEntries(entries);
-      setDbStats(stats);
-    } catch (error) {
-      console.error('Error loading database info:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load local storage information",
-        variant: "destructive"
-      });
-    }
-  };
+  // Touch swipe handling
+  const [touchStartX, setTouchStartX] = React.useState(0);
+  const [touchStartY, setTouchStartY] = React.useState(0);
+  const [touchStartTime, setTouchStartTime] = React.useState(0);
+  const pageRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (showDebug) {
-      loadDatabaseInfo();
-    }
-  }, [showDebug]);
+    const handleTouchStart = (e: TouchEvent) => {
+      setTouchStartX(e.touches[0].clientX);
+      setTouchStartY(e.touches[0].clientY);
+      setTouchStartTime(Date.now());
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      // Prevent default to avoid scrolling conflicts
+      if (Math.abs(e.touches[0].clientX - touchStartX) > Math.abs(e.touches[0].clientY - touchStartY)) {
+        e.preventDefault();
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndTime = Date.now();
+      const swipeDistance = touchEndX - touchStartX;
+      const verticalDistance = Math.abs(touchEndY - touchStartY);
+      const swipeTime = touchEndTime - touchStartTime;
+
+      console.log("Swipe detected:", {
+        swipeDistance,
+        verticalDistance,
+        swipeTime,
+        condition: ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30)
+      });
+
+      // If swiped right far enough and fast enough (not too much vertical movement)
+      if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
+        // Get the last scroll position from session storage
+        const lastScrollPosition = sessionStorage.getItem('homeScrollPosition');
+
+        // Navigate back to home
+        navigate('/');
+
+        // After navigation, restore scroll position (needs to be handled in the main page)
+        if (lastScrollPosition) {
+          sessionStorage.setItem('shouldRestoreScroll', 'true');
+        }
+      }
+    };
+
+    // Get current ref element
+    const element = pageRef.current;
+    if (!element) return;
+
+    element.addEventListener('touchstart', handleTouchStart, { passive: false });
+    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+    element.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchmove', handleTouchMove);
+      element.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [navigate, touchStartX, touchStartY]);
+
+  // Save scroll position when leaving settings page
+  React.useEffect(() => {
+    return () => {
+      const homeScrollPosition = sessionStorage.getItem('homeScrollPosition');
+      if (homeScrollPosition) {
+        sessionStorage.setItem('shouldRestoreScroll', 'true');
+      }
+    };
+  }, []);
+
+  const autoLockOptions = [
+    { value: "0", label: "Disabled" },
+    { value: "1", label: "1 minute" },
+    { value: "5", label: "5 minutes" },
+    { value: "15", label: "15 minutes" },
+    { value: "30", label: "30 minutes" },
+    { value: "60", label: "1 hour" },
+  ];
+
 
   return (
     <PageTransition direction={1}>
-      <div className="min-h-screen bg-background">
+      <div ref={pageRef} className="min-h-screen bg-background">
         {/* Header */}
         <div className="sticky top-0 z-10 border-b bg-background">
           <div className="container flex h-14 max-w-screen-2xl items-center">
@@ -79,7 +134,7 @@ export default function SettingsPage() {
         {/* Content */}
         <div className="container py-6 max-w-2xl">
           <Tabs defaultValue="appearance" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="appearance" className="flex flex-col items-center gap-1 py-2">
                 <Sun className="h-4 w-4" />
                 <span className="text-xs">Appearance</span>
@@ -88,9 +143,13 @@ export default function SettingsPage() {
                 <Lock className="h-4 w-4" />
                 <span className="text-xs">Privacy</span>
               </TabsTrigger>
-              <TabsTrigger value="debug" className="flex flex-col items-center gap-1 py-2">
+              <TabsTrigger value="notifications" className="flex flex-col items-center gap-1 py-2">
+                <Bell className="h-4 w-4" />
+                <span className="text-xs">Notifications</span>
+              </TabsTrigger>
+              <TabsTrigger value="data" className="flex flex-col items-center gap-1 py-2">
                 <Database className="h-4 w-4" />
-                <span className="text-xs">Debug</span>
+                <span className="text-xs">Data</span>
               </TabsTrigger>
             </TabsList>
 
@@ -112,6 +171,7 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
+
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Text Size</h3>
                   <div className="flex items-center justify-between">
@@ -134,76 +194,31 @@ export default function SettingsPage() {
             <TabsContent value="privacy">
               <Card className="p-6 space-y-6">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Data Storage</h3>
-                  <div className="text-sm text-muted-foreground">
-                    Your diary entries are stored locally on your device using IndexedDB.
-                    No data is sent to external servers.
+                  <h3 className="text-lg font-semibold">Sharing</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Public Sharing</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Allow entries to be shared publicly
+                      </div>
+                    </div>
+                    <Switch
+                      checked={settings.isPublicSharingEnabled}
+                      onCheckedChange={settings.setPublicSharing}
+                    />
                   </div>
                 </div>
               </Card>
             </TabsContent>
 
-            {/* Debug View */}
-            <TabsContent value="debug">
-              <Card className="p-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Local Storage Debug</h3>
+            {/* Notification Settings */}
+            <TabsContent value="notifications">
+              <Card className="p-6">Notification settings coming soon...</Card>
+            </TabsContent>
 
-                  {/* Database Stats */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 border rounded">
-                      <div className="text-sm text-muted-foreground">Total Entries</div>
-                      <div className="text-2xl font-semibold">{dbStats.entriesCount}</div>
-                    </div>
-                    <div className="p-4 border rounded">
-                      <div className="text-sm text-muted-foreground">Last Modified</div>
-                      <div className="text-sm">
-                        {dbStats.lastModifiedEntry
-                          ? new Date(dbStats.lastModifiedEntry).toLocaleString()
-                          : 'Never'}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Entries List</h4>
-                    <Button
-                      onClick={() => {
-                        setShowDebug(!showDebug);
-                        if (!showDebug) loadDatabaseInfo();
-                      }}
-                      size="sm"
-                    >
-                      {showDebug ? 'Hide' : 'Show'} Details
-                    </Button>
-                  </div>
-
-                  {showDebug && (
-                    <div className="mt-4 space-y-2">
-                      <div className="max-h-96 overflow-auto space-y-2">
-                        {localEntries.map((entry: any) => (
-                          <div key={entry.id} className="p-4 border rounded">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium">{entry.title || 'Untitled'}</p>
-                                <p className="text-sm text-muted-foreground">ID: {entry.id}</p>
-                              </div>
-                            </div>
-                            <div className="mt-2 text-sm text-muted-foreground">
-                              Last Modified: {new Date(entry.lastModified).toLocaleString()}
-                            </div>
-                            {entry.content && (
-                              <div className="mt-2 text-sm text-muted-foreground truncate">
-                                {entry.content}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Card>
+            {/* Data Management Settings */}
+            <TabsContent value="data">
+              <Card className="p-6">Data management settings coming soon...</Card>
             </TabsContent>
           </Tabs>
         </div>

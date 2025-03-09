@@ -17,9 +17,6 @@ import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
 import { KeyboardProvider, useKeyboard } from "@/lib/keyboard-context";
-import { addEntry, updateEntry } from "@/lib/indexedDB";
-import { useSyncStore } from "@/lib/store";
-
 
 const EditorContent = () => {
   const { id } = useParams();
@@ -33,7 +30,6 @@ const EditorContent = () => {
   const floatingBarRef = useRef<HTMLDivElement>(null);
   const editorAreaRef = useRef<HTMLDivElement>(null);
   const { isKeyboardVisible, keyboardHeight } = useKeyboard();
-  const syncStore = useSyncStore();
 
   useEffect(() => {
     let touchStartX = 0;
@@ -150,31 +146,10 @@ const EditorContent = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
-      try {
-        if (id) {
-          await updateEntry(parseInt(id), {
-            ...data,
-            syncStatus: 'pending',
-            lastModified: new Date()
-          });
-        } else {
-          await addEntry({
-            ...data,
-            syncStatus: 'pending',
-            lastModified: new Date()
-          });
-        }
-
-        if (syncStore.isOnline) {
-          if (id) {
-            await apiRequest("PUT", `/api/entries/${id}`, data);
-          } else {
-            await apiRequest("POST", "/api/entries", data);
-          }
-        }
-      } catch (error) {
-        console.error('Error saving entry:', error);
-        throw error;
+      if (id) {
+        await apiRequest("PUT", `/api/entries/${id}`, data);
+      } else {
+        await apiRequest("POST", "/api/entries", data);
       }
     },
     onSuccess: () => {
@@ -183,17 +158,8 @@ const EditorContent = () => {
         title: "Success",
         description: id ? "Entry updated" : "Entry created",
       });
-      syncStore.syncEntries();
       navigate("/");
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Entry saved locally but failed to sync with server",
-        variant: "destructive"
-      });
-      navigate("/");
-    }
   });
 
   const onMediaUpload = async (file: File) => {

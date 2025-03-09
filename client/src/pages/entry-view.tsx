@@ -347,8 +347,8 @@ export default function EntryView() {
                     onClick={handleCommentsClick}
                     className="text-muted-foreground hover:text-foreground flex items-center gap-2"
                   >
-                    <span className="font-medium">{comments.length > 0 ? comments.length : ' '}</span>
                     <MessageCircle className="h-4 w-4" />
+                    <span className="font-medium text-xs">{comments.length > 0 ? comments.length : ' '}</span>
                   </Button>
 
                   <div className="flex gap-1">

@@ -67,7 +67,7 @@ export function Comments({ entryId, onCommentCountChange }: CommentsProps) {
         {Array.isArray(comments) && comments.map((comment) => (
           <div key={comment.id} className="flex items-start gap-2 group">
             <div className="flex-1 bg-muted rounded-lg p-3">
-              <div className="text-sm">{comment.content}</div>
+              <div className="text-xs">{comment.content}</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {formatTimeAgo(comment.createdAt)}
               </div>

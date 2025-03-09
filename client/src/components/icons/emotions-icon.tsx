@@ -5,8 +5,8 @@ export function EmotionsIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg 
       viewBox="0 0 24 24" 
-      width="30" 
-      height="30" 
+      width="25" 
+      height="25" 
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
       {...props}

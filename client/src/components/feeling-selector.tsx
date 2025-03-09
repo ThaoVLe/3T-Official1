@@ -195,7 +195,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className="h-10 px-3 rounded-full flex items-center"
+          className="h-[30px] w-[30px] p-0 rounded-full flex items-center justify-center"
           aria-label="Select feeling"
           onClick={(e) => {
             e.preventDefault();
@@ -252,7 +252,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           }}
         >
           <div className="flex items-center justify-center">
-            <EmotionsIcon className="h-8 w-8" />
+            <EmotionsIcon className="h-[25px] w-[25px]" />
           </div>
         </Button>
       </SheetTrigger>

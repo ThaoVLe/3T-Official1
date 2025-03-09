@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { useLocation } from "wouter";
-import { useKeyboard } from "@/hooks/use-keyboard"; // Added import for keyboard height
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +31,8 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
   const [isExiting, setIsExiting] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   // ... other state variables
-  const { keyboardHeight } = useKeyboard(); // Get keyboard height
+
+  // Reference to track swipe animation
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,10 +43,12 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
     let currentTranslateX = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
+      // Check if touch started inside the editing area or floating bar
       const target = e.target as HTMLElement;
       const isInsideEditor = target.closest('.tiptap-container, .ProseMirror') !== null;
       const isInsideFloatingBar = target.closest('.floating-bar') !== null;
 
+      // Only allow swipe if touch is NOT inside editor area
       if (isInsideEditor || isInsideFloatingBar) {
         isDragging = false;
         return;
@@ -57,6 +59,7 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
       touchStartTime = Date.now();
       isDragging = true;
 
+      // Reset transition during drag
       if (containerRef.current) {
         containerRef.current.style.transition = 'none';
       }
@@ -69,17 +72,22 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
       const touchMoveY = e.touches[0].clientY;
       const verticalDistance = Math.abs(touchMoveY - touchStartY);
 
+      // Prevent vertical scrolling interference
       if (verticalDistance > 30) return;
 
+      // Calculate the horizontal distance moved
       const moveDistance = touchMoveX - touchStartX;
 
+      // Only allow right swipes (positive distance)
       if (moveDistance > 0) {
         currentTranslateX = moveDistance;
 
+        // Apply transform with damping effect (using sqrt for more natural feel)
         if (containerRef.current) {
           const dampenedDistance = Math.sqrt(moveDistance) * 6;
           containerRef.current.style.transform = `translateX(${Math.min(dampenedDistance, 100)}px)`;
 
+          // Gradually increase opacity of backdrop as user swipes
           const opacity = Math.min(moveDistance / 150, 0.5);
           containerRef.current.style.boxShadow = `-5px 0 15px rgba(0, 0, 0, ${opacity})`;
         }
@@ -97,18 +105,23 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
       const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
 
+      // Add transition for smooth animation back to original position
       if (containerRef.current) {
         containerRef.current.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease-out';
       }
 
+      // If swiped far enough or fast enough (distance > 50px, time < 300ms, not too much vertical movement)
       if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
+        // Show save dialog
         setShowSaveDialog(true);
 
+        // Animate back to original position
         if (containerRef.current) {
           containerRef.current.style.transform = 'translateX(0)';
           containerRef.current.style.boxShadow = 'none';
         }
       } else {
+        // Not swiped far enough, animate back to original position
         if (containerRef.current) {
           containerRef.current.style.transform = 'translateX(0)';
           containerRef.current.style.boxShadow = 'none';
@@ -129,11 +142,12 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ ...entry, feeling, location }); 
+    onSave({ ...entry, feeling, location }); // ... other properties
   };
 
   const handleSaveConfirm = () => {
     if (formRef.current) {
+      // Trigger the form submission
       const event = new Event('submit', { cancelable: true, bubbles: true });
       formRef.current.dispatchEvent(event);
     }
@@ -144,6 +158,7 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
     setShowSaveDialog(false);
     if (entry?.id) {
       setIsExiting(true);
+      // Match the entry-view animation timing
       setTimeout(() => navigate(`/entry/${entry.id}`), 100);
     } else {
       setIsExiting(true);
@@ -151,31 +166,39 @@ const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({
     }
   };
 
-
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.style.height = `calc(100vh - ${keyboardHeight}px)`;
+  const handleSaveConfirm = () => {
+    if (formRef.current) {
+      // Trigger the form submission
+      const event = new Event('submit', { cancelable: true, bubbles: true });
+      formRef.current.dispatchEvent(event);
     }
-  }, [keyboardHeight]);
+    setShowSaveDialog(false);
 
+    // Add exit animation similar to the entry-view
+    if (containerRef.current) {
+      containerRef.current.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+      containerRef.current.style.transform = 'translateX(-20px)';
+      containerRef.current.style.opacity = '0';
+    }
+  };
 
   return (
     <>
       <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-        <form ref={formRef} onSubmit={handleSubmit}>
-          <div className="flex flex-wrap gap-2 items-center">
-            <FeelingSelector
-              onSelect={setFeeling}
-              selectedFeeling={feeling}
-            />
-            <LocationSelector
-              onSelect={setLocation}
-              selectedLocation={location}
-            />
-          </div>
-          {/* ... other form elements */}
-          <button type="submit">Save</button>
-        </form>
+      <form ref={formRef} onSubmit={handleSubmit}>
+        <div className="flex flex-wrap gap-2 items-center">
+          <FeelingSelector
+            onSelect={setFeeling}
+            selectedFeeling={feeling}
+          />
+          <LocationSelector
+            onSelect={setLocation}
+            selectedLocation={location}
+          />
+        </div>
+        {/* ... other form elements */}
+        <button type="submit">Save</button>
+      </form>
       </div>
 
       <AlertDialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>

@@ -367,7 +367,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
             className="text-muted-foreground hover:text-foreground flex items-center gap-2"
           >
             <MessageCircle className="h-4 w-4" />
-            <span className="font-medium text-sm">{comments.length > 0 ? comments.length : ' '}</span>
+            <span className="font-medium text-sm">{comments.length > 0 ? comments.length : ''}</span>
           </Button>
 
           <div className="flex gap-1">

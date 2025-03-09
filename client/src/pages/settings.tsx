@@ -20,8 +20,31 @@ import { useSettings } from "@/lib/settings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSyncStore } from "@/lib/store";
 import { getAllEntries, getDatabaseStats } from "@/lib/indexedDB";
-import { auth, signInWithGoogle, signOutUser, handleRedirectResult } from "@/lib/firebase"; // Added import for handleRedirectResult
+import { auth, signInWithGoogle, signOutUser, handleRedirectResult } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+
+export async function handleGoogleSignIn() {
+  try {
+    if (!auth) {
+      throw new Error('Firebase not initialized');
+    }
+    await signInWithGoogle();
+  } catch (error) {
+    console.error('Google Sign-in Error:', error);
+    let errorMessage = "Failed to sign in with Google";
+
+    // Check for unauthorized domain error
+    if (error instanceof Error && error.message.includes('not authorized')) {
+      errorMessage = error.message;
+    }
+
+    toast({
+      title: "Error",
+      description: errorMessage,
+      variant: "destructive"
+    });
+  }
+}
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
@@ -120,9 +143,16 @@ export default function SettingsPage() {
       await signInWithGoogle();
     } catch (error) {
       console.error('Google Sign-in Error:', error);
+      let errorMessage = "Failed to sign in with Google";
+
+      // Check for unauthorized domain error
+      if (error instanceof Error && error.message.includes('not authorized')) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Error",
-        description: "Failed to sign in with Google",
+        description: errorMessage,
         variant: "destructive"
       });
     }

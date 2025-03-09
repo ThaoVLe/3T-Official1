@@ -17,6 +17,7 @@ import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
 import { KeyboardAware } from "@/components/keyboard-aware"; //Import added
+import { SmilePlus, ImagePlus, MapPin } from 'lucide-react'; //Import added
 
 const NewEntry: React.FC = () => {
   const [feeling, setFeeling] = useState<{ emoji: string; label: string } | null>(null);
@@ -280,23 +281,57 @@ const NewEntry: React.FC = () => {
                 </div>
               )}
 
-              {/* Floating Bar - Now positioned consistently with editor page */}
+              {/* Floating Bar */}
               <div className="floating-bar">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-around px-4 py-2">
                   <FeelingSelector
                     selectedFeeling={form.getValues("feeling")}
                     onSelect={(feeling) => {
                       setFeeling(feeling);
                       form.setValue("feeling", feeling);
                     }}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-11 w-11 rounded-full hover:bg-muted"
+                      >
+                        <SmilePlus className="h-6 w-6" />
+                        <span className="sr-only">Select Feeling</span>
+                      </Button>
+                    }
                   />
-                  <MediaRecorder onCapture={onMediaUpload} />
+
+                  <MediaRecorder
+                    onCapture={onMediaUpload}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-11 w-11 rounded-full hover:bg-muted"
+                      >
+                        <ImagePlus className="h-6 w-6" />
+                        <span className="sr-only">Add Media</span>
+                      </Button>
+                    }
+                  />
+
                   <LocationSelector
                     selectedLocation={form.getValues("location")}
                     onSelect={(location) => {
                       setLocation(location);
                       form.setValue("location", location);
                     }}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-11 w-11 rounded-full hover:bg-muted"
+                      >
+                        <MapPin className="h-6 w-6" />
+                        <span className="sr-only">Add Location</span>
+                      </Button>
+                    }
                   />
                 </div>
               </div>

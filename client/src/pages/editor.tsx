@@ -11,7 +11,7 @@ import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
-import { Save, X } from "lucide-react";
+import { Save, X, SmilePlus, MapPin, ImagePlus } from "lucide-react";
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
@@ -39,7 +39,6 @@ const EditorContent = () => {
     let isScrolling = false;
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Check if touch is on floating bar or outside editor area
       const target = e.target as HTMLElement;
       const isFloatingBarTouch = floatingBarRef.current?.contains(target);
       const isEditorAreaTouch = editorAreaRef.current?.contains(target);
@@ -70,7 +69,6 @@ const EditorContent = () => {
       const touchMoveY = e.touches[0].clientY;
       const verticalDistance = Math.abs(touchMoveY - touchStartY);
 
-      // If vertical scrolling is detected
       if (verticalDistance > 10) {
         isScrolling = true;
       }
@@ -235,17 +233,13 @@ const EditorContent = () => {
     form.setValue("mediaUrls", newUrls);
   };
 
-  // Function to hide keyboard on mobile devices
   const hideKeyboard = useCallback(() => {
     if (!isMobile()) return;
 
-    // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
-    // More aggressive iOS keyboard dismissal
-    // Create an offscreen input and force it to focus and blur
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
     temporaryInput.style.position = 'fixed';
@@ -254,12 +248,10 @@ const EditorContent = () => {
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
     temporaryInput.style.width = '100%';
-    temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
+    temporaryInput.style.fontSize = '16px'; 
 
-    // Append to body, focus, then blur and remove
     document.body.appendChild(temporaryInput);
 
-    // Force focus then immediately blur
     setTimeout(() => {
       temporaryInput.focus();
       setTimeout(() => {
@@ -268,13 +260,11 @@ const EditorContent = () => {
       }, 50);
     }, 50);
 
-    // Additional fix - add a slight delay before showing sheet
     return new Promise(resolve => setTimeout(resolve, 100));
   }, []);
 
   return (
     <div className={`flex flex-col h-full bg-background ${isExiting ? 'pointer-events-none' : ''}`}>
-      {/* Header */}
       <div className="relative px-4 sm:px-6 py-3 border-b border-border bg-card sticky top-0 z-10">
         <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
           <Button
@@ -328,7 +318,6 @@ const EditorContent = () => {
         </div>
       </div>
 
-      {/* Content Area */}
       <div 
         ref={editorAreaRef}
         className="flex-1 flex flex-col overflow-auto w-full bg-background relative touch-pan-y"
@@ -340,7 +329,6 @@ const EditorContent = () => {
           />
         </div>
 
-        {/* Media Preview */}
         {form.watch("mediaUrls")?.length > 0 && (
           <div className="p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
             <MediaPreview
@@ -352,7 +340,6 @@ const EditorContent = () => {
           </div>
         )}
 
-        {/* Floating Controls Bar */}
         <div 
           ref={floatingBarRef}
           className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out touch-none"
@@ -361,17 +348,39 @@ const EditorContent = () => {
             paddingBottom: 'env(safe-area-inset-bottom)'
           }}
         >
-          <div className="bg-background/80 backdrop-blur-sm border-t border-border p-2">
-            <div className="flex items-center justify-between gap-4">
+          <div className="bg-background/80 backdrop-blur-sm border-t border-border">
+            <div className="flex items-center justify-around px-4 py-2">
               <FeelingSelector
                 selectedFeeling={form.getValues("feeling")}
                 onSelect={async (feeling) => {
                   await hideKeyboard();
                   form.setValue("feeling", feeling);
                 }}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11 rounded-full hover:bg-muted"
+                  >
+                    <SmilePlus className="h-6 w-6" />
+                    <span className="sr-only">Select Feeling</span>
+                  </Button>
+                }
               />
 
-              <MediaRecorder onCapture={onMediaUpload} />
+              <MediaRecorder
+                onCapture={onMediaUpload}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11 rounded-full hover:bg-muted"
+                  >
+                    <ImagePlus className="h-6 w-6" />
+                    <span className="sr-only">Add Media</span>
+                  </Button>
+                }
+              />
 
               <LocationSelector
                 selectedLocation={form.getValues("location")}
@@ -379,6 +388,16 @@ const EditorContent = () => {
                   hideKeyboard();
                   form.setValue("location", location);
                 }}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11 rounded-full hover:bg-muted"
+                  >
+                    <MapPin className="h-6 w-6" />
+                    <span className="sr-only">Add Location</span>
+                  </Button>
+                }
               />
             </div>
           </div>

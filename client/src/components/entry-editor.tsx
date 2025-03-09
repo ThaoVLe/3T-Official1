@@ -58,16 +58,21 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entry, onSubmit }) => {
         <LocationSelector onSelect={setLocation} selectedLocation={location} />
       </div>
       {settings.isPasswordProtectionEnabled && (
-        <div className="flex items-center space-x-2 mt-4">
+        <div className="flex items-center justify-between px-4 py-3 mt-4 bg-muted/50 rounded-lg">
+          <div className="space-y-0.5">
+            <Label htmlFor="sensitive" className="flex items-center gap-2 text-base">
+              <Lock className="h-4 w-4 text-amber-600" />
+              <span>Mark as sensitive entry</span>
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              This entry will be password protected
+            </p>
+          </div>
           <Switch
             id="sensitive"
             checked={sensitive}
             onCheckedChange={setSensitive}
           />
-          <Label htmlFor="sensitive" className="flex items-center space-x-2 cursor-pointer">
-            <Lock className="h-4 w-4" />
-            <span>Mark as sensitive entry</span>
-          </Label>
         </div>
       )}
       <button type="submit">Submit</button>

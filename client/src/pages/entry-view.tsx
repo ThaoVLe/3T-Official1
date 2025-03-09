@@ -21,9 +21,28 @@ export default function EntryView() {
   const [isExiting, setIsExiting] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const { toast } = useToast();
   const settings = useSettings();
+
+  // Check URL parameters for showComments
+  useEffect(() => {
+    const showCommentsParam = new URLSearchParams(window.location.search).get('showComments');
+    if (showCommentsParam === 'true') {
+      setShowComments(true);
+      // Scroll to comments section after a short delay to ensure content is loaded
+      setTimeout(() => {
+        const commentsSection = document.getElementById('comments-section');
+        if (commentsSection) {
+          commentsSection.scrollIntoView({ behavior: 'instant', block: 'start' });
+        } else {
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'instant'
+          });
+        }
+      }, 300); // Increased timeout to ensure DOM is fully loaded
+    }
+  }, []);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
@@ -36,59 +55,13 @@ export default function EntryView() {
     enabled: !!id,
   });
 
-  // Check if content should be blurred - with null check
-  const shouldBlurContent = entry?.sensitive && settings.isPasswordProtectionEnabled && !isUnlocked;
-
-  // Check for existing unlock state on mount
-  useEffect(() => {
-    if (id) {
-      const isEntryUnlocked = sessionStorage.getItem(`entry-${id}-unlocked`) === 'true';
-      setIsUnlocked(isEntryUnlocked);
-    }
-  }, [id]);
-
-  // Update unlock state when entry changes
-  useEffect(() => {
-    if (entry?.sensitive && settings.isPasswordProtectionEnabled && !isUnlocked) {
-      setShowPasswordDialog(true);
-    }
-  }, [entry?.sensitive, settings.isPasswordProtectionEnabled, isUnlocked]);
-
-  const verifyPassword = async (password: string) => {
-    try {
-      await apiRequest("POST", "/api/verify-password", { password });
-      setShowPasswordDialog(false);
-      setIsUnlocked(true);
-      // Store the unlocked state in sessionStorage
-      if (id) {
-        sessionStorage.setItem(`entry-${id}-unlocked`, 'true');
-      }
-      toast({
-        title: "Entry unlocked",
-        description: "You can now view the protected content",
-      });
-    } catch (error) {
-      toast({
-        title: "Invalid password",
-        description: "Please try again",
-        variant: "destructive",
-      });
-    }
-  };
-
   const toggleSensitiveMutation = useMutation({
     mutationFn: async () => {
       if (!entry) return;
-      const newSensitiveState = !entry.sensitive;
       await apiRequest("PATCH", `/api/entries/${id}`, {
         ...entry,
-        sensitive: newSensitiveState,
+        sensitive: !entry.sensitive,
       });
-      // Clear unlock state when marking as sensitive
-      if (newSensitiveState) {
-        sessionStorage.removeItem(`entry-${id}-unlocked`);
-        setIsUnlocked(false);
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/entries/${id}`] });
@@ -112,6 +85,20 @@ export default function EntryView() {
       navigate("/");
     },
   });
+
+  const verifyPassword = async (password: string) => {
+    try {
+      await apiRequest("POST", "/api/verify-password", { password });
+      setShowPasswordDialog(false);
+      // Password verified, continue showing the entry
+    } catch (error) {
+      toast({
+        title: "Invalid password",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     let touchStartX = 0;
@@ -167,24 +154,12 @@ export default function EntryView() {
     }
   }, [entry?.mediaUrls]);
 
-  // Check URL parameters for showComments
   useEffect(() => {
-    const showCommentsParam = new URLSearchParams(window.location.search).get('showComments');
-    if (showCommentsParam === 'true') {
-      setShowComments(true);
-      setTimeout(() => {
-        const commentsSection = document.getElementById('comments-section');
-        if (commentsSection) {
-          commentsSection.scrollIntoView({ behavior: 'instant', block: 'start' });
-        } else {
-          window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'instant'
-          });
-        }
-      }, 300);
+    // Check if entry is sensitive and password protection is enabled
+    if (entry?.sensitive && settings.isPasswordProtectionEnabled) {
+      setShowPasswordDialog(true);
     }
-  }, []);
+  }, [entry?.sensitive, settings.isPasswordProtectionEnabled]);
 
   if (!entry) return null;
 
@@ -213,6 +188,7 @@ export default function EntryView() {
     }
   };
 
+  // Update the comments button click handler
   const handleCommentsClick = () => {
     setShowComments(!showComments);
     const event = new CustomEvent('toggleComments', { 
@@ -221,6 +197,7 @@ export default function EntryView() {
     window.dispatchEvent(event);
 
     if (!showComments) {
+      // Update URL to reflect comments state without navigation
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('showComments', 'true');
       window.history.pushState({}, '', newUrl.toString());
@@ -232,6 +209,7 @@ export default function EntryView() {
         });
       }, 100);
     } else {
+      // Remove showComments from URL when closing
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('showComments');
       window.history.pushState({}, '', newUrl.toString());
@@ -241,7 +219,7 @@ export default function EntryView() {
   return (
     <PageTransition direction={1}>
       <div className={`min-h-screen flex flex-col bg-background w-full ${isExiting ? 'pointer-events-none' : ''}`}>
-        {/* Header with lock icon */}
+        {/* Header */}
         <div className="sticky top-0 z-10 bg-card border-b border-border">
           <div className="container px-4 py-2 flex items-center">
             <Button
@@ -260,9 +238,9 @@ export default function EntryView() {
             </Button>
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-semibold truncate max-w-[75%] text-foreground">
-                {entry?.title || "Untitled Entry"}
+                {entry.title || "Untitled Entry"}
               </h1>
-              {entry?.sensitive && settings.isPasswordProtectionEnabled && (
+              {entry.sensitive && settings.isPasswordProtectionEnabled && (
                 <Lock className="h-5 w-5 text-amber-600" />
               )}
             </div>
@@ -274,217 +252,179 @@ export default function EntryView() {
           <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
             <AnimatePresence mode="wait">
               <motion.div 
-                className="space-y-4 relative"
+                className="space-y-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
               >
-                {shouldBlurContent ? (
-                  <>
-                    <div className="filter blur-md pointer-events-none">
-                      {/* Blurred content */}
-                      <div className="prose dark:prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{ __html: entry?.content || '' }}
-                      />
-                      {/* Blurred media */}
-                      {entry?.mediaUrls && entry.mediaUrls.length > 0 && (
-                        <div className="space-y-2 my-4">
-                          {entry.mediaUrls.map((_, index) => (
-                            <div key={index} className="rounded-lg overflow-hidden border bg-muted h-48" />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowPasswordDialog(true)}
-                        className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-                      >
-                        <Lock className="mr-2 h-4 w-4" />
-                        Unlock to view
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Regular content display */}
-                    <div className="text-sm text-muted-foreground">
-                      {formatTimeAgo(entry.createdAt)}
-                    </div>
+                <div className="text-sm text-muted-foreground">
+                  {formatTimeAgo(entry.createdAt)}
+                </div>
 
-                    {(feeling || entry.location) && (
-                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                        {feeling && (
-                          <div className="flex items-center">
-                            {feeling.label.includes(',') ? (
-                              <span>
-                                feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                                while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                              </span>
-                            ) : (
-                              <span>
-                                feeling {feeling.label} {feeling.emoji}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        {entry.location && (
-                          <div className="flex items-center">
-                            <span>at {entry.location} 📍</span>
-                          </div>
+                {(feeling || entry.location) && (
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                    {feeling && (
+                      <div className="flex items-center">
+                        {feeling.label.includes(',') ? (
+                          <span>
+                            feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
+                            while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
+                          </span>
+                        ) : (
+                          <span>
+                            feeling {feeling.label} {feeling.emoji}
+                          </span>
                         )}
                       </div>
                     )}
-                    <div
-                      className="prose dark:prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ __html: entry?.content || '' }}
-                    />
+                    {entry.location && (
+                      <div className="flex items-center">
+                        <span>at {entry.location} 📍</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div
+                  className="prose dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: entry.content }}
+                />
 
-                    {entry?.mediaUrls && entry.mediaUrls.length > 0 && (
-                      <div className="space-y-2 my-4">
-                        {entry.mediaUrls.map((url, index) => {
-                          const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
-                          return (
-                            <motion.div 
-                              key={index} 
-                              className="rounded-lg overflow-hidden border relative"
-                              ref={el => mediaRefs.current[index] = el}
-                              variants={mediaPreviewVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={{ delay: index * 0.1 }}
-                            >
-                              {isVideo ? (
-                                <div className="relative w-full">
-                                  <video
-                                    src={url}
-                                    controls
-                                    playsInline
-                                    preload="metadata"
-                                    poster={url + '#t=0.5'}
-                                    className="w-full aspect-video object-cover rounded-lg"
-                                    onLoadStart={(e) => {
-                                      const video = e.target as HTMLVideoElement;
-                                      video.currentTime = 0.5;
-                                    }}
-                                  />
-                                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
-                                    <div className="rounded-full bg-white/30 p-3">
-                                      <Play className="h-6 w-6 text-white" />
-                                    </div>
-                                  </div>
+                {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+                  <div className="space-y-2 my-4">
+                    {entry.mediaUrls.map((url, index) => {
+                      const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                      return (
+                        <motion.div 
+                          key={index} 
+                          className="rounded-lg overflow-hidden border relative"
+                          ref={el => mediaRefs.current[index] = el}
+                          variants={mediaPreviewVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          {isVideo ? (
+                            <div className="relative w-full">
+                              <video
+                                src={url}
+                                controls
+                                playsInline
+                                preload="metadata"
+                                poster={url + '#t=0.5'}
+                                className="w-full aspect-video object-cover rounded-lg"
+                                onLoadStart={(e) => {
+                                  const video = e.target as HTMLVideoElement;
+                                  video.currentTime = 0.5; // Set to 0.5 seconds for thumbnail
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+                                <div className="rounded-full bg-white/30 p-3">
+                                  <Play className="h-6 w-6 text-white" />
                                 </div>
-                              ) : (
-                                <img
-                                  src={url}
-                                  alt={`Media ${index + 1}`}
-                                  className="w-full rounded-lg"
-                                  loading="lazy"
-                                />
-                              )}
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                    )}
+                              </div>
+                            </div>
+                          ) : (
+                            <img
+                              src={url}
+                              alt={`Media ${index + 1}`}
+                              className="w-full rounded-lg"
+                              loading="lazy"
+                            />
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t">
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between mt-4 pt-3 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCommentsClick}
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-2"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    {comments.length > 0 ? (
+                      <span className="font-medium">{comments.length} Comments</span>
+                    ) : (
+                      <span>Comments</span>
+                    )}
+                  </Button>
+
+                  <div className="flex gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: entry.title || "My Diary Entry",
+                            text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                            url: window.location.href,
+                          }).catch(err => console.log('Error sharing:', err));
+                        } else {
+                          navigator.clipboard.writeText(window.location.href)
+                            .then(() => toast({
+                              title: "Link copied",
+                              description: "Entry link copied to clipboard"
+                            }))
+                            .catch(err => console.error('Could not copy text:', err));
+                        }
+                      }}
+                      className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
+                    >
+                      <Share className="h-4 w-4"/>
+                    </Button>
+                    {settings.isPasswordProtectionEnabled && (
                       <Button
+                        size="icon"
                         variant="ghost"
-                        size="sm"
-                        onClick={handleCommentsClick}
-                        className="text-muted-foreground hover:text-foreground flex items-center gap-2"
+                        onClick={() => toggleSensitiveMutation.mutate()}
+                        className={`h-8 w-8 ${entry.sensitive ? 'text-amber-600 hover:bg-amber-100' : 'hover:bg-muted'}`}
                       >
-                        <MessageCircle className="h-4 w-4" />
-                        <span className="font-medium text-sm">{comments.length > 0 ? comments.length : ''}</span>
+                        {entry.sensitive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
                       </Button>
-
-                      <div className="flex gap-1">
-                        {/* Share button */}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => {
-                            if (navigator.share) {
-                              navigator.share({
-                                title: entry?.title || "My Diary Entry",
-                                text: `Check out my diary entry: ${entry?.title || "Untitled Entry"}`,
-                                url: window.location.href,
-                              }).catch(err => console.log('Error sharing:', err));
-                            } else {
-                              navigator.clipboard.writeText(window.location.href)
-                                .then(() => toast({
-                                  title: "Link copied",
-                                  description: "Entry link copied to clipboard"
-                                }))
-                                .catch(err => console.error('Could not copy text:', err));
-                            }
-                          }}
-                          className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600"
-                        >
-                          <Share className="h-4 w-4"/>
-                        </Button>
-
-                        {/* Sensitive toggle button */}
-                        {settings.isPasswordProtectionEnabled && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => toggleSensitiveMutation.mutate()}
-                            className={`h-8 w-8 ${entry?.sensitive ? 'text-amber-600 hover:bg-amber-100' : 'hover:bg-muted'}`}
-                          >
-                            {entry?.sensitive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                          </Button>
-                        )}
-
-                        {/* Edit button */}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => navigate(`/edit/${entry?.id}`)}
-                          className="h-8 w-8 hover:bg-muted"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-
-                        {/* Delete button */}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => deleteMutation.mutate()}
-                          disabled={deleteMutation.isPending}
-                          className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Comments Section */}
-                    {showComments && (
-                      <div className="mt-4 pb-16" id="comments-section">
-                        <Comments 
-                          entryId={entry?.id} 
-                          onCommentCountChange={(count) => {
-                            queryClient.invalidateQueries({ queryKey: [`/api/entries/${id}/comments`] });
-                          }}
-                        />
-                      </div>
                     )}
-                  </>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => navigate(`/edit/${entry.id}`)}
+                      className="h-8 w-8 hover:bg-muted"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => deleteMutation.mutate()}
+                      disabled={deleteMutation.isPending}
+                      className="h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Comments Section */}
+                {showComments && (
+                  <div className="mt-4 pb-16" id="comments-section">
+                    <Comments 
+                      entryId={entry.id} 
+                      onCommentCountChange={(count) => {
+                        queryClient.invalidateQueries({ queryKey: [`/api/entries/${id}/comments`] });
+                      }}
+                    />
+                  </div>
                 )}
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
       </div>
-
-      {/* Password Dialog */}
       <PasswordDialog
         open={showPasswordDialog}
         onOpenChange={setShowPasswordDialog}

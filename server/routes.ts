@@ -6,7 +6,6 @@ import fs from "fs";
 import { storage } from "./storage";
 import { insertEntrySchema, insertCommentSchema } from "@shared/schema";
 import express from 'express';
-import { hashPassword, comparePasswords } from "./utils/password";
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -193,48 +192,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting comment:", error);
       res.status(500).json({ message: "Failed to delete comment" });
-    }
-  });
-
-  // Password protection routes
-  app.post("/api/settings/password", async (req, res) => {
-    try {
-      const { password } = req.body;
-      if (!password || typeof password !== "string") {
-        return res.status(400).json({ message: "Invalid password" });
-      }
-
-      const hashedPassword = await hashPassword(password);
-      await storage.updateSettings(1, { protectedHash: hashedPassword }); // Using userId 1 for now
-
-      res.json({ message: "Password updated successfully" });
-    } catch (error) {
-      console.error("Error setting password:", error);
-      res.status(500).json({ message: "Failed to set password" });
-    }
-  });
-
-  app.post("/api/verify-password", async (req, res) => {
-    try {
-      const { password } = req.body;
-      if (!password || typeof password !== "string") {
-        return res.status(400).json({ message: "Invalid password" });
-      }
-
-      const settings = await storage.getSettings(1); // Using userId 1 for now
-      if (!settings?.protectedHash) {
-        return res.status(400).json({ message: "No password set" });
-      }
-
-      const isValid = await comparePasswords(password, settings.protectedHash);
-      if (!isValid) {
-        return res.status(401).json({ message: "Invalid password" });
-      }
-
-      res.json({ message: "Password verified" });
-    } catch (error) {
-      console.error("Error verifying password:", error);
-      res.status(500).json({ message: "Failed to verify password" });
     }
   });
 

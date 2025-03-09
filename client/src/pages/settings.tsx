@@ -186,6 +186,7 @@ export default function SettingsPage() {
             <TabsContent value="appearance">
               <Card className="p-6 space-y-6">
                 <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Theme</h3>
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label>Dark Mode</Label>
@@ -201,6 +202,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Text Size</h3>
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label>Larger Text</Label>

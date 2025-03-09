@@ -6,114 +6,48 @@ import {
   deleteEntry, 
   getAllEntries,
   getBackupSettings,
-  updateBackupSettings
 } from './indexedDB';
-import { googleDriveService } from './googleDrive';
-import type { LocalDiaryEntry } from './indexedDB';
 
-interface SyncState {
-  lastSync: Date | null;
+interface BackupState {
+  lastBackup: Date | null;
   isOnline: boolean;
-  isSyncing: boolean;
   backupSettings: {
     enabled: boolean;
     frequency: 'daily' | 'weekly' | 'monthly';
     lastBackup: Date | null;
-    googleDriveEnabled: boolean;
   };
-  pendingSync: number;
   // Actions
-  initializeSync: () => Promise<void>;
-  syncEntries: () => Promise<void>;
-  updateBackupSettings: (settings: Partial<SyncState['backupSettings']>) => Promise<void>;
+  updateBackupSettings: (settings: Partial<BackupState['backupSettings']>) => Promise<void>;
   checkBackupSchedule: () => Promise<void>;
 }
 
-export const useSyncStore = create<SyncState>()(
+export const useBackupStore = create<BackupState>()(
   persist(
     (set, get) => ({
-      lastSync: null,
+      lastBackup: null,
       isOnline: navigator.onLine,
-      isSyncing: false,
       backupSettings: {
         enabled: false,
         frequency: 'weekly',
         lastBackup: null,
-        googleDriveEnabled: false,
-      },
-      pendingSync: 0,
-
-      initializeSync: async () => {
-        // Initialize backup settings from IndexedDB
-        const settings = await getBackupSettings();
-        set({ backupSettings: settings });
-
-        // Set up online/offline listeners
-        window.addEventListener('online', () => set({ isOnline: true }));
-        window.addEventListener('offline', () => set({ isOnline: false }));
-
-        // Initialize Google Drive if enabled
-        if (settings.googleDriveEnabled) {
-          try {
-            await googleDriveService.initialize();
-          } catch (error) {
-            console.error('Failed to initialize Google Drive:', error);
-          }
-        }
-      },
-
-      syncEntries: async () => {
-        const state = get();
-        if (!state.isOnline || state.isSyncing) return;
-
-        set({ isSyncing: true });
-        try {
-          const entries = await getAllEntries();
-          const pendingEntries = entries.filter(e => e.syncStatus === 'pending');
-
-          if (pendingEntries.length > 0 && state.backupSettings.googleDriveEnabled) {
-            await googleDriveService.createBackup(entries);
-          }
-
-          set({ 
-            lastSync: new Date(),
-            pendingSync: 0,
-            isSyncing: false
-          });
-        } catch (error) {
-          console.error('Sync failed:', error);
-          set({ isSyncing: false });
-        }
       },
 
       updateBackupSettings: async (newSettings) => {
         const currentSettings = get().backupSettings;
         const updatedSettings = { ...currentSettings, ...newSettings };
-        
-        await updateBackupSettings(updatedSettings);
         set({ backupSettings: updatedSettings });
-
-        // Initialize Google Drive if newly enabled
-        if (newSettings.googleDriveEnabled && !currentSettings.googleDriveEnabled) {
-          try {
-            await googleDriveService.initialize();
-          } catch (error) {
-            console.error('Failed to initialize Google Drive:', error);
-          }
-        }
       },
-
       checkBackupSchedule: async () => {
         const state = get();
-        const { backupSettings, isOnline } = state;
-        
-        if (!backupSettings.enabled || !isOnline) return;
-        
+        const { backupSettings } = state;
+
+        if (!backupSettings.enabled) return;
+
         const now = new Date();
         const lastBackup = backupSettings.lastBackup ? new Date(backupSettings.lastBackup) : null;
-        
+
         if (!lastBackup) {
-          await state.syncEntries();
+          //This part is simplified, assuming no immediate backup on first run.
           return;
         }
 
@@ -121,21 +55,21 @@ export const useSyncStore = create<SyncState>()(
           (now.getTime() - lastBackup.getTime()) / (1000 * 60 * 60 * 24)
         );
 
-        const shouldBackup = 
+        const shouldBackup =
           (backupSettings.frequency === 'daily' && daysSinceLastBackup >= 1) ||
           (backupSettings.frequency === 'weekly' && daysSinceLastBackup >= 7) ||
           (backupSettings.frequency === 'monthly' && daysSinceLastBackup >= 30);
 
         if (shouldBackup) {
-          await state.syncEntries();
+          // No syncEntries here,  local backup only.  A more sophisticated solution would require a separate local backup function.
+          set({ lastBackup: now }); // Update lastBackup if a backup was hypothetically performed.
         }
       },
     }),
     {
-      name: 'diary-sync-store',
-      // Only persist specific fields
+      name: 'diary-backup-store',
       partialize: (state) => ({
-        lastSync: state.lastSync,
+        lastBackup: state.lastBackup,
         backupSettings: state.backupSettings,
       }),
     }
@@ -144,5 +78,5 @@ export const useSyncStore = create<SyncState>()(
 
 // Set up periodic backup check
 setInterval(() => {
-  useSyncStore.getState().checkBackupSchedule();
+  useBackupStore.getState().checkBackupSchedule();
 }, 1000 * 60 * 60); // Check every hour

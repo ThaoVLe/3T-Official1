@@ -12,17 +12,14 @@ import {
   Lock,
   Database,
   ArrowLeft,
-  RefreshCw
 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
-import { useSyncStore } from "@/lib/store";
 import { getAllEntries, getDatabaseStats } from "@/lib/indexedDB";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
   const settings = useSettings();
-  const syncStore = useSyncStore();
   const [localEntries, setLocalEntries] = React.useState<any[]>([]);
   const [showDebug, setShowDebug] = React.useState(false);
   const { toast } = useToast();
@@ -139,18 +136,10 @@ export default function SettingsPage() {
             <TabsContent value="privacy">
               <Card className="p-6 space-y-6">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Sharing</h3>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Public Sharing</Label>
-                      <div className="text-sm text-muted-foreground">
-                        Allow entries to be shared publicly
-                      </div>
-                    </div>
-                    <Switch
-                      checked={settings.isPublicSharingEnabled}
-                      onCheckedChange={settings.setPublicSharing}
-                    />
+                  <h3 className="text-lg font-semibold">Data Storage</h3>
+                  <div className="text-sm text-muted-foreground">
+                    Your diary entries are stored locally on your device using IndexedDB.
+                    No data is sent to external servers.
                   </div>
                 </div>
               </Card>
@@ -163,14 +152,10 @@ export default function SettingsPage() {
                   <h3 className="text-lg font-semibold">Local Storage Debug</h3>
 
                   {/* Database Stats */}
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 border rounded">
                       <div className="text-sm text-muted-foreground">Total Entries</div>
                       <div className="text-2xl font-semibold">{dbStats.entriesCount}</div>
-                    </div>
-                    <div className="p-4 border rounded">
-                      <div className="text-sm text-muted-foreground">Pending Sync</div>
-                      <div className="text-2xl font-semibold">{dbStats.pendingSyncCount}</div>
                     </div>
                     <div className="p-4 border rounded">
                       <div className="text-sm text-muted-foreground">Last Modified</div>
@@ -181,16 +166,6 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Manual Sync Button */}
-                  <Button
-                    className="w-full mt-4"
-                    onClick={() => syncStore.syncEntries()}
-                    disabled={!syncStore.isOnline || syncStore.isSyncing}
-                  >
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    {syncStore.isSyncing ? 'Syncing...' : 'Sync Now'}
-                  </Button>
 
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Entries List</h4>
@@ -214,15 +189,6 @@ export default function SettingsPage() {
                               <div>
                                 <p className="font-medium">{entry.title || 'Untitled'}</p>
                                 <p className="text-sm text-muted-foreground">ID: {entry.id}</p>
-                              </div>
-                              <div className={`px-2 py-1 rounded text-xs ${
-                                entry.syncStatus === 'synced'
-                                  ? 'bg-green-100 text-green-800'
-                                  : entry.syncStatus === 'pending'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {entry.syncStatus}
                               </div>
                             </div>
                             <div className="mt-2 text-sm text-muted-foreground">

@@ -14,13 +14,11 @@ const STORES = {
 // IndexedDB Schema and types
 export interface LocalDiaryEntry extends Omit<DiaryEntry, 'id'> {
   id?: number;
-  syncStatus: 'pending' | 'synced' | 'failed';
   lastModified: Date;
 }
 
 interface LocalComment extends Omit<Comment, 'id'> {
   id?: number;
-  syncStatus: 'pending' | 'synced' | 'failed';
   lastModified: Date;
 }
 
@@ -28,7 +26,6 @@ interface BackupSettings {
   enabled: boolean;
   frequency: 'daily' | 'weekly' | 'monthly';
   lastBackup: Date | null;
-  googleDriveEnabled: boolean;
 }
 
 // Initialize the database
@@ -54,7 +51,6 @@ export async function initDB(): Promise<IDBDatabase> {
       // Create entries store
       if (!db.objectStoreNames.contains(STORES.entries)) {
         const entriesStore = db.createObjectStore(STORES.entries, { keyPath: 'id', autoIncrement: true });
-        entriesStore.createIndex('syncStatus', 'syncStatus');
         entriesStore.createIndex('lastModified', 'lastModified');
         console.log('Created entries store');
       }
@@ -63,7 +59,6 @@ export async function initDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORES.comments)) {
         const commentsStore = db.createObjectStore(STORES.comments, { keyPath: 'id', autoIncrement: true });
         commentsStore.createIndex('entryId', 'entryId');
-        commentsStore.createIndex('syncStatus', 'syncStatus');
         commentsStore.createIndex('lastModified', 'lastModified');
         console.log('Created comments store');
       }
@@ -87,7 +82,6 @@ export async function addEntry(entry: Omit<LocalDiaryEntry, 'id'>): Promise<numb
 
     const request = store.add({
       ...entry,
-      syncStatus: 'pending',
       lastModified: new Date()
     });
 
@@ -161,7 +155,6 @@ export async function updateEntry(id: number, entry: Partial<LocalDiaryEntry>): 
       const updatedEntry = {
         ...existingEntry,
         ...entry,
-        syncStatus: 'pending',
         lastModified: new Date()
       };
 
@@ -214,8 +207,7 @@ export async function getBackupSettings(): Promise<BackupSettings> {
       const defaultSettings = {
         enabled: false,
         frequency: 'weekly' as const,
-        lastBackup: null,
-        googleDriveEnabled: false
+        lastBackup: null
       };
       console.log('Successfully fetched backup settings:', request.result || defaultSettings);
       resolve(request.result || defaultSettings);
@@ -227,35 +219,14 @@ export async function getBackupSettings(): Promise<BackupSettings> {
   });
 }
 
-export async function updateBackupSettings(settings: BackupSettings): Promise<void> {
-  console.log('Updating backup settings:', settings);
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORES.settings], 'readwrite');
-    const store = transaction.objectStore(STORES.settings);
-    const request = store.put({ id: 'backupSettings', ...settings });
-
-    request.onsuccess = () => {
-      console.log('Successfully updated backup settings');
-      resolve();
-    };
-    request.onerror = () => {
-      console.error('Failed to update backup settings:', request.error);
-      reject(request.error);
-    };
-  });
-}
-
 // Debug utilities
 export async function getDatabaseStats(): Promise<{
   entriesCount: number;
-  pendingSyncCount: number;
   lastModifiedEntry: Date | null;
 }> {
   const entries = await getAllEntries();
   return {
     entriesCount: entries.length,
-    pendingSyncCount: entries.filter(e => e.syncStatus === 'pending').length,
     lastModifiedEntry: entries.length > 0 
       ? new Date(Math.max(...entries.map(e => e.lastModified.getTime())))
       : null

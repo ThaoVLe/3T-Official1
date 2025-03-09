@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share, MessageCircle, Play, Lock, Unlock } from "lucide-react";
+import { Edit2, Trash2, Share, MessageCircle, Play, Lock } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -18,6 +18,33 @@ interface EntryCardProps {
   setSelectedEntryId?: (id: string) => void;
 }
 
+const needsExpansion = (content: string) => {
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = content;
+  const textContent = tempDiv.textContent || '';
+  return textContent.length > 200;
+};
+
+const formatTimeAgo = (createdAt: string | Date) => {
+  const now = new Date();
+  const entryDate = new Date(createdAt);
+  const diffInDays = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffInDays > 30) {
+    return format(entryDate, "MMM dd, yyyy");
+  } else if (diffInDays > 0) {
+    return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+  } else {
+    const diffInHours = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60));
+    if (diffInHours > 0) {
+      return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+    } else {
+      const diffInMinutes = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60));
+      return diffInMinutes <= 0 ? 'Just now' : `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    }
+  }
+};
+
 export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -25,11 +52,9 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [, navigate] = useLocation();
   const mediaScrollRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [startY, setStartY] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchStartTimeRef = useRef<number>(0);
   const settings = useSettings();
@@ -37,11 +62,32 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   // Check if content should be blurred
   const shouldBlurContent = entry.sensitive && settings.isPasswordProtectionEnabled && !isUnlocked;
 
+  // Fetch comment count
+  const { data: comments = [] } = useQuery({
+    queryKey: [`/api/entries/${entry.id}/comments`],
+    enabled: !!entry.id,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/entries/${entry.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+      toast({
+        title: "Success",
+        description: "Entry deleted",
+      });
+    },
+  });
+
   const verifyPassword = async (password: string) => {
     try {
       await apiRequest("POST", "/api/verify-password", { password });
       setShowPasswordDialog(false);
       setIsUnlocked(true);
+      // Store the unlocked state in sessionStorage
+      sessionStorage.setItem(`entry-${entry.id}-unlocked`, 'true');
       toast({
         title: "Entry unlocked",
         description: "You can now view the protected content",
@@ -55,18 +101,21 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     }
   };
 
-  useEffect(() => {
-    const container = mediaScrollRef.current;
-    if (!container) return;
+  const handleMediaClick = (mediaIndex: number) => {
+    const container = document.querySelector('.diary-content');
+    if (container) {
+      sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
+      sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
+    }
 
-    const handleScroll = () => {
-      const index = Math.round(container.scrollLeft / container.offsetWidth);
-      setActiveMediaIndex(index);
-    };
+    if (setSelectedEntryId) {
+      setSelectedEntryId(entry.id.toString());
+    }
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
+    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
+    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
+    navigate(cleanUrl);
+  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!mediaScrollRef.current) return;
@@ -150,78 +199,21 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
     setIsSwiping(false);
   };
 
-
-  // Fetch comment count
-  const { data: comments = [] } = useQuery({
-    queryKey: [`/api/entries/${entry.id}/comments`],
-    enabled: !!entry.id,
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("DELETE", `/api/entries/${entry.id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
-      toast({
-        title: "Success",
-        description: "Entry deleted",
-      });
-    },
-  });
+  // Check for existing unlock state on mount
+  useEffect(() => {
+    const isEntryUnlocked = sessionStorage.getItem(`entry-${entry.id}-unlocked`) === 'true';
+    setIsUnlocked(isEntryUnlocked);
+  }, [entry.id]);
 
   const feeling = entry.feeling ? {
     emoji: entry.feeling.emoji || "",
     label: entry.feeling.label || ""
   } : null;
 
-  const formatTimeAgo = (createdAt: string | Date) => {
-    const now = new Date();
-    const entryDate = new Date(createdAt);
-    const diffInDays = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffInDays > 30) {
-      return format(entryDate, "MMM dd, yyyy");
-    } else if (diffInDays > 0) {
-      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
-    } else {
-      const diffInHours = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60));
-      if (diffInHours > 0) {
-        return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
-      } else {
-        const diffInMinutes = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60));
-        return diffInMinutes <= 0 ? 'Just now' : `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-      }
-    }
-  };
-
-  const needsExpansion = (content: string) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
-    const textContent = tempDiv.textContent || '';
-    return textContent.length > 200;
-  };
-
-  const handleMediaClick = (mediaIndex: number) => {
-    const container = document.querySelector('.diary-content');
-    if (container) {
-      sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
-      sessionStorage.setItem('lastViewedEntryId', entry.id.toString());
-    }
-
-    if (setSelectedEntryId) {
-      setSelectedEntryId(entry.id.toString());
-    }
-
-    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
-    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
-    navigate(cleanUrl);
-  };
-
   return (
     <Card className="group bg-card border-border shadow-none w-full mb-4">
-      <CardHeader className="space-y-0 pb-2 pt-3 px-0">
-        <div className="flex justify-between items-start px-4">
+      <CardHeader className="space-y-0 pb-2 pt-3 px-4">
+        <div className="flex items-center justify-between">
           <div className="flex flex-col space-y-1.5">
             <div className="flex items-center gap-2">
               <CardTitle className="text-[18px] font-semibold text-foreground">
@@ -234,167 +226,148 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
               )}
             </div>
 
-            {/* Date and metadata */}
             <div className="text-sm text-muted-foreground">
               {formatTimeAgo(entry.createdAt)}
             </div>
-
-            {/* Feeling and location info */}
-            {(feeling || entry.location) && (
-              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                {feeling && (
-                  <div className="flex items-center">
-                    {feeling.label.includes(',') ? (
-                      <span>
-                        feeling {feeling.label.split(',')[0].trim()} {feeling.emoji.split(' ')[0]}{' '}
-                        while {feeling.label.split(',')[1].trim()} {feeling.emoji.split(' ')[1]}
-                      </span>
-                    ) : (
-                      <span>
-                        feeling {feeling.label} {feeling.emoji}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {entry.location && (
-                  <div className="flex items-center">
-                    <span>at {entry.location} 📍</span>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-4 pt-0 pb-3">
-        {/* Content section with conditional blur */}
-        <div className={`relative ${shouldBlurContent ? 'filter blur-md pointer-events-none' : ''}`}>
-          <div 
-            onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
-            className={`prose max-w-none text-foreground ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
-            dangerouslySetInnerHTML={{ __html: entry.content }}
-          />
-          {needsExpansion(entry.content) && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-sm text-primary hover:text-primary/90 mt-1 font-medium"
-            >
-              {isExpanded ? 'See less' : 'See more'}
-            </button>
-          )}
+      <CardContent className="px-4 pt-0 pb-3 relative">
+        {shouldBlurContent ? (
+          <>
+            <div className="filter blur-md pointer-events-none">
+              <div className="prose max-w-none text-foreground line-clamp-3"
+                dangerouslySetInnerHTML={{ __html: entry.content }} />
 
-          {/* Media section */}
-          {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-            <motion.div 
-              className="mt-3 -mx-4 relative"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div 
-                ref={mediaScrollRef}
-                className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory"
-                style={{ 
-                  WebkitOverflowScrolling: 'touch',
-                  scrollBehavior: 'smooth',
-                  msOverflowStyle: 'none',
-                  scrollbarWidth: 'none',
-                  overscrollBehavior: 'auto'
-                }}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+              {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+                <div className="mt-3 h-48 bg-muted rounded-lg" />
+              )}
+            </div>
+
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPasswordDialog(true)}
+                className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
               >
-                <AnimatePresence mode="popLayout">
-                  {entry.mediaUrls.map((url, index) => {
-                    const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
+                <Lock className="mr-2 h-4 w-4" />
+                Unlock to view
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div 
+              onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
+              className={`prose max-w-none text-foreground ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
+              dangerouslySetInnerHTML={{ __html: entry.content }}
+            />
+            {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+              <motion.div 
+                className="mt-3 -mx-4 relative"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div 
+                  ref={mediaScrollRef}
+                  className="flex gap-2.5 px-2.5 pb-2.5 overflow-x-auto snap-x snap-mandatory"
+                  style={{ 
+                    WebkitOverflowScrolling: 'touch',
+                    scrollBehavior: 'smooth',
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
+                    overscrollBehavior: 'auto'
+                  }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  <AnimatePresence mode="popLayout">
+                    {entry.mediaUrls.map((url, index) => {
+                      const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
 
-                    return (
-                      <motion.div
-                        key={index}
-                        className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
-                        style={{
-                          width: 'auto',
-                          maxWidth: '66.666667vw',
-                          height: '300px',
-                          minWidth: '200px'
-                        }}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.9, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        onClick={() => !isSwiping && handleMediaClick(index)}
-                      >
-                        <motion.div 
-                          className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                      return (
+                        <motion.div
+                          key={index}
+                          className="flex-none first:ml-2.5 last:mr-2.5 snap-center"
+                          style={{
+                            width: 'auto',
+                            maxWidth: '66.666667vw',
+                            height: '300px',
+                            minWidth: '200px'
+                          }}
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.9, opacity: 0 }}
                           transition={{ duration: 0.2 }}
+                          onClick={() => !isSwiping && handleMediaClick(index)}
                         >
-                          {!isVideo ? (
-                            <ProgressiveImage
-                              src={url}
-                              alt={`Media ${index + 1}`}
-                              className="absolute inset-0 w-full h-full object-cover"
-                              sizes="(max-width: 768px) 66.66vw, 512px"
-                            />
-                          ) : (
-                            <div className="relative w-full h-full">
-                              <video
+                          <motion.div 
+                            className="h-full w-full relative rounded-xl overflow-hidden bg-muted"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {!isVideo ? (
+                              <ProgressiveImage
                                 src={url}
-                                className="h-full w-full object-cover"
-                                playsInline
-                                preload="metadata"
-                                muted
-                                ref={(el) => {
-                                  if (el) {
-                                    const handleLoadedMetadata = () => {
-                                      el.currentTime = 1;
-                                      el.removeEventListener('loadedmetadata', handleLoadedMetadata);
-                                    };
-                                    el.addEventListener('loadedmetadata', handleLoadedMetadata);
-                                  }
-                                }}
+                                alt={`Media ${index + 1}`}
+                                className="absolute inset-0 w-full h-full object-cover"
+                                sizes="(max-width: 768px) 66.66vw, 512px"
                               />
-                              <motion.div 
-                                className="absolute inset-0 bg-black/20 flex items-center justify-center"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.3 }}
-                              >
+                            ) : (
+                              <div className="relative w-full h-full">
+                                <video
+                                  src={url}
+                                  className="h-full w-full object-cover"
+                                  playsInline
+                                  preload="metadata"
+                                  muted
+                                  ref={(el) => {
+                                    if (el) {
+                                      const handleLoadedMetadata = () => {
+                                        el.currentTime = 1;
+                                        el.removeEventListener('loadedmetadata', handleLoadedMetadata);
+                                      };
+                                      el.addEventListener('loadedmetadata', handleLoadedMetadata);
+                                    }
+                                  }}
+                                />
                                 <motion.div 
-                                  className="rounded-full bg-white/30 p-3"
-                                  whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
+                                  className="absolute inset-0 bg-black/20 flex items-center justify-center"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{ duration: 0.3 }}
                                 >
-                                  <Play className="h-6 w-6 text-white" />
+                                  <motion.div 
+                                    className="rounded-full bg-white/30 p-3"
+                                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
+                                  >
+                                    <Play className="h-6 w-6 text-white" />
+                                  </motion.div>
                                 </motion.div>
-                              </motion.div>
-                            </div>
-                          )}
+                              </div>
+                            )}
+                          </motion.div>
                         </motion.div>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Unlock button for sensitive content */}
-        {shouldBlurContent && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/5 rounded-lg">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPasswordDialog(true)}
-              className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-            >
-              <Lock className="mr-2 h-4 w-4" />
-              Unlock to view
-            </Button>
-          </div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            )}
+            {needsExpansion(entry.content) && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-sm text-primary hover:text-primary/90 mt-1 font-medium"
+              >
+                {isExpanded ? 'See less' : 'See more'}
+              </button>
+            )}
+          </>
         )}
 
         {/* Action buttons */}
@@ -463,7 +436,6 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
         </div>
       </CardContent>
 
-      {/* Password verification dialog */}
       <PasswordDialog
         open={showPasswordDialog}
         onOpenChange={setShowPasswordDialog}

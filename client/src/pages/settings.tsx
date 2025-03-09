@@ -22,6 +22,7 @@ import { useSyncStore } from "@/lib/store";
 import { getAllEntries, getDatabaseStats } from "@/lib/indexedDB";
 import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import { googleDriveService } from "@/lib/googleDrive";
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
@@ -41,6 +42,8 @@ export default function SettingsPage() {
     lastModifiedEntry: null
   });
   const [authError, setAuthError] = React.useState<string | null>(null);
+  const [backupInProgress, setBackupInProgress] = React.useState(false);
+  const [backupError, setBackupError] = React.useState<string | null>(null);
 
   // Listen for auth state changes
   React.useEffect(() => {
@@ -168,6 +171,40 @@ export default function SettingsPage() {
       </PageTransition>
     );
   }
+
+  const handleCreateBackup = async () => {
+    try {
+      setBackupInProgress(true);
+      setBackupError(null);
+
+      // Get all entries from IndexedDB
+      const entries = await getAllEntries();
+
+      // Create backup using Google Drive service
+      await googleDriveService.createBackup(entries);
+
+      toast({
+        title: "Success",
+        description: "Backup created successfully",
+      });
+
+      // Update backup settings with latest backup time
+      syncStore.updateBackupSettings({
+        lastBackup: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Backup creation error:', error);
+      setBackupError('Failed to create backup. Please try again.');
+      toast({
+        title: "Error",
+        description: "Failed to create backup",
+        variant: "destructive"
+      });
+    } finally {
+      setBackupInProgress(false);
+    }
+  };
+
 
   return (
     <PageTransition direction={1}>
@@ -370,6 +407,30 @@ export default function SettingsPage() {
                           <RefreshCw className="mr-2 h-4 w-4" />
                           {syncStore.isSyncing ? 'Syncing...' : 'Sync Now'}
                         </Button>
+                        {user && (
+                          <div className="space-y-4 mt-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-0.5">
+                                <Label>Google Drive Backup</Label>
+                                <div className="text-sm text-muted-foreground">
+                                  Create a backup of your entries on Google Drive
+                                </div>
+                              </div>
+                              <Button
+                                onClick={handleCreateBackup}
+                                disabled={backupInProgress || !user}
+                              >
+                                {backupInProgress ? 'Creating Backup...' : 'Create Backup'}
+                              </Button>
+                            </div>
+
+                            {backupError && (
+                              <div className="text-sm text-destructive mt-2">
+                                {backupError}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </>
                   )}

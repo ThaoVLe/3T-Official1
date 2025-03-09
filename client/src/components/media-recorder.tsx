@@ -55,7 +55,6 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
             size="icon"
             className="h-10 w-10" 
             disabled={isUploading}
-            asChild
           >
             <ImageIcon className="h-8 w-8" /> {/* Removed text, kept only the icon */}
           </Button>

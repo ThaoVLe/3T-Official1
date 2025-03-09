@@ -200,20 +200,20 @@
     letter-spacing: 0.01em;
   }
 
-  .large-text .heading-1 { font-size: 28px; }
-  .large-text .heading-2 { font-size: 22px; }
-  .large-text .text-default { font-size: 14px; }
-  .large-text .subtitle { font-size: 14px; }
+  .large-text .heading-1 { font-size: 30px; }
+  .large-text .heading-2 { font-size: 24px; }
+  .large-text .text-default { font-size: 16px; }
+  .large-text .subtitle { font-size: 16px; }
 
   /* Enhanced text size adjustments for various UI elements */
-  .large-text .prose { font-size: 1.125rem; }
-  .large-text button { font-size: 1rem; }
-  .large-text input { font-size: 1rem; }
-  .large-text textarea { font-size: 1rem; }
-  .large-text nav { font-size: 1rem; }
-  .large-text [data-sidebar="menu-button"] { font-size: 1rem; }
-  .large-text .card-title { font-size: 1.25rem; }
-  .large-text .card-description { font-size: 1rem; }
-  .large-text dialog { font-size: 1rem; }
-  .large-text .modal-title { font-size: 1.25rem; }
+  .large-text .prose { font-size: 1.25rem; }
+  .large-text button { font-size: 1.125rem; }
+  .large-text input { font-size: 1.125rem; }
+  .large-text textarea { font-size: 1.125rem; }
+  .large-text nav { font-size: 1.125rem; }
+  .large-text [data-sidebar="menu-button"] { font-size: 1.125rem; }
+  .large-text .card-title { font-size: 1.375rem; }
+  .large-text .card-description { font-size: 1.125rem; }
+  .large-text dialog { font-size: 1.125rem; }
+  .large-text .modal-title { font-size: 1.375rem; }
 }

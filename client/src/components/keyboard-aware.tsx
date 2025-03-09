@@ -23,29 +23,48 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
         setIsKeyboardVisible(true);
         setKeyboardHeight(heightDifference);
 
-        // Set CSS variables for keyboard height
+        // Set the keyboard height CSS variable
         document.documentElement.style.setProperty('--keyboard-height', `${heightDifference}px`);
         document.documentElement.classList.add('keyboard-visible');
 
-        // Adjust viewport height
+        // Also set the viewport offset for better positioning
+        const offsetTop = window.visualViewport.offsetTop || 0;
+        document.documentElement.style.setProperty('--keyboard-offset', `${offsetTop}px`);
+
+        // Set the current viewport height for better positioning calculations
         document.documentElement.style.setProperty('--viewport-height', `${currentHeight}px`);
+
+        // Ensure the content is scrolled into view when keyboard appears
+        if (contentRef.current && document.activeElement instanceof HTMLElement) {
+          const activeElement = document.activeElement;
+          const elementRect = activeElement.getBoundingClientRect();
+          const elementBottom = elementRect.bottom;
+
+          if (elementBottom > currentHeight) {
+            const scrollOffset = elementBottom - currentHeight + 20; // 20px buffer
+            contentRef.current.scrollTop += scrollOffset;
+          }
+        }
       } else {
         setIsKeyboardVisible(false);
         setKeyboardHeight(0);
         document.documentElement.style.setProperty('--keyboard-height', '0px');
         document.documentElement.classList.remove('keyboard-visible');
-        document.documentElement.style.setProperty('--viewport-height', `${windowHeight}px`);
       }
 
       lastVisualViewportHeight.current = currentHeight;
     };
 
-    // Setup event listeners for keyboard detection
+    const handleResize = () => {
+      requestAnimationFrame(updateKeyboardStatus);
+    };
+
+    // Listen for both visualViewport and window resize events
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateKeyboardStatus);
-      window.visualViewport.addEventListener('scroll', updateKeyboardStatus);
+      window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
     }
-    window.addEventListener('resize', updateKeyboardStatus);
+    window.addEventListener('resize', handleResize);
 
     // Initial setup
     updateKeyboardStatus();
@@ -53,10 +72,10 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
     // Cleanup
     return () => {
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateKeyboardStatus);
-        window.visualViewport.removeEventListener('scroll', updateKeyboardStatus);
+        window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
       }
-      window.removeEventListener('resize', updateKeyboardStatus);
+      window.removeEventListener('resize', handleResize);
       document.documentElement.classList.remove('keyboard-visible');
       document.documentElement.style.setProperty('--keyboard-height', '0px');
     };
@@ -66,15 +85,22 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
     <div 
       className="editor-container"
       style={{ 
-        height: isKeyboardVisible ? `calc(100vh - ${keyboardHeight}px)` : '100vh',
+        minHeight: '100vh',
+        minHeight: '-webkit-fill-available',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        height: window.visualViewport?.height || '100vh'
       }}
     >
       <div 
         ref={contentRef}
         className="keyboard-adjustable-content"
         style={{
-          height: isKeyboardVisible ? `calc(100vh - ${keyboardHeight}px)` : '100vh',
-          paddingBottom: isKeyboardVisible ? `${keyboardHeight}px` : 'env(safe-area-inset-bottom)',
+          flex: 1,
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          position: 'relative'
         }}
       >
         {children}
@@ -82,3 +108,79 @@ export function KeyboardAware({ children }: KeyboardAwareProps) {
     </div>
   );
 }
+import React, { useEffect, useRef, useState } from 'react';
+
+interface KeyboardAwareProps {
+  contentRef?: React.RefObject<HTMLDivElement>;
+  children: React.ReactNode;
+}
+
+export const KeyboardAware: React.FC<KeyboardAwareProps> = ({ contentRef, children }) => {
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const lastVisualViewportHeight = useRef<number>(window.visualViewport?.height || window.innerHeight);
+
+  useEffect(() => {
+    if (!window.visualViewport) {
+      return;
+    }
+
+    // Store initial viewport height
+    lastVisualViewportHeight.current = window.visualViewport.height;
+    
+    const handleResize = () => {
+      if (!window.visualViewport) {
+        return;
+      }
+
+      const currentHeight = window.visualViewport.height;
+      const heightDifference = lastVisualViewportHeight.current - currentHeight;
+      
+      // Check if keyboard is visible (height decreases significantly)
+      if (heightDifference > 150) {
+        // Keyboard is likely visible
+        const calculatedKeyboardHeight = heightDifference;
+        setKeyboardHeight(calculatedKeyboardHeight);
+        setIsKeyboardVisible(true);
+        
+        document.documentElement.style.setProperty('--keyboard-height', `${calculatedKeyboardHeight}px`);
+        document.documentElement.classList.add('keyboard-visible');
+        
+        // Ensure the floating bar stays in position
+        const floatingBar = document.querySelector('.floating-bar');
+        if (floatingBar) {
+          floatingBar.classList.add('keyboard-fixed');
+        }
+      } else {
+        // Keyboard is likely hidden
+        setIsKeyboardVisible(false);
+        setKeyboardHeight(0);
+        document.documentElement.style.setProperty('--keyboard-height', '0px');
+        document.documentElement.classList.remove('keyboard-visible');
+        
+        // Reset floating bar position
+        const floatingBar = document.querySelector('.floating-bar');
+        if (floatingBar) {
+          floatingBar.classList.remove('keyboard-fixed');
+        }
+      }
+
+      lastVisualViewportHeight.current = currentHeight;
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+
+    // Initial application of viewport height
+    document.documentElement.style.setProperty('--viewport-height', `${window.visualViewport.height}px`);
+    
+    return () => {
+      window.visualViewport.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return (
+    <div className="keyboard-adjustable-content" style={{ position: 'relative' }}>
+      {children}
+    </div>
+  );
+};

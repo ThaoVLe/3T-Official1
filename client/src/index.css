@@ -7,7 +7,6 @@
     --scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     --keyboard-height: 0px;
-    --viewport-height: 100vh;
   }
 
   * {
@@ -20,6 +19,19 @@
     display: none !important;
   }
 
+  html, body {
+    @apply bg-background text-foreground antialiased;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    overflow: auto;
+    touch-action: pan-y pinch-zoom;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    width: 100%;
+    height: 100%;
+  }
+
   .editor-container {
     min-height: 100vh;
     min-height: -webkit-fill-available;
@@ -27,7 +39,6 @@
     flex-direction: column;
     position: relative;
     @apply bg-background;
-    transition: height 0.3s ease;
   }
 
   .keyboard-adjustable-content {
@@ -35,14 +46,83 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    height: 100%;
-    min-height: 100%;
-    transition: height 0.3s ease, padding-bottom 0.3s ease;
   }
 
-  .keyboard-visible .keyboard-adjustable-content {
-    height: calc(100vh - var(--keyboard-height));
-    min-height: calc(100vh - var(--keyboard-height));
+  .floating-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    @apply bg-background/80 border-border;
+    border-top: 1px solid var(--border);
+    padding: 8px;
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+    transition: transform 0.3s ease;
+    backdrop-filter: blur(8px);
+    pointer-events: auto;
+  }
+
+  .keyboard-visible .floating-bar {
+    transform: translateY(calc(-1 * var(--keyboard-height)));
+  }
+
+  .mobile-vh {
+    height: 100vh;
+    height: -webkit-fill-available;
+    height: stretch;
+  }
+
+  .diary-content {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .diary-content::-webkit-scrollbar,
+  .diary-content *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    .diary-content {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  .container-page {
+    @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: none !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: none !important;
+    touch-action: pan-y pinch-zoom !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+
+  .not-scrollable {
+    position: fixed !important;
+    touch-action: none !important;
+    transform: none !important;
+    transform-style: flat !important;
+    will-change: bottom !important;
   }
 
   .tiptap-container {
@@ -53,40 +133,35 @@
 
   .tiptap-container .ProseMirror {
     @apply min-h-[300px] bg-background dark:bg-background text-foreground;
+    transition: min-height 0.2s ease;
     height: auto;
     overflow-y: hidden;
   }
 
-  .fixed-bar {
-    @apply bg-background/80 border-t border-border;
-    position: fixed !important;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    transform: translateZ(0);
-    will-change: transform;
-    backface-visibility: hidden;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px);
-    transition: transform 0.3s ease;
-  }
-
-  .keyboard-visible .fixed-bar {
-    transform: translateY(calc(-1 * var(--keyboard-height))) !important;
+  .ProseMirror p.is-editor-empty:first-child::before {
+    @apply text-muted-foreground;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
   }
 
   .heading-1 { @apply text-[24px] font-bold tracking-tight text-foreground mb-4; }
   .heading-2 { @apply text-[18px] font-semibold text-foreground mb-3; }
   .text-default { @apply text-[11px] text-foreground; }
   .subtitle { @apply text-[11px] text-muted-foreground mb-6; }
+
   .form-container { @apply flex flex-col space-y-4 mb-6; }
   .button-primary { @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors; }
   .button-secondary { @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors; }
   .button-outline { @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md; }
+
   .drop-zone { @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted; }
   .mobile-friendly-button { @apply w-full sm:w-auto; }
   .responsive-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }
   .full-width { @apply w-full min-w-0; }
+
+  .swipe-active {
+    overflow: hidden !important;
+  }
 }

@@ -21,14 +21,12 @@ import { PageTransition } from "@/components/animations";
 const KeyboardAware = ({ children }: { children: React.ReactNode }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
       const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
       const keyboardIsShown = vh < window.innerHeight;
       setKeyboardHeight(keyboardIsShown ? window.innerHeight - vh : 0);
-      setIsKeyboardVisible(keyboardIsShown);
     };
 
     window.addEventListener('resize', handleResize);
@@ -51,9 +49,6 @@ export default function Editor() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0); // Added state
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false); // Added state
-
 
   useEffect(() => {
     let touchStartX = 0;
@@ -321,13 +316,9 @@ export default function Editor() {
               />
             </div>
 
-            {/* Media Preview */}
+            {/* Media Preview moved here */}
             {form.watch("mediaUrls")?.length > 0 && (
-              <div className="px-4" style={{ 
-                paddingBottom: isKeyboardVisible 
-                  ? `${keyboardHeight + 60}px` 
-                  : 'calc(env(safe-area-inset-bottom) + 80px)'
-              }}>
+              <div className="p-4 pb-[80px]"> {/* Increased padding to 80px */}
                 <MediaPreview
                   urls={form.watch("mediaUrls")}
                   onRemove={onMediaRemove}
@@ -337,9 +328,12 @@ export default function Editor() {
               </div>
             )}
 
-            {/* Media Controls */}
-            <div className="fixed-bar">
-              <div className="flex items-center justify-between gap-4 w-full">
+            {/* Media Controls - Now in floating bar */}
+            <div 
+              className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-2 z-50 floating-bar"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
+            >
+              <div className="flex items-center justify-between gap-4">
                 <FeelingSelector
                   selectedFeeling={form.getValues("feeling")}
                   onSelect={async (feeling) => {

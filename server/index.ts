@@ -61,40 +61,23 @@ const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunct
     await setupVite(app, server);
     log('Vite middleware setup complete');
 
-    const initialPort = 5000;
-    log(`Attempting to bind to port ${initialPort}...`);
-
-    // Kill existing process on port 5000 if any
-    try {
-      // Try to kill any process running on our port
-      log(`Attempting to kill any process using port ${initialPort}`);
-      await new Promise<void>((resolve) => {
-        const { exec } = require('child_process');
-        exec(`fuser -k ${initialPort}/tcp`, () => {
-          log(`Killed any processes on port ${initialPort}`);
-          // Give time for port to be released
-          setTimeout(resolve, 1000);
-        });
-      });
-    } catch (err) {
-      // If killing failed, just continue trying to bind
-      log(`Could not kill process on port ${initialPort}: ${err.message}`);
-    }
+    const port = 5000;
+    log(`Attempting to bind to port ${port}...`);
 
     // Add timeout to prevent hanging
     await Promise.race([
       new Promise<void>((resolve, reject) => {
         server.listen({
-          port: initialPort,
+          port,
           host: "0.0.0.0",
         })
         .once('listening', () => {
-          log(`Server successfully listening on port ${initialPort}`);
+          log(`Server successfully listening on port ${port}`);
           resolve();
         })
         .once('error', (err: NodeJS.ErrnoException) => {
           if (err.code === 'EADDRINUSE') {
-            reject(new Error(`Port ${initialPort} is already in use. Please ensure no other server is running on this port.`));
+            reject(new Error(`Port ${port} is already in use. Please ensure no other server is running on this port.`));
           } else {
             reject(err);
           }

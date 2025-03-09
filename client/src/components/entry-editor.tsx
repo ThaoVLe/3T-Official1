@@ -47,7 +47,10 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entry, onSubmit }) => {
       </div>
       <div className="flex items-center space-x-2">
         <FeelingSelector onSelect={setFeeling} selectedFeeling={feeling} />
-        <LocationSelector onSelect={setLocation} selectedLocation={location} />
+        <LocationSelector 
+          value={location}
+          onChange={(newLocation: string | null) => setLocation(newLocation)}
+        />
       </div>
       <button type="submit">Submit</button>
     </form>

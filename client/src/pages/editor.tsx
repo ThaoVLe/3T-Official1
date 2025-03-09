@@ -36,21 +36,55 @@ const EditorContent = () => {
     let touchStartY = 0;
     let touchStartTime = 0;
     let touchStartElement: HTMLElement | null = null;
+    let isScrolling = false;
 
     const handleTouchStart = (e: TouchEvent) => {
+      // Check if touch is on floating bar or outside editor area
+      const target = e.target as HTMLElement;
+      const isFloatingBarTouch = floatingBarRef.current?.contains(target);
+      const isEditorAreaTouch = editorAreaRef.current?.contains(target);
+
+      if (isFloatingBarTouch || !isEditorAreaTouch) {
+        e.stopPropagation();
+        return;
+      }
+
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
-      touchStartElement = e.target as HTMLElement;
+      touchStartElement = target;
+      isScrolling = false;
     };
 
-    const handleTouchEnd = (e: TouchEvent) => {
-      // Check if touch started in floating bar or outside editor area
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!touchStartElement) return;
+
       const isFloatingBarTouch = floatingBarRef.current?.contains(touchStartElement);
       const isEditorAreaTouch = editorAreaRef.current?.contains(touchStartElement);
 
       if (isFloatingBarTouch || !isEditorAreaTouch) {
-        return; // Don't trigger swipe if touch started in floating bar or outside editor
+        e.stopPropagation();
+        return;
+      }
+
+      const touchMoveY = e.touches[0].clientY;
+      const verticalDistance = Math.abs(touchMoveY - touchStartY);
+
+      // If vertical scrolling is detected
+      if (verticalDistance > 10) {
+        isScrolling = true;
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!touchStartElement || isScrolling) return;
+
+      const isFloatingBarTouch = floatingBarRef.current?.contains(touchStartElement);
+      const isEditorAreaTouch = editorAreaRef.current?.contains(touchStartElement);
+
+      if (isFloatingBarTouch || !isEditorAreaTouch) {
+        e.stopPropagation();
+        return;
       }
 
       const touchEndX = e.changedTouches[0].clientX;
@@ -69,11 +103,13 @@ const EditorContent = () => {
       }
     };
 
-    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [id, navigate]);
@@ -295,7 +331,7 @@ const EditorContent = () => {
       {/* Content Area */}
       <div 
         ref={editorAreaRef}
-        className="flex-1 flex flex-col overflow-auto w-full bg-background relative"
+        className="flex-1 flex flex-col overflow-auto w-full bg-background relative touch-pan-y"
       >
         <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
           <TipTapEditor
@@ -319,13 +355,13 @@ const EditorContent = () => {
         {/* Floating Controls Bar */}
         <div 
           ref={floatingBarRef}
-          className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out"
+          className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out touch-none"
           style={{ 
             transform: `translateY(${isKeyboardVisible ? -keyboardHeight : 0}px)`,
             paddingBottom: 'env(safe-area-inset-bottom)'
           }}
         >
-          <div className="bg-background/80 backdrop-blur-sm border-t border-t border-border p-2">
+          <div className="bg-background/80 backdrop-blur-sm border-t border-border p-2">
             <div className="flex items-center justify-between gap-4">
               <FeelingSelector
                 selectedFeeling={form.getValues("feeling")}

@@ -78,10 +78,24 @@
     transition: transform 0.3s ease-out;
     backdrop-filter: blur(8px);
     pointer-events: auto;
+    touch-action: none !important;
   }
 
   .keyboard-visible .floating-bar {
     transform: translateY(calc(-1 * var(--keyboard-height)));
+  }
+
+  .touch-pan-y {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+
+  .touch-none {
+    touch-action: none !important;
+    pointer-events: auto !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
   }
 
   .mobile-vh {

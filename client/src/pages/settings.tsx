@@ -25,12 +25,20 @@ export default function SettingsPage() {
   const [touchStartX, setTouchStartX] = React.useState(0);
   const [touchStartY, setTouchStartY] = React.useState(0);
   const [touchStartTime, setTouchStartTime] = React.useState(0);
+  const pageRef = React.useRef<HTMLDivElement>(null);
   
   React.useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
       setTouchStartX(e.touches[0].clientX);
       setTouchStartY(e.touches[0].clientY);
       setTouchStartTime(Date.now());
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      // Prevent default to avoid scrolling conflicts
+      if (Math.abs(e.touches[0].clientX - touchStartX) > Math.abs(e.touches[0].clientY - touchStartY)) {
+        e.preventDefault();
+      }
     };
     
     const handleTouchEnd = (e: TouchEvent) => {
@@ -40,6 +48,13 @@ export default function SettingsPage() {
       const swipeDistance = touchEndX - touchStartX;
       const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
+      
+      console.log("Swipe detected:", {
+        swipeDistance,
+        verticalDistance,
+        swipeTime,
+        condition: ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30)
+      });
       
       // If swiped right far enough and fast enough (not too much vertical movement)
       if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
@@ -56,14 +71,30 @@ export default function SettingsPage() {
       }
     };
     
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchend', handleTouchEnd);
+    // Get current ref element
+    const element = pageRef.current;
+    if (!element) return;
+    
+    element.addEventListener('touchstart', handleTouchStart, { passive: false });
+    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+    element.addEventListener('touchend', handleTouchEnd);
     
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchmove', handleTouchMove);
+      element.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [navigate]);
+  }, [navigate, touchStartX, touchStartY]);
+
+  // Save scroll position when leaving settings page
+  React.useEffect(() => {
+    return () => {
+      const homeScrollPosition = sessionStorage.getItem('homeScrollPosition');
+      if (homeScrollPosition) {
+        sessionStorage.setItem('shouldRestoreScroll', 'true');
+      }
+    };
+  }, []);
 
   const autoLockOptions = [
     { value: "0", label: "Disabled" },
@@ -76,7 +107,7 @@ export default function SettingsPage() {
 
   return (
     <PageTransition direction={1}>
-      <div className="min-h-screen bg-background">
+      <div ref={pageRef} className="min-h-screen bg-background">
         {/* Header */}
         <div className="sticky top-0 z-10 border-b bg-background">
           <div className="container flex h-14 max-w-screen-2xl items-center">

@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, FileEdit } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -135,7 +135,7 @@ export default function Home() {
             </h1>
             <Link href="/new">
               <Button className="flex gap-2">
-                <PlusCircle className="w-4 h-4" />
+                <FileEdit className="w-4 h-4" />
                 New Entry
               </Button>
             </Link>

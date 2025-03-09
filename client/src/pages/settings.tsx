@@ -13,18 +13,32 @@ import {
   Bell,
   Database,
   ArrowLeft,
+  CloudOff,
+  RefreshCw
 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// Placeholder for toast function - replace with your actual implementation
-const toast = ({ title, description, variant }: { title: string; description: string; variant?: string }) => {
-  console.log(`Toast: ${title} - ${description} (${variant || 'info'})`);
-};
+import { useSyncStore } from "@/lib/store";
+import { getAllEntries } from "@/lib/indexedDB";
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
   const settings = useSettings();
+  const syncStore = useSyncStore();
+  const [localEntries, setLocalEntries] = React.useState<any[]>([]);
+  const [showDebug, setShowDebug] = React.useState(false);
+
+  // Load local entries for debug view
+  const loadLocalEntries = async () => {
+    const entries = await getAllEntries();
+    setLocalEntries(entries);
+  };
+
+  React.useEffect(() => {
+    if (showDebug) {
+      loadLocalEntries();
+    }
+  }, [showDebug]);
 
   // Touch swipe handling
   const [touchStartX, setTouchStartX] = React.useState(0);
@@ -110,6 +124,11 @@ export default function SettingsPage() {
     { value: "60", label: "1 hour" },
   ];
 
+  const frequencyOptions = [
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "monthly", label: "Monthly" },
+  ];
 
   return (
     <PageTransition direction={1}>
@@ -143,13 +162,13 @@ export default function SettingsPage() {
                 <Lock className="h-4 w-4" />
                 <span className="text-xs">Privacy</span>
               </TabsTrigger>
-              <TabsTrigger value="notifications" className="flex flex-col items-center gap-1 py-2">
-                <Bell className="h-4 w-4" />
-                <span className="text-xs">Notifications</span>
+              <TabsTrigger value="backup" className="flex flex-col items-center gap-1 py-2">
+                <CloudOff className="h-4 w-4" />
+                <span className="text-xs">Backup</span>
               </TabsTrigger>
-              <TabsTrigger value="data" className="flex flex-col items-center gap-1 py-2">
+              <TabsTrigger value="debug" className="flex flex-col items-center gap-1 py-2">
                 <Database className="h-4 w-4" />
-                <span className="text-xs">Data</span>
+                <span className="text-xs">Debug</span>
               </TabsTrigger>
             </TabsList>
 
@@ -171,7 +190,6 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
-
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Text Size</h3>
                   <div className="flex items-center justify-between">
@@ -211,14 +229,115 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
 
-            {/* Notification Settings */}
-            <TabsContent value="notifications">
-              <Card className="p-6">Notification settings coming soon...</Card>
+            {/* Backup Settings */}
+            <TabsContent value="backup">
+              <Card className="p-6 space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Backup Settings</h3>
+
+                  {/* Enable Backups */}
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Enable Automatic Backups</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Automatically backup your entries
+                      </div>
+                    </div>
+                    <Switch
+                      checked={syncStore.backupSettings.enabled}
+                      onCheckedChange={(checked) =>
+                        syncStore.updateBackupSettings({ enabled: checked })}
+                    />
+                  </div>
+
+                  {/* Backup Frequency */}
+                  <div className="space-y-2">
+                    <Label>Backup Frequency</Label>
+                    <Select
+                      value={syncStore.backupSettings.frequency}
+                      onValueChange={(value: 'daily' | 'weekly' | 'monthly') =>
+                        syncStore.updateBackupSettings({ frequency: value })}
+                      disabled={!syncStore.backupSettings.enabled}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {frequencyOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Google Drive Integration */}
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-0.5">
+                      <Label>Google Drive Sync</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Sync your backups with Google Drive
+                      </div>
+                    </div>
+                    <Switch
+                      checked={syncStore.backupSettings.googleDriveEnabled}
+                      onCheckedChange={(checked) =>
+                        syncStore.updateBackupSettings({ googleDriveEnabled: checked })}
+                    />
+                  </div>
+
+                  {/* Last Backup Info */}
+                  {syncStore.backupSettings.lastBackup && (
+                    <div className="text-sm text-muted-foreground pt-2">
+                      Last backup: {new Date(syncStore.backupSettings.lastBackup).toLocaleString()}
+                    </div>
+                  )}
+
+                  {/* Manual Sync Button */}
+                  <Button
+                    className="w-full mt-4"
+                    onClick={() => syncStore.syncEntries()}
+                    disabled={!syncStore.isOnline || syncStore.isSyncing}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    {syncStore.isSyncing ? 'Syncing...' : 'Sync Now'}
+                  </Button>
+                </div>
+              </Card>
             </TabsContent>
 
-            {/* Data Management Settings */}
-            <TabsContent value="data">
-              <Card className="p-6">Data management settings coming soon...</Card>
+            {/* Debug View */}
+            <TabsContent value="debug">
+              <Card className="p-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Local Storage Debug</h3>
+                  <Button
+                    onClick={() => {
+                      setShowDebug(!showDebug);
+                      if (!showDebug) loadLocalEntries();
+                    }}
+                  >
+                    {showDebug ? 'Hide' : 'Show'} Local Entries
+                  </Button>
+
+                  {showDebug && (
+                    <div className="mt-4 space-y-2">
+                      <h4 className="font-medium">IndexedDB Entries ({localEntries.length})</h4>
+                      <div className="max-h-96 overflow-auto">
+                        {localEntries.map((entry: any) => (
+                          <div key={entry.id} className="p-2 border rounded mb-2">
+                            <p>ID: {entry.id}</p>
+                            <p>Title: {entry.title}</p>
+                            <p>Sync Status: {entry.syncStatus}</p>
+                            <p>Last Modified: {new Date(entry.lastModified).toLocaleString()}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>

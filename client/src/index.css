@@ -216,4 +216,8 @@
   .large-text .card-description { font-size: 1.125rem; }
   .large-text dialog { font-size: 1.125rem; }
   .large-text .modal-title { font-size: 1.375rem; }
+  .large-text [role="dialog"] .text-lg { font-size: 1.375rem; }
+  .large-text [data-dialog="DialogTitle"] { font-size: 1.5rem; }
+  .large-text [data-dialog="SheetTitle"] { font-size: 1.5rem; }
+  .large-text [data-dialog="AlertTitle"] { font-size: 1.375rem; }
 }

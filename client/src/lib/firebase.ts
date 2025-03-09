@@ -6,48 +6,86 @@ function formatConfigString(configStr: string): string {
   try {
     // If it's already valid JSON, return it
     JSON.parse(configStr);
+    console.log('Config is already valid JSON');
     return configStr;
   } catch {
+    console.log('Converting JS object notation to JSON...');
     // Try to convert JS object notation to JSON
-    return configStr
+    const formattedStr = configStr
       .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":') // Ensure property names are quoted
-      .replace(/'/g, '"'); // Replace single quotes with double quotes
+      .replace(/'/g, '"') // Replace single quotes with double quotes
+      .replace(/\s+/g, '') // Remove whitespace
+      .replace(/,\s*([\]}])/g, '$1'); // Remove trailing commas
+
+    console.log('Formatted string:', formattedStr);
+    try {
+      // Verify the formatted string is valid JSON
+      JSON.parse(formattedStr);
+      console.log('Successfully formatted to valid JSON');
+      return formattedStr;
+    } catch (error) {
+      // If that fails, try to manually parse the object structure
+      const config = {
+        apiKey: configStr.match(/apiKey:\s*["']([^"']+)["']/)?.[1],
+        authDomain: configStr.match(/authDomain:\s*["']([^"']+)["']/)?.[1],
+        projectId: configStr.match(/projectId:\s*["']([^"']+)["']/)?.[1],
+        storageBucket: configStr.match(/storageBucket:\s*["']([^"']+)["']/)?.[1],
+        messagingSenderId: configStr.match(/messagingSenderId:\s*["']([^"']+)["']/)?.[1],
+        appId: configStr.match(/appId:\s*["']([^"']+)["']/)?.[1],
+        measurementId: configStr.match(/measurementId:\s*["']([^"']+)["']/)?.[1]
+      };
+
+      // Convert the parsed object to a JSON string
+      return JSON.stringify(config);
+    }
   }
 }
 
 // Helper function to validate Firebase config
 function validateFirebaseConfig(config: any): boolean {
   const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
-  return requiredFields.every(field => typeof config[field] === 'string' && config[field].length > 0);
+  return requiredFields.every(field => {
+    const hasField = typeof config[field] === 'string' && config[field].length > 0;
+    if (!hasField) {
+      console.error(`Missing or invalid Firebase config field: ${field}`);
+    }
+    return hasField;
+  });
 }
 
 // Initialize Firebase with better error handling
 function initializeFirebase() {
   try {
     const rawConfigStr = import.meta.env.VITE_FIREBASE_CONFIG;
-    console.log('Raw Firebase config:', rawConfigStr); // For debugging
-
     if (!rawConfigStr) {
-      throw new Error('Firebase configuration is missing from environment variables');
+      console.error('Firebase configuration is missing from environment variables');
+      return null;
     }
 
-    const formattedConfigStr = formatConfigString(rawConfigStr);
-    let firebaseConfig;
+    console.log('Raw config string:', rawConfigStr); // Debug log
 
+    // Format and clean the config string
+    const formattedConfigStr = formatConfigString(rawConfigStr);
+    console.log('Formatted config string:', formattedConfigStr); // Debug log
+
+    let firebaseConfig;
     try {
       firebaseConfig = JSON.parse(formattedConfigStr);
+      console.log('Parsed config:', firebaseConfig); // Debug log
     } catch (parseError) {
       console.error('Failed to parse Firebase config:', parseError);
-      throw new Error('Invalid Firebase configuration format. Must be a valid JSON string.');
+      console.error('Attempted to parse:', formattedConfigStr);
+      return null;
     }
 
     if (!validateFirebaseConfig(firebaseConfig)) {
       console.error('Invalid Firebase config structure:', firebaseConfig);
-      throw new Error('Firebase configuration is missing required fields');
+      return null;
     }
 
-    console.log('Firebase initialization successful');
-    return initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
+    console.log('Firebase app initialized successfully');
+    return app;
   } catch (error) {
     console.error('Firebase initialization error:', error);
     return null;
@@ -55,10 +93,16 @@ function initializeFirebase() {
 }
 
 const app = initializeFirebase();
-const auth = app ? getAuth(app) : null;
-const googleProvider = new GoogleAuthProvider();
+if (!app) {
+  console.error('Failed to initialize Firebase app');
+}
 
-// Add Google Drive scope for backup access
+const auth = app ? getAuth(app) : null;
+if (!auth) {
+  console.error('Failed to initialize Firebase auth');
+}
+
+const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('https://www.googleapis.com/auth/drive.file');
 
 export async function signInWithGoogle() {
@@ -68,7 +112,6 @@ export async function signInWithGoogle() {
     }
 
     const result = await signInWithPopup(auth, googleProvider);
-    // Get Google Drive access token
     const credential = GoogleAuthProvider.credentialFromResult(result);
     return {
       user: result.user,

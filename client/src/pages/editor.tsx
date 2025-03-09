@@ -21,12 +21,14 @@ import { PageTransition } from "@/components/animations";
 const KeyboardAware = ({ children }: { children: React.ReactNode }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
       const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
       const keyboardIsShown = vh < window.innerHeight;
       setKeyboardHeight(keyboardIsShown ? window.innerHeight - vh : 0);
+      setIsKeyboardVisible(keyboardIsShown);
     };
 
     window.addEventListener('resize', handleResize);
@@ -49,6 +51,9 @@ export default function Editor() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0); // Added state
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false); // Added state
+
 
   useEffect(() => {
     let touchStartX = 0;
@@ -318,7 +323,11 @@ export default function Editor() {
 
             {/* Media Preview */}
             {form.watch("mediaUrls")?.length > 0 && (
-              <div className="px-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}>
+              <div className="px-4" style={{ 
+                paddingBottom: isKeyboardVisible 
+                  ? `${keyboardHeight + 60}px` 
+                  : 'calc(env(safe-area-inset-bottom) + 80px)'
+              }}>
                 <MediaPreview
                   urls={form.watch("mediaUrls")}
                   onRemove={onMediaRemove}

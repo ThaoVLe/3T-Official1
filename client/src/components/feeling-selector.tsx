@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { X } from "lucide-react";
 import { emotions, activities } from "@/data/feelings";
+import { EmotionsIcon } from "@/components/icons/emotions-icon";
 
 const feelingsData = [
   { emoji: "😊", label: "Happy" },
@@ -250,27 +251,9 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             }, 50);
           }}
         >
-          {selectedFeeling ? (
-            <div className="flex items-center gap-1.5">
-              {selectedFeeling.emoji.includes(' ') ? (
-                // Combined emotion and activity
-                <>
-                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
-                  <span className="text-xl">{selectedFeeling.emoji}</span>
-                </>
-              ) : (
-                // Just emotion
-                <>
-                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
-                  <span className="text-xl">{selectedFeeling.emoji}</span>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center">
-              <span className="text-xl">❤️</span>
-            </div>
-          )}
+          <div className="flex items-center justify-center">
+            <EmotionsIcon className="h-8 w-8" />
+          </div>
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[100dvh] pt-6" onOpenAutoFocus={(e) => {

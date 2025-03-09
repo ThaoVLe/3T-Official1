@@ -1,6 +1,20 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
+// Helper function to format config string to proper JSON
+function formatConfigString(configStr: string): string {
+  try {
+    // If it's already valid JSON, return it
+    JSON.parse(configStr);
+    return configStr;
+  } catch {
+    // Try to convert JS object notation to JSON
+    return configStr
+      .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":') // Ensure property names are quoted
+      .replace(/'/g, '"'); // Replace single quotes with double quotes
+  }
+}
+
 // Helper function to validate Firebase config
 function validateFirebaseConfig(config: any): boolean {
   const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
@@ -10,12 +24,18 @@ function validateFirebaseConfig(config: any): boolean {
 // Initialize Firebase with better error handling
 function initializeFirebase() {
   try {
-    const configStr = import.meta.env.VITE_FIREBASE_CONFIG;
-    console.log('Raw Firebase config:', configStr); // For debugging
+    const rawConfigStr = import.meta.env.VITE_FIREBASE_CONFIG;
+    console.log('Raw Firebase config:', rawConfigStr); // For debugging
 
+    if (!rawConfigStr) {
+      throw new Error('Firebase configuration is missing from environment variables');
+    }
+
+    const formattedConfigStr = formatConfigString(rawConfigStr);
     let firebaseConfig;
+
     try {
-      firebaseConfig = JSON.parse(configStr);
+      firebaseConfig = JSON.parse(formattedConfigStr);
     } catch (parseError) {
       console.error('Failed to parse Firebase config:', parseError);
       throw new Error('Invalid Firebase configuration format. Must be a valid JSON string.');
@@ -26,10 +46,10 @@ function initializeFirebase() {
       throw new Error('Firebase configuration is missing required fields');
     }
 
+    console.log('Firebase initialization successful');
     return initializeApp(firebaseConfig);
   } catch (error) {
     console.error('Firebase initialization error:', error);
-    // Return null to indicate initialization failure
     return null;
   }
 }

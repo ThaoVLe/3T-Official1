@@ -30,7 +30,7 @@ export default function SettingsPage() {
   const [localEntries, setLocalEntries] = React.useState<any[]>([]);
   const [showDebug, setShowDebug] = React.useState(false);
   const { toast } = useToast();
-  const [user, setUser] = React.useState(auth.currentUser);
+  const [user, setUser] = React.useState(auth?.currentUser || null);
   const [dbStats, setDbStats] = React.useState<{
     entriesCount: number;
     pendingSyncCount: number;
@@ -43,11 +43,24 @@ export default function SettingsPage() {
 
   // Listen for auth state changes
   React.useEffect(() => {
+    if (!auth) {
+      console.error('Firebase auth not initialized');
+      return;
+    }
+
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
+    }, (error) => {
+      console.error('Auth state change error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to monitor authentication state",
+        variant: "destructive"
+      });
     });
+
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   // Load local entries and database stats for debug view
   const loadDatabaseInfo = async () => {
@@ -77,6 +90,9 @@ export default function SettingsPage() {
   // Handle Google Sign In
   const handleGoogleSignIn = async () => {
     try {
+      if (!auth) {
+        throw new Error('Firebase not initialized');
+      }
       await signInWithGoogle();
       toast({
         title: "Success",
@@ -95,6 +111,9 @@ export default function SettingsPage() {
   // Handle Sign Out
   const handleSignOut = async () => {
     try {
+      if (!auth) {
+        throw new Error('Firebase not initialized');
+      }
       await signOutUser();
       toast({
         title: "Success",
@@ -115,6 +134,22 @@ export default function SettingsPage() {
     { value: "weekly", label: "Weekly" },
     { value: "monthly", label: "Monthly" },
   ];
+
+  // Early return if Firebase is not initialized
+  if (!auth) {
+    return (
+      <PageTransition direction={1}>
+        <div className="min-h-screen bg-background p-6">
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Firebase Not Initialized</h2>
+            <p className="text-muted-foreground">
+              Firebase authentication is not available. Please check your configuration.
+            </p>
+          </Card>
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition direction={1}>
@@ -233,7 +268,7 @@ export default function SettingsPage() {
                         <div className="space-y-0.5">
                           <Label>Signed in as</Label>
                           <div className="text-sm text-muted-foreground">
-                            {user.email}
+                            {user?.email}
                           </div>
                         </div>
                         <Button

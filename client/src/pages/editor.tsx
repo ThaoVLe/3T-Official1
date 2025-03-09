@@ -331,6 +331,18 @@ const EditorContent = () => {
           </div>
         )}
 
+        <div className="fixed bottom-24 right-6 z-20">
+          <Button
+            type="button"
+            size="icon"
+            onClick={form.handleSubmit((data) => mutation.mutate(data))}
+            disabled={mutation.isPending}
+            className="h-14 w-14 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-md flex items-center justify-center"
+          >
+            <FileEdit className="h-6 w-6" />
+          </Button>
+        </div>
+
         <div 
           ref={floatingBarRef}
           className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out touch-none"

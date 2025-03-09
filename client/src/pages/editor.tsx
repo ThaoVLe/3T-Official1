@@ -17,8 +17,6 @@ import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
 import { KeyboardProvider, useKeyboard } from "@/lib/keyboard-context";
-import {Sun, Moon, Heart, LightningBolt} from 'lucide-react'; // Suggested icons
-
 
 const EditorContent = () => {
   const { id } = useParams();
@@ -364,14 +362,13 @@ const EditorContent = () => {
           }}
         >
           <div className="bg-background/80 backdrop-blur-sm border-t border-border p-2">
-            <div className="flex items-center justify-evenly gap-4">
+            <div className="flex items-center justify-between gap-4">
               <FeelingSelector
                 selectedFeeling={form.getValues("feeling")}
                 onSelect={async (feeling) => {
                   await hideKeyboard();
                   form.setValue("feeling", feeling);
                 }}
-                showText={false} // Added prop to hide text
               />
 
               <MediaRecorder onCapture={onMediaUpload} />
@@ -382,7 +379,6 @@ const EditorContent = () => {
                   hideKeyboard();
                   form.setValue("location", location);
                 }}
-                showText={false} // Added prop to hide text
               />
             </div>
           </div>

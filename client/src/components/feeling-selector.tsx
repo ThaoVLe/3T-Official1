@@ -251,12 +251,25 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           }}
         >
           {selectedFeeling ? (
-            <div className="flex items-center gap-1.5 w-full h-full">
-              <span className="text-2xl w-[90%] h-[90%]">{selectedFeeling.emoji}</span>
+            <div className="flex items-center gap-1.5">
+              {selectedFeeling.emoji.includes(' ') ? (
+                // Combined emotion and activity
+                <>
+                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
+                  <span className="text-xl">{selectedFeeling.emoji}</span>
+                </>
+              ) : (
+                // Just emotion
+                <>
+                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
+                  <span className="text-xl">{selectedFeeling.emoji}</span>
+                </>
+              )}
             </div>
           ) : (
-            <div className="flex items-center justify-center w-full h-full">
-              <span className="text-2xl w-[90%] h-[90%]">❤️</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xl">😊</span>
+              <span className="text-sm font-medium">Feeling</span>
             </div>
           )}
         </Button>
@@ -270,13 +283,13 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             {selectedEmotion && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
                 <span className="text-xs">{selectedEmotion.label}</span>
-                <span className="text-xl">{selectedEmotion.emoji}</span>
+                <span>{selectedEmotion.emoji}</span>
               </div>
             )}
             {selectedActivity && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
                 <span className="text-xs">{selectedActivity.label}</span>
-                <span className="text-xl">{selectedActivity.emoji}</span>
+                <span>{selectedActivity.emoji}</span>
               </div>
             )}
           </div>
@@ -298,10 +311,11 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
                 <Button
                   key={feeling.label}
                   variant={selectedEmotion?.label === feeling.label ? "default" : "ghost"}
-                  className="flex items-center justify-center p-3 h-14"
+                  className="flex items-center justify-start gap-2 p-3 h-14"
                   onClick={() => handleSelectEmotion(feeling)}
                 >
-                  <span className="text-2xl">{feeling.emoji}</span>
+                  <span className="text-xl">{feeling.emoji}</span>
+                  <span className="text-sm">{feeling.label}</span>
                 </Button>
               ))}
             </div>
@@ -313,10 +327,11 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
                 <Button
                   key={activity.label}
                   variant={selectedActivity?.label === activity.label ? "default" : "ghost"}
-                  className="flex items-center justify-center p-3 h-14"
+                  className="flex items-center justify-start gap-2 p-3 h-14"
                   onClick={() => handleSelectActivity(activity)}
                 >
-                  <span className="text-2xl">{activity.emoji}</span>
+                  <span className="text-xl">{activity.emoji}</span>
+                  <span className="text-sm">{activity.label}</span>
                 </Button>
               ))}
             </div>

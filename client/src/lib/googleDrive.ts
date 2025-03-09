@@ -30,99 +30,15 @@ interface BackupMetadata {
   version: string;
 }
 
-class GoogleDriveService {
-  private async getAccessToken(): Promise<string | null> {
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-    const token = await user.getIdToken();
-    return token;
-  }
-
-  async createBackup(entries: LocalDiaryEntry[]): Promise<void> {
-    const token = await this.getAccessToken();
-    if (!token) {
-      throw new Error('Not authenticated with Google Drive');
-    }
-
-    const timestamp = new Date().toISOString();
-    const backupData = {
-      metadata: {
-        timestamp,
-        entryCount: entries.length,
-        version: '1.0',
-      },
-      entries,
-    };
-
-    try {
-      const response = await fetch('/api/backup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(backupData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create backup');
-      }
-    } catch (error) {
-      console.error('Backup creation failed:', error);
-      throw error;
-    }
-  }
-
-  async listBackups(): Promise<{ id: string; name: string; timestamp: string }[]> {
-    const token = await this.getAccessToken();
-    if (!token) {
-      throw new Error('Not authenticated with Google Drive');
-    }
-
-    try {
-      const response = await fetch('/api/backups', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to list backups');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to list backups:', error);
-      throw error;
-    }
-  }
-
-  async restoreBackup(fileId: string): Promise<LocalDiaryEntry[]> {
-    const token = await this.getAccessToken();
-    if (!token) {
-      throw new Error('Not authenticated with Google Drive');
-    }
-
-    try {
-      const response = await fetch(`/api/backup/${fileId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to restore backup');
-      }
-
-      const backupData = await response.json();
-      return backupData.entries;
-    } catch (error) {
-      console.error('Failed to restore backup:', error);
-      throw error;
-    }
-  }
-}
-
-export const googleDriveService = new GoogleDriveService();
+// This file is kept as a placeholder in case we need to add Google Drive integration later
+export const googleDriveService = {
+  createBackup: async () => {
+    throw new Error('Google Drive integration is not implemented');
+  },
+  listBackups: async () => {
+    throw new Error('Google Drive integration is not implemented');
+  },
+  restoreBackup: async () => {
+    throw new Error('Google Drive integration is not implemented');
+  },
+};

@@ -10,19 +10,14 @@ import {
   Moon,
   Sun,
   Lock,
-  Bell,
   Database,
   ArrowLeft,
-  CloudOff,
   RefreshCw
 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSyncStore } from "@/lib/store";
 import { getAllEntries, getDatabaseStats } from "@/lib/indexedDB";
-import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { googleDriveService } from "@/lib/googleDrive";
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
@@ -31,7 +26,6 @@ export default function SettingsPage() {
   const [localEntries, setLocalEntries] = React.useState<any[]>([]);
   const [showDebug, setShowDebug] = React.useState(false);
   const { toast } = useToast();
-  const [user, setUser] = React.useState(auth?.currentUser || null);
   const [dbStats, setDbStats] = React.useState<{
     entriesCount: number;
     pendingSyncCount: number;
@@ -41,30 +35,6 @@ export default function SettingsPage() {
     pendingSyncCount: 0,
     lastModifiedEntry: null
   });
-  const [authError, setAuthError] = React.useState<string | null>(null);
-  const [backupInProgress, setBackupInProgress] = React.useState(false);
-  const [backupError, setBackupError] = React.useState<string | null>(null);
-
-  // Listen for auth state changes
-  React.useEffect(() => {
-    if (!auth) {
-      console.error('Firebase auth not initialized');
-      return;
-    }
-
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
-    }, (error) => {
-      console.error('Auth state change error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to monitor authentication state",
-        variant: "destructive"
-      });
-    });
-
-    return () => unsubscribe();
-  }, [toast]);
 
   // Load local entries and database stats for debug view
   const loadDatabaseInfo = async () => {
@@ -91,121 +61,6 @@ export default function SettingsPage() {
     }
   }, [showDebug]);
 
-  // Handle Google Sign In
-  const handleGoogleSignIn = async () => {
-    try {
-      if (!auth) {
-        throw new Error('Firebase not initialized');
-      }
-      setAuthError(null);
-      const result = await signInWithGoogle();
-      if (result?.user) {
-        toast({
-          title: "Success",
-          description: "Successfully signed in with Google",
-        });
-      }
-    } catch (error) {
-      console.error('Google Sign-in Error:', error);
-      let errorMessage = "Failed to sign in with Google";
-
-      // Check for specific error types
-      if ((error as any).code === 'auth/popup-blocked') {
-        errorMessage = "Pop-up was blocked by your browser. Please allow pop-ups for this site.";
-      } else if ((error as any).code === 'auth/unauthorized-domain') {
-        const currentDomain = window.location.hostname;
-        errorMessage = `This domain (${currentDomain}) is not authorized`;
-        setAuthError(`Please add this domain to Firebase Console:\n${currentDomain}`);
-      } else if ((error as any).code === 'auth/invalid-oauth-provider') {
-        errorMessage = "Google Sign-in is not enabled in Firebase Console.";
-        setAuthError("Please enable Google Sign-in in Firebase Console under Authentication > Sign-in methods");
-      }
-
-      toast({
-        title: "Authentication Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Handle Sign Out
-  const handleSignOut = async () => {
-    try {
-      if (!auth) {
-        throw new Error('Firebase not initialized');
-      }
-      await signOutUser();
-      toast({
-        title: "Success",
-        description: "Successfully signed out",
-      });
-    } catch (error) {
-      console.error('Sign-out Error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sign out",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const frequencyOptions = [
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly" },
-    { value: "monthly", label: "Monthly" },
-  ];
-
-  // Early return if Firebase is not initialized
-  if (!auth) {
-    return (
-      <PageTransition direction={1}>
-        <div className="min-h-screen bg-background p-6">
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Firebase Not Initialized</h2>
-            <p className="text-muted-foreground">
-              Firebase authentication is not available. Please check your configuration.
-            </p>
-          </Card>
-        </div>
-      </PageTransition>
-    );
-  }
-
-  const handleCreateBackup = async () => {
-    try {
-      setBackupInProgress(true);
-      setBackupError(null);
-
-      // Get all entries from IndexedDB
-      const entries = await getAllEntries();
-
-      // Create backup using Google Drive service
-      await googleDriveService.createBackup(entries);
-
-      toast({
-        title: "Success",
-        description: "Backup created successfully",
-      });
-
-      // Update backup settings with latest backup time
-      syncStore.updateBackupSettings({
-        lastBackup: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Backup creation error:', error);
-      setBackupError('Failed to create backup. Please try again.');
-      toast({
-        title: "Error",
-        description: "Failed to create backup",
-        variant: "destructive"
-      });
-    } finally {
-      setBackupInProgress(false);
-    }
-  };
-
-
   return (
     <PageTransition direction={1}>
       <div className="min-h-screen bg-background">
@@ -229,7 +84,7 @@ export default function SettingsPage() {
         {/* Content */}
         <div className="container py-6 max-w-2xl">
           <Tabs defaultValue="appearance" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="appearance" className="flex flex-col items-center gap-1 py-2">
                 <Sun className="h-4 w-4" />
                 <span className="text-xs">Appearance</span>
@@ -237,10 +92,6 @@ export default function SettingsPage() {
               <TabsTrigger value="privacy" className="flex flex-col items-center gap-1 py-2">
                 <Lock className="h-4 w-4" />
                 <span className="text-xs">Privacy</span>
-              </TabsTrigger>
-              <TabsTrigger value="backup" className="flex flex-col items-center gap-1 py-2">
-                <CloudOff className="h-4 w-4" />
-                <span className="text-xs">Backup</span>
               </TabsTrigger>
               <TabsTrigger value="debug" className="flex flex-col items-center gap-1 py-2">
                 <Database className="h-4 w-4" />
@@ -305,139 +156,6 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
 
-            {/* Backup Settings */}
-            <TabsContent value="backup">
-              <Card className="p-6 space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Google Account</h3>
-                  {!user ? (
-                    <>
-                      <Button
-                        className="w-full"
-                        onClick={handleGoogleSignIn}
-                      >
-                        Sign in with Google
-                      </Button>
-                      {authError && (
-                        <div className="mt-4 p-4 border rounded bg-destructive/10 text-destructive">
-                          <p className="font-medium">Configuration Required</p>
-                          <p className="text-sm mt-1">{authError}</p>
-                          <p className="text-sm mt-2">
-                            To fix this:
-                          </p>
-                          <ol className="text-sm list-decimal list-inside mt-1">
-                            <li>Go to Firebase Console</li>
-                            <li>Navigate to Authentication</li>
-                            <li>Click on &quot;Sign-in method&quot; tab</li>
-                            <li>Enable &quot;Google&quot; as a sign-in provider</li>
-                            <li>Save the changes</li>
-                          </ol>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>Signed in as</Label>
-                          <div className="text-sm text-muted-foreground">
-                            {user?.email}
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          onClick={handleSignOut}
-                        >
-                          Sign Out
-                        </Button>
-                      </div>
-
-                      <div className="pt-4">
-                        <h3 className="text-lg font-semibold">Backup Settings</h3>
-                        {/* Enable Backups */}
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="space-y-0.5">
-                            <Label>Enable Automatic Backups</Label>
-                            <div className="text-sm text-muted-foreground">
-                              Automatically backup your entries to Google Drive
-                            </div>
-                          </div>
-                          <Switch
-                            checked={syncStore.backupSettings.enabled}
-                            onCheckedChange={(checked) =>
-                              syncStore.updateBackupSettings({ enabled: checked })}
-                          />
-                        </div>
-
-                        {/* Backup Frequency */}
-                        <div className="space-y-2 mt-4">
-                          <Label>Backup Frequency</Label>
-                          <Select
-                            value={syncStore.backupSettings.frequency}
-                            onValueChange={(value: 'daily' | 'weekly' | 'monthly') =>
-                              syncStore.updateBackupSettings({ frequency: value })}
-                            disabled={!syncStore.backupSettings.enabled}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {frequencyOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Last Backup Info */}
-                        {syncStore.backupSettings.lastBackup && (
-                          <div className="text-sm text-muted-foreground mt-4">
-                            Last backup: {new Date(syncStore.backupSettings.lastBackup).toLocaleString()}
-                          </div>
-                        )}
-
-                        {/* Manual Sync Button */}
-                        <Button
-                          className="w-full mt-4"
-                          onClick={() => syncStore.syncEntries()}
-                          disabled={!syncStore.isOnline || syncStore.isSyncing}
-                        >
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          {syncStore.isSyncing ? 'Syncing...' : 'Sync Now'}
-                        </Button>
-                        {user && (
-                          <div className="space-y-4 mt-4">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-0.5">
-                                <Label>Google Drive Backup</Label>
-                                <div className="text-sm text-muted-foreground">
-                                  Create a backup of your entries on Google Drive
-                                </div>
-                              </div>
-                              <Button
-                                onClick={handleCreateBackup}
-                                disabled={backupInProgress || !user}
-                              >
-                                {backupInProgress ? 'Creating Backup...' : 'Create Backup'}
-                              </Button>
-                            </div>
-
-                            {backupError && (
-                              <div className="text-sm text-destructive mt-2">
-                                {backupError}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </Card>
-            </TabsContent>
-
             {/* Debug View */}
             <TabsContent value="debug">
               <Card className="p-6">
@@ -464,12 +182,15 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Firebase Authentication Status</h4>
-                    <div className="text-sm">
-                      {auth ? 'Initialized' : 'Not Initialized'}
-                    </div>
-                  </div>
+                  {/* Manual Sync Button */}
+                  <Button
+                    className="w-full mt-4"
+                    onClick={() => syncStore.syncEntries()}
+                    disabled={!syncStore.isOnline || syncStore.isSyncing}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    {syncStore.isSyncing ? 'Syncing...' : 'Sync Now'}
+                  </Button>
 
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Entries List</h4>

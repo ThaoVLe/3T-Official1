@@ -282,7 +282,7 @@ const NewEntry: React.FC = () => {
 
               {/* Floating Bar - Now positioned consistently with editor page */}
               <div className="floating-bar">
-                <div className="flex items-center justify-center gap-6">
+                <div className="flex items-center justify-between gap-4">
                   <FeelingSelector
                     selectedFeeling={form.getValues("feeling")}
                     onSelect={(feeling) => {

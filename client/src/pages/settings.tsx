@@ -16,39 +16,23 @@ import {
 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PasswordDialog } from "@/components/password-dialog";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-
-// Placeholder for toast function - replace with your actual implementation
-const toast = ({ title, description, variant }: { title: string; description: string; variant?: string }) => {
-  console.log(`Toast: ${title} - ${description} (${variant || 'info'})`);
-};
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
   const settings = useSettings();
-
+  
   // Touch swipe handling
   const [touchStartX, setTouchStartX] = React.useState(0);
   const [touchStartY, setTouchStartY] = React.useState(0);
   const [touchStartTime, setTouchStartTime] = React.useState(0);
-  const pageRef = React.useRef<HTMLDivElement>(null);
-
+  
   React.useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
       setTouchStartX(e.touches[0].clientX);
       setTouchStartY(e.touches[0].clientY);
       setTouchStartTime(Date.now());
     };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      // Prevent default to avoid scrolling conflicts
-      if (Math.abs(e.touches[0].clientX - touchStartX) > Math.abs(e.touches[0].clientY - touchStartY)) {
-        e.preventDefault();
-      }
-    };
-
+    
     const handleTouchEnd = (e: TouchEvent) => {
       const touchEndX = e.changedTouches[0].clientX;
       const touchEndY = e.changedTouches[0].clientY;
@@ -56,53 +40,30 @@ export default function SettingsPage() {
       const swipeDistance = touchEndX - touchStartX;
       const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
-
-      console.log("Swipe detected:", {
-        swipeDistance,
-        verticalDistance,
-        swipeTime,
-        condition: ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30)
-      });
-
+      
       // If swiped right far enough and fast enough (not too much vertical movement)
       if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
         // Get the last scroll position from session storage
         const lastScrollPosition = sessionStorage.getItem('homeScrollPosition');
-
+        
         // Navigate back to home
         navigate('/');
-
+        
         // After navigation, restore scroll position (needs to be handled in the main page)
         if (lastScrollPosition) {
           sessionStorage.setItem('shouldRestoreScroll', 'true');
         }
       }
     };
-
-    // Get current ref element
-    const element = pageRef.current;
-    if (!element) return;
-
-    element.addEventListener('touchstart', handleTouchStart, { passive: false });
-    element.addEventListener('touchmove', handleTouchMove, { passive: false });
-    element.addEventListener('touchend', handleTouchEnd);
-
+    
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
+    
     return () => {
-      element.removeEventListener('touchstart', handleTouchStart);
-      element.removeEventListener('touchmove', handleTouchMove);
-      element.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [navigate, touchStartX, touchStartY]);
-
-  // Save scroll position when leaving settings page
-  React.useEffect(() => {
-    return () => {
-      const homeScrollPosition = sessionStorage.getItem('homeScrollPosition');
-      if (homeScrollPosition) {
-        sessionStorage.setItem('shouldRestoreScroll', 'true');
-      }
-    };
-  }, []);
+  }, [navigate]);
 
   const autoLockOptions = [
     { value: "0", label: "Disabled" },
@@ -113,36 +74,9 @@ export default function SettingsPage() {
     { value: "60", label: "1 hour" },
   ];
 
-  const [showPasswordDialog, setShowPasswordDialog] = React.useState(false);
-
-  const updatePasswordMutation = useMutation({
-    mutationFn: async (password: string) => {
-      await apiRequest("POST", "/api/settings/password", { password });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Password updated",
-        description: "Your protection password has been set successfully.",
-      });
-      setShowPasswordDialog(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update password",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handlePasswordSet = (password: string) => {
-    updatePasswordMutation.mutate(password);
-  };
-
   return (
     <PageTransition direction={1}>
-      <div ref={pageRef} className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="sticky top-0 z-10 border-b bg-background">
           <div className="container flex h-14 max-w-screen-2xl items-center">
@@ -194,7 +128,7 @@ export default function SettingsPage() {
                         Switch between light and dark theme
                       </div>
                     </div>
-                    <Switch
+                    <Switch 
                       checked={settings.theme === 'dark'}
                       onCheckedChange={(checked) => settings.setTheme(checked ? 'dark' : 'light')}
                     />
@@ -210,7 +144,7 @@ export default function SettingsPage() {
                         Make text larger and easier to read throughout the app
                       </div>
                     </div>
-                    <Switch
+                    <Switch 
                       checked={settings.isLargeText}
                       onCheckedChange={settings.setLargeText}
                     />
@@ -249,12 +183,7 @@ export default function SettingsPage() {
                     </div>
                     <Switch
                       checked={settings.isPasswordProtectionEnabled}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setShowPasswordDialog(true);
-                        }
-                        settings.setPasswordProtection(checked);
-                      }}
+                      onCheckedChange={settings.setPasswordProtection}
                     />
                   </div>
 
@@ -297,12 +226,6 @@ export default function SettingsPage() {
           </Tabs>
         </div>
       </div>
-      <PasswordDialog
-        open={showPasswordDialog}
-        onOpenChange={setShowPasswordDialog}
-        onSubmit={handlePasswordSet}
-        mode="set"
-      />
     </PageTransition>
   );
 }

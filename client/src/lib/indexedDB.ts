@@ -12,7 +12,7 @@ const STORES = {
 } as const;
 
 // IndexedDB Schema and types
-interface LocalDiaryEntry extends Omit<DiaryEntry, 'id'> {
+export interface LocalDiaryEntry extends Omit<DiaryEntry, 'id'> {
   id?: number;
   syncStatus: 'pending' | 'synced' | 'failed';
   lastModified: Date;
@@ -33,13 +33,22 @@ interface BackupSettings {
 
 // Initialize the database
 export async function initDB(): Promise<IDBDatabase> {
+  console.log('Initializing IndexedDB...');
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => {
+      console.error('Failed to initialize IndexedDB:', request.error);
+      reject(request.error);
+    };
+
+    request.onsuccess = () => {
+      console.log('IndexedDB initialized successfully');
+      resolve(request.result);
+    };
 
     request.onupgradeneeded = (event) => {
+      console.log('Upgrading IndexedDB schema...');
       const db = (event.target as IDBOpenDBRequest).result;
 
       // Create entries store
@@ -47,6 +56,7 @@ export async function initDB(): Promise<IDBDatabase> {
         const entriesStore = db.createObjectStore(STORES.entries, { keyPath: 'id', autoIncrement: true });
         entriesStore.createIndex('syncStatus', 'syncStatus');
         entriesStore.createIndex('lastModified', 'lastModified');
+        console.log('Created entries store');
       }
 
       // Create comments store
@@ -55,11 +65,13 @@ export async function initDB(): Promise<IDBDatabase> {
         commentsStore.createIndex('entryId', 'entryId');
         commentsStore.createIndex('syncStatus', 'syncStatus');
         commentsStore.createIndex('lastModified', 'lastModified');
+        console.log('Created comments store');
       }
 
       // Create settings store
       if (!db.objectStoreNames.contains(STORES.settings)) {
-        const settingsStore = db.createObjectStore(STORES.settings, { keyPath: 'id' });
+        db.createObjectStore(STORES.settings, { keyPath: 'id' });
+        console.log('Created settings store');
       }
     };
   });
@@ -67,57 +79,82 @@ export async function initDB(): Promise<IDBDatabase> {
 
 // CRUD operations for entries
 export async function addEntry(entry: Omit<LocalDiaryEntry, 'id'>): Promise<number> {
+  console.log('Adding new entry to IndexedDB:', entry);
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORES.entries], 'readwrite');
     const store = transaction.objectStore(STORES.entries);
-    
+
     const request = store.add({
       ...entry,
       syncStatus: 'pending',
       lastModified: new Date()
     });
 
-    request.onsuccess = () => resolve(request.result as number);
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const id = request.result as number;
+      console.log('Successfully added entry with ID:', id);
+      resolve(id);
+    };
+    request.onerror = () => {
+      console.error('Failed to add entry:', request.error);
+      reject(request.error);
+    };
   });
 }
 
 export async function getEntry(id: number): Promise<LocalDiaryEntry | undefined> {
+  console.log('Fetching entry with ID:', id);
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORES.entries], 'readonly');
     const store = transaction.objectStore(STORES.entries);
     const request = store.get(id);
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      console.log('Successfully fetched entry:', request.result);
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      console.error('Failed to fetch entry:', request.error);
+      reject(request.error);
+    };
   });
 }
 
 export async function getAllEntries(): Promise<LocalDiaryEntry[]> {
+  console.log('Fetching all entries from IndexedDB');
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORES.entries], 'readonly');
     const store = transaction.objectStore(STORES.entries);
     const request = store.getAll();
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      console.log('Successfully fetched all entries:', request.result.length, 'entries found');
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      console.error('Failed to fetch entries:', request.error);
+      reject(request.error);
+    };
   });
 }
 
 export async function updateEntry(id: number, entry: Partial<LocalDiaryEntry>): Promise<void> {
+  console.log('Updating entry with ID:', id, 'New data:', entry);
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORES.entries], 'readwrite');
     const store = transaction.objectStore(STORES.entries);
-    
+
     const getRequest = store.get(id);
     getRequest.onsuccess = () => {
       const existingEntry = getRequest.result;
       if (!existingEntry) {
-        reject(new Error('Entry not found'));
+        const error = new Error('Entry not found');
+        console.error(error);
+        reject(error);
         return;
       }
 
@@ -129,27 +166,44 @@ export async function updateEntry(id: number, entry: Partial<LocalDiaryEntry>): 
       };
 
       const updateRequest = store.put(updatedEntry);
-      updateRequest.onsuccess = () => resolve();
-      updateRequest.onerror = () => reject(updateRequest.error);
+      updateRequest.onsuccess = () => {
+        console.log('Successfully updated entry');
+        resolve();
+      };
+      updateRequest.onerror = () => {
+        console.error('Failed to update entry:', updateRequest.error);
+        reject(updateRequest.error);
+      };
     };
-    getRequest.onerror = () => reject(getRequest.error);
+    getRequest.onerror = () => {
+      console.error('Failed to fetch entry for update:', getRequest.error);
+      reject(getRequest.error);
+    };
   });
 }
 
 export async function deleteEntry(id: number): Promise<void> {
+  console.log('Deleting entry with ID:', id);
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORES.entries], 'readwrite');
     const store = transaction.objectStore(STORES.entries);
     const request = store.delete(id);
 
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      console.log('Successfully deleted entry');
+      resolve();
+    };
+    request.onerror = () => {
+      console.error('Failed to delete entry:', request.error);
+      reject(request.error);
+    };
   });
 }
 
 // Settings operations
 export async function getBackupSettings(): Promise<BackupSettings> {
+  console.log('Fetching backup settings');
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORES.settings], 'readonly');
@@ -157,25 +211,53 @@ export async function getBackupSettings(): Promise<BackupSettings> {
     const request = store.get('backupSettings');
 
     request.onsuccess = () => {
-      resolve(request.result || {
+      const defaultSettings = {
         enabled: false,
-        frequency: 'weekly',
+        frequency: 'weekly' as const,
         lastBackup: null,
         googleDriveEnabled: false
-      });
+      };
+      console.log('Successfully fetched backup settings:', request.result || defaultSettings);
+      resolve(request.result || defaultSettings);
     };
-    request.onerror = () => reject(request.error);
+    request.onerror = () => {
+      console.error('Failed to fetch backup settings:', request.error);
+      reject(request.error);
+    };
   });
 }
 
 export async function updateBackupSettings(settings: BackupSettings): Promise<void> {
+  console.log('Updating backup settings:', settings);
   const db = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORES.settings], 'readwrite');
     const store = transaction.objectStore(STORES.settings);
     const request = store.put({ id: 'backupSettings', ...settings });
 
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      console.log('Successfully updated backup settings');
+      resolve();
+    };
+    request.onerror = () => {
+      console.error('Failed to update backup settings:', request.error);
+      reject(request.error);
+    };
   });
+}
+
+// Debug utilities
+export async function getDatabaseStats(): Promise<{
+  entriesCount: number;
+  pendingSyncCount: number;
+  lastModifiedEntry: Date | null;
+}> {
+  const entries = await getAllEntries();
+  return {
+    entriesCount: entries.length,
+    pendingSyncCount: entries.filter(e => e.syncStatus === 'pending').length,
+    lastModifiedEntry: entries.length > 0 
+      ? new Date(Math.max(...entries.map(e => e.lastModified.getTime())))
+      : null
+  };
 }

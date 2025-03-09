@@ -19,7 +19,9 @@ import {
 import { useSettings } from "@/lib/settings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSyncStore } from "@/lib/store";
-import { getAllEntries } from "@/lib/indexedDB";
+import { getAllEntries, getDatabaseStats } from "@/lib/indexedDB";
+import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
@@ -27,102 +29,86 @@ export default function SettingsPage() {
   const syncStore = useSyncStore();
   const [localEntries, setLocalEntries] = React.useState<any[]>([]);
   const [showDebug, setShowDebug] = React.useState(false);
+  const { toast } = useToast();
+  const [user, setUser] = React.useState(auth.currentUser);
+  const [dbStats, setDbStats] = React.useState<{
+    entriesCount: number;
+    pendingSyncCount: number;
+    lastModifiedEntry: Date | null;
+  }>({
+    entriesCount: 0,
+    pendingSyncCount: 0,
+    lastModifiedEntry: null
+  });
 
-  // Load local entries for debug view
-  const loadLocalEntries = async () => {
-    const entries = await getAllEntries();
-    setLocalEntries(entries);
+  // Listen for auth state changes
+  React.useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load local entries and database stats for debug view
+  const loadDatabaseInfo = async () => {
+    try {
+      const [entries, stats] = await Promise.all([
+        getAllEntries(),
+        getDatabaseStats()
+      ]);
+      setLocalEntries(entries);
+      setDbStats(stats);
+    } catch (error) {
+      console.error('Error loading database info:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load local storage information",
+        variant: "destructive"
+      });
+    }
   };
 
   React.useEffect(() => {
     if (showDebug) {
-      loadLocalEntries();
+      loadDatabaseInfo();
     }
   }, [showDebug]);
 
-  // Touch swipe handling
-  const [touchStartX, setTouchStartX] = React.useState(0);
-  const [touchStartY, setTouchStartY] = React.useState(0);
-  const [touchStartTime, setTouchStartTime] = React.useState(0);
-  const pageRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const handleTouchStart = (e: TouchEvent) => {
-      setTouchStartX(e.touches[0].clientX);
-      setTouchStartY(e.touches[0].clientY);
-      setTouchStartTime(Date.now());
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      // Prevent default to avoid scrolling conflicts
-      if (Math.abs(e.touches[0].clientX - touchStartX) > Math.abs(e.touches[0].clientY - touchStartY)) {
-        e.preventDefault();
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const touchEndTime = Date.now();
-      const swipeDistance = touchEndX - touchStartX;
-      const verticalDistance = Math.abs(touchEndY - touchStartY);
-      const swipeTime = touchEndTime - touchStartTime;
-
-      console.log("Swipe detected:", {
-        swipeDistance,
-        verticalDistance,
-        swipeTime,
-        condition: ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30)
+  // Handle Google Sign In
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      toast({
+        title: "Success",
+        description: "Successfully signed in with Google",
       });
+    } catch (error) {
+      console.error('Google Sign-in Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sign in with Google",
+        variant: "destructive"
+      });
+    }
+  };
 
-      // If swiped right far enough and fast enough (not too much vertical movement)
-      if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
-        // Get the last scroll position from session storage
-        const lastScrollPosition = sessionStorage.getItem('homeScrollPosition');
-
-        // Navigate back to home
-        navigate('/');
-
-        // After navigation, restore scroll position (needs to be handled in the main page)
-        if (lastScrollPosition) {
-          sessionStorage.setItem('shouldRestoreScroll', 'true');
-        }
-      }
-    };
-
-    // Get current ref element
-    const element = pageRef.current;
-    if (!element) return;
-
-    element.addEventListener('touchstart', handleTouchStart, { passive: false });
-    element.addEventListener('touchmove', handleTouchMove, { passive: false });
-    element.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      element.removeEventListener('touchstart', handleTouchStart);
-      element.removeEventListener('touchmove', handleTouchMove);
-      element.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [navigate, touchStartX, touchStartY]);
-
-  // Save scroll position when leaving settings page
-  React.useEffect(() => {
-    return () => {
-      const homeScrollPosition = sessionStorage.getItem('homeScrollPosition');
-      if (homeScrollPosition) {
-        sessionStorage.setItem('shouldRestoreScroll', 'true');
-      }
-    };
-  }, []);
-
-  const autoLockOptions = [
-    { value: "0", label: "Disabled" },
-    { value: "1", label: "1 minute" },
-    { value: "5", label: "5 minutes" },
-    { value: "15", label: "15 minutes" },
-    { value: "30", label: "30 minutes" },
-    { value: "60", label: "1 hour" },
-  ];
+  // Handle Sign Out
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+      toast({
+        title: "Success",
+        description: "Successfully signed out",
+      });
+    } catch (error) {
+      console.error('Sign-out Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive"
+      });
+    }
+  };
 
   const frequencyOptions = [
     { value: "daily", label: "Daily" },
@@ -132,7 +118,7 @@ export default function SettingsPage() {
 
   return (
     <PageTransition direction={1}>
-      <div ref={pageRef} className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="sticky top-0 z-10 border-b bg-background">
           <div className="container flex h-14 max-w-screen-2xl items-center">
@@ -233,76 +219,89 @@ export default function SettingsPage() {
             <TabsContent value="backup">
               <Card className="p-6 space-y-6">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Backup Settings</h3>
-
-                  {/* Enable Backups */}
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Enable Automatic Backups</Label>
-                      <div className="text-sm text-muted-foreground">
-                        Automatically backup your entries
-                      </div>
-                    </div>
-                    <Switch
-                      checked={syncStore.backupSettings.enabled}
-                      onCheckedChange={(checked) =>
-                        syncStore.updateBackupSettings({ enabled: checked })}
-                    />
-                  </div>
-
-                  {/* Backup Frequency */}
-                  <div className="space-y-2">
-                    <Label>Backup Frequency</Label>
-                    <Select
-                      value={syncStore.backupSettings.frequency}
-                      onValueChange={(value: 'daily' | 'weekly' | 'monthly') =>
-                        syncStore.updateBackupSettings({ frequency: value })}
-                      disabled={!syncStore.backupSettings.enabled}
+                  <h3 className="text-lg font-semibold">Google Account</h3>
+                  {!user ? (
+                    <Button
+                      className="w-full"
+                      onClick={handleGoogleSignIn}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {frequencyOptions.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Google Drive Integration */}
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-0.5">
-                      <Label>Google Drive Sync</Label>
-                      <div className="text-sm text-muted-foreground">
-                        Sync your backups with Google Drive
+                      Sign in with Google
+                    </Button>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Signed in as</Label>
+                          <div className="text-sm text-muted-foreground">
+                            {user.email}
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={handleSignOut}
+                        >
+                          Sign Out
+                        </Button>
                       </div>
-                    </div>
-                    <Switch
-                      checked={syncStore.backupSettings.googleDriveEnabled}
-                      onCheckedChange={(checked) =>
-                        syncStore.updateBackupSettings({ googleDriveEnabled: checked })}
-                    />
-                  </div>
 
-                  {/* Last Backup Info */}
-                  {syncStore.backupSettings.lastBackup && (
-                    <div className="text-sm text-muted-foreground pt-2">
-                      Last backup: {new Date(syncStore.backupSettings.lastBackup).toLocaleString()}
-                    </div>
+                      <div className="pt-4">
+                        <h3 className="text-lg font-semibold">Backup Settings</h3>
+                        {/* Enable Backups */}
+                        <div className="flex items-center justify-between mt-4">
+                          <div className="space-y-0.5">
+                            <Label>Enable Automatic Backups</Label>
+                            <div className="text-sm text-muted-foreground">
+                              Automatically backup your entries to Google Drive
+                            </div>
+                          </div>
+                          <Switch
+                            checked={syncStore.backupSettings.enabled}
+                            onCheckedChange={(checked) =>
+                              syncStore.updateBackupSettings({ enabled: checked })}
+                          />
+                        </div>
+
+                        {/* Backup Frequency */}
+                        <div className="space-y-2 mt-4">
+                          <Label>Backup Frequency</Label>
+                          <Select
+                            value={syncStore.backupSettings.frequency}
+                            onValueChange={(value: 'daily' | 'weekly' | 'monthly') =>
+                              syncStore.updateBackupSettings({ frequency: value })}
+                            disabled={!syncStore.backupSettings.enabled}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {frequencyOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Last Backup Info */}
+                        {syncStore.backupSettings.lastBackup && (
+                          <div className="text-sm text-muted-foreground mt-4">
+                            Last backup: {new Date(syncStore.backupSettings.lastBackup).toLocaleString()}
+                          </div>
+                        )}
+
+                        {/* Manual Sync Button */}
+                        <Button
+                          className="w-full mt-4"
+                          onClick={() => syncStore.syncEntries()}
+                          disabled={!syncStore.isOnline || syncStore.isSyncing}
+                        >
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          {syncStore.isSyncing ? 'Syncing...' : 'Sync Now'}
+                        </Button>
+                      </div>
+                    </>
                   )}
-
-                  {/* Manual Sync Button */}
-                  <Button
-                    className="w-full mt-4"
-                    onClick={() => syncStore.syncEntries()}
-                    disabled={!syncStore.isOnline || syncStore.isSyncing}
-                  >
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    {syncStore.isSyncing ? 'Syncing...' : 'Sync Now'}
-                  </Button>
                 </div>
               </Card>
             </TabsContent>
@@ -312,25 +311,68 @@ export default function SettingsPage() {
               <Card className="p-6">
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Local Storage Debug</h3>
-                  <Button
-                    onClick={() => {
-                      setShowDebug(!showDebug);
-                      if (!showDebug) loadLocalEntries();
-                    }}
-                  >
-                    {showDebug ? 'Hide' : 'Show'} Local Entries
-                  </Button>
+
+                  {/* Database Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-4 border rounded">
+                      <div className="text-sm text-muted-foreground">Total Entries</div>
+                      <div className="text-2xl font-semibold">{dbStats.entriesCount}</div>
+                    </div>
+                    <div className="p-4 border rounded">
+                      <div className="text-sm text-muted-foreground">Pending Sync</div>
+                      <div className="text-2xl font-semibold">{dbStats.pendingSyncCount}</div>
+                    </div>
+                    <div className="p-4 border rounded">
+                      <div className="text-sm text-muted-foreground">Last Modified</div>
+                      <div className="text-sm">
+                        {dbStats.lastModifiedEntry
+                          ? new Date(dbStats.lastModifiedEntry).toLocaleString()
+                          : 'Never'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">Entries List</h4>
+                    <Button
+                      onClick={() => {
+                        setShowDebug(!showDebug);
+                        if (!showDebug) loadDatabaseInfo();
+                      }}
+                      size="sm"
+                    >
+                      {showDebug ? 'Hide' : 'Show'} Details
+                    </Button>
+                  </div>
 
                   {showDebug && (
                     <div className="mt-4 space-y-2">
-                      <h4 className="font-medium">IndexedDB Entries ({localEntries.length})</h4>
-                      <div className="max-h-96 overflow-auto">
+                      <div className="max-h-96 overflow-auto space-y-2">
                         {localEntries.map((entry: any) => (
-                          <div key={entry.id} className="p-2 border rounded mb-2">
-                            <p>ID: {entry.id}</p>
-                            <p>Title: {entry.title}</p>
-                            <p>Sync Status: {entry.syncStatus}</p>
-                            <p>Last Modified: {new Date(entry.lastModified).toLocaleString()}</p>
+                          <div key={entry.id} className="p-4 border rounded">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium">{entry.title || 'Untitled'}</p>
+                                <p className="text-sm text-muted-foreground">ID: {entry.id}</p>
+                              </div>
+                              <div className={`px-2 py-1 rounded text-xs ${
+                                entry.syncStatus === 'synced'
+                                  ? 'bg-green-100 text-green-800'
+                                  : entry.syncStatus === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {entry.syncStatus}
+                              </div>
+                            </div>
+                            <div className="mt-2 text-sm text-muted-foreground">
+                              Last Modified: {new Date(entry.lastModified).toLocaleString()}
+                            </div>
+                            {entry.content && (
+                              <div className="mt-2 text-sm text-muted-foreground truncate">
+                                {entry.content}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

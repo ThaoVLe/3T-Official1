@@ -63,6 +63,7 @@ export default function SettingsPage() {
     pendingSyncCount: 0,
     lastModifiedEntry: null
   });
+  const [authError, setAuthError] = React.useState<string | null>(null);
 
   // Listen for auth state changes
   React.useEffect(() => {
@@ -140,6 +141,7 @@ export default function SettingsPage() {
       if (!auth) {
         throw new Error('Firebase not initialized');
       }
+      setAuthError(null);
       await signInWithGoogle();
     } catch (error) {
       console.error('Google Sign-in Error:', error);
@@ -148,10 +150,13 @@ export default function SettingsPage() {
       // Check for unauthorized domain error
       if (error instanceof Error && error.message.includes('not authorized')) {
         errorMessage = error.message;
+        // Add the current domain for easy copying
+        const currentDomain = window.location.hostname;
+        setAuthError(`Please add this domain to Firebase Console:\n${currentDomain}`);
       }
 
       toast({
-        title: "Error",
+        title: "Authentication Error",
         description: errorMessage,
         variant: "destructive"
       });
@@ -306,12 +311,28 @@ export default function SettingsPage() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Google Account</h3>
                   {!user ? (
-                    <Button
-                      className="w-full"
-                      onClick={handleGoogleSignIn}
-                    >
-                      Sign in with Google
-                    </Button>
+                    <>
+                      <Button
+                        className="w-full"
+                        onClick={handleGoogleSignIn}
+                      >
+                        Sign in with Google
+                      </Button>
+                      {authError && (
+                        <div className="mt-4 p-4 border rounded bg-destructive/10 text-destructive">
+                          <p className="font-medium">Domain Not Authorized</p>
+                          <p className="text-sm mt-1">{authError}</p>
+                          <p className="text-sm mt-2">
+                            To fix this:
+                          </p>
+                          <ol className="text-sm list-decimal list-inside mt-1">
+                            <li>Go to Firebase Console</li>
+                            <li>Navigate to Authentication &gt; Settings</li>
+                            <li>Add the domain above to &quot;Authorized domains&quot;</li>
+                          </ol>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <>
                       <div className="flex items-center justify-between">

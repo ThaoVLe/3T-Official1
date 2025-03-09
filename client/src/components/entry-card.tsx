@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Share2, MessageCircle, Play, Lock } from "lucide-react";
+import { FileEdit, Trash2, Share2, MessageCircle, Play, Lock } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -404,7 +404,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
               onClick={() => navigate(`/edit/${entry.id}`)}
               className="h-8 w-8 hover:bg-muted"
             >
-              <Edit2 className="h-4 w-4" />
+              <FileEdit className="h-4 w-4" />
             </Button>
             <Button
               size="icon"

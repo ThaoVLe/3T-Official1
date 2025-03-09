@@ -12,7 +12,7 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X } from "lucide-react";
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
@@ -316,7 +316,7 @@ const EditorContent = () => {
             paddingBottom: 'env(safe-area-inset-bottom)'
           }}
         >
-          <div className="bg-background/80 backdrop-blur-sm border-t border-border p-2">
+          <div className="bg-background/80 backdrop-blur-sm border-t border-t border-border p-2">
             <div className="flex items-center justify-between gap-4">
               <FeelingSelector
                 selectedFeeling={form.getValues("feeling")}

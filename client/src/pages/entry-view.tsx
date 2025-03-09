@@ -25,7 +25,18 @@ export default function EntryView() {
   const { toast } = useToast();
   const settings = useSettings();
 
-  // Check if content should be blurred
+  const { data: entry } = useQuery<DiaryEntry>({
+    queryKey: [`/api/entries/${id}`],
+    enabled: !!id,
+  });
+
+  // Fetch comments
+  const { data: comments = [] } = useQuery({
+    queryKey: [`/api/entries/${id}/comments`],
+    enabled: !!id,
+  });
+
+  // Check if content should be blurred - with null check
   const shouldBlurContent = entry?.sensitive && settings.isPasswordProtectionEnabled && !isUnlocked;
 
   // Check for existing unlock state on mount
@@ -102,17 +113,6 @@ export default function EntryView() {
     },
   });
 
-  const { data: entry } = useQuery<DiaryEntry>({
-    queryKey: [`/api/entries/${id}`],
-    enabled: !!id,
-  });
-
-  // Fetch comments
-  const { data: comments = [] } = useQuery({
-    queryKey: [`/api/entries/${id}/comments`],
-    enabled: !!id,
-  });
-
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
@@ -167,12 +167,24 @@ export default function EntryView() {
     }
   }, [entry?.mediaUrls]);
 
+  // Check URL parameters for showComments
   useEffect(() => {
-    // Check if entry is sensitive and password protection is enabled
-    if (entry?.sensitive && settings.isPasswordProtectionEnabled && !isUnlocked) {
-      setShowPasswordDialog(true);
+    const showCommentsParam = new URLSearchParams(window.location.search).get('showComments');
+    if (showCommentsParam === 'true') {
+      setShowComments(true);
+      setTimeout(() => {
+        const commentsSection = document.getElementById('comments-section');
+        if (commentsSection) {
+          commentsSection.scrollIntoView({ behavior: 'instant', block: 'start' });
+        } else {
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'instant'
+          });
+        }
+      }, 300);
     }
-  }, [entry?.sensitive, settings.isPasswordProtectionEnabled, isUnlocked]);
+  }, []);
 
   if (!entry) return null;
 
@@ -201,7 +213,6 @@ export default function EntryView() {
     }
   };
 
-  // Update the comments button click handler
   const handleCommentsClick = () => {
     setShowComments(!showComments);
     const event = new CustomEvent('toggleComments', { 
@@ -210,7 +221,6 @@ export default function EntryView() {
     window.dispatchEvent(event);
 
     if (!showComments) {
-      // Update URL to reflect comments state without navigation
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('showComments', 'true');
       window.history.pushState({}, '', newUrl.toString());
@@ -222,7 +232,6 @@ export default function EntryView() {
         });
       }, 100);
     } else {
-      // Remove showComments from URL when closing
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('showComments');
       window.history.pushState({}, '', newUrl.toString());
@@ -331,10 +340,10 @@ export default function EntryView() {
                     )}
                     <div
                       className="prose dark:prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ __html: entry.content }}
+                      dangerouslySetInnerHTML={{ __html: entry?.content || '' }}
                     />
 
-                    {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+                    {entry?.mediaUrls && entry.mediaUrls.length > 0 && (
                       <div className="space-y-2 my-4">
                         {entry.mediaUrls.map((url, index) => {
                           const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
@@ -360,7 +369,7 @@ export default function EntryView() {
                                     className="w-full aspect-video object-cover rounded-lg"
                                     onLoadStart={(e) => {
                                       const video = e.target as HTMLVideoElement;
-                                      video.currentTime = 0.5; // Set to 0.5 seconds for thumbnail
+                                      video.currentTime = 0.5;
                                     }}
                                   />
                                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
@@ -403,8 +412,8 @@ export default function EntryView() {
                           onClick={() => {
                             if (navigator.share) {
                               navigator.share({
-                                title: entry.title || "My Diary Entry",
-                                text: `Check out my diary entry: ${entry.title || "Untitled Entry"}`,
+                                title: entry?.title || "My Diary Entry",
+                                text: `Check out my diary entry: ${entry?.title || "Untitled Entry"}`,
                                 url: window.location.href,
                               }).catch(err => console.log('Error sharing:', err));
                             } else {
@@ -427,9 +436,9 @@ export default function EntryView() {
                             size="icon"
                             variant="ghost"
                             onClick={() => toggleSensitiveMutation.mutate()}
-                            className={`h-8 w-8 ${entry.sensitive ? 'text-amber-600 hover:bg-amber-100' : 'hover:bg-muted'}`}
+                            className={`h-8 w-8 ${entry?.sensitive ? 'text-amber-600 hover:bg-amber-100' : 'hover:bg-muted'}`}
                           >
-                            {entry.sensitive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                            {entry?.sensitive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
                           </Button>
                         )}
 
@@ -437,7 +446,7 @@ export default function EntryView() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          onClick={() => navigate(`/edit/${entry.id}`)}
+                          onClick={() => navigate(`/edit/${entry?.id}`)}
                           className="h-8 w-8 hover:bg-muted"
                         >
                           <Edit2 className="h-4 w-4" />
@@ -460,7 +469,7 @@ export default function EntryView() {
                     {showComments && (
                       <div className="mt-4 pb-16" id="comments-section">
                         <Comments 
-                          entryId={entry.id} 
+                          entryId={entry?.id} 
                           onCommentCountChange={(count) => {
                             queryClient.invalidateQueries({ queryKey: [`/api/entries/${id}/comments`] });
                           }}

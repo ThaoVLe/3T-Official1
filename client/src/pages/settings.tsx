@@ -91,28 +91,12 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Layout</h3>
+                  <h3 className="text-lg font-semibold">Text Size</h3>
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Compact View</Label>
+                      <Label>Larger Text</Label>
                       <div className="text-sm text-muted-foreground">
-                        Show more content in less space
-                      </div>
-                    </div>
-                    <Switch 
-                      checked={settings.isCompactMode}
-                      onCheckedChange={settings.setCompactMode}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Font Size</h3>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Large Text</Label>
-                      <div className="text-sm text-muted-foreground">
-                        Increase text size for better readability
+                        Make text larger and easier to read throughout the app
                       </div>
                     </div>
                     <Switch 

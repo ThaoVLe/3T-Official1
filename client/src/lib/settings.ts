@@ -5,7 +5,6 @@ type Theme = 'light' | 'dark' | 'system';
 
 interface Settings {
   theme: Theme;
-  isCompactMode: boolean;
   isLargeText: boolean;
   // Privacy settings
   isPublicSharingEnabled: boolean;
@@ -13,7 +12,6 @@ interface Settings {
   autoLockTimeout: number; // in minutes, 0 means disabled
   // Methods
   setTheme: (theme: Theme) => void;
-  setCompactMode: (isCompact: boolean) => void;
   setLargeText: (isLarge: boolean) => void;
   setPublicSharing: (enabled: boolean) => void;
   setPasswordProtection: (enabled: boolean) => void;
@@ -24,7 +22,6 @@ export const useSettings = create<Settings>()(
   persist(
     (set) => ({
       theme: 'system',
-      isCompactMode: false,
       isLargeText: false,
       // Privacy defaults
       isPublicSharingEnabled: false,
@@ -32,7 +29,6 @@ export const useSettings = create<Settings>()(
       autoLockTimeout: 0,
       // Methods
       setTheme: (theme) => set({ theme }),
-      setCompactMode: (isCompactMode) => set({ isCompactMode }),
       setLargeText: (isLargeText) => set({ isLargeText }),
       setPublicSharing: (isPublicSharingEnabled) => set({ isPublicSharingEnabled }),
       setPasswordProtection: (isPasswordProtectionEnabled) => set({ isPasswordProtectionEnabled }),

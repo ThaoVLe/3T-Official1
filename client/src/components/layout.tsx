@@ -35,9 +35,8 @@ export function Layout({ children }: LayoutProps) {
   const rootClasses = React.useMemo(() => {
     const classes = ['min-h-screen bg-background'];
     if (settings.isLargeText) classes.push('large-text');
-    if (settings.isCompactMode) classes.push('compact-mode');
     return classes.join(' ');
-  }, [settings.isLargeText, settings.isCompactMode]);
+  }, [settings.isLargeText]);
 
   return isMobile ? (
     <div className={rootClasses}>

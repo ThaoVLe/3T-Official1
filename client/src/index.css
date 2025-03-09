@@ -11,13 +11,13 @@
   }
 
   * {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-    -webkit-tap-highlight-color: transparent !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   *::-webkit-scrollbar {
-    display: none !important;
+    display: none;
   }
 
   html, body {
@@ -78,7 +78,7 @@
     transition: transform 0.3s ease-out;
     backdrop-filter: blur(8px);
     pointer-events: auto;
-    touch-action: none !important;
+    touch-action: none;
   }
 
   .keyboard-visible .floating-bar {
@@ -92,10 +92,10 @@
   }
 
   .touch-none {
-    touch-action: none !important;
-    pointer-events: auto !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
+    touch-action: none;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .mobile-vh {
@@ -105,8 +105,8 @@
   }
 
   .diary-content {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
     width: 100%;
@@ -116,10 +116,10 @@
 
   .diary-content::-webkit-scrollbar,
   .diary-content *::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    background: transparent !important;
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
   }
 
   @supports (-webkit-touch-callout: none) {
@@ -130,27 +130,27 @@
 
   .container-page {
     @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior-y: none !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   .mobile-scroll {
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior-y: none !important;
-    touch-action: pan-y pinch-zoom !important;
-    -webkit-tap-highlight-color: transparent !important;
-    -webkit-user-select: none !important;
-    user-select: none !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+    touch-action: pan-y pinch-zoom;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .not-scrollable {
-    position: fixed !important;
-    touch-action: none !important;
-    transform: none !important;
-    transform-style: flat !important;
-    will-change: bottom !important;
+    position: fixed;
+    touch-action: none;
+    transform: none;
+    transform-style: flat;
+    will-change: bottom;
   }
 
   .tiptap-container {
@@ -174,10 +174,10 @@
     pointer-events: none;
   }
 
-  .heading-1 { @apply text-[24px] font-bold tracking-tight text-foreground mb-4; }
-  .heading-2 { @apply text-[18px] font-semibold text-foreground mb-3; }
-  .text-default { @apply text-[11px] text-foreground; }
-  .subtitle { @apply text-[11px] text-muted-foreground mb-6; }
+  .heading-1 { font-size: 24px; font-weight: 700; letter-spacing: -0.025em; color: hsl(var(--foreground)); margin-bottom: 1rem; }
+  .heading-2 { font-size: 18px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 0.75rem; }
+  .text-default { font-size: 11px; color: hsl(var(--foreground)); }
+  .subtitle { font-size: 11px; color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem; }
 
   .form-container { @apply flex flex-col space-y-4 mb-6; }
   .button-primary { @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors; }
@@ -190,33 +190,30 @@
   .full-width { @apply w-full min-w-0; }
 
   .swipe-active {
-    overflow: hidden !important;
+    overflow: hidden;
   }
 
-  /* Add new utility classes for text size and compact mode */
+  /* Add new utility classes for text size */
   .large-text {
-    font-size: 1.125rem !important; /* Slightly larger base font */
+    font-size: 1.125rem; 
+    line-height: 1.6;
+    letter-spacing: 0.01em;
   }
 
-  .large-text .heading-1 { @apply text-[28px] !important; }
-  .large-text .heading-2 { @apply text-[22px] !important; }
-  .large-text .text-default { @apply text-[14px] !important; }
-  .large-text .subtitle { @apply text-[14px] !important; }
+  .large-text .heading-1 { font-size: 28px; }
+  .large-text .heading-2 { font-size: 22px; }
+  .large-text .text-default { font-size: 14px; }
+  .large-text .subtitle { font-size: 14px; }
 
-  /* Compact mode styles */
-  .compact-mode .container-page {
-    @apply py-4 px-3 sm:px-4;
-  }
-
-  .compact-mode .diary-content {
-    @apply space-y-2;
-  }
-
-  .compact-mode .entry-card {
-    @apply py-2 px-3;
-  }
-
-  .compact-mode .floating-bar {
-    @apply py-1 px-2;
-  }
+  /* Enhanced text size adjustments for various UI elements */
+  .large-text .prose { font-size: 1.125rem; }
+  .large-text button { font-size: 1rem; }
+  .large-text input { font-size: 1rem; }
+  .large-text textarea { font-size: 1rem; }
+  .large-text nav { font-size: 1rem; }
+  .large-text [data-sidebar="menu-button"] { font-size: 1rem; }
+  .large-text .card-title { font-size: 1.25rem; }
+  .large-text .card-description { font-size: 1rem; }
+  .large-text dialog { font-size: 1rem; }
+  .large-text .modal-title { font-size: 1.25rem; }
 }

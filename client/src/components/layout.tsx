@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Search, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { BottomNavigation } from "./bottom-navigation";
+import { useSettings } from "@/lib/settings";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +20,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [isMobile, setIsMobile] = React.useState(false);
   const [location] = useLocation();
+  const settings = useSettings();
 
   React.useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -29,8 +31,16 @@ export function Layout({ children }: LayoutProps) {
 
   const showBottomNav = isMobile && location === '/';
 
+  // Create class names based on settings
+  const rootClasses = React.useMemo(() => {
+    const classes = ['min-h-screen bg-background'];
+    if (settings.isLargeText) classes.push('large-text');
+    if (settings.isCompactMode) classes.push('compact-mode');
+    return classes.join(' ');
+  }, [settings.isLargeText, settings.isCompactMode]);
+
   return isMobile ? (
-    <div className="min-h-screen bg-background">
+    <div className={rootClasses}>
       <main className={`flex-1 ${showBottomNav ? 'pb-16' : ''}`}>
         {children}
       </main>
@@ -38,7 +48,7 @@ export function Layout({ children }: LayoutProps) {
     </div>
   ) : (
     <SidebarProvider defaultOpen={true}>
-      <div className="grid lg:grid-cols-[280px_1fr] min-h-screen bg-background">
+      <div className={`grid lg:grid-cols-[280px_1fr] ${rootClasses}`}>
         <Sidebar className="border-r">
           <SidebarHeader className="border-b px-2 py-4">
             <Link href="/">

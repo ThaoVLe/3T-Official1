@@ -192,4 +192,31 @@
   .swipe-active {
     overflow: hidden !important;
   }
+
+  /* Add new utility classes for text size and compact mode */
+  .large-text {
+    font-size: 1.125rem !important; /* Slightly larger base font */
+  }
+
+  .large-text .heading-1 { @apply text-[28px] !important; }
+  .large-text .heading-2 { @apply text-[22px] !important; }
+  .large-text .text-default { @apply text-[14px] !important; }
+  .large-text .subtitle { @apply text-[14px] !important; }
+
+  /* Compact mode styles */
+  .compact-mode .container-page {
+    @apply py-4 px-3 sm:px-4;
+  }
+
+  .compact-mode .diary-content {
+    @apply space-y-2;
+  }
+
+  .compact-mode .entry-card {
+    @apply py-2 px-3;
+  }
+
+  .compact-mode .floating-bar {
+    @apply py-1 px-2;
+  }
 }

@@ -17,29 +17,50 @@ import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
 
-// Added KeyboardAware component
+// KeyboardAware component with enhanced behavior
 const KeyboardAware = ({ children }: { children: React.ReactNode }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
       const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
       const keyboardIsShown = vh < window.innerHeight;
-      setKeyboardHeight(keyboardIsShown ? window.innerHeight - vh : 0);
+      const newKeyboardHeight = keyboardIsShown ? window.innerHeight - vh : 0;
+
+      setKeyboardHeight(newKeyboardHeight);
+      setIsKeyboardVisible(keyboardIsShown);
+
+      // Update CSS variables for smooth transitions
+      document.documentElement.style.setProperty('--keyboard-height', `${newKeyboardHeight}px`);
+      document.documentElement.style.setProperty('--vh', `${vh * 0.01}px`);
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('scroll', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
   }, []);
 
   return (
-    <div ref={ref} style={{ marginBottom: keyboardHeight }} className="relative">
+    <div 
+      ref={ref} 
+      className={`relative transition-[padding] duration-300 ease-out ${isKeyboardVisible ? 'keyboard-visible' : ''}`}
+      style={{ 
+        height: 'calc(var(--vh, 1vh) * 100)',
+        paddingBottom: keyboardHeight 
+      }}
+    >
       {children}
     </div>
   );
 };
-
 
 export default function Editor() {
   const { id } = useParams();
@@ -49,6 +70,7 @@ export default function Editor() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let touchStartX = 0;
@@ -252,9 +274,9 @@ export default function Editor() {
   return (
     <PageTransition direction={1}>
       <KeyboardAware>
-        <div className={`min-h-screen flex flex-col bg-background w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+        <div className={`flex flex-col h-full bg-background ${isExiting ? 'pointer-events-none' : ''}`}>
           {/* Header */}
-          <div className="relative px-4 sm:px-6 py-3 border-b border-border bg-card sticky top-0 z-10 w-full">
+          <div className="relative px-4 sm:px-6 py-3 border-b border-border bg-card sticky top-0 z-10">
             <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -308,7 +330,10 @@ export default function Editor() {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 flex flex-col overflow-auto w-full bg-background">
+          <div 
+            ref={contentRef}
+            className="flex-1 flex flex-col overflow-auto w-full bg-background relative"
+          >
             <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
               <TipTapEditor
                 value={form.watch("content")}
@@ -316,9 +341,9 @@ export default function Editor() {
               />
             </div>
 
-            {/* Media Preview moved here */}
+            {/* Media Preview */}
             {form.watch("mediaUrls")?.length > 0 && (
-              <div className="p-4 pb-[80px]"> {/* Increased padding to 80px */}
+              <div className="p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
                 <MediaPreview
                   urls={form.watch("mediaUrls")}
                   onRemove={onMediaRemove}
@@ -328,29 +353,34 @@ export default function Editor() {
               </div>
             )}
 
-            {/* Media Controls - Now in floating bar */}
+            {/* Floating Controls Bar */}
             <div 
-              className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border p-2 z-50 floating-bar"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
+              className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out"
+              style={{ 
+                transform: `translateY(${isKeyboardVisible ? -keyboardHeight : 0}px)`,
+                paddingBottom: 'env(safe-area-inset-bottom)'
+              }}
             >
-              <div className="flex items-center justify-between gap-4">
-                <FeelingSelector
-                  selectedFeeling={form.getValues("feeling")}
-                  onSelect={async (feeling) => {
-                    await hideKeyboard();
-                    form.setValue("feeling", feeling);
-                  }}
-                />
+              <div className="bg-background/80 backdrop-blur-sm border-t border-border p-2">
+                <div className="flex items-center justify-between gap-4">
+                  <FeelingSelector
+                    selectedFeeling={form.getValues("feeling")}
+                    onSelect={async (feeling) => {
+                      await hideKeyboard();
+                      form.setValue("feeling", feeling);
+                    }}
+                  />
 
-                <MediaRecorder onCapture={onMediaUpload} />
+                  <MediaRecorder onCapture={onMediaUpload} />
 
-                <LocationSelector
-                  selectedLocation={form.getValues("location")}
-                  onSelect={(location) => {
-                    hideKeyboard();
-                    form.setValue("location", location);
-                  }}
-                />
+                  <LocationSelector
+                    selectedLocation={form.getValues("location")}
+                    onSelect={(location) => {
+                      hideKeyboard();
+                      form.setValue("location", location);
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>

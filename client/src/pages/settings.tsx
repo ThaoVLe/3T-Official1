@@ -19,6 +19,50 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export default function SettingsPage() {
   const [, navigate] = useLocation();
   const settings = useSettings();
+  
+  // Touch swipe handling
+  const [touchStartX, setTouchStartX] = React.useState(0);
+  const [touchStartY, setTouchStartY] = React.useState(0);
+  const [touchStartTime, setTouchStartTime] = React.useState(0);
+  
+  React.useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      setTouchStartX(e.touches[0].clientX);
+      setTouchStartY(e.touches[0].clientY);
+      setTouchStartTime(Date.now());
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndTime = Date.now();
+      const swipeDistance = touchEndX - touchStartX;
+      const verticalDistance = Math.abs(touchEndY - touchStartY);
+      const swipeTime = touchEndTime - touchStartTime;
+      
+      // If swiped right far enough and fast enough (not too much vertical movement)
+      if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
+        // Get the last scroll position from session storage
+        const lastScrollPosition = sessionStorage.getItem('homeScrollPosition');
+        
+        // Navigate back to home
+        navigate('/');
+        
+        // After navigation, restore scroll position (needs to be handled in the main page)
+        if (lastScrollPosition) {
+          sessionStorage.setItem('shouldRestoreScroll', 'true');
+        }
+      }
+    };
+    
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
+    
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [navigate]);
 
   const autoLockOptions = [
     { value: "0", label: "Disabled" },

@@ -20,7 +20,7 @@ import { useSettings } from "@/lib/settings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSyncStore } from "@/lib/store";
 import { getAllEntries, getDatabaseStats } from "@/lib/indexedDB";
-import { auth, signInWithGoogle, signOutUser, handleRedirectResult } from "@/lib/firebase";
+import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 export async function handleGoogleSignIn() {
@@ -111,29 +111,6 @@ export default function SettingsPage() {
     }
   }, [showDebug]);
 
-  // Check for redirect result on mount
-  React.useEffect(() => {
-    async function checkRedirectResult() {
-      try {
-        const result = await handleRedirectResult();
-        if (result?.user) {
-          toast({
-            title: "Success",
-            description: "Successfully signed in with Google",
-          });
-        }
-      } catch (error) {
-        console.error('Redirect result error:', error);
-        toast({
-          title: "Error",
-          description: "Failed to complete Google sign-in",
-          variant: "destructive"
-        });
-      }
-    }
-
-    checkRedirectResult();
-  }, [toast]);
 
   // Handle Google Sign In
   const handleGoogleSignIn = async () => {
@@ -143,6 +120,10 @@ export default function SettingsPage() {
       }
       setAuthError(null);
       await signInWithGoogle();
+      toast({
+        title: "Success",
+        description: "Successfully signed in with Google",
+      });
     } catch (error) {
       console.error('Google Sign-in Error:', error);
       let errorMessage = "Failed to sign in with Google";

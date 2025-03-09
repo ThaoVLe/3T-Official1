@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
 // Helper function to format config string to proper JSON
 function formatConfigString(configStr: string): string {
@@ -96,8 +96,12 @@ export async function signInWithGoogle() {
       throw new Error('Firebase authentication is not initialized');
     }
 
-    // Use redirect-based sign-in instead of popup
-    await signInWithRedirect(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    return {
+      user: result.user,
+      accessToken: credential?.accessToken
+    };
   } catch (error) {
     console.error('Google Sign-in Error:', error);
     // Add specific error handling for unauthorized domain
@@ -105,28 +109,6 @@ export async function signInWithGoogle() {
       const currentDomain = window.location.hostname;
       throw new Error(`This domain (${currentDomain}) is not authorized. Please add it to the Firebase Console under Authentication > Settings > Authorized domains.`);
     }
-    throw error;
-  }
-}
-
-// Handle redirect result
-export async function handleRedirectResult() {
-  try {
-    if (!auth) {
-      throw new Error('Firebase authentication is not initialized');
-    }
-
-    const result = await getRedirectResult(auth);
-    if (result) {
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      return {
-        user: result.user,
-        accessToken: credential?.accessToken
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error('Redirect result error:', error);
     throw error;
   }
 }

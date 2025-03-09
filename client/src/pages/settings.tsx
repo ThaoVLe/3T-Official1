@@ -23,29 +23,6 @@ import { getAllEntries, getDatabaseStats } from "@/lib/indexedDB";
 import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
-export async function handleGoogleSignIn() {
-  try {
-    if (!auth) {
-      throw new Error('Firebase not initialized');
-    }
-    await signInWithGoogle();
-  } catch (error) {
-    console.error('Google Sign-in Error:', error);
-    let errorMessage = "Failed to sign in with Google";
-
-    // Check for unauthorized domain error
-    if (error instanceof Error && error.message.includes('not authorized')) {
-      errorMessage = error.message;
-    }
-
-    toast({
-      title: "Error",
-      description: errorMessage,
-      variant: "destructive"
-    });
-  }
-}
-
 export default function SettingsPage() {
   const [, navigate] = useLocation();
   const settings = useSettings();
@@ -111,7 +88,6 @@ export default function SettingsPage() {
     }
   }, [showDebug]);
 
-
   // Handle Google Sign In
   const handleGoogleSignIn = async () => {
     try {
@@ -119,20 +95,23 @@ export default function SettingsPage() {
         throw new Error('Firebase not initialized');
       }
       setAuthError(null);
-      await signInWithGoogle();
-      toast({
-        title: "Success",
-        description: "Successfully signed in with Google",
-      });
+      const result = await signInWithGoogle();
+      if (result?.user) {
+        toast({
+          title: "Success",
+          description: "Successfully signed in with Google",
+        });
+      }
     } catch (error) {
       console.error('Google Sign-in Error:', error);
       let errorMessage = "Failed to sign in with Google";
 
-      // Check for unauthorized domain error
-      if (error instanceof Error && error.message.includes('not authorized')) {
-        errorMessage = error.message;
-        // Add the current domain for easy copying
+      // Check for specific error types
+      if ((error as any).code === 'auth/popup-blocked') {
+        errorMessage = "Pop-up was blocked by your browser. Please allow pop-ups for this site.";
+      } else if ((error as any).code === 'auth/unauthorized-domain') {
         const currentDomain = window.location.hostname;
+        errorMessage = `This domain (${currentDomain}) is not authorized`;
         setAuthError(`Please add this domain to Firebase Console:\n${currentDomain}`);
       }
 

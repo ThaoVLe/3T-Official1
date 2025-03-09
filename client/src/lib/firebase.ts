@@ -108,6 +108,8 @@ export async function signInWithGoogle() {
     if ((error as any).code === 'auth/unauthorized-domain') {
       const currentDomain = window.location.hostname;
       throw new Error(`This domain (${currentDomain}) is not authorized. Please add it to the Firebase Console under Authentication > Settings > Authorized domains.`);
+    } else if ((error as any).code === 'auth/popup-blocked') {
+      throw new Error('Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.');
     }
     throw error;
   }

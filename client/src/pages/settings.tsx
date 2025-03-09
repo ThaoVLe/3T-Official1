@@ -25,11 +25,9 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const [dbStats, setDbStats] = React.useState<{
     entriesCount: number;
-    pendingSyncCount: number;
     lastModifiedEntry: Date | null;
   }>({
     entriesCount: 0,
-    pendingSyncCount: 0,
     lastModifiedEntry: null
   });
 

@@ -14,10 +14,20 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SettingsPage() {
   const [, navigate] = useLocation();
   const settings = useSettings();
+
+  const autoLockOptions = [
+    { value: "0", label: "Disabled" },
+    { value: "1", label: "1 minute" },
+    { value: "5", label: "5 minutes" },
+    { value: "15", label: "15 minutes" },
+    { value: "30", label: "30 minutes" },
+    { value: "60", label: "1 hour" },
+  ];
 
   return (
     <PageTransition direction={1}>
@@ -116,7 +126,63 @@ export default function SettingsPage() {
 
             {/* Privacy Settings */}
             <TabsContent value="privacy">
-              <Card className="p-6">Privacy settings coming soon...</Card>
+              <Card className="p-6 space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Sharing</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Public Sharing</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Allow entries to be shared publicly
+                      </div>
+                    </div>
+                    <Switch
+                      checked={settings.isPublicSharingEnabled}
+                      onCheckedChange={settings.setPublicSharing}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Security</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Password Protection</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Require password for sensitive entries
+                      </div>
+                    </div>
+                    <Switch
+                      checked={settings.isPasswordProtectionEnabled}
+                      onCheckedChange={settings.setPasswordProtection}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Auto-Lock</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Lock app after period of inactivity
+                      </div>
+                    </div>
+                    <Select
+                      value={settings.autoLockTimeout.toString()}
+                      onValueChange={(value) => settings.setAutoLockTimeout(parseInt(value))}
+                    >
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Select time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {autoLockOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </Card>
             </TabsContent>
 
             {/* Notification Settings */}

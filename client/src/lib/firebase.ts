@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, getRedirectResult } from 'firebase/auth';
 
 // Helper function to format config string to proper JSON
 function formatConfigString(configStr: string): string {
@@ -10,34 +10,19 @@ function formatConfigString(configStr: string): string {
     return configStr;
   } catch {
     console.log('Converting JS object notation to JSON...');
-    // Try to convert JS object notation to JSON
-    const formattedStr = configStr
-      .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":') // Ensure property names are quoted
-      .replace(/'/g, '"') // Replace single quotes with double quotes
-      .replace(/\s+/g, '') // Remove whitespace
-      .replace(/,\s*([\]}])/g, '$1'); // Remove trailing commas
+    // Try to manually parse the object structure
+    const config = {
+      apiKey: configStr.match(/apiKey:\s*["']([^"']+)["']/)?.[1],
+      authDomain: configStr.match(/authDomain:\s*["']([^"']+)["']/)?.[1],
+      projectId: configStr.match(/projectId:\s*["']([^"']+)["']/)?.[1],
+      storageBucket: configStr.match(/storageBucket:\s*["']([^"']+)["']/)?.[1],
+      messagingSenderId: configStr.match(/messagingSenderId:\s*["']([^"']+)["']/)?.[1],
+      appId: configStr.match(/appId:\s*["']([^"']+)["']/)?.[1],
+      measurementId: configStr.match(/measurementId:\s*["']([^"']+)["']/)?.[1]
+    };
 
-    console.log('Formatted string:', formattedStr);
-    try {
-      // Verify the formatted string is valid JSON
-      JSON.parse(formattedStr);
-      console.log('Successfully formatted to valid JSON');
-      return formattedStr;
-    } catch (error) {
-      // If that fails, try to manually parse the object structure
-      const config = {
-        apiKey: configStr.match(/apiKey:\s*["']([^"']+)["']/)?.[1],
-        authDomain: configStr.match(/authDomain:\s*["']([^"']+)["']/)?.[1],
-        projectId: configStr.match(/projectId:\s*["']([^"']+)["']/)?.[1],
-        storageBucket: configStr.match(/storageBucket:\s*["']([^"']+)["']/)?.[1],
-        messagingSenderId: configStr.match(/messagingSenderId:\s*["']([^"']+)["']/)?.[1],
-        appId: configStr.match(/appId:\s*["']([^"']+)["']/)?.[1],
-        measurementId: configStr.match(/measurementId:\s*["']([^"']+)["']/)?.[1]
-      };
-
-      // Convert the parsed object to a JSON string
-      return JSON.stringify(config);
-    }
+    // Convert the parsed object to a JSON string
+    return JSON.stringify(config);
   }
 }
 
@@ -111,14 +96,32 @@ export async function signInWithGoogle() {
       throw new Error('Firebase authentication is not initialized');
     }
 
-    const result = await signInWithPopup(auth, googleProvider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    return {
-      user: result.user,
-      accessToken: credential?.accessToken
-    };
+    // Use redirect-based sign-in instead of popup
+    await signInWithRedirect(auth, googleProvider);
   } catch (error) {
     console.error('Google Sign-in Error:', error);
+    throw error;
+  }
+}
+
+// Handle redirect result
+export async function handleRedirectResult() {
+  try {
+    if (!auth) {
+      throw new Error('Firebase authentication is not initialized');
+    }
+
+    const result = await getRedirectResult(auth);
+    if (result) {
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      return {
+        user: result.user,
+        accessToken: credential?.accessToken
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Redirect result error:', error);
     throw error;
   }
 }

@@ -20,7 +20,7 @@ import { useSettings } from "@/lib/settings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSyncStore } from "@/lib/store";
 import { getAllEntries, getDatabaseStats } from "@/lib/indexedDB";
-import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase";
+import { auth, signInWithGoogle, signOutUser, handleRedirectResult } from "@/lib/firebase"; // Added import for handleRedirectResult
 import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
@@ -87,6 +87,30 @@ export default function SettingsPage() {
     }
   }, [showDebug]);
 
+  // Check for redirect result on mount
+  React.useEffect(() => {
+    async function checkRedirectResult() {
+      try {
+        const result = await handleRedirectResult();
+        if (result?.user) {
+          toast({
+            title: "Success",
+            description: "Successfully signed in with Google",
+          });
+        }
+      } catch (error) {
+        console.error('Redirect result error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to complete Google sign-in",
+          variant: "destructive"
+        });
+      }
+    }
+
+    checkRedirectResult();
+  }, [toast]);
+
   // Handle Google Sign In
   const handleGoogleSignIn = async () => {
     try {
@@ -94,10 +118,6 @@ export default function SettingsPage() {
         throw new Error('Firebase not initialized');
       }
       await signInWithGoogle();
-      toast({
-        title: "Success",
-        description: "Successfully signed in with Google",
-      });
     } catch (error) {
       console.error('Google Sign-in Error:', error);
       toast({

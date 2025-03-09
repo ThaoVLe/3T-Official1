@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { X } from "lucide-react";
 import { emotions, activities } from "@/data/feelings";
-import { EmotionsIcon } from "@/components/icons/emotions-icon";
 
 const feelingsData = [
   { emoji: "😊", label: "Happy" },
@@ -195,7 +194,7 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className="h-[30px] w-[30px] p-0 rounded-full flex items-center justify-center"
+          className="h-10 px-3 rounded-full flex items-center"
           aria-label="Select feeling"
           onClick={(e) => {
             e.preventDefault();
@@ -251,9 +250,27 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             }, 50);
           }}
         >
-          <div className="flex items-center justify-center">
-            <EmotionsIcon className="h-[25px] w-[25px]" />
-          </div>
+          {selectedFeeling ? (
+            <div className="flex items-center gap-1.5">
+              {selectedFeeling.emoji.includes(' ') ? (
+                // Combined emotion and activity
+                <>
+                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
+                  <span className="text-xl">{selectedFeeling.emoji}</span>
+                </>
+              ) : (
+                // Just emotion
+                <>
+                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
+                  <span className="text-xl">{selectedFeeling.emoji}</span>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center">
+              <span className="text-xl">❤️</span>
+            </div>
+          )}
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[100dvh] pt-6" onOpenAutoFocus={(e) => {

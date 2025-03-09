@@ -204,7 +204,9 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
                 {entry.title || "Untitled Entry"}
               </CardTitle>
               {entry.sensitive && settings.isPasswordProtectionEnabled && (
-                <Lock className="h-5 w-5 text-amber-600" />
+                <div className="bg-amber-100 p-1 rounded-full ml-1">
+                  <Lock className="h-5 w-5 text-amber-600" />
+                </div>
               )}
             </div>
 

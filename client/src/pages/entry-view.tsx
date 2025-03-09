@@ -2,7 +2,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
-import { ArrowLeft, MessageCircle, Share2, Edit2, Trash2, Play, Lock, Unlock } from "lucide-react";
+import { ArrowLeft, MessageCircle, Share2, FileEdit, Trash2, Play, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -395,7 +395,7 @@ export default function EntryView() {
                       onClick={() => navigate(`/edit/${entry.id}`)}
                       className="h-8 w-8 hover:bg-muted"
                     >
-                      <Edit2 className="h-4 w-4" />
+                      <FileEdit className="h-4 w-4" />
                     </Button>
                     <Button
                       size="icon"

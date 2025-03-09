@@ -12,6 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ArrowLeft, Check, FileEdit, MapPin, X } from "lucide-react"; // Changed import
 
 interface Entry {
   feeling: { emoji: string; label: string } | null;

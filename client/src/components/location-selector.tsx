@@ -390,7 +390,7 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
         className="flex items-center gap-2"
       >
         <MapPin className="h-4 w-4" />
-        {location ? (location.name || location.address || 'Selected location') : 'Select location'}
+        {/* Removed text from location selector button */}
       </Button>
 
       <Dialog open={showMap} onOpenChange={setShowMap}>

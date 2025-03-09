@@ -364,7 +364,7 @@ const EditorContent = () => {
           }}
         >
           <div className="bg-background/80 backdrop-blur-sm border-t border-border p-2">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-evenly gap-4">
               <FeelingSelector
                 selectedFeeling={form.getValues("feeling")}
                 onSelect={async (feeling) => {

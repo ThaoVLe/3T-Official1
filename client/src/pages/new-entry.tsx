@@ -273,7 +273,7 @@ const NewEntry: React.FC = () => {
                 </div>
               )}
 
-              <div className="floating-bar flex items-center justify-between gap-4 p-4"> {/* Simplified floating bar */}
+              <div className="floating-bar flex items-center justify-evenly gap-4 p-2"> {/* Standardized floating bar */}
                 <FeelingSelector
                   selectedFeeling={form.getValues("feeling")}
                   onSelect={(feeling) => {

@@ -113,6 +113,9 @@ export default function SettingsPage() {
         const currentDomain = window.location.hostname;
         errorMessage = `This domain (${currentDomain}) is not authorized`;
         setAuthError(`Please add this domain to Firebase Console:\n${currentDomain}`);
+      } else if ((error as any).code === 'auth/invalid-oauth-provider') {
+        errorMessage = "Google Sign-in is not enabled in Firebase Console.";
+        setAuthError("Please enable Google Sign-in in Firebase Console under Authentication > Sign-in methods");
       }
 
       toast({
@@ -280,15 +283,17 @@ export default function SettingsPage() {
                       </Button>
                       {authError && (
                         <div className="mt-4 p-4 border rounded bg-destructive/10 text-destructive">
-                          <p className="font-medium">Domain Not Authorized</p>
+                          <p className="font-medium">Configuration Required</p>
                           <p className="text-sm mt-1">{authError}</p>
                           <p className="text-sm mt-2">
                             To fix this:
                           </p>
                           <ol className="text-sm list-decimal list-inside mt-1">
                             <li>Go to Firebase Console</li>
-                            <li>Navigate to Authentication &gt; Settings</li>
-                            <li>Add the domain above to &quot;Authorized domains&quot;</li>
+                            <li>Navigate to Authentication</li>
+                            <li>Click on &quot;Sign-in method&quot; tab</li>
+                            <li>Enable &quot;Google&quot; as a sign-in provider</li>
+                            <li>Save the changes</li>
                           </ol>
                         </div>
                       )}
@@ -395,6 +400,13 @@ export default function SettingsPage() {
                           ? new Date(dbStats.lastModifiedEntry).toLocaleString()
                           : 'Never'}
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">Firebase Authentication Status</h4>
+                    <div className="text-sm">
+                      {auth ? 'Initialized' : 'Not Initialized'}
                     </div>
                   </div>
 

@@ -1,31 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
-// Helper function to format config string to proper JSON
-function formatConfigString(configStr: string): string {
-  try {
-    // If it's already valid JSON, return it
-    JSON.parse(configStr);
-    console.log('Config is already valid JSON');
-    return configStr;
-  } catch {
-    console.log('Converting JS object notation to JSON...');
-    // Try to manually parse the object structure
-    const config = {
-      apiKey: configStr.match(/apiKey:\s*["']([^"']+)["']/)?.[1],
-      authDomain: configStr.match(/authDomain:\s*["']([^"']+)["']/)?.[1],
-      projectId: configStr.match(/projectId:\s*["']([^"']+)["']/)?.[1],
-      storageBucket: configStr.match(/storageBucket:\s*["']([^"']+)["']/)?.[1],
-      messagingSenderId: configStr.match(/messagingSenderId:\s*["']([^"']+)["']/)?.[1],
-      appId: configStr.match(/appId:\s*["']([^"']+)["']/)?.[1],
-      measurementId: configStr.match(/measurementId:\s*["']([^"']+)["']/)?.[1]
-    };
-
-    // Convert the parsed object to a JSON string
-    return JSON.stringify(config);
-  }
-}
-
 // Helper function to validate Firebase config
 function validateFirebaseConfig(config: any): boolean {
   const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
@@ -47,26 +22,47 @@ function initializeFirebase() {
       return null;
     }
 
-    console.log('Raw config string:', rawConfigStr); // Debug log
-
-    // Format and clean the config string
-    const formattedConfigStr = formatConfigString(rawConfigStr);
-    console.log('Formatted config string:', formattedConfigStr); // Debug log
-
     let firebaseConfig;
     try {
-      firebaseConfig = JSON.parse(formattedConfigStr);
-      console.log('Parsed config:', firebaseConfig); // Debug log
-    } catch (parseError) {
-      console.error('Failed to parse Firebase config:', parseError);
-      console.error('Attempted to parse:', formattedConfigStr);
-      return null;
+      // Try parsing as JSON first
+      firebaseConfig = JSON.parse(rawConfigStr);
+    } catch {
+      // If not JSON, try to parse the object notation
+      const match = rawConfigStr.match(/({[\s\S]*})/);
+      if (!match) {
+        console.error('Invalid Firebase config format');
+        return null;
+      }
+
+      // Clean up the string and try to parse it
+      const cleanConfig = match[1]
+        .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":')
+        .replace(/'/g, '"')
+        .replace(/,(\s*[}\]])/g, '$1');
+
+      try {
+        firebaseConfig = JSON.parse(cleanConfig);
+      } catch (parseError) {
+        console.error('Failed to parse Firebase config:', parseError);
+        return null;
+      }
     }
 
+    // Ensure required fields are present
     if (!validateFirebaseConfig(firebaseConfig)) {
       console.error('Invalid Firebase config structure:', firebaseConfig);
       return null;
     }
+
+    // Ensure authDomain is properly formatted
+    if (!firebaseConfig.authDomain.includes('firebaseapp.com')) {
+      firebaseConfig.authDomain = `${firebaseConfig.projectId}.firebaseapp.com`;
+    }
+
+    console.log('Initializing Firebase with config:', {
+      ...firebaseConfig,
+      apiKey: '***' // Hide API key in logs
+    });
 
     const app = initializeApp(firebaseConfig);
     console.log('Firebase app initialized successfully');
@@ -87,14 +83,23 @@ if (!auth) {
   console.error('Failed to initialize Firebase auth');
 }
 
+// Configure Google Provider with required scopes
 const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('https://www.googleapis.com/auth/drive.file');
+googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
 
 export async function signInWithGoogle() {
   try {
     if (!auth) {
       throw new Error('Firebase authentication is not initialized');
     }
+
+    // Configure OAuth consent screen settings
+    googleProvider.setCustomParameters({
+      prompt: 'select_account',
+      access_type: 'offline',
+    });
 
     const result = await signInWithPopup(auth, googleProvider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -110,6 +115,12 @@ export async function signInWithGoogle() {
       throw new Error(`This domain (${currentDomain}) is not authorized. Please add it to the Firebase Console under Authentication > Settings > Authorized domains.`);
     } else if ((error as any).code === 'auth/popup-blocked') {
       throw new Error('Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.');
+    } else if ((error as any).code === 'auth/cancelled-popup-request') {
+      throw new Error('Sign-in was cancelled. Please try again.');
+    } else if ((error as any).code === 'auth/invalid-oauth-provider') {
+      throw new Error('Please make sure Google sign-in is enabled in your Firebase Console under Authentication > Sign-in methods.');
+    } else if ((error as any).code === 'auth/operation-not-allowed') {
+      throw new Error('Google authentication is not enabled. Please enable it in your Firebase Console and set up the OAuth consent screen in Google Cloud Console.');
     }
     throw error;
   }

@@ -53,13 +53,11 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
             type="button" 
             variant="ghost" 
             size="icon"
-            className="h-10 w-10" // Increased size
+            className="h-10 w-10" 
             disabled={isUploading}
             asChild
           >
-            <span>
-              <ImageIcon className="h-8 w-8" /> {/* Increased size */}
-            </span>
+            <ImageIcon className="h-8 w-8" /> 
           </Button>
         </label>
       </div>

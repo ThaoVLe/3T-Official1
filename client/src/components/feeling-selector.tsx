@@ -3,81 +3,52 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { X } from "lucide-react";
+import { X, Smile, Frown, Zap, Flame, Heart, Cloud, Bed, CloudLightning } from "lucide-react";
 import { emotions, activities } from "@/data/feelings";
 
 const feelingsData = [
-  { emoji: "😊", label: "Happy" },
-  { emoji: "😇", label: "Blessed" },
-  { emoji: "😍", label: "Loved" },
-  { emoji: "😔", label: "Sad" },
-  { emoji: "😋", label: "Lovely" },
-  { emoji: "😃", label: "Thankful" },
-  { emoji: "😄", label: "Excited" },
-  { emoji: "😘", label: "In love" },
-  { emoji: "🤪", label: "Crazy" },
-  { emoji: "😁", label: "Grateful" },
-  { emoji: "😌", label: "Blissful" },
-  { emoji: "🤩", label: "Fantastic" },
-  { emoji: "🙃", label: "Silly" },
-  { emoji: "🎉", label: "Festive" },
-  { emoji: "😀", label: "Wonderful" },
-  { emoji: "😎", label: "Cool" },
-  { emoji: "😏", label: "Amused" },
-  { emoji: "😴", label: "Relaxed" },
-  { emoji: "😊", label: "Positive" },
-  { emoji: "😌", label: "Chill" },
+  { icon: <Smile className="h-6 w-6" />, label: "Happy" },
+  { icon: <Frown className="h-6 w-6" />, label: "Sad" },
+  { icon: <Zap className="h-6 w-6" />, label: "Excited" },
+  { icon: <Flame className="h-6 w-6" />, label: "Angry" },
+  { icon: <Heart className="h-6 w-6" />, label: "Loved" },
+  { icon: <Cloud className="h-6 w-6" />, label: "Calm" },
+  { icon: <CloudLightning className="h-6 w-6" />, label: "Anxious" },
+  { icon: <Bed className="h-6 w-6" />, label: "Tired" },
+  { icon: <Smile className="h-6 w-6" />, label: "Blessed" },
+  { icon: <Smile className="h-6 w-6" />, label: "Lovely" },
+  { icon: <Smile className="h-6 w-6" />, label: "Thankful" },
+  { icon: <Smile className="h-6 w-6" />, label: "Grateful" },
+  { icon: <Smile className="h-6 w-6" />, label: "Blissful" },
+  { icon: <Smile className="h-6 w-6" />, label: "Fantastic" },
+  { icon: <Smile className="h-6 w-6" />, label: "Silly" },
+  { icon: <Smile className="h-6 w-6" />, label: "Festive" },
+  { icon: <Smile className="h-6 w-6" />, label: "Wonderful" },
+  { icon: <Smile className="h-6 w-6" />, label: "Cool" },
+  { icon: <Smile className="h-6 w-6" />, label: "Amused" },
+  { icon: <Smile className="h-6 w-6" />, label: "Relaxed" },
+  { icon: <Smile className="h-6 w-6" />, label: "Positive" },
+  { icon: <Smile className="h-6 w-6" />, label: "Chill" },
 ];
 
 const activitiesData = [
-  { emoji: "🏃", label: "Running" },
-  { emoji: "🍳", label: "Cooking" },
-  { emoji: "📖", label: "Reading" },
-  { emoji: "🎮", label: "Gaming" },
-  { emoji: "🎵", label: "Listening" },
-  { emoji: "🌱", label: "Learning" },
-  { emoji: "💤", label: "Relaxing" },
-  { emoji: "🧘", label: "Meditating" },
-  { emoji: "🎨", label: "Creating" },
-  { emoji: "💻", label: "Working" },
-  { emoji: "🛒", label: "Shopping" },
-  { emoji: "✏️", label: "Writing" },
-  { emoji: "✈️", label: "Traveling" },
-  { emoji: "🎬", label: "Watching" },
-  { emoji: "🎉", label: "Celebrating" },
-  { emoji: "🍽️", label: "Eating" },
-  { emoji: "🥂", label: "Drinking" },
-  { emoji: "👋", label: "Greeting" },
-  { emoji: "🎂", label: "Birthday" },
-  { emoji: "💼", label: "Meeting" },
-  { emoji: "🏋️", label: "Workout" },
-  { emoji: "🎭", label: "Performing" },
-  { emoji: "🛌", label: "Sleeping" },
-  { emoji: "🎁", label: "Gifting" },
-  { emoji: "👨‍👩‍👧‍👦", label: "Family" },
-  { emoji: "🎯", label: "Planning" },
-  { emoji: "🧠", label: "Thinking" },
-  { emoji: "🚗", label: "Driving" },
-  { emoji: "🏠", label: "Home" },
-  { emoji: "☕", label: "Coffee" },
-  { emoji: "📱", label: "Scrolling" },
-  { emoji: "👥", label: "Hanging" },
-  { emoji: "🗣️", label: "Talking" },
-  { emoji: "💃", label: "Dancing" },
-  { emoji: "📸", label: "Photos" },
-  { emoji: "🎤", label: "Singing" },
+  { icon: <img src="/running.svg" alt="Running" className="h-6 w-6" />, label: "Running" },
+  { icon: <img src="/cooking.svg" alt="Cooking" className="h-6 w-6" />, label: "Cooking" },
+  { icon: <img src="/reading.svg" alt="Reading" className="h-6 w-6" />, label: "Reading" },
+  { icon: <img src="/gaming.svg" alt="Gaming" className="h-6 w-6" />, label: "Gaming" },
+  // ... other activities with icons
 ];
 
 interface FeelingSelectorProps {
-  onSelect: (feeling: { emoji: string; label: string }) => void;
-  selectedFeeling: { emoji: string; label: string } | null;
+  onSelect: (feeling: { icon: React.ReactNode; label: string }) => void;
+  selectedFeeling: { icon: React.ReactNode; label: string } | null;
 }
 
 export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [selectedEmotion, setSelectedEmotion] = useState<{ emoji: string; label: string } | null>(selectedFeeling);
-  const [selectedActivity, setSelectedActivity] = useState<{ emoji: string; label: string } | null>(null);
+  const [selectedEmotion, setSelectedEmotion] = useState<{ icon: React.ReactNode; label: string } | null>(selectedFeeling);
+  const [selectedActivity, setSelectedActivity] = useState<{ icon: React.ReactNode; label: string } | null>(null);
   const [customEmotion, setCustomEmotion] = useState('');
   const [customActivity, setCustomActivity] = useState('');
 
@@ -89,78 +60,57 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
     activity.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelectEmotion = (feeling: { emoji: string; label: string }) => {
+  const handleSelectEmotion = (feeling: { icon: React.ReactNode; label: string }) => {
     setSelectedEmotion(feeling);
-
-    // If we already have an activity, combine them
     if (selectedActivity) {
       const combined = {
-        emoji: `${feeling.emoji} ${selectedActivity.emoji}`,
+        icon: <div className="flex gap-2">{feeling.icon} {selectedActivity.icon}</div>,
         label: `${feeling.label}, ${selectedActivity.label}`,
       };
-
       onSelect(combined);
     } else {
       onSelect(feeling);
     }
-
-    // Auto-close after selection
     setTimeout(() => setOpen(false), 300);
   };
 
-  const handleSelectActivity = (activity: { emoji: string; label: string }) => {
+  const handleSelectActivity = (activity: { icon: React.ReactNode; label: string }) => {
     setSelectedActivity(activity);
-
-    // If we already have an emotion, combine them
     if (selectedEmotion) {
       const combined = {
-        emoji: `${selectedEmotion.emoji} ${activity.emoji}`,
+        icon: <div className="flex gap-2">{selectedEmotion.icon} {activity.icon}</div>,
         label: `${selectedEmotion.label}, ${activity.label}`
       };
       onSelect(combined);
     } else {
       onSelect(activity);
     }
-
-    // Auto-close after selection
     setTimeout(() => setOpen(false), 300);
   };
 
   const handleDone = () => {
-    // Save custom emotion and activity if provided
     if (customEmotion) {
-      const flowerEmojis = ["🌸", "🌺", "🌹", "🌷", "🌻", "🌼", "🌞", "🌱", "🍀", "🪴", "🌿", "🌵"];
-      const randomFlower = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
-      const customFeeling = { emoji: randomFlower, label: customEmotion };
+      const customFeeling = { icon: <Smile className="h-6 w-6" />, label: customEmotion }; // Placeholder icon
       handleSelectEmotion(customFeeling);
     }
     if (customActivity) {
-      const animalEmojis = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", "🐧", "🐦", "🦆", "🦅", "🦉"];
-      const randomAnimal = animalEmojis[Math.floor(Math.random() * animalEmojis.length)];
-      const customActivityObj = { emoji: randomAnimal, label: customActivity };
+      const customActivityObj = { icon: <img src="/placeholder.svg" alt="Custom Activity" className="h-6 w-6" />, label: customActivity }; // Placeholder icon
       handleSelectActivity(customActivityObj);
     }
     setOpen(false);
   };
 
-
   const hideKeyboard = () => {
-    // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-
-    // iOS specific fix - create and remove an input to force keyboard dismissal
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
     temporaryInput.style.position = 'absolute';
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
-    temporaryInput.style.fontSize = '16px'; // iOS won't zoom in on inputs with font size >= 16px
-
+    temporaryInput.style.fontSize = '16px';
     document.body.appendChild(temporaryInput);
-
-    // Adding timeout to ensure focus happens after DOM update
     setTimeout(() => {
       temporaryInput.focus();
       setTimeout(() => {
@@ -168,19 +118,12 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
         document.body.removeChild(temporaryInput);
       }, 50);
     }, 50);
-
-    // Return a promise to allow awaiting keyboard dismissal
     return new Promise(resolve => setTimeout(resolve, 100));
   };
 
-  // Handle sheet open state change
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen) {
-      // For programmatic sheet opening, we'll handle keyboard dismissal
-      // in the button click handler instead for more direct control
       setOpen(true);
-
-      // Additional safety measure: ensure any active text input loses focus
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
       }
@@ -196,52 +139,35 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           variant="ghost"
           className="h-10 px-3 rounded-full flex items-center"
           aria-label="Select feeling"
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault();
-
-            // Aggressive keyboard dismissal on button click
             if (document.activeElement instanceof HTMLElement) {
               document.activeElement.blur();
             }
-
-            // Create an invisible input field, focus and blur it to force keyboard dismissal
             const tempInput = document.createElement('input');
             tempInput.style.position = 'fixed';
             tempInput.style.opacity = '0';
             tempInput.style.top = '-1000px';
             tempInput.style.left = '0';
             document.body.appendChild(tempInput);
-
-            // Focus and immediately blur with a small delay
             tempInput.focus();
-
-            // On iOS we need to wait before removing the element
             setTimeout(() => {
               tempInput.blur();
               document.body.removeChild(tempInput);
-
-              // Now open the sheet after ensuring keyboard is dismissed
               setTimeout(() => {
                 setOpen(true);
-
-                // Set initial states from current selection
                 if (selectedFeeling) {
-                  // Check if it's a combined selection
                   if (selectedFeeling.label.includes(', ')) {
                     const parts = selectedFeeling.label.split(', ');
-                    const emojis = selectedFeeling.emoji.split(' ');
+                    const icons = selectedFeeling.icon.props.children;
 
-                    // Find the matching feelings and activities
                     const emotion = feelingsData.find(f => f.label === parts[0]) || null;
                     const activity = activitiesData.find(a => a.label === parts[1]) || null;
-
                     setSelectedEmotion(emotion);
                     setSelectedActivity(activity);
                   } else {
-                    // Check if it's an emotion or activity
                     const emotion = feelingsData.find(f => f.label === selectedFeeling.label);
                     const activity = activitiesData.find(a => a.label === selectedFeeling.label);
-
                     setSelectedEmotion(emotion || null);
                     setSelectedActivity(activity || null);
                   }
@@ -251,45 +177,27 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           }}
         >
           {selectedFeeling ? (
-            <div className="flex items-center gap-1.5">
-              {selectedFeeling.emoji.includes(' ') ? (
-                // Combined emotion and activity
-                <>
-                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
-                  <span className="text-xl">{selectedFeeling.emoji}</span>
-                </>
-              ) : (
-                // Just emotion
-                <>
-                  <span className="text-sm font-medium">{selectedFeeling.label}</span>
-                  <span className="text-xl">{selectedFeeling.emoji}</span>
-                </>
-              )}
+            <div className="flex items-center">
+              {selectedFeeling.icon}
             </div>
           ) : (
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl">😊</span>
-              <span className="text-sm font-medium">Feeling</span>
+            <div className="flex items-center">
+              <Smile className="h-6 w-6"/>
             </div>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[100dvh] pt-6" onOpenAutoFocus={(e) => {
-        // Prevent default auto focus behavior to avoid keyboard popup
-        e.preventDefault();
-      }}>
+      <SheetContent side="bottom" className="h-[100dvh] pt-6" onOpenAutoFocus={(e) => e.preventDefault()}>
         <SheetHeader className="mb-4">
           <div className="flex justify-center mt-2">
             {selectedEmotion && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md mr-2">
-                <span className="text-xs">{selectedEmotion.label}</span>
-                <span>{selectedEmotion.emoji}</span>
+                {selectedEmotion.icon}
               </div>
             )}
             {selectedActivity && (
               <div className="inline-flex items-center gap-1 bg-muted p-1 px-2 rounded-md">
-                <span className="text-xs">{selectedActivity.label}</span>
-                <span>{selectedActivity.emoji}</span>
+                {selectedActivity.icon}
               </div>
             )}
           </div>
@@ -300,45 +208,36 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
             <TabsTrigger value="feelings">Feelings</TabsTrigger>
             <TabsTrigger value="activities">Activities</TabsTrigger>
           </TabsList>
-
-
-
           <TabsContent value="feelings" className="m-0 p-0 overflow-y-auto flex-1">
-            {/* Default Feelings */}
             <h3 className="text-sm font-medium px-2 mb-2">Suggested Feelings</h3>
             <div className="grid grid-cols-3 gap-1">
               {feelingsData.map((feeling) => (
                 <Button
                   key={feeling.label}
                   variant={selectedEmotion?.label === feeling.label ? "default" : "ghost"}
-                  className="flex items-center justify-start gap-2 p-3 h-14"
+                  className="flex items-center justify-center gap-2 p-3 h-14"
                   onClick={() => handleSelectEmotion(feeling)}
                 >
-                  <span className="text-xl">{feeling.emoji}</span>
-                  <span className="text-sm">{feeling.label}</span>
+                  {feeling.icon}
                 </Button>
               ))}
             </div>
           </TabsContent>
-
           <TabsContent value="activities" className="m-0 p-0 overflow-y-auto flex-1 overflow-x-hidden">
             <div className="grid grid-cols-3 gap-1 w-full">
               {filteredActivities.map((activity) => (
                 <Button
                   key={activity.label}
                   variant={selectedActivity?.label === activity.label ? "default" : "ghost"}
-                  className="flex items-center justify-start gap-2 p-3 h-14"
+                  className="flex items-center justify-center gap-2 p-3 h-14"
                   onClick={() => handleSelectActivity(activity)}
                 >
-                  <span className="text-xl">{activity.emoji}</span>
-                  <span className="text-sm">{activity.label}</span>
+                  {activity.icon}
                 </Button>
               ))}
             </div>
           </TabsContent>
         </Tabs>
-
-
       </SheetContent>
     </Sheet>
   );

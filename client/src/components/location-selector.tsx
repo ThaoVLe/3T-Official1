@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, MapPin, Search } from 'lucide-react';
+import { Loader2, MapPin } from 'lucide-react';
 
 interface Location {
   lat: number;
@@ -387,10 +387,9 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
           setShowMap(true);
           hideKeyboard(); // Hide keyboard when opening the map
         }}
-        className="flex items-center gap-2"
+        className="h-9 w-9 p-1 rounded-full"
       >
         <MapPin className="h-4 w-4" />
-        {location ? (location.name || location.address || 'Selected location') : 'Select location'}
       </Button>
 
       <Dialog open={showMap} onOpenChange={setShowMap}>
@@ -408,7 +407,7 @@ export function LocationSelector({ onLocationSelect, defaultLocation }: Location
               className="flex-1"
             />
             <Button type="button" onClick={handleSearch} variant="secondary">
-              <Search className="h-4 w-4" />
+              {/*Search icon removed as per instructions*/}
             </Button>
           </div>
 

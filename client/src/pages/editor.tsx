@@ -27,20 +27,32 @@ const EditorContent = () => {
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const floatingBarRef = useRef<HTMLDivElement>(null);
+  const editorAreaRef = useRef<HTMLDivElement>(null);
   const { isKeyboardVisible, keyboardHeight } = useKeyboard();
 
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
+    let touchStartElement: HTMLElement | null = null;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
+      touchStartElement = e.target as HTMLElement;
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
+      // Check if touch started in floating bar or outside editor area
+      const isFloatingBarTouch = floatingBarRef.current?.contains(touchStartElement);
+      const isEditorAreaTouch = editorAreaRef.current?.contains(touchStartElement);
+
+      if (isFloatingBarTouch || !isEditorAreaTouch) {
+        return; // Don't trigger swipe if touch started in floating bar or outside editor
+      }
+
       const touchEndX = e.changedTouches[0].clientX;
       const touchEndY = e.changedTouches[0].clientY;
       const touchEndTime = Date.now();
@@ -51,10 +63,6 @@ const EditorContent = () => {
       if (swipeDistance > 50 && swipeTime < 300 && verticalDistance < 30) {
         if (id) {
           sessionStorage.setItem('lastViewedEntryId', id);
-        }
-        const container = document.querySelector('.diary-content');
-        if (container) {
-          sessionStorage.setItem('homeScrollPosition', container.scrollTop.toString());
         }
         setIsExiting(true);
         setTimeout(() => navigate('/'), 100);
@@ -286,7 +294,7 @@ const EditorContent = () => {
 
       {/* Content Area */}
       <div 
-        ref={contentRef}
+        ref={editorAreaRef}
         className="flex-1 flex flex-col overflow-auto w-full bg-background relative"
       >
         <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
@@ -310,6 +318,7 @@ const EditorContent = () => {
 
         {/* Floating Controls Bar */}
         <div 
+          ref={floatingBarRef}
           className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out"
           style={{ 
             transform: `translateY(${isKeyboardVisible ? -keyboardHeight : 0}px)`,

@@ -38,24 +38,20 @@ const EditorContent = () => {
     let touchStartElement: HTMLElement | null = null;
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Check if touch started inside the floating bar or editor area
-      const target = e.target as HTMLElement;
-      const isFloatingBarTouch = floatingBarRef.current?.contains(target);
-      const isEditorAreaTouch = editorAreaRef.current?.contains(target);
-
-      // Only proceed if the touch didn't start in these areas
-      if (isFloatingBarTouch || !isEditorAreaTouch) {
-        return;
-      }
-
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
-      touchStartElement = target;
+      touchStartElement = e.target as HTMLElement;
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!touchStartElement) return;
+      // Check if touch started in floating bar or outside editor area
+      const isFloatingBarTouch = floatingBarRef.current?.contains(touchStartElement);
+      const isEditorAreaTouch = editorAreaRef.current?.contains(touchStartElement);
+
+      if (isFloatingBarTouch || !isEditorAreaTouch) {
+        return; // Don't trigger swipe if touch started in floating bar or outside editor
+      }
 
       const touchEndX = e.changedTouches[0].clientX;
       const touchEndY = e.changedTouches[0].clientY;
@@ -71,8 +67,6 @@ const EditorContent = () => {
         setIsExiting(true);
         setTimeout(() => navigate('/'), 100);
       }
-
-      touchStartElement = null;
     };
 
     document.addEventListener('touchstart', handleTouchStart);
@@ -209,10 +203,13 @@ const EditorContent = () => {
   const hideKeyboard = useCallback(() => {
     if (!isMobile()) return;
 
+    // Force any active element to lose focus
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
+    // More aggressive iOS keyboard dismissal
+    // Create an offscreen input and force it to focus and blur
     const temporaryInput = document.createElement('input');
     temporaryInput.setAttribute('type', 'text');
     temporaryInput.style.position = 'fixed';
@@ -221,10 +218,12 @@ const EditorContent = () => {
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
     temporaryInput.style.width = '100%';
-    temporaryInput.style.fontSize = '16px';
+    temporaryInput.style.fontSize = '16px'; // Prevents iOS zoom
 
+    // Append to body, focus, then blur and remove
     document.body.appendChild(temporaryInput);
 
+    // Force focus then immediately blur
     setTimeout(() => {
       temporaryInput.focus();
       setTimeout(() => {
@@ -233,6 +232,7 @@ const EditorContent = () => {
       }, 50);
     }, 50);
 
+    // Additional fix - add a slight delay before showing sheet
     return new Promise(resolve => setTimeout(resolve, 100));
   }, []);
 
@@ -325,7 +325,7 @@ const EditorContent = () => {
             paddingBottom: 'env(safe-area-inset-bottom)'
           }}
         >
-          <div className="bg-background/80 backdrop-blur-sm border-t border-border p-2">
+          <div className="bg-background/80 backdrop-blur-sm border-t border-t border-border p-2">
             <div className="flex items-center justify-between gap-4">
               <FeelingSelector
                 selectedFeeling={form.getValues("feeling")}

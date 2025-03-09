@@ -251,12 +251,12 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
           }}
         >
           {selectedFeeling ? (
-            <div className="flex items-center gap-1.5">
-              <span className="text-2xl">{selectedFeeling.emoji}</span>
+            <div className="flex items-center gap-1.5 w-full h-full">
+              <span className="text-2xl w-[90%] h-[90%]">{selectedFeeling.emoji}</span>
             </div>
           ) : (
-            <div className="flex items-center justify-center">
-              <span className="text-2xl">❤️</span>
+            <div className="flex items-center justify-center w-full h-full">
+              <span className="text-2xl w-[90%] h-[90%]">❤️</span>
             </div>
           )}
         </Button>

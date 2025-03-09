@@ -56,7 +56,9 @@ export default function MediaRecorder({ onCapture, className }: MediaRecorderPro
             className="h-10 w-10" 
             disabled={isUploading}
           >
-            <ImageIcon className="h-8 w-8" /> {/* Icon size adjusted */}
+            <div className="flex items-center justify-center w-full h-full"> {/* Added div for better centering */}
+              <ImageIcon className="w-[90%] h-[90%]" />
+            </div>
           </Button>
         </label>
       </div>

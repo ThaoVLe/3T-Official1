@@ -17,6 +17,8 @@ import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
 import { KeyboardProvider, useKeyboard } from "@/lib/keyboard-context";
+import {Sun, Moon, Heart, LightningBolt} from 'lucide-react'; // Suggested icons
+
 
 const EditorContent = () => {
   const { id } = useParams();
@@ -369,6 +371,7 @@ const EditorContent = () => {
                   await hideKeyboard();
                   form.setValue("feeling", feeling);
                 }}
+                showText={false} // Added prop to hide text
               />
 
               <MediaRecorder onCapture={onMediaUpload} />
@@ -379,6 +382,7 @@ const EditorContent = () => {
                   hideKeyboard();
                   form.setValue("location", location);
                 }}
+                showText={false} // Added prop to hide text
               />
             </div>
           </div>

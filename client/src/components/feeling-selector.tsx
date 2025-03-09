@@ -267,9 +267,8 @@ export function FeelingSelector({ onSelect, selectedFeeling }: FeelingSelectorPr
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl">😊</span>
-              <span className="text-sm font-medium">Feeling</span>
+            <div className="flex items-center justify-center">
+              <span className="text-xl">❤️</span>
             </div>
           )}
         </Button>

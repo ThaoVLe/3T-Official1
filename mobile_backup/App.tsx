@@ -1,16 +1,19 @@
-import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import type { RootStackParamList } from './src/navigation/types';
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {AuthScreen} from './src/screens/AuthScreen';
+import {HomeScreen} from './src/screens/HomeScreen';
+import {EntryScreen} from './src/screens/EntryScreen';
+import type {RootStackParamList} from './src/navigation/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-export default function App() {
+const App = () => {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <Stack.Navigator
+        <Stack.Navigator 
           initialRouteName="Auth"
           screenOptions={{
             headerStyle: {
@@ -24,12 +27,12 @@ export default function App() {
         >
           <Stack.Screen 
             name="Auth" 
-            component={() => null}
+            component={AuthScreen}
             options={{headerShown: false}}
           />
           <Stack.Screen 
             name="Home" 
-            component={() => null}
+            component={HomeScreen}
             options={{
               title: 'My Journal',
               headerLeft: () => null,
@@ -37,12 +40,13 @@ export default function App() {
           />
           <Stack.Screen 
             name="Entry" 
-            component={() => null}
+            component={EntryScreen}
             options={{title: 'Journal Entry'}}
           />
         </Stack.Navigator>
-        <StatusBar style="auto" />
       </NavigationContainer>
     </SafeAreaProvider>
   );
-}
+};
+
+export default App;

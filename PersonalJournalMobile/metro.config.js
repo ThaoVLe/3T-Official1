@@ -11,7 +11,13 @@ const config = {
   },
   resolver: {
     sourceExts: ['jsx', 'js', 'ts', 'tsx', 'json'],
+    extraNodeModules: {
+      '@shared': '../shared',
+    },
   },
+  watchFolders: [
+    '../shared',
+  ],
 };
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);

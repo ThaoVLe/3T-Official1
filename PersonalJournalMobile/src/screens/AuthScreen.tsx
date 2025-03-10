@@ -9,12 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Auth: undefined;
-  Home: undefined;
-  Entry: {entryId?: string};
-};
+import type {LoginCredentials, SignupCredentials} from '@shared/api/auth';
+import type {RootStackParamList} from '../navigation/types';
 
 type AuthScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Auth'>;

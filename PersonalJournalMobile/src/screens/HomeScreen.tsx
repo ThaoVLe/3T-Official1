@@ -8,15 +8,17 @@ import {
 } from 'react-native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/types';
+import {formatDate} from '@shared/utils/date';
+import type {JournalEntry} from '@shared/types/schema';
 
 type HomeScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
 };
 
 // Temporary mock data until we connect to the backend
-const mockEntries = [
-  {id: '1', title: 'First Entry', date: '2025-03-10'},
-  {id: '2', title: 'Second Entry', date: '2025-03-09'},
+const mockEntries: JournalEntry[] = [
+  {id: '1', title: 'First Entry', content: '', createdAt: '2025-03-10', userId: '1'},
+  {id: '2', title: 'Second Entry', content: '', createdAt: '2025-03-09', userId: '1'},
 ];
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
@@ -24,13 +26,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
     navigation.replace('Auth');
   };
 
-  const renderItem = ({item}: any) => (
+  const renderItem = ({item}: {item: JournalEntry}) => (
     <TouchableOpacity
       style={styles.entryItem}
       onPress={() => navigation.navigate('Entry', {entryId: item.id})}
     >
       <Text style={styles.entryTitle}>{item.title}</Text>
-      <Text style={styles.entryDate}>{item.date}</Text>
+      <Text style={styles.entryDate}>{formatDate(item.createdAt)}</Text>
     </TouchableOpacity>
   );
 

@@ -7,8 +7,12 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import type {RootStackParamList} from '../navigation/types';
 
-export const EntryScreen = ({navigation, route}: any) => {
+type Props = NativeStackScreenProps<RootStackParamList, 'Entry'>;
+
+export const EntryScreen: React.FC<Props> = ({navigation, route}) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 

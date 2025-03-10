@@ -11,6 +11,8 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@expo/cli": "^0.22.18",
+    "@expo/vector-icons": "^14.0.4",
     "@firebase/auth": "^1.9.1",
     "@hookform/resolvers": "^3.9.1",
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -62,6 +64,11 @@
     "drizzle-orm": "^0.39.1",
     "drizzle-zod": "^0.7.0",
     "embla-carousel-react": "^8.5.2",
+    "expo": "~50.0.0",
+    "expo-cli": "^6.3.12",
+    "expo-constants": "~15.4.5",
+    "expo-splash-screen": "^0.26.5",
+    "expo-status-bar": "~1.11.1",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "firebase": "^11.4.0",

@@ -18,28 +18,31 @@ export default function App() {
   const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
-    const checkAuthAndSession = async () => {
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+    // Check auth state and session validity
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      console.log('Auth state changed:', currentUser ? 'User logged in' : 'No user');
 
-        if (user) {
-          // Check if session is expired
-          const expired = await isSessionExpired();
-          setSessionExpired(expired);
-          if (!expired) {
-            setUser(user);
-          }
-        } else {
+      if (currentUser) {
+        // If user exists, check session expiration
+        const expired = await isSessionExpired();
+        console.log('Session expired:', expired);
+
+        if (expired) {
           setUser(null);
+          setSessionExpired(true);
+        } else {
+          setUser(currentUser);
           setSessionExpired(false);
         }
-        setIsLoading(false);
-      });
+      } else {
+        setUser(null);
+        setSessionExpired(false);
+      }
 
-      return unsubscribe;
-    };
+      setIsLoading(false);
+    });
 
-    checkAuthAndSession();
+    return () => unsubscribe();
   }, []);
 
   if (isLoading) {
@@ -60,7 +63,7 @@ export default function App() {
             },
           }}
         >
-          {!user || sessionExpired ? (
+          {!user ? (
             // Auth Stack
             <Stack.Screen 
               name="Auth" 

@@ -1,22 +1,32 @@
-import { initializeApp } from '@firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@firebase/auth';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut
+} from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: `${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: `${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com`,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 // Session constants
 const SESSION_KEY = 'auth_session_timestamp';
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 1 day in milliseconds
-
-// Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
 
 
 // User management functions
@@ -59,7 +69,7 @@ export const isSessionExpired = async () => {
     const timeDifference = currentTime - lastLoginTime;
 
     // Session expires after 24 hours
-    return timeDifference > 86400000;
+    return timeDifference > SESSION_DURATION_MS;
   } catch (error) {
     console.error('Error checking session expiration:', error);
     // Default to expired on error
@@ -79,15 +89,11 @@ export const updateSessionTimestamp = async (): Promise<void> => {
 // Sign in with Google
 export const signInWithGoogle = async () => {
   try {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-
-    // Update session timestamp on successful login
+    const result = await signInWithPopup(auth, googleProvider);
     await updateSessionTimestamp();
-
     return result.user;
   } catch (error) {
-    console.error('Google Sign-In Error:', error);
+    console.error('Error signing in with Google:', error);
     throw error;
   }
 };
@@ -129,10 +135,13 @@ export const signOut = async () => {
   }
 };
 
-// Export Firebase auth instances and methods
 export { 
   auth, 
   signInWithGoogle,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  signOut,
+  getCurrentUser,
+  getUserProfile,
+  isSessionExpired
 };

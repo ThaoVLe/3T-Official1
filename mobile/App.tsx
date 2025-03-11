@@ -9,36 +9,33 @@ import { AuthScreen } from './src/screens/AuthScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { EntryScreen } from './src/screens/EntryScreen';
 import type { RootStackParamList } from './src/navigation/types';
+import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     // Check auth state and session validity
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      console.log('Auth state changed:', currentUser ? 'User logged in' : 'No user');
-
       if (currentUser) {
-        // If user exists, check session expiration
+        // Check if session is expired
         const expired = await isSessionExpired();
-        console.log('Session expired:', expired);
-
         if (expired) {
+          console.log('Session expired, redirecting to auth');
           setUser(null);
-          setSessionExpired(true);
+          // Sign out the user if session expired
+          await auth.signOut();
         } else {
+          console.log('Valid session found');
           setUser(currentUser);
-          setSessionExpired(false);
         }
       } else {
+        console.log('No user found, showing auth screen');
         setUser(null);
-        setSessionExpired(false);
       }
-
       setIsLoading(false);
     });
 
@@ -46,7 +43,11 @@ export default function App() {
   }, []);
 
   if (isLoading) {
-    return null; // Or a loading spinner
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
   }
 
   return (
@@ -64,25 +65,19 @@ export default function App() {
           }}
         >
           {!user ? (
-            // Auth Stack
             <Stack.Screen 
               name="Auth" 
               component={AuthScreen}
-              options={{ 
-                headerShown: false,
-                // Pass sessionExpired to show different message
-                initialParams: { sessionExpired }
-              }}
+              options={{ headerShown: false }}
             />
           ) : (
-            // App Stack
             <>
               <Stack.Screen 
                 name="Home" 
                 component={HomeScreen}
                 options={{
                   title: 'My Journal',
-                  headerLeft: () => null, // Disable back button
+                  headerLeft: () => null,
                 }}
               />
               <Stack.Screen 

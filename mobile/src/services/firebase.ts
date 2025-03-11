@@ -1,5 +1,5 @@
 import { initializeApp } from '@firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from '@firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from '@firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
@@ -22,11 +22,16 @@ const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 export const isSessionExpired = async () => {
   try {
     const timestamp = await AsyncStorage.getItem(SESSION_KEY);
-    if (!timestamp) return true;
+    if (!timestamp) {
+      console.log('No session timestamp found');
+      return true;
+    }
 
     const lastLoginTime = parseInt(timestamp, 10);
     const currentTime = Date.now();
-    return (currentTime - lastLoginTime) > SESSION_DURATION;
+    const isExpired = (currentTime - lastLoginTime) > SESSION_DURATION;
+    console.log('Session expired:', isExpired);
+    return isExpired;
   } catch (error) {
     console.error('Error checking session:', error);
     return true; // Default to expired on error
@@ -37,6 +42,7 @@ export const isSessionExpired = async () => {
 const updateSessionTimestamp = async () => {
   try {
     await AsyncStorage.setItem(SESSION_KEY, Date.now().toString());
+    console.log('Session timestamp updated');
   } catch (error) {
     console.error('Error updating session:', error);
   }
@@ -55,36 +61,12 @@ export const signInWithGoogle = async () => {
   }
 };
 
-//Sign in with email and password
-export const signInWithEmailAndPassword = async (email: string, password: string) => {
-    try {
-        const result = await signInWithEmailAndPassword(auth, email, password);
-        await updateSessionTimestamp();
-        return result.user;
-    } catch (error) {
-        console.error('Email/Password Sign-In Error:', error)
-        throw error;
-    }
-}
-
-//Create user with email and password
-export const createUserWithEmailAndPassword = async (email: string, password: string) => {
-    try {
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        await updateSessionTimestamp();
-        return result.user;
-    } catch (error) {
-        console.error('Email/Password Sign-Up Error:', error)
-        throw error;
-    }
-}
-
-
 // Sign out
 export const signOut = async () => {
   try {
     await auth.signOut();
     await AsyncStorage.removeItem(SESSION_KEY); // Clear session on logout
+    console.log('User signed out and session cleared');
   } catch (error) {
     console.error('Sign Out Error:', error);
     throw error;
@@ -95,24 +77,4 @@ export const getCurrentUser = () => {
   return auth.currentUser;
 };
 
-export const getUserProfile = async (userId: string) => {
-  try {
-    // Add Firestore implementation here when needed
-    // For now, just return user info from auth
-    if (auth.currentUser && auth.currentUser.uid === userId) {
-      return {
-        uid: auth.currentUser.uid,
-        displayName: auth.currentUser.displayName,
-        email: auth.currentUser.email,
-        photoURL: auth.currentUser.photoURL,
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting user profile:', error);
-    throw error;
-  }
-};
-
-
-export {  auth, signInWithGoogle, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, getCurrentUser, getUserProfile, isSessionExpired };
+export {  auth, signInWithGoogle, signOut, getCurrentUser, isSessionExpired };

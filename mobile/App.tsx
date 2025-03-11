@@ -3,46 +3,32 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { auth, isSessionExpired } from './src/services/firebase';
-import { onAuthStateChanged } from '@firebase/auth';
+import { ActivityIndicator, View } from 'react-native';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { EntryScreen } from './src/screens/EntryScreen';
 import type { RootStackParamList } from './src/navigation/types';
-import { ActivityIndicator, View } from 'react-native';
+import { auth } from './src/services/firebase';
+import { onAuthStateChanged } from '@firebase/auth';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    // Check auth state and session validity
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        // Check if session is expired
-        const expired = await isSessionExpired();
-        if (expired) {
-          console.log('Session expired, redirecting to auth');
-          setUser(null);
-          // Sign out the user if session expired
-          await auth.signOut();
-        } else {
-          console.log('Valid session found');
-          setUser(currentUser);
-        }
-      } else {
-        console.log('No user found, showing auth screen');
-        setUser(null);
-      }
-      setIsLoading(false);
-    });
+  // Handle user state changes
+  function onAuthStateChange(user) {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
 
-    return () => unsubscribe();
+  useEffect(() => {
+    const subscriber = onAuthStateChanged(auth, onAuthStateChange);
+    return subscriber; // unsubscribe on unmount
   }, []);
 
-  if (isLoading) {
+  if (initializing) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -54,6 +40,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator
+          initialRouteName="Auth"
           screenOptions={{
             headerStyle: {
               backgroundColor: '#ffffff',

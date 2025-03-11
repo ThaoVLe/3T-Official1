@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { auth } from './src/services/firebase';
+import { auth, isSessionExpired } from './src/services/firebase';
 import { onAuthStateChanged } from '@firebase/auth';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -18,31 +18,28 @@ export default function App() {
   const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
-    // Set up authentication state observer
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+    const checkAuthAndSession = async () => {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        console.log('Auth state changed:', user ? 'User logged in' : 'No user');
 
-      if (user) {
-        // Check if session is expired when user exists
-        const expired = await isSessionExpired();
-        setSessionExpired(expired);
-
-        if (expired) {
-          console.log('Session expired, user needs to login again');
-          // Keep the user data but require re-auth
+        if (user) {
+          // Check if session is expired
+          const expired = await isSessionExpired();
+          setSessionExpired(expired);
+          if (!expired) {
+            setUser(user);
+          }
         } else {
-          console.log('Session is still valid');
+          setUser(null);
+          setSessionExpired(false);
         }
-      } else {
-        setSessionExpired(false);
-      }
+        setIsLoading(false);
+      });
 
-      setUser(user);
-      setIsLoading(false);
-    });
+      return unsubscribe;
+    };
 
-    // Clean up subscription
-    return () => unsubscribe();
+    checkAuthAndSession();
   }, []);
 
   if (isLoading) {
@@ -64,18 +61,18 @@ export default function App() {
           }}
         >
           {!user || sessionExpired ? (
-            // Auth Stack - show when no user OR session expired
+            // Auth Stack
             <Stack.Screen 
               name="Auth" 
               component={AuthScreen}
               options={{ 
                 headerShown: false,
-                // Pass if session expired to display different message
+                // Pass sessionExpired to show different message
                 initialParams: { sessionExpired }
               }}
             />
           ) : (
-            // App Stack - only when user exists AND session is valid
+            // App Stack
             <>
               <Stack.Screen 
                 name="Home" 
@@ -98,26 +95,3 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
-
-const isSessionExpired = async () => {
-    const user = auth.currentUser;
-    if (!user) return true;
-
-    try {
-      // Get last login time
-      const lastLoginTime = user.metadata.lastSignInTime 
-        ? new Date(user.metadata.lastSignInTime).getTime()
-        : 0;
-
-      // Calculate time difference (24 hours = 86400000 ms)
-      const currentTime = new Date().getTime();
-      const timeDifference = currentTime - lastLoginTime;
-
-      // Session expires after 24 hours
-      return timeDifference > 86400000;
-    } catch (error) {
-      console.error('Error checking session expiration:', error);
-      // Default to expired on error
-      return true;
-    }
-  };

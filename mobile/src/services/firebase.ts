@@ -1,99 +1,56 @@
-import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut
-} from 'firebase/auth';
+import { initializeApp } from '@firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from '@firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  authDomain: `${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  storageBucket: `${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com`,
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
 
-// Session constants
+// Session management constants
 const SESSION_KEY = 'auth_session_timestamp';
-const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-
-// User management functions
-export const getCurrentUser = () => {
-  return auth.currentUser;
-};
-
-export const getUserProfile = async (userId: string) => {
-  try {
-    // Add Firestore implementation here when needed
-    // For now, just return user info from auth
-    if (auth.currentUser && auth.currentUser.uid === userId) {
-      return {
-        uid: auth.currentUser.uid,
-        displayName: auth.currentUser.displayName,
-        email: auth.currentUser.email,
-        photoURL: auth.currentUser.photoURL,
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting user profile:', error);
-    throw error;
-  }
-};
-
-// Function to determine if session is expired (24-hour period)
+// Function to check if session is expired
 export const isSessionExpired = async () => {
-  const user = auth.currentUser;
-  if (!user) return true;
-
   try {
-    // Get last login time
-    const lastLoginTime = user.metadata.lastSignInTime 
-      ? new Date(user.metadata.lastSignInTime).getTime()
-      : 0;
+    const timestamp = await AsyncStorage.getItem(SESSION_KEY);
+    if (!timestamp) return true;
 
-    // Calculate time difference (24 hours = 86400000 ms)
-    const currentTime = new Date().getTime();
-    const timeDifference = currentTime - lastLoginTime;
-
-    // Session expires after 24 hours
-    return timeDifference > SESSION_DURATION_MS;
+    const lastLoginTime = parseInt(timestamp, 10);
+    const currentTime = Date.now();
+    return (currentTime - lastLoginTime) > SESSION_DURATION;
   } catch (error) {
-    console.error('Error checking session expiration:', error);
-    // Default to expired on error
-    return true;
+    console.error('Error checking session:', error);
+    return true; // Default to expired on error
   }
 };
 
 // Update session timestamp
-export const updateSessionTimestamp = async (): Promise<void> => {
+const updateSessionTimestamp = async () => {
   try {
     await AsyncStorage.setItem(SESSION_KEY, Date.now().toString());
   } catch (error) {
-    console.error('Failed to update session timestamp:', error);
+    console.error('Error updating session:', error);
   }
 };
 
 // Sign in with Google
 export const signInWithGoogle = async () => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    await updateSessionTimestamp();
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    await updateSessionTimestamp(); // Update session timestamp after successful login
     return result.user;
   } catch (error) {
-    console.error('Error signing in with Google:', error);
+    console.error('Google Sign-In Error:', error);
     throw error;
   }
 };
@@ -127,21 +84,35 @@ export const createUserWithEmailAndPassword = async (email: string, password: st
 export const signOut = async () => {
   try {
     await auth.signOut();
-    // Clear session timestamp on logout
-    await AsyncStorage.removeItem(SESSION_KEY);
+    await AsyncStorage.removeItem(SESSION_KEY); // Clear session on logout
   } catch (error) {
     console.error('Sign Out Error:', error);
     throw error;
   }
 };
 
-export { 
-  auth, 
-  signInWithGoogle,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  getCurrentUser,
-  getUserProfile,
-  isSessionExpired
+export const getCurrentUser = () => {
+  return auth.currentUser;
 };
+
+export const getUserProfile = async (userId: string) => {
+  try {
+    // Add Firestore implementation here when needed
+    // For now, just return user info from auth
+    if (auth.currentUser && auth.currentUser.uid === userId) {
+      return {
+        uid: auth.currentUser.uid,
+        displayName: auth.currentUser.displayName,
+        email: auth.currentUser.email,
+        photoURL: auth.currentUser.photoURL,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    throw error;
+  }
+};
+
+
+export {  auth, signInWithGoogle, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, getCurrentUser, getUserProfile, isSessionExpired };

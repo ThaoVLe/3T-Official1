@@ -21,12 +21,12 @@ export default function App() {
     // Set up authentication state observer
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('Auth state changed:', user ? 'User logged in' : 'No user');
-      
+
       if (user) {
         // Check if session is expired when user exists
         const expired = await isSessionExpired();
         setSessionExpired(expired);
-        
+
         if (expired) {
           console.log('Session expired, user needs to login again');
           // Keep the user data but require re-auth
@@ -36,7 +36,7 @@ export default function App() {
       } else {
         setSessionExpired(false);
       }
-      
+
       setUser(user);
       setIsLoading(false);
     });
@@ -98,3 +98,26 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+const isSessionExpired = async () => {
+    const user = auth.currentUser;
+    if (!user) return true;
+
+    try {
+      // Get last login time
+      const lastLoginTime = user.metadata.lastSignInTime 
+        ? new Date(user.metadata.lastSignInTime).getTime()
+        : 0;
+
+      // Calculate time difference (24 hours = 86400000 ms)
+      const currentTime = new Date().getTime();
+      const timeDifference = currentTime - lastLoginTime;
+
+      // Session expires after 24 hours
+      return timeDifference > 86400000;
+    } catch (error) {
+      console.error('Error checking session expiration:', error);
+      // Default to expired on error
+      return true;
+    }
+  };

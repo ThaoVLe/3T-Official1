@@ -18,22 +18,52 @@ const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 1 day in milliseconds
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Check if session is expired
-export const isSessionExpired = async (): Promise<boolean> => {
+
+// User management functions
+export const getCurrentUser = () => {
+  return auth.currentUser;
+};
+
+export const getUserProfile = async (userId: string) => {
   try {
-    const sessionTimestamp = await AsyncStorage.getItem(SESSION_KEY);
-    
-    // If no timestamp exists, session is expired
-    if (!sessionTimestamp) return true;
-    
-    const lastLoginTime = parseInt(sessionTimestamp, 10);
-    const currentTime = Date.now();
-    
-    // Check if more than 24 hours have passed
-    return (currentTime - lastLoginTime) > SESSION_DURATION_MS;
+    // Add Firestore implementation here when needed
+    // For now, just return user info from auth
+    if (auth.currentUser && auth.currentUser.uid === userId) {
+      return {
+        uid: auth.currentUser.uid,
+        displayName: auth.currentUser.displayName,
+        email: auth.currentUser.email,
+        photoURL: auth.currentUser.photoURL,
+      };
+    }
+    return null;
   } catch (error) {
-    console.error('Session check error:', error);
-    return true; // If there's an error, force login
+    console.error('Error getting user profile:', error);
+    throw error;
+  }
+};
+
+// Function to determine if session is expired (24-hour period)
+export const isSessionExpired = async () => {
+  const user = auth.currentUser;
+  if (!user) return true;
+
+  try {
+    // Get last login time
+    const lastLoginTime = user.metadata.lastSignInTime 
+      ? new Date(user.metadata.lastSignInTime).getTime()
+      : 0;
+
+    // Calculate time difference (24 hours = 86400000 ms)
+    const currentTime = new Date().getTime();
+    const timeDifference = currentTime - lastLoginTime;
+
+    // Session expires after 24 hours
+    return timeDifference > 86400000;
+  } catch (error) {
+    console.error('Error checking session expiration:', error);
+    // Default to expired on error
+    return true;
   }
 };
 
@@ -51,10 +81,10 @@ export const signInWithGoogle = async () => {
   try {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
-    
+
     // Update session timestamp on successful login
     await updateSessionTimestamp();
-    
+
     return result.user;
   } catch (error) {
     console.error('Google Sign-In Error:', error);

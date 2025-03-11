@@ -62,6 +62,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/entries", async (req, res) => {
     try {
+      const userId = req.query.userId as string;
+      
+      // If userId is provided, filter entries by user
+      if (userId) {
+        const userEntries = await storage.getEntriesByUserId(userId);
+        return res.json(userEntries);
+      }
+      
+      // Otherwise return all entries (for admin purposes)
       const entries = await storage.getAllEntries();
       res.json(entries);
     } catch (error) {

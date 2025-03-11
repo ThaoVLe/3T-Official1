@@ -12,6 +12,7 @@ export interface IStorage {
   getComments(entryId: number): Promise<Comment[]>;
   addComment(comment: InsertComment): Promise<Comment>;
   deleteComment(id: number): Promise<boolean>;
+  getEntriesByUserId(userId: string): Promise<DiaryEntry[]>; // Added method
 }
 
 export class DatabaseStorage implements IStorage {
@@ -88,6 +89,26 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return !!deleted;
   }
+
+  // Added method to get entries by userId
+  async getEntriesByUserId(userId: string): Promise<DiaryEntry[]> {
+    return db.select().from(diaryEntries).where(eq(diaryEntries.userId, userId)).orderBy(desc(diaryEntries.createdAt));
+  }
 }
 
 export const storage = new DatabaseStorage();
+
+// Get all entries
+export const getAllEntries = async () => {
+  return db.query.entries.findMany({
+    orderBy: [desc(entries.createdAt)],
+  });
+};
+
+// Get entries by userId
+export const getEntriesByUserId = async (userId: string) => {
+  return db.query.entries.findMany({
+    where: eq(entries.userId, userId),
+    orderBy: [desc(entries.createdAt)],
+  });
+};

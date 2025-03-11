@@ -15,11 +15,28 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     // Set up authentication state observer
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+      
+      if (user) {
+        // Check if session is expired when user exists
+        const expired = await isSessionExpired();
+        setSessionExpired(expired);
+        
+        if (expired) {
+          console.log('Session expired, user needs to login again');
+          // Keep the user data but require re-auth
+        } else {
+          console.log('Session is still valid');
+        }
+      } else {
+        setSessionExpired(false);
+      }
+      
       setUser(user);
       setIsLoading(false);
     });
@@ -46,15 +63,19 @@ export default function App() {
             },
           }}
         >
-          {!user ? (
-            // Auth Stack
+          {!user || sessionExpired ? (
+            // Auth Stack - show when no user OR session expired
             <Stack.Screen 
               name="Auth" 
               component={AuthScreen}
-              options={{ headerShown: false }}
+              options={{ 
+                headerShown: false,
+                // Pass if session expired to display different message
+                initialParams: { sessionExpired }
+              }}
             />
           ) : (
-            // App Stack
+            // App Stack - only when user exists AND session is valid
             <>
               <Stack.Screen 
                 name="Home" 

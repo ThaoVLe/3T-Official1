@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { getAuth, onAuthStateChanged } from '@firebase/auth';
+import { auth } from './src/services/firebase';
+import { onAuthStateChanged } from '@firebase/auth';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { EntryScreen } from './src/screens/EntryScreen';
@@ -12,17 +13,18 @@ import type { RootStackParamList } from './src/navigation/types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const auth = getAuth();
+    // Set up authentication state observer
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log('Auth state changed:', user ? 'User logged in' : 'No user');
-      setIsAuthenticated(!!user);
+      setUser(user);
       setIsLoading(false);
     });
 
+    // Clean up subscription
     return () => unsubscribe();
   }, []);
 
@@ -34,7 +36,6 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Auth"
           screenOptions={{
             headerStyle: {
               backgroundColor: '#ffffff',
@@ -45,20 +46,22 @@ export default function App() {
             },
           }}
         >
-          {!isAuthenticated ? (
+          {!user ? (
+            // Auth Stack
             <Stack.Screen 
               name="Auth" 
               component={AuthScreen}
               options={{ headerShown: false }}
             />
           ) : (
+            // App Stack
             <>
               <Stack.Screen 
                 name="Home" 
                 component={HomeScreen}
                 options={{
                   title: 'My Journal',
-                  headerLeft: () => null,
+                  headerLeft: () => null, // Disable back button
                 }}
               />
               <Stack.Screen 

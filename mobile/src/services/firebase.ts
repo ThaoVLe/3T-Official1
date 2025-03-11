@@ -1,5 +1,5 @@
 import { initializeApp } from '@firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from '@firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
@@ -92,6 +92,31 @@ export const signInWithGoogle = async () => {
   }
 };
 
+//Sign in with email and password
+export const signInWithEmailAndPassword = async (email: string, password: string) => {
+    try {
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        await updateSessionTimestamp();
+        return result.user;
+    } catch (error) {
+        console.error('Email/Password Sign-In Error:', error)
+        throw error;
+    }
+}
+
+//Create user with email and password
+export const createUserWithEmailAndPassword = async (email: string, password: string) => {
+    try {
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        await updateSessionTimestamp();
+        return result.user;
+    } catch (error) {
+        console.error('Email/Password Sign-Up Error:', error)
+        throw error;
+    }
+}
+
+
 // Sign out
 export const signOut = async () => {
   try {
@@ -102,4 +127,12 @@ export const signOut = async () => {
     console.error('Sign Out Error:', error);
     throw error;
   }
+};
+
+// Export Firebase auth instances and methods
+export { 
+  auth, 
+  signInWithGoogle,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
 };

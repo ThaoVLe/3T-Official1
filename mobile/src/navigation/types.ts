@@ -1,7 +1,5 @@
 export type RootStackParamList = {
-  Auth: undefined;
+  Auth: {sessionExpired?: boolean};
   Home: undefined;
-  Entry: {
-    entryId?: string;
-  };
+  Entry: {entryId?: string};
 };

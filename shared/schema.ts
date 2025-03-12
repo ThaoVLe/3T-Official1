@@ -1,22 +1,23 @@
-import { pgTable, text, serial, timestamp, jsonb, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const diaryEntries = pgTable("diary_entries", {
+export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
-  mediaUrls: jsonb("media_urls").$type<string[]>().default([]),
-  feeling: jsonb("feeling").$type<{ emoji: string; label: string } | null>().default(null),
-  location: text("location"),
+  email: text("email").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const comments = pgTable("comments", {
+export const diaryEntries = pgTable("diary_entries", {
   id: serial("id").primaryKey(),
-  entryId: integer("entry_id").references(() => diaryEntries.id).notNull(),
+  userEmail: text("user_email").references(() => users.email).notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertEntrySchema = createInsertSchema(diaryEntries).omit({
@@ -24,12 +25,7 @@ export const insertEntrySchema = createInsertSchema(diaryEntries).omit({
   createdAt: true,
 });
 
-export const insertCommentSchema = createInsertSchema(comments).omit({
-  id: true,
-  createdAt: true,
-});
-
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
 export type InsertEntry = z.infer<typeof insertEntrySchema>;
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
-export type InsertComment = z.infer<typeof insertCommentSchema>;
-export type Comment = typeof comments.$inferSelect;

@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from "wouter";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { getEntry, updateEntry } from '../shared/api/entries';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { toast } from '../components/ui/use-toast';
-import { PageTransition } from '../components/page-transition';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { PageTransition } from '@/components/animations';
 import { MapPin } from 'lucide-react';
 
 const formSchema = z.object({
@@ -140,8 +140,8 @@ export default function EditEntry() {
               </Button>
 
               {/* Location button would go here */}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="gap-2"
                 disabled={form.formState.isSubmitting}
               >

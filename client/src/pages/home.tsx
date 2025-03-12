@@ -47,105 +47,70 @@ export default function Home() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 bg-card border-b">
-          <div className="flex justify-between items-center px-4 py-3">
-            <Skeleton className="h-10 w-48" />
-            <div className="flex gap-2">
-              <Skeleton className="h-10 w-24" />
-              <Skeleton className="h-10 w-24" />
-            </div>
-          </div>
-        </div>
-        <div className="p-4 space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-40 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 bg-card border-b">
-          <div className="flex justify-between items-center px-4 py-3">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              My Journal
-            </h1>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
-              <Button onClick={() => navigate("/new")} className="flex gap-2">
-                <FileEdit className="w-4 h-4" />
-                New Entry
-              </Button>
-            </div>
+      <div className="container mx-auto p-4 sm:p-6 max-w-5xl">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">My Journal</h1>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/new")} className="gap-2">
+              <PlusCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">New Entry</span>
+            </Button>
+            <Button variant="ghost" onClick={handleSignOut} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </Button>
           </div>
         </div>
 
-        <div className="p-4">
-          {error ? (
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold text-destructive">Error loading entries</h2>
-              <p className="text-muted-foreground mt-2">Please try refreshing the page</p>
-              <Button 
-                onClick={() => window.location.reload()} 
-                className="mt-4"
-                variant="outline"
-              >
-                Refresh Page
-              </Button>
-            </div>
-          ) : !entries?.length ? (
-            <motion.div
-              className="text-center py-12"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <h2 className="text-2xl font-bold mb-4">No entries yet</h2>
-              <p className="text-muted-foreground mb-8">
-                Start capturing your memories with text, photos, and more.
-              </p>
-              <Button 
-                size="lg" 
-                className="flex gap-2"
-                onClick={() => navigate("/new")}
-              >
-                <PlusCircle className="w-5 h-5" />
-                Create Your First Entry
-              </Button>
-            </motion.div>
-          ) : (
-            <AnimatePresence>
-              <div className="space-y-4 max-w-4xl mx-auto">
-                {entries.map((entry, index) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <EntryCard 
-                      entry={entry} 
-                      setSelectedEntryId={setSelectedEntryId}
-                    />
-                  </motion.div>
-                ))}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="border rounded-lg p-4">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2 mb-2" />
+                <Skeleton className="h-24 w-full mb-2" />
               </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong className="font-bold">Error!</strong>
+            <span className="block sm:inline"> Failed to load journal entries. Please try again later.</span>
+          </div>
+        ) : entries && entries.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <AnimatePresence>
+              {entries.map((entry) => (
+                <motion.div
+                  key={entry.id}
+                  layoutId={entry.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => setSelectedEntryId(entry.id)}
+                >
+                  <EntryCard 
+                    entry={entry} 
+                    onClick={() => navigate(`/view/${entry.id}`)} 
+                    onEdit={() => navigate(`/edit/${entry.id}`)}
+                  />
+                </motion.div>
+              ))}
             </AnimatePresence>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="text-center py-16 border-2 border-dashed rounded-lg">
+            <h2 className="text-xl font-medium mb-2">No journal entries yet</h2>
+            <p className="text-gray-500 mb-6">Start writing your first journal entry</p>
+            <Button onClick={() => navigate("/new")} className="gap-2">
+              <PlusCircle className="h-5 w-5" />
+              Create your first entry
+            </Button>
+          </div>
+        )}
       </div>
     </PageTransition>
   );

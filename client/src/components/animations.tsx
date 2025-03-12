@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import React from "react";
 
 // Shared page transition variants
 export const pageTransitionVariants = {
@@ -23,40 +24,22 @@ export const pageTransition = {
   ease: "easeInOut"
 };
 
-// Shared container for page transitions
-export const PageTransition = ({ 
-  children, 
-  direction = 1 // 1 for forward, -1 for backward
-}: { 
+interface PageTransitionProps {
   children: React.ReactNode;
-  direction?: number;
-}) => {
+}
+
+export function PageTransition({ children }: PageTransitionProps) {
   return (
     <motion.div
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      variants={pageTransitionVariants}
-      transition={pageTransition}
-      custom={direction}
-      style={{
-        position: 'fixed',
-        width: '100%',
-        height: '100%',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'white',
-        zIndex: 10,
-        overflowY: 'auto',
-        WebkitOverflowScrolling: 'touch'
-      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
     >
       {children}
     </motion.div>
   );
-};
+}
 
 // Card animation variants
 export const cardVariants = {

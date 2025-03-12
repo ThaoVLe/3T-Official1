@@ -61,7 +61,7 @@ const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunct
     await setupVite(app, server);
     log('Vite middleware setup complete');
 
-    const port = 5000;
+    const port = 5001;
     log(`Attempting to bind to port ${port}...`);
 
     // Add timeout to prevent hanging

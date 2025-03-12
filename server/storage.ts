@@ -1,6 +1,6 @@
 import { diaryEntries, users, type DiaryEntry, type InsertEntry, type User, type InsertUser } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, like, gte, lt } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -8,7 +8,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
 
   // Diary entry methods
-  getAllEntriesByEmail(email: string): Promise<DiaryEntry[]>;
+  getAllEntriesByEmail(email: string, filters: any): Promise<DiaryEntry[]>;
   getEntry(id: number): Promise<DiaryEntry | undefined>;
   createEntry(entry: InsertEntry): Promise<DiaryEntry>;
   updateEntry(id: number, entry: Partial<InsertEntry>): Promise<DiaryEntry | undefined>;
@@ -35,12 +35,44 @@ export class DatabaseStorage implements IStorage {
     return newUser;
   }
 
-  async getAllEntriesByEmail(email: string): Promise<DiaryEntry[]> {
-    return await db
-      .select()
-      .from(diaryEntries)
-      .where(eq(diaryEntries.userEmail, email.toLowerCase()))
-      .orderBy(desc(diaryEntries.createdAt));
+  async getAllEntriesByEmail(email: string, filters: any = {}): Promise<DiaryEntry[]> {
+    try {
+      let query = and(eq(diaryEntries.userEmail, email.toLowerCase()));
+
+      // Add filters if they exist
+      if (filters.feeling) {
+        query = and(query, like(diaryEntries.feeling, `%${filters.feeling}%`));
+      }
+
+      if (filters.location) {
+        query = and(query, like(diaryEntries.location, `%${filters.location}%`));
+      }
+
+      if (filters.tags) {
+        query = and(query, like(diaryEntries.tags, `%${filters.tags}%`));
+      }
+
+      if (filters.startDate) {
+        query = and(query, gte(diaryEntries.createdAt, new Date(filters.startDate)));
+      }
+
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate);
+        endDate.setDate(endDate.getDate() + 1); // Include the end date fully
+        query = and(query, lt(diaryEntries.createdAt, endDate));
+      }
+
+      const entries = await db
+        .select()
+        .from(diaryEntries)
+        .where(query)
+        .orderBy(desc(diaryEntries.createdAt));
+
+      return entries;
+    } catch (error) {
+      console.error('Error getting entries by email:', error);
+      throw error;
+    }
   }
 
   async getEntry(id: number): Promise<DiaryEntry | undefined> {

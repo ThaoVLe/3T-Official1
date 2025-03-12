@@ -65,7 +65,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email is required" });
       }
 
-      const entries = await storage.getAllEntriesByEmail(email);
+      // Extract filter parameters
+      const feeling = req.query.feeling as string;
+      const location = req.query.location as string;
+      const tag = req.query.tag as string;
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+
+      // Build filter object
+      const filters: any = {};
+      if (feeling) filters.feeling = feeling;
+      if (location) filters.location = location;
+      if (tag) filters.tags = tag;
+      if (startDate) filters.startDate = startDate;
+      if (endDate) filters.endDate = endDate;
+
+      // Get entries with optional filters
+      const entries = await storage.getAllEntriesByEmail(email, filters);
       res.json(entries);
     } catch (error) {
       console.error("Error fetching entries:", error);

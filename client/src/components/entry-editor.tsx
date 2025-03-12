@@ -7,7 +7,36 @@ interface Entry {
   content: string;
   feeling: { emoji: string; label: string } | null;
   location: string | null;
+  tags?: string[];
 }
+
+// Make sure the form submission includes all fields
+const submitEntry = async (entry: Entry) => {
+  // Include all metadata in the request
+  try {
+    const response = await fetch('/api/entries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...entry,
+        userEmail: currentUser.email,
+        // Convert feeling object to string format for storage
+        feeling: entry.feeling ? JSON.stringify(entry.feeling) : null,
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to create entry');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating entry:', error);
+    throw error;
+  }
+};
 
 interface EntryEditorProps {
   entry?: Entry;

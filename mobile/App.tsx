@@ -29,6 +29,11 @@ function App(): JSX.Element {
     }, 1000);
   }, []);
 
+  // This function allows the AuthScreen to update the login state
+  const login = () => {
+    setIsLoggedIn(true);
+  };
+
   if (isLoading) {
     return null; // Or a loading screen
   }
@@ -55,6 +60,7 @@ function App(): JSX.Element {
               name="Auth" 
               component={AuthScreen}
               options={{ headerShown: false }}
+              initialParams={{ login }}
             />
           )}
         </Stack.Navigator>

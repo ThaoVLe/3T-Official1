@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  FlatList,
   StyleSheet,
-  ActivityIndicator
+  FlatList,
+  ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
@@ -14,134 +15,98 @@ type HomeScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
 };
 
-// Temporary mock data until we connect to the backend
-const mockEntries = [
-  {id: '1', title: 'First Entry', date: '2025-03-10'},
-  {id: '2', title: 'Second Entry', date: '2025-03-09'},
+// Sample data for entries
+const sampleEntries = [
+  { id: '1', title: 'My first journal entry', date: '2023-11-15' },
+  { id: '2', title: 'Today was a good day', date: '2023-11-16' },
+  { id: '3', title: 'Reflections on the week', date: '2023-11-18' },
 ];
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
-  const [entries, setEntries] = useState(mockEntries);
-  const [loading, setLoading] = useState(false);
+export function HomeScreen({ navigation }: HomeScreenProps) {
+  const [entries, setEntries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // For debugging
-    console.log("HomeScreen rendered with entries:", entries);
+    // Simulate API call to fetch entries
+    setTimeout(() => {
+      setEntries(sampleEntries);
+      setLoading(false);
+    }, 1000);
   }, []);
 
-  const handleLogout = () => {
-    navigation.replace('Auth');
-  };
-
-  const renderItem = ({item}: any) => (
-    <TouchableOpacity
+  const renderItem = ({ item }: { item: any }) => (
+    <TouchableOpacity 
       style={styles.entryItem}
-      onPress={() => navigation.navigate('Entry', {entryId: item.id})}
+      onPress={() => navigation.navigate('Entry', { entryId: item.id })}
     >
       <Text style={styles.entryTitle}>{item.title}</Text>
       <Text style={styles.entryDate}>{item.date}</Text>
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Your Journal</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={styles.newButton}
-            onPress={() => navigation.navigate('Entry')}
-          >
-            <Text style={styles.newButtonText}>New Entry</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-          >
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.headerTitle}>My Journal</Text>
+        <TouchableOpacity 
+          style={styles.newButton}
+          onPress={() => navigation.navigate('Entry')}
+        >
+          <Text style={styles.newButtonText}>+ New Entry</Text>
+        </TouchableOpacity>
       </View>
 
-      {entries.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No entries yet. Create your first one!</Text>
-          <TouchableOpacity
-            style={styles.createFirstButton}
-            onPress={() => navigation.navigate('Entry')}
-          >
-            <Text style={styles.createFirstButtonText}>Create First Entry</Text>
-          </TouchableOpacity>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
         </View>
-      ) : (
+      ) : entries.length > 0 ? (
         <FlatList
           data={entries}
           renderItem={renderItem}
           keyExtractor={item => item.id}
-          style={styles.list}
+          contentContainerStyle={styles.list}
         />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No journal entries yet</Text>
+          <TouchableOpacity 
+            style={styles.createFirstButton}
+            onPress={() => navigation.navigate('Entry')}
+          >
+            <Text style={styles.createFirstButtonText}>Create Your First Entry</Text>
+          </TouchableOpacity>
+        </View>
       )}
-    </View>
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#F9F9F9',
   },
   header: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#EEEEEE',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
   },
   newButton: {
     backgroundColor: '#007AFF',
-    padding: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 8,
-    flex: 1,
-    marginRight: 8,
-    alignItems: 'center',
   },
   newButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  logoutButton: {
-    backgroundColor: '#FF3B30',
-    padding: 10,
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 8,
-    alignItems: 'center',
-  },
-  logoutButtonText: {
     color: 'white',
     fontWeight: 'bold',
   },
@@ -149,18 +114,29 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   entryItem: {
+    backgroundColor: 'white',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderRadius: 8,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 2,
   },
   entryTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginBottom: 4,
   },
   entryDate: {
     fontSize: 14,
     color: '#666',
-    marginTop: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyContainer: {
     flex: 1,
@@ -169,10 +145,10 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#666',
+    marginBottom: 16,
     textAlign: 'center',
-    marginBottom: 20,
   },
   createFirstButton: {
     backgroundColor: '#007AFF',

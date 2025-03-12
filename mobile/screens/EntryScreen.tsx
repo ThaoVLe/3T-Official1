@@ -9,7 +9,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert
+  Alert,
+  SafeAreaView,
+  ActivityIndicator
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
@@ -20,139 +22,184 @@ type EntryScreenProps = {
   route: RouteProp<RootStackParamList, 'Entry'>;
 };
 
-export const EntryScreen: React.FC<EntryScreenProps> = ({ navigation, route }) => {
-  const entryId = route.params?.entryId;
+export function EntryScreen({ navigation, route }: EntryScreenProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const entryId = route.params?.entryId;
+  const isEditing = !!entryId;
+
   useEffect(() => {
-    // For debugging
-    console.log("EntryScreen rendered with entryId:", entryId);
-    
-    // If we have an entryId, this is an edit, so we should load the entry
-    if (entryId) {
-      // For now we'll use mock data
-      const mockEntry = { 
-        id: entryId, 
-        title: 'Sample Entry', 
-        content: 'This is the content of the entry', 
-        date: '2025-03-10' 
-      };
-      
-      setTitle(mockEntry.title);
-      setContent(mockEntry.content);
+    if (isEditing) {
+      // Simulate fetching entry data
+      setTimeout(() => {
+        setTitle('Sample Entry Title');
+        setContent('This is a sample journal entry content. You can edit this text.');
+        setInitialLoading(false);
+      }, 1000);
+    } else {
+      setInitialLoading(false);
     }
-  }, [entryId]);
+  }, [isEditing]);
 
   const handleSave = () => {
-    if (!title.trim() && !content.trim()) {
-      Alert.alert('Error', 'Please enter a title or content for your entry');
+    if (!title.trim()) {
+      Alert.alert('Error', 'Please enter a title for your entry');
       return;
     }
+
+    setLoading(true);
     
-    setIsSaving(true);
-    
-    // Simulate API call
+    // Simulate saving
     setTimeout(() => {
-      setIsSaving(false);
-      navigation.goBack();
+      setLoading(false);
+      Alert.alert(
+        'Success', 
+        isEditing ? 'Entry updated successfully' : 'Entry created successfully',
+        [{ text: 'OK', onPress: () => navigation.navigate('Home') }]
+      );
     }, 1000);
   };
 
+  const handleCancel = () => {
+    navigation.goBack();
+  };
+
+  if (initialLoading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {entryId ? 'Edit Entry' : 'New Entry'}
-        </Text>
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          disabled={isSaving}
-        >
-          <Text style={styles.saveButtonText}>
-            {isSaving ? 'Saving...' : 'Save'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-      
-      <ScrollView style={styles.content}>
-        <TextInput
-          style={styles.titleInput}
-          placeholder="Title (optional)"
-          value={title}
-          onChangeText={setTitle}
-        />
-        <TextInput
-          style={styles.contentInput}
-          placeholder="Write your thoughts..."
-          value={content}
-          onChangeText={setContent}
-          multiline={true}
-          textAlignVertical="top"
-        />
-      </ScrollView>
-    </KeyboardAvoidingView>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>{isEditing ? 'Edit Entry' : 'New Entry'}</Text>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.titleInput}
+              placeholder="Title"
+              value={title}
+              onChangeText={setTitle}
+              placeholderTextColor="#999"
+            />
+            
+            <TextInput
+              style={styles.contentInput}
+              placeholder="Write your journal entry here..."
+              value={content}
+              onChangeText={setContent}
+              multiline={true}
+              placeholderTextColor="#999"
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F9F9F9',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#EEEEEE',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
   },
+  headerButtons: {
+    flexDirection: 'row',
+  },
   cancelButton: {
+    marginRight: 12,
     padding: 8,
   },
   cancelButtonText: {
-    color: '#007AFF',
+    color: '#666',
     fontSize: 16,
   },
   saveButton: {
-    padding: 8,
+    backgroundColor: '#007AFF',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 70,
   },
   saveButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
+    color: 'white',
     fontWeight: 'bold',
+    fontSize: 16,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  inputContainer: {
     padding: 16,
   },
   titleInput: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
+    padding: 12,
+    backgroundColor: 'white',
+    borderRadius: 8,
     marginBottom: 16,
-    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 2,
   },
   contentInput: {
-    flex: 1,
     fontSize: 16,
-    minHeight: 200,
-    padding: 8,
+    padding: 12,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    height: 300,
+    textAlignVertical: 'top',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 2,
   },
 });

@@ -21,7 +21,8 @@ function AppRoutes() {
         <AuthRequired>
           <Layout>
             <Switch>
-              <Route path={["/", "/home"]} component={Home} />
+              <Route path="/" component={Home} />
+              <Route path="/home" component={Home} />
               <Route path="/new" component={Editor} />
               <Route path="/edit/:id" component={Editor} />
               <Route path="/entry/:id" component={EntryView} />

@@ -23,11 +23,11 @@ export default function Home() {
   }, [navigate]);
 
   // Fetch entries for the current user
-  const { data: entries = [], isLoading, error } = useQuery<DiaryEntry[]>({
-    queryKey: ["/api/entries", { userEmail }],
+  const { data: allEntries = [], isLoading, error } = useQuery<DiaryEntry[]>({
+    queryKey: ["/api/entries"],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/entries?userEmail=${encodeURIComponent(userEmail || '')}`);
+        const response = await fetch('/api/entries');
         if (!response.ok) throw new Error('Failed to fetch entries');
         return response.json();
       } catch (err) {
@@ -36,9 +36,20 @@ export default function Home() {
       }
     },
     enabled: !!userEmail,
+    refetchInterval: 2000, // Refetch every 2 seconds
+    refetchOnWindowFocus: true,
+    staleTime: 0
   });
 
-  console.log("Home page render:", { userEmail, entriesCount: entries?.length });
+  console.log("All entries from API:", allEntries);
+  
+  // Filter entries by userId client-side
+  const entries = allEntries.filter(entry => 
+    entry.userId && userEmail && 
+    entry.userId.toLowerCase() === userEmail.toLowerCase()
+  );
+
+  console.log("Home page render:", { userEmail, entriesCount: entries?.length, filteredEntries: entries });
 
   const handleSignOut = () => {
     localStorage.removeItem('userEmail');

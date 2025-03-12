@@ -1,67 +1,31 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileEdit, LogOut } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/animations";
-import { auth } from "@/lib/firebase";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [, navigate] = useLocation();
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  console.log("Home page rendering");
-
-  useEffect(() => {
-    // Check auth state
-    console.log("Checking auth state");
-    if (!auth.currentUser) {
-      console.log("No authenticated user, redirecting to auth");
-      navigate("/auth");
-      return;
-    }
-  }, [navigate]);
 
   const { data: entries, isLoading, error } = useQuery<DiaryEntry[]>({
     queryKey: ["/api/entries"],
-    enabled: !!auth.currentUser,
   });
-
-  const handleSignOut = async () => {
-    try {
-      await auth.signOut();
-      navigate("/auth");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <PageTransition>
-      <div className="container mx-auto p-4 sm:p-6 max-w-5xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold">My Journal</h1>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/new")} className="gap-2">
-              <PlusCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">New Entry</span>
-            </Button>
-            <Button variant="ghost" onClick={handleSignOut} className="gap-2">
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </Button>
-          </div>
+      <div className="container mx-auto py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Your Journal</h1>
+          <Button onClick={() => navigate("/new")} className="gap-2">
+            <PlusCircle className="h-5 w-5" />
+            New Entry
+          </Button>
         </div>
 
         {isLoading ? (
@@ -85,12 +49,12 @@ export default function Home() {
               {entries.map((entry) => (
                 <motion.div
                   key={entry.id}
-                  layoutId={entry.id}
+                  layoutId={entry.id.toString()}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.2 }}
-                  onClick={() => setSelectedEntryId(entry.id)}
+                  onClick={() => setSelectedEntryId(entry.id.toString())}
                 >
                   <EntryCard 
                     entry={entry} 

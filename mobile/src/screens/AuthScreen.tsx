@@ -1,249 +1,166 @@
-
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity,
-  ActivityIndicator,
+import {
+  View,
+  Text,
   TextInput,
-  Alert,
-  KeyboardAvoidingView,
+  TouchableOpacity,
+  StyleSheet,
   Platform,
-  ScrollView,
-  Image
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import type { NavigationProp, AuthScreenRouteProp } from '../navigation/types';
-import { 
-  signInWithGoogle, 
-  auth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword 
-} from '../services/firebase';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList, AuthScreenRouteProp } from '../navigation/types';
+import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '../services/firebase';
 
-export function AuthScreen() {
-  const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<AuthScreenRouteProp>();
-  const { sessionExpired } = route.params || {};
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+type AuthScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Auth'>;
+  route: AuthScreenRouteProp;
+};
+
+export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Handle email/password authentication
+  // Check if we've been redirected here due to session expiry
+  useEffect(() => {
+    if (route.params?.sessionExpired) {
+      Alert.alert('Session Expired', 'Please sign in again to continue');
+    }
+  }, [route.params]);
+
   const handleAuth = async () => {
     if (!email || !password) {
-      setError('Email and password are required');
+      Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    if (isSignUp && password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    setError('');
-    setIsLoading(true);
-
+    setLoading(true);
     try {
-      if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } else {
+      if (isLogin) {
+        // Login with Firebase
         await signInWithEmailAndPassword(auth, email, password);
+        console.log('User logged in successfully');
+        // No need to navigate - the auth state listener in App.tsx will redirect
+      } else {
+        // Sign up with Firebase
+        await createUserWithEmailAndPassword(auth, email, password);
+        console.log('User account created successfully');
+        // No need to navigate - the auth state listener in App.tsx will redirect
       }
-      // Navigation will happen automatically via the auth state listener in App.tsx
     } catch (error) {
       console.error('Authentication error:', error);
-      setError(error.message || 'Authentication failed');
+      Alert.alert(
+        'Authentication Error', 
+        error instanceof Error ? error.message : 'Failed to authenticate. Please try again.'
+      );
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle Google Sign In
-  const handleGoogleSignIn = async () => {
-    setError('');
-    setIsLoading(true);
-
-    try {
-      await signInWithGoogle();
-      // Navigation will happen automatically via the auth state listener in App.tsx
-    } catch (error) {
-      console.error('Google Sign In error:', error);
-      setError(error.message || 'Google Sign In failed');
-    } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidView}
+    <View style={styles.container}>
+      <Text style={styles.title}>Personal Journal</Text>
+      <Text style={styles.subtitle}>
+        {isLogin ? 'Sign in to your account' : 'Create a new account'}
+      </Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      <TouchableOpacity 
+        style={styles.button} 
+        onPress={handleAuth}
+        disabled={loading}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Personal Journal</Text>
-            {sessionExpired && (
-              <Text style={styles.sessionMessage}>
-                Your session has expired. Please sign in again.
-              </Text>
-            )}
-          </View>
+        {loading ? (
+          <ActivityIndicator color="#FFFFFF" size="small" />
+        ) : (
+          <Text style={styles.buttonText}>
+            {isLogin ? 'Sign In' : 'Sign Up'}
+          </Text>
+        )}
+      </TouchableOpacity>
 
-          <View style={styles.formContainer}>
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-
-            {isSignUp && (
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
-            )}
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleAuth}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>
-                  {isSignUp ? 'Sign Up' : 'Sign In'}
-                </Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.googleButton}
-              onPress={handleGoogleSignIn}
-              disabled={isLoading}
-            >
-              <Text style={styles.googleButtonText}>
-                {isSignUp ? 'Sign Up with Google' : 'Sign In with Google'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.switchButton}
-              onPress={() => setIsSignUp(!isSignUp)}
-              disabled={isLoading}
-            >
-              <Text style={styles.switchButtonText}>
-                {isSignUp
-                  ? 'Already have an account? Sign In'
-                  : "Don't have an account? Sign Up"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <TouchableOpacity 
+        onPress={() => setIsLogin(!isLogin)}
+        style={styles.switchButton}
+      >
+        <Text style={styles.switchText}>
+          {isLogin ? 'Need an account? Sign up' : 'Have an account? Sign in'}
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  keyboardAvoidView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
-  },
-  header: {
     alignItems: 'center',
-    marginBottom: 40,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 10,
+    color: '#333333',
   },
-  sessionMessage: {
-    color: 'orange',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  formContainer: {
-    width: '100%',
+  subtitle: {
+    fontSize: 16,
+    marginBottom: 20,
+    color: '#666666',
   },
   input: {
-    backgroundColor: 'white',
+    width: '100%',
+    height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#CCCCCC',
     borderRadius: 8,
-    padding: 15,
     marginBottom: 15,
-    fontSize: 16,
+    paddingHorizontal: 10,
+    backgroundColor: '#F9F9F9',
   },
   button: {
-    backgroundColor: '#4CAF50',
+    width: '100%',
+    height: 50,
+    backgroundColor: '#007AFF',
     borderRadius: 8,
-    padding: 15,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginTop: 10,
   },
   buttonText: {
-    color: 'white',
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  googleButton: {
-    backgroundColor: '#4285F4',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  googleButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   switchButton: {
+    marginTop: 20,
     padding: 10,
-    alignItems: 'center',
   },
-  switchButtonText: {
-    color: '#4285F4',
+  switchText: {
+    color: '#007AFF',
     fontSize: 14,
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: 15,
-    textAlign: 'center',
   },
 });

@@ -19,11 +19,13 @@ export default function App() {
 
   // Handle user state changes
   function onAuthStateChange(user) {
+    console.log('Auth state changed, user:', user ? 'Logged in' : 'Not logged in');
     setUser(user);
     if (initializing) setInitializing(false);
   }
 
   useEffect(() => {
+    // Check for authentication state when the app loads
     const subscriber = onAuthStateChanged(auth, onAuthStateChange);
     return subscriber; // unsubscribe on unmount
   }, []);
@@ -40,7 +42,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Auth"
+          initialRouteName={!user ? "Auth" : "Home"}
           screenOptions={{
             headerStyle: {
               backgroundColor: '#ffffff',

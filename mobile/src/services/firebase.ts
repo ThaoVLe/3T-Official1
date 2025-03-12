@@ -1,18 +1,42 @@
-import { initializeApp } from '@firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from '@firebase/auth';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword as fbCreateUser,
+  signInWithEmailAndPassword as fbSignIn,
+  signOut as fbSignOut,
+  onAuthStateChanged as fbOnAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Firebase configuration - you should place these in environment variables in production
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: `${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: `${process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com`,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
+  apiKey: "AIzaSyDJKkQQzE-rLXYT0hcNSVVeTFDEJzKHdAw",  // This is a placeholder - replace with your own
+  authDomain: "personaljournal-app.firebaseapp.com",
+  projectId: "personaljournal-app",
+  storageBucket: "personaljournal-app.appspot.com",
+  messagingSenderId: "123456789012", // Added messagingSenderId - required for some Firebase features
+  appId: "1:123456789012:web:123456789abcdef"
 };
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// Export auth functions
+const createUserWithEmailAndPassword = (email, password) => {
+  return fbCreateUser(auth, email, password);
+};
+
+const signInWithEmailAndPassword = (email, password) => {
+  return fbSignIn(auth, email, password);
+};
+
+
+const onAuthStateChanged = (callback) => {
+  return fbOnAuthStateChanged(auth, callback);
+};
 
 // Session management constants
 const SESSION_KEY = 'auth_session_timestamp';
@@ -64,7 +88,7 @@ export const signInWithGoogle = async () => {
 // Sign out
 export const signOut = async () => {
   try {
-    await auth.signOut();
+    await fbSignOut(auth);
     await AsyncStorage.removeItem(SESSION_KEY); // Clear session on logout
     console.log('User signed out and session cleared');
   } catch (error) {
@@ -77,4 +101,4 @@ export const getCurrentUser = () => {
   return auth.currentUser;
 };
 
-export {  auth, signInWithGoogle, signOut, getCurrentUser, isSessionExpired };
+export {  auth, signInWithGoogle, signOut, getCurrentUser, isSessionExpired, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged };

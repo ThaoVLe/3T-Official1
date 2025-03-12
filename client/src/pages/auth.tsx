@@ -43,10 +43,11 @@ export default function AuthPage() {
       // Handle specific Firebase auth errors
       switch (error.code) {
         case 'auth/operation-not-allowed':
-          errorMessage = "Email/Password sign-in is not enabled. Please contact support.";
+          errorMessage = "Email/Password sign-in is not enabled. Please contact support or try again in a few minutes.";
           break;
         case 'auth/email-already-in-use':
           errorMessage = "This email is already registered. Try logging in instead.";
+          setIsLogin(true); // Automatically switch to login mode
           break;
         case 'auth/invalid-email':
           errorMessage = "Please enter a valid email address.";
@@ -90,6 +91,7 @@ export default function AuthPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
                 required
+                className="w-full"
               />
               <Input
                 type="password"
@@ -99,6 +101,7 @@ export default function AuthPage() {
                 disabled={loading}
                 required
                 minLength={6}
+                className="w-full"
               />
             </div>
             <Button
@@ -119,7 +122,11 @@ export default function AuthPage() {
               type="button"
               variant="ghost"
               className="w-full"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setEmail('');
+                setPassword('');
+              }}
               disabled={loading}
             >
               {isLogin ? "Need an account? Sign up" : "Have an account? Log in"}

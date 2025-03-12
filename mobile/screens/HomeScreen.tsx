@@ -1,64 +1,52 @@
-
-import React, {useState, useEffect} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  ActivityIndicator,
+  ActivityIndicator
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
 
-export const HomeScreen = ({navigation, route}) => {
-  const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const email = route.params?.email || '';
+type HomeScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
+};
+
+// Temporary mock data until we connect to the backend
+const mockEntries = [
+  {id: '1', title: 'First Entry', date: '2025-03-10'},
+  {id: '2', title: 'Second Entry', date: '2025-03-09'},
+];
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
+  const [entries, setEntries] = useState(mockEntries);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchEntries();
+    // For debugging
+    console.log("HomeScreen rendered with entries:", entries);
   }, []);
-
-  const fetchEntries = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`http://0.0.0.0:5000/api/entries?email=${email}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch entries');
-      }
-      
-      const data = await response.json();
-      setEntries(data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching entries:', err);
-      setError('Failed to load entries. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogout = () => {
     navigation.replace('Auth');
   };
 
-  const renderItem = ({item}) => (
+  const renderItem = ({item}: any) => (
     <TouchableOpacity
       style={styles.entryItem}
-      onPress={() => navigation.navigate('Entry', {entryId: item.id, email})}
+      onPress={() => navigation.navigate('Entry', {entryId: item.id})}
     >
-      <Text style={styles.entryTitle}>{item.title || 'Untitled Entry'}</Text>
-      <Text style={styles.entryDate}>{new Date(item.date).toLocaleDateString()}</Text>
+      <Text style={styles.entryTitle}>{item.title}</Text>
+      <Text style={styles.entryDate}>{item.date}</Text>
     </TouchableOpacity>
   );
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.centered]}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Loading entries...</Text>
       </View>
     );
   }
@@ -66,40 +54,39 @@ export const HomeScreen = ({navigation, route}) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.newButton}
-          onPress={() => navigation.navigate('Entry', {email})}
-        >
-          <Text style={styles.newButtonText}>New Entry</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {error ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchEntries}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+        <Text style={styles.headerTitle}>Your Journal</Text>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={styles.newButton}
+            onPress={() => navigation.navigate('Entry')}
+          >
+            <Text style={styles.newButtonText}>New Entry</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
-      ) : entries.length === 0 ? (
+      </View>
+
+      {entries.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No journal entries yet.</Text>
-          <Text style={styles.emptySubText}>Create your first entry!</Text>
+          <Text style={styles.emptyText}>No entries yet. Create your first one!</Text>
+          <TouchableOpacity
+            style={styles.createFirstButton}
+            onPress={() => navigation.navigate('Entry')}
+          >
+            <Text style={styles.createFirstButtonText}>Create First Entry</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
           data={entries}
           renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={item => item.id}
           style={styles.list}
-          refreshing={loading}
-          onRefresh={fetchEntries}
         />
       )}
     </View>
@@ -109,70 +96,71 @@ export const HomeScreen = ({navigation, route}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
-  centered: {
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-  },
   header: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  headerButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 15,
-    backgroundColor: '#ffffff',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    width: '100%',
   },
   newButton: {
-    backgroundColor: '#4285F4',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 8,
+    flex: 1,
+    marginRight: 8,
+    alignItems: 'center',
   },
   newButtonText: {
-    color: '#ffffff',
+    color: 'white',
     fontWeight: 'bold',
   },
   logoutButton: {
-    backgroundColor: '#f5f5f5',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#dddddd',
+    backgroundColor: '#FF3B30',
+    padding: 10,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 8,
+    alignItems: 'center',
   },
   logoutButtonText: {
-    color: '#333333',
+    color: 'white',
+    fontWeight: 'bold',
   },
   list: {
-    padding: 10,
+    padding: 16,
   },
   entryItem: {
-    backgroundColor: '#ffffff',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 5,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   entryTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
   },
   entryDate: {
     fontSize: 14,
-    color: '#666666',
+    color: '#666',
+    marginTop: 4,
   },
   emptyContainer: {
     flex: 1,
@@ -182,34 +170,19 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  emptySubText: {
-    fontSize: 16,
-    color: '#666666',
+    color: '#666',
     textAlign: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: 'red',
     marginBottom: 20,
-    textAlign: 'center',
   },
-  retryButton: {
-    backgroundColor: '#4285F4',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+  createFirstButton: {
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  retryButtonText: {
-    color: '#ffffff',
+  createFirstButtonText: {
+    color: 'white',
     fontWeight: 'bold',
+    fontSize: 16,
   },
 });

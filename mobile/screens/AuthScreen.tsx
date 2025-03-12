@@ -1,125 +1,152 @@
-import React, {useState} from 'react';
+
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  KeyboardAvoidingView,
   Platform,
-  Alert
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
 
 type AuthScreenProps = {
-  navigation: any;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Auth'>;
 };
 
-export const AuthScreen: React.FC<AuthScreenProps> = ({navigation}) => {
+export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleAuth = async () => {
-    try {
-      setIsLoading(true);
-
-      // Make a request to the login API
-      const response = await fetch('http://0.0.0.0:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const userData = await response.json();
-      setIsLoading(false);
-
-      // Navigate to Home and pass the email
-      navigation.replace('Home', { email: userData.email });
-    } catch (error) {
-      setIsLoading(false);
-      Alert.alert('Login Failed', 'Invalid email or password');
+  const handleAuth = () => {
+    if (!email || !password) {
+      alert('Please enter both email and password');
+      return;
     }
+
+    setLoading(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      setLoading(false);
+      navigation.replace('Home');
+    }, 1000);
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Personal Journal</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <TouchableOpacity style={styles.button} onPress={handleAuth}>
-        <Text style={styles.buttonText}>
-          {isLogin ? 'Log In' : 'Sign Up'}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
-        <Text style={styles.switchText}>
-          {isLogin ? 'Need an account? Sign up' : 'Have an account? Log in'}
-        </Text>
-      </TouchableOpacity>
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>
+            {isLogin ? 'Welcome Back' : 'Create Account'}
+          </Text>
+          <Text style={styles.subtitle}>
+            {isLogin ? 'Sign in to continue' : 'Sign up to get started'}
+          </Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={handleAuth}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>
+                {isLogin ? 'Login' : 'Sign Up'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.switchButton}
+            onPress={() => setIsLogin(!isLogin)}
+          >
+            <Text style={styles.switchButtonText}>
+              {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
     backgroundColor: '#fff',
   },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  formContainer: {
+    padding: 20,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    marginBottom: 10,
     textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
     marginBottom: 30,
+    textAlign: 'center',
   },
   input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 15,
+    backgroundColor: '#f5f5f5',
+    padding: 15,
+    borderRadius: 10,
     marginBottom: 15,
-    backgroundColor: '#f9f9f9',
+    fontSize: 16,
   },
   button: {
     backgroundColor: '#007AFF',
-    height: 50,
-    borderRadius: 8,
-    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 15,
+    marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
-  switchText: {
+  switchButton: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  switchButtonText: {
     color: '#007AFF',
-    textAlign: 'center',
     fontSize: 16,
   },
 });

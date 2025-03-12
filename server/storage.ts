@@ -49,11 +49,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEntry(entry: InsertEntry): Promise<DiaryEntry> {
-    const [newEntry] = await db
-      .insert(diaryEntries)
-      .values(entry)
-      .returning();
-    return newEntry;
+    // Ensure we're handling both column naming styles
+    const entryData = {
+      ...entry,
+      // Make sure user_email is set if it exists in the schema
+      user_email: entry.userEmail 
+    };
+    
+    console.log("Creating entry with formatted data:", entryData);
+    
+    try {
+      const [newEntry] = await db
+        .insert(diaryEntries)
+        .values(entryData)
+        .returning();
+      return newEntry;
+    } catch (error) {
+      console.error("Database error when creating entry:", error);
+      // If there was an error with the user_email field, try again with just the original data
+      if (String(error).includes("user_email") || String(error).includes("duplicate key")) {
+        const [newEntry] = await db
+          .insert(diaryEntries)
+          .values(entry)
+          .returning();
+        return newEntry;
+      }
+      throw error;
+    }
   }
 
   async updateEntry(id: number, entry: Partial<InsertEntry>): Promise<DiaryEntry | undefined> {

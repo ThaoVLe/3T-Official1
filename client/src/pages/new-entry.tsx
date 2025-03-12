@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import TipTapEditor from "@/components/tiptap-editor";
@@ -6,17 +5,24 @@ import { PageTransition } from "@/components/animations";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { X, Save } from "lucide-react";
-import { useRouter } from "@/hooks/use-router";
+import { useLocation } from "wouter";
+import { queryClient } from "@/lib/queryClient";
 
 export default function NewEntryPage() {
-  const { userEmail } = useAuth();
-  const { navigate } = useRouter();
+  const userEmail = localStorage.getItem("userEmail");
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  // Check for authentication
+  if (!userEmail) {
+    navigate("/");
+    return null;
+  }
+
   const handleCancel = () => {
-    navigate("/diary");
+    navigate("/");
   };
 
   const handleSave = async () => {
@@ -24,15 +30,6 @@ export default function NewEntryPage() {
       toast({
         title: "Error",
         description: "Please enter some content for your diary entry",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!userEmail) {
-      toast({
-        title: "Error",
-        description: "You need to be logged in to save an entry",
         variant: "destructive",
       });
       return;
@@ -57,17 +54,19 @@ export default function NewEntryPage() {
         throw new Error(errorData.message || "Failed to save entry");
       }
 
-      console.log("Entry saved successfully");
+      // Invalidate the entries query to refetch with new entry
+      await queryClient.invalidateQueries({ queryKey: ["/api/entries", userEmail] });
+
       toast({
         title: "Success",
         description: "Diary entry saved successfully",
       });
-      navigate("/diary");
+      navigate("/");
     } catch (error) {
       console.error("Error saving entry:", error);
       toast({
         title: "Error",
-        description: typeof error === 'object' && error !== null ? (error as Error).message : "Failed to save diary entry",
+        description: error instanceof Error ? error.message : "Failed to save diary entry",
         variant: "destructive",
       });
     } finally {

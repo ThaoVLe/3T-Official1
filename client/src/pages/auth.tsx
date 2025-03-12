@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -17,8 +17,6 @@ export default function AuthPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  console.log("Auth page rendering");
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -33,61 +31,38 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      console.log("Starting authentication process");
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
-        console.log("Login successful");
+        // Store email in localStorage after successful login
+        localStorage.setItem('userEmail', email);
         toast({
           title: "Success",
           description: "Logged in successfully",
         });
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
-        console.log("Signup successful");
+        // Store email in localStorage after successful signup
+        localStorage.setItem('userEmail', email);
         toast({
           title: "Success",
           description: "Account created successfully",
         });
       }
 
-      // Navigate to root path
-      console.log("Navigating to root path");
-      navigate("/", { replace: true });
+      // Navigate to home page
+      navigate("/");
 
     } catch (error: any) {
-      console.error("Auth error:", error);
       let errorMessage = "Failed to authenticate";
-
-      switch (error.code) {
-        case 'auth/operation-not-allowed':
-          errorMessage = "Email/Password sign-in is not enabled. Please contact support.";
-          break;
-        case 'auth/email-already-in-use':
-          errorMessage = "This email is already registered. Try logging in instead.";
-          setIsLogin(true);
-          break;
-        case 'auth/invalid-email':
-          errorMessage = "Please enter a valid email address.";
-          break;
-        case 'auth/user-disabled':
-          errorMessage = "This account has been disabled. Please contact support.";
-          break;
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-          errorMessage = "Invalid email or password.";
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = "Network error. Please check your connection and try again.";
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = "Too many attempts. Please try again later.";
-          break;
-        default:
-          errorMessage = error.message || "Authentication failed. Please try again.";
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        errorMessage = "Invalid email or password";
+      } else if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "Email already registered. Please login instead.";
+        setIsLogin(true);
       }
 
       toast({
-        title: "Authentication Error",
+        title: "Error",
         description: errorMessage,
         variant: "destructive",
       });

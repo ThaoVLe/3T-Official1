@@ -1,80 +1,135 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, FileEdit, LogOut } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/animations";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [, navigate] = useLocation();
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Check if user is logged in via localStorage
+  useEffect(() => {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+      navigate("/auth");
+    }
+  }, [navigate]);
 
   const { data: entries, isLoading, error } = useQuery<DiaryEntry[]>({
     queryKey: ["/api/entries"],
   });
 
+  const handleSignOut = () => {
+    localStorage.removeItem('userEmail');
+    navigate("/auth");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 bg-card border-b">
+          <div className="flex justify-between items-center px-4 py-3">
+            <Skeleton className="h-10 w-48" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-24" />
+            </div>
+          </div>
+        </div>
+        <div className="p-4 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-40 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <PageTransition>
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Your Journal</h1>
-          <Button onClick={() => navigate("/new")} className="gap-2">
-            <PlusCircle className="h-5 w-5" />
-            New Entry
-          </Button>
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 bg-card border-b">
+          <div className="flex justify-between items-center px-4 py-3">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              My Journal
+            </h1>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+              <Button onClick={() => navigate("/new")} className="flex gap-2">
+                <FileEdit className="w-4 h-4" />
+                New Entry
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="border rounded-lg p-4">
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2 mb-2" />
-                <Skeleton className="h-24 w-full mb-2" />
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <strong className="font-bold">Error!</strong>
-            <span className="block sm:inline"> Failed to load journal entries. Please try again later.</span>
-          </div>
-        ) : entries && entries.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="p-4">
+          {error ? (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-bold text-destructive">Error loading entries</h2>
+              <p className="text-muted-foreground mt-2">Please try refreshing the page</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="mt-4"
+                variant="outline"
+              >
+                Refresh Page
+              </Button>
+            </div>
+          ) : !entries?.length ? (
+            <motion.div
+              className="text-center py-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <h2 className="text-2xl font-bold mb-4">No entries yet</h2>
+              <p className="text-muted-foreground mb-8">
+                Start capturing your memories with text, photos, and more.
+              </p>
+              <Button 
+                size="lg" 
+                className="flex gap-2"
+                onClick={() => navigate("/new")}
+              >
+                <PlusCircle className="w-5 h-5" />
+                Create Your First Entry
+              </Button>
+            </motion.div>
+          ) : (
             <AnimatePresence>
-              {entries.map((entry) => (
-                <motion.div
-                  key={entry.id}
-                  layoutId={entry.id.toString()}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.2 }}
-                  onClick={() => setSelectedEntryId(entry.id.toString())}
-                >
-                  <EntryCard 
-                    entry={entry} 
-                    onClick={() => navigate(`/view/${entry.id}`)} 
-                    onEdit={() => navigate(`/edit/${entry.id}`)}
-                  />
-                </motion.div>
-              ))}
+              <div className="space-y-4 max-w-4xl mx-auto">
+                {entries.map((entry, index) => (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <EntryCard 
+                      entry={entry}
+                      onClick={() => navigate(`/entries/${entry.id}`)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
             </AnimatePresence>
-          </div>
-        ) : (
-          <div className="text-center py-16 border-2 border-dashed rounded-lg">
-            <h2 className="text-xl font-medium mb-2">No journal entries yet</h2>
-            <p className="text-gray-500 mb-6">Start writing your first journal entry</p>
-            <Button onClick={() => navigate("/new")} className="gap-2">
-              <PlusCircle className="h-5 w-5" />
-              Create your first entry
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </PageTransition>
   );

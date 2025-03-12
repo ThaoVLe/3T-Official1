@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
@@ -39,46 +40,27 @@ export default function AuthPage() {
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
+        toast({
+          title: "Success",
+          description: "Logged in successfully",
+        });
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
+        toast({
+          title: "Success",
+          description: "Account created successfully",
+        });
       }
-    } catch (error: any) {
-      console.error("Authentication error:", error);
-      let errorMessage = "Failed to authenticate";
-
-      // Handle specific Firebase auth errors
-      switch (error.code) {
-        case 'auth/operation-not-allowed':
-          errorMessage = "Email/Password sign-in is not enabled. Please contact support.";
-          break;
-        case 'auth/email-already-in-use':
-          errorMessage = "This email is already registered. Try logging in instead.";
-          setIsLogin(true);
-          break;
-        case 'auth/invalid-email':
-          errorMessage = "Please enter a valid email address.";
-          break;
-        case 'auth/weak-password':
-          errorMessage = "Password should be at least 6 characters long.";
-          break;
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-          errorMessage = "Invalid email or password.";
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = "Network error. Please check your connection and try again.";
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = "Too many attempts. Please try again later.";
-          break;
-        default:
-          errorMessage = error.message || "Authentication failed. Please try again.";
+      navigate("/home");
+    } catch (error) {
+      let errorMessage = "Authentication failed";
+      if (error instanceof Error) {
+        errorMessage = error.message;
       }
-
       toast({
         title: "Authentication Error",
         description: errorMessage,
@@ -150,6 +132,17 @@ export default function AuthPage() {
               >
                 {isLogin ? "Need an account? Sign up" : "Have an account? Log in"}
               </Button>
+              {isLogin && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={() => window.location.href = "/new"}
+                  disabled={loading}
+                >
+                  Create First Entry
+                </Button>
+              )}
             </form>
           </CardContent>
         </Card>

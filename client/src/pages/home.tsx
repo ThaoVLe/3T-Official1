@@ -5,30 +5,48 @@ import { PlusCircle, FileEdit, LogOut } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/animations";
+import { auth } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [, navigate] = useLocation();
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const { toast } = useToast();
+  const [currentUser, setCurrentUser] = useState(auth.currentUser);
 
-  // Check if user is logged in via localStorage
   useEffect(() => {
-    const userEmail = localStorage.getItem('userEmail');
-    if (!userEmail) {
-      navigate("/auth");
-    }
+    // Check auth state
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+      if (!user) {
+        navigate("/auth");
+      }
+    });
+
+    return () => unsubscribe();
   }, [navigate]);
 
   const { data: entries, isLoading, error } = useQuery<DiaryEntry[]>({
-    queryKey: ["/api/entries"],
+    queryKey: ["/api/entries", currentUser?.email],
+    enabled: !!currentUser,
+    select: (data) => data.filter(entry => entry.userId === currentUser?.email),
   });
 
-  const handleSignOut = () => {
-    localStorage.removeItem('userEmail');
-    navigate("/auth");
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {

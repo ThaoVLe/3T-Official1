@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 
 // Verify environment variables are present
 const requiredEnvVars = [
@@ -35,3 +35,12 @@ console.log('Firebase Config (without sensitive data):', {
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Enable local persistence
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('Firebase Auth persistence enabled');
+  })
+  .catch((error) => {
+    console.error('Error enabling persistence:', error);
+  });

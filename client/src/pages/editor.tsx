@@ -11,12 +11,13 @@ import TipTapEditor from "@/components/tiptap-editor";
 import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
-import { Save, X, SmilePlus, MapPin, ImagePlus, FileEdit, Edit } from "lucide-react";
+import { Save, X, SmilePlus, ImagePlus, MapPin } from "lucide-react";
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { PageTransition } from "@/components/animations";
 import { KeyboardProvider, useKeyboard } from "@/lib/keyboard-context";
+import { auth } from "@/lib/firebase";
 
 const EditorContent = () => {
   const { id } = useParams();
@@ -27,98 +28,21 @@ const EditorContent = () => {
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [isExiting, setIsExiting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const floatingBarRef = useRef<HTMLDivElement>(null);
-  const editorAreaRef = useRef<HTMLDivElement>(null);
   const { isKeyboardVisible, keyboardHeight } = useKeyboard();
 
+  // Check authentication
   useEffect(() => {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchStartTime = 0;
-    let touchStartElement: HTMLElement | null = null;
-    let isScrolling = false;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      const isFloatingBarTouch = floatingBarRef.current?.contains(target);
-      const isEditorAreaTouch = editorAreaRef.current?.contains(target);
-
-      if (isFloatingBarTouch || !isEditorAreaTouch) {
-        e.stopPropagation();
-        return;
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user) {
+        navigate("/auth");
       }
-
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
-      touchStartElement = target;
-      isScrolling = false;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!touchStartElement) return;
-
-      const isFloatingBarTouch = floatingBarRef.current?.contains(touchStartElement);
-      const isEditorAreaTouch = editorAreaRef.current?.contains(touchStartElement);
-
-      if (isFloatingBarTouch || !isEditorAreaTouch) {
-        e.stopPropagation();
-        return;
-      }
-
-      const touchMoveY = e.touches[0].clientY;
-      const verticalDistance = Math.abs(touchMoveY - touchStartY);
-
-      if (verticalDistance > 10) {
-        isScrolling = true;
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (!touchStartElement || isScrolling) return;
-
-      const isFloatingBarTouch = floatingBarRef.current?.contains(touchStartElement);
-      const isEditorAreaTouch = editorAreaRef.current?.contains(touchStartElement);
-
-      if (isFloatingBarTouch || !isEditorAreaTouch) {
-        e.stopPropagation();
-        return;
-      }
-
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const touchEndTime = Date.now();
-      const swipeDistance = touchEndX - touchStartX;
-      const verticalDistance = Math.abs(touchEndY - touchStartY);
-      const swipeTime = touchEndTime - touchStartTime;
-
-      if (swipeDistance > 50 && swipeTime < 300 && verticalDistance < 30) {
-        if (id) {
-          sessionStorage.setItem('lastViewedEntryId', id);
-        }
-        setIsExiting(true);
-        setTimeout(() => navigate('/'), 100);
-      }
-    };
-
-    document.addEventListener('touchstart', handleTouchStart, { passive: false });
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [id, navigate]);
-
-  const isMobile = () => {
-    return window.innerWidth < 768;
-  };
+    });
+    return () => unsubscribe();
+  }, [navigate]);
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
-    enabled: !!id,
+    enabled: !!id && !!auth.currentUser,
   });
 
   const form = useForm<InsertEntry>({
@@ -129,27 +53,34 @@ const EditorContent = () => {
       mediaUrls: [],
       feeling: null,
       location: null,
+      userId: auth.currentUser?.uid || "", // Include user ID
     },
   });
 
   useEffect(() => {
     if (entry) {
       form.reset({
-        title: entry.title,
-        content: entry.content,
-        mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling,
-        location: entry.location,
+        ...entry,
+        userId: auth.currentUser?.uid || "", // Ensure user ID is set
       });
     }
   }, [entry, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
+      if (!auth.currentUser) {
+        throw new Error("You must be logged in to create or edit entries");
+      }
+
+      const entryData = {
+        ...data,
+        userId: auth.currentUser.uid,
+      };
+
       if (id) {
-        await apiRequest("PUT", `/api/entries/${id}`, data);
+        await apiRequest("PUT", `/api/entries/${id}`, entryData);
       } else {
-        await apiRequest("POST", "/api/entries", data);
+        await apiRequest("POST", "/api/entries", entryData);
       }
     },
     onSuccess: () => {
@@ -158,7 +89,14 @@ const EditorContent = () => {
         title: "Success",
         description: id ? "Entry updated" : "Entry created",
       });
-      navigate("/");
+      navigate("/home");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save entry",
+        variant: "destructive",
+      });
     },
   });
 
@@ -263,6 +201,11 @@ const EditorContent = () => {
     return new Promise(resolve => setTimeout(resolve, 100));
   }, []);
 
+  const isMobile = () => {
+    return window.innerWidth < 768;
+  };
+
+
   return (
     <div className={`flex flex-col h-full bg-background ${isExiting ? 'pointer-events-none' : ''}`}>
       <div className="relative px-4 sm:px-6 py-3 border-b border-border bg-card sticky top-0 z-10">
@@ -271,18 +214,23 @@ const EditorContent = () => {
             variant="ghost"
             size="sm"
             onClick={() => {
-              if (id) {
-                sessionStorage.setItem('lastViewedEntryId', id);
-              }
-              setIsExiting(true);
-              setTimeout(() => navigate("/"), 100);
+              navigate("/home");
             }}
             className="whitespace-nowrap"
           >
             <X className="h-4 w-4 mr-1" />
             Cancel
           </Button>
-          {/*Removed Save button here */}
+          <Button
+            type="button"
+            size="sm"
+            onClick={form.handleSubmit((data) => mutation.mutate(data))}
+            disabled={mutation.isPending}
+            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            {id ? "Update" : "Create"}
+          </Button>
         </div>
         <div className="max-w-full sm:max-w-2xl pr-24">
           <Input
@@ -310,7 +258,6 @@ const EditorContent = () => {
       </div>
 
       <div 
-        ref={editorAreaRef}
         className="flex-1 flex flex-col overflow-auto w-full bg-background relative touch-pan-y"
       >
         <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
@@ -339,12 +286,11 @@ const EditorContent = () => {
             disabled={mutation.isPending}
             className="h-11 w-11 rounded-full hover:bg-muted"
           >
-            <FileEdit className="h-6 w-6" />
+            <Save className="h-6 w-6" />
           </Button>
         </div>
 
         <div 
-          ref={floatingBarRef}
           className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out touch-none"
           style={{ 
             transform: `translateY(${isKeyboardVisible ? -keyboardHeight : 0}px)`,

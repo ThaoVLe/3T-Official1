@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
 import { useLocation } from "wouter";
@@ -18,6 +18,10 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
 import { SmilePlus, ImagePlus, MapPin } from 'lucide-react';
 import { auth } from "@/lib/firebase";
+import { motion } from "framer-motion";
+
+const SWIPE_THRESHOLD = 50;
+const VELOCITY_THRESHOLD = 0.5;
 
 const NewEntry: React.FC = () => {
   const [feeling, setFeeling] = useState<{ emoji: string; label: string } | null>(null);
@@ -27,6 +31,11 @@ const NewEntry: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
   const [content, setContent] = useState('');
+  const [isExiting, setIsExiting] = useState(false);
+  const [swipeProgress, setSwipeProgress] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  const isDraggingRef = useRef(false);
 
   // Check authentication
   useEffect(() => {
@@ -36,6 +45,88 @@ const NewEntry: React.FC = () => {
       }
     });
     return () => unsubscribe();
+  }, [navigate]);
+
+  const handleTouchStart = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+    isDraggingRef.current = true;
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!isDraggingRef.current) return;
+
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+
+    // Prevent vertical scrolling from triggering swipe
+    if (deltaY > Math.abs(deltaX)) {
+      isDraggingRef.current = false;
+      setSwipeProgress(0);
+      return;
+    }
+
+    // Only allow right swipe
+    if (deltaX > 0) {
+      const progress = Math.min(deltaX / window.innerWidth, 1);
+      setSwipeProgress(progress);
+
+      if (containerRef.current) {
+        containerRef.current.style.transform = `translateX(${deltaX}px)`;
+        containerRef.current.style.opacity = `${1 - progress * 0.3}`;
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaTime = Date.now() - touchStartRef.current.time;
+    const velocity = deltaX / deltaTime;
+
+    const shouldExit = 
+      (deltaX > SWIPE_THRESHOLD && velocity > VELOCITY_THRESHOLD) ||
+      deltaX > window.innerWidth * 0.4;
+
+    if (shouldExit) {
+      setIsExiting(true);
+      if (containerRef.current) {
+        containerRef.current.style.transition = 'all 0.3s ease-out';
+        containerRef.current.style.transform = `translateX(${window.innerWidth}px)`;
+        containerRef.current.style.opacity = '0';
+      }
+      setTimeout(() => navigate("/home"), 300);
+    } else {
+      if (containerRef.current) {
+        containerRef.current.style.transition = 'all 0.3s ease-out';
+        containerRef.current.style.transform = 'translateX(0)';
+        containerRef.current.style.opacity = '1';
+      }
+      setSwipeProgress(0);
+    }
+  };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.addEventListener('touchstart', handleTouchStart);
+    container.addEventListener('touchmove', handleTouchMove);
+    container.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
   }, [navigate]);
 
   const form = useForm<InsertEntry>({
@@ -155,7 +246,18 @@ const NewEntry: React.FC = () => {
 
   return (
     <PageTransition direction={1}>
-      <div className="relative min-h-screen">
+      <motion.div
+        ref={containerRef}
+        className="relative min-h-screen"
+        initial={{ x: 0 }}
+        style={{
+          touchAction: 'pan-y pinch-zoom',
+          willChange: 'transform',
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))}>
           <div className="flex flex-col bg-white w-full">
             {/* Header */}
@@ -265,7 +367,7 @@ const NewEntry: React.FC = () => {
             </div>
           </div>
         </form>
-      </div>
+      </motion.div>
     </PageTransition>
   );
 };

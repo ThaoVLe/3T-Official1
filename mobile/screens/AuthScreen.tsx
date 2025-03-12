@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Alert
 } from 'react-native';
 
 type AuthScreenProps = {
@@ -16,15 +17,36 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAuth = async () => {
     try {
-      // TODO: Implement Firebase authentication
-      // For now, just navigate to home screen
-      navigation.replace('Home');
+      setIsLoading(true);
+
+      // Make a request to the login API
+      const response = await fetch('http://0.0.0.0:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const userData = await response.json();
+      setIsLoading(false);
+
+      // Navigate to Home and pass the email
+      navigation.replace('Home', { email: userData.email });
     } catch (error) {
-      console.error(error);
-      // Add proper error handling here
+      setIsLoading(false);
+      Alert.alert('Login Failed', 'Invalid email or password');
     }
   };
 

@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import TipTapEditor from "@/components/tiptap-editor";
@@ -14,6 +15,7 @@ export default function NewEntryPage() {
   const { toast } = useToast();
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   // Check for authentication
   if (!userEmail) {
@@ -22,7 +24,8 @@ export default function NewEntryPage() {
   }
 
   const handleCancel = () => {
-    navigate("/");
+    setIsExiting(true);
+    setTimeout(() => navigate("/"), 100);
   };
 
   const handleSave = async () => {
@@ -35,42 +38,43 @@ export default function NewEntryPage() {
       return;
     }
 
-    setIsSaving(true);
     try {
-      console.log("Submitting new entry:", { userEmail, content });
+      setIsSaving(true);
       const response = await fetch("/api/entries", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ 
           userEmail, 
           content,
-          title: "New Entry", // Add a default title
+          title: "New Entry",
           date: new Date().toISOString(),
-          feeling: null,      // Include feeling field
-          location: null,     // Include location field
-          tags: []            // Include tags field
+          feeling: null,
+          location: null,
+          tags: []
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error from server:", errorData);
-        throw new Error(errorData.message || "Failed to save entry");
+        throw new Error("Failed to save entry");
       }
 
-      // Invalidate the entries query to refetch with new entry
-      await queryClient.invalidateQueries({ queryKey: ["/api/entries", userEmail] });
-
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+      
       toast({
         title: "Success",
-        description: "Diary entry saved successfully",
+        description: "Entry saved successfully",
       });
+      
+      // Navigate to home page
       navigate("/");
     } catch (error) {
       console.error("Error saving entry:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save diary entry",
+        description: "Failed to save entry",
         variant: "destructive",
       });
     } finally {
@@ -80,33 +84,41 @@ export default function NewEntryPage() {
 
   return (
     <PageTransition direction={1}>
-      <div className="min-h-screen flex flex-col bg-background">
-        <div className="sticky top-0 z-10 bg-card border-b">
-          <div className="flex justify-between items-center px-4 py-3">
-            <div className="flex items-center">
-              <Button variant="ghost" size="icon" onClick={handleCancel}>
-                <X className="h-5 w-5" />
-              </Button>
-              <h1 className="text-xl font-bold ml-2">New Entry</h1>
-            </div>
-            <Button 
-              onClick={handleSave} 
-              disabled={isSaving} 
-              className="bg-primary hover:bg-primary/90"
-              type="button"
+      <div className={`flex flex-col h-screen bg-background ${isExiting ? 'pointer-events-none' : ''}`}>
+        <div className="relative px-4 sm:px-6 py-3 border-b border-border bg-card sticky top-0 z-10">
+          <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancel}
+              className="whitespace-nowrap"
             >
-              {isSaving ? "Saving..." : "Save"}
-              <Save className="h-4 w-4 ml-2" />
+              <X className="h-4 w-4 mr-1" />
+              Cancel
             </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="whitespace-nowrap"
+            >
+              <Save className="h-4 w-4 mr-1" />
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          </div>
+          <div className="max-w-full sm:max-w-2xl pr-24">
+            <h1 className="text-xl font-semibold">New Entry</h1>
           </div>
         </div>
 
-        <div className="flex-1 p-4">
-          <TipTapEditor 
-            content={content} 
-            onChange={setContent} 
-            placeholder="What's on your mind today?"
-          />
+        <div className="flex-1 p-4 sm:p-6 overflow-auto">
+          <div className="max-w-full sm:max-w-2xl mx-auto">
+            <TipTapEditor 
+              onChange={setContent} 
+              content={content}
+              placeholder="Write your thoughts..."
+            />
+          </div>
         </div>
       </div>
     </PageTransition>

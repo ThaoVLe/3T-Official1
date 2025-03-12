@@ -15,28 +15,28 @@ export default function AuthPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
+  console.log("Auth page rendering");
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
+
     try {
+      console.log("Starting authentication process");
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
-        navigate("/home");
+        console.log("Login successful");
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
-        navigate("/home");
+        console.log("Signup successful");
       }
+
+      // Navigate to root path
+      console.log("Navigating to root path");
+      navigate("/", { replace: true });
+
     } catch (error: any) {
-      console.error("Authentication error:", error);
+      console.error("Auth error:", error);
       toast({
         title: "Error",
         description: error.message || "Authentication failed",

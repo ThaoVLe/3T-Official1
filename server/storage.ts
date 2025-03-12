@@ -3,11 +3,11 @@ import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
-  getAllEntries(): Promise<DiaryEntry[]>;
-  getEntry(id: number): Promise<DiaryEntry | undefined>;
+  getAllEntries(userId: string): Promise<DiaryEntry[]>;
+  getEntry(id: number, userId: string): Promise<DiaryEntry | undefined>;
   createEntry(entry: InsertEntry): Promise<DiaryEntry>;
-  updateEntry(id: number, entry: InsertEntry): Promise<DiaryEntry | undefined>;
-  deleteEntry(id: number): Promise<boolean>;
+  updateEntry(id: number, entry: InsertEntry, userId: string): Promise<DiaryEntry | undefined>;
+  deleteEntry(id: number, userId: string): Promise<boolean>;
   // Comment methods
   getComments(entryId: number): Promise<Comment[]>;
   addComment(comment: InsertComment): Promise<Comment>;
@@ -15,56 +15,51 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getAllEntries(): Promise<DiaryEntry[]> {
-    return await db.select().from(diaryEntries).orderBy(desc(diaryEntries.createdAt));
+  async getAllEntries(userId: string): Promise<DiaryEntry[]> {
+    return await db
+      .select()
+      .from(diaryEntries)
+      .where(eq(diaryEntries.userId, userId))
+      .orderBy(desc(diaryEntries.createdAt));
   }
 
-  async getEntry(id: number): Promise<DiaryEntry | undefined> {
+  async getEntry(id: number, userId: string): Promise<DiaryEntry | undefined> {
     const [entry] = await db
       .select()
       .from(diaryEntries)
-      .where(eq(diaryEntries.id, id));
+      .where(eq(diaryEntries.id, id))
+      .where(eq(diaryEntries.userId, userId));
     return entry;
   }
 
   async createEntry(entry: InsertEntry): Promise<DiaryEntry> {
     const [newEntry] = await db
       .insert(diaryEntries)
-      .values({
-        title: entry.title,
-        content: entry.content,
-        mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling,
-        location: entry.location,
-      })
+      .values(entry)
       .returning();
     return newEntry;
   }
 
-  async updateEntry(id: number, entry: InsertEntry): Promise<DiaryEntry | undefined> {
+  async updateEntry(id: number, entry: InsertEntry, userId: string): Promise<DiaryEntry | undefined> {
     const [updated] = await db
       .update(diaryEntries)
-      .set({
-        title: entry.title,
-        content: entry.content,
-        mediaUrls: entry.mediaUrls || [],
-        feeling: entry.feeling,
-        location: entry.location,
-      })
+      .set(entry)
       .where(eq(diaryEntries.id, id))
+      .where(eq(diaryEntries.userId, userId))
       .returning();
     return updated;
   }
 
-  async deleteEntry(id: number): Promise<boolean> {
+  async deleteEntry(id: number, userId: string): Promise<boolean> {
     const [deleted] = await db
       .delete(diaryEntries)
       .where(eq(diaryEntries.id, id))
+      .where(eq(diaryEntries.userId, userId))
       .returning();
     return !!deleted;
   }
 
-  // Comment methods
+  // Comment methods remain unchanged
   async getComments(entryId: number): Promise<Comment[]> {
     return await db
       .select()

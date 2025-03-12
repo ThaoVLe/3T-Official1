@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export const diaryEntries = pgTable("diary_entries", {
   id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),  // Add userId field
   title: text("title").notNull(),
   content: text("content").notNull(),
   mediaUrls: jsonb("media_urls").$type<string[]>().default([]),

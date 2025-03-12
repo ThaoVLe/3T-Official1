@@ -7,8 +7,10 @@ import {
   StyleSheet,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { authentication } from '../config/firebase';
 
 type RootStackParamList = {
   Auth: undefined;
@@ -24,18 +26,35 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handleAuth = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
     try {
-      // TODO: Implement Firebase authentication
-      // For now, just navigate to home screen
-      if (!email || !password) {
-        Alert.alert('Error', 'Please fill in all fields');
-        return;
+      setLoading(true);
+      if (isLogin) {
+        const userCredential = await authentication.signInWithEmailAndPassword(
+          email,
+          password,
+        );
+        console.log('User logged in:', userCredential.user.uid);
+      } else {
+        const userCredential = await authentication.createUserWithEmailAndPassword(
+          email,
+          password,
+        );
+        console.log('User created:', userCredential.user.uid);
       }
       navigation.replace('Home');
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Authentication failed');
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,6 +69,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({navigation}) => {
         autoCapitalize="none"
         keyboardType="email-address"
         testID="email-input"
+        editable={!loading}
       />
       <TextInput
         style={styles.input}
@@ -58,19 +78,26 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({navigation}) => {
         onChangeText={setPassword}
         secureTextEntry
         testID="password-input"
+        editable={!loading}
       />
       <TouchableOpacity 
-        style={styles.button} 
+        style={[styles.button, loading && styles.buttonDisabled]} 
         onPress={handleAuth}
+        disabled={loading}
         testID="auth-button"
       >
-        <Text style={styles.buttonText}>
-          {isLogin ? 'Log In' : 'Sign Up'}
-        </Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>
+            {isLogin ? 'Log In' : 'Sign Up'}
+          </Text>
+        )}
       </TouchableOpacity>
       <TouchableOpacity 
         onPress={() => setIsLogin(!isLogin)}
         testID="toggle-auth-mode"
+        disabled={loading}
       >
         <Text style={styles.switchText}>
           {isLogin ? 'Need an account? Sign up' : 'Have an account? Log in'}
@@ -120,6 +147,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#fff',

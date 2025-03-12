@@ -1,68 +1,39 @@
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileEdit, LogOut } from "lucide-react";
+import { PlusCircle, LogOut } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
 import { auth } from "@/lib/firebase";
-
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [, navigate] = useLocation();
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const { toast } = useToast();
 
   // Check if user is authenticated
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user) {
-        navigate("/auth");
-      }
-      setIsAuthChecked(true);
-    });
-    return () => unsubscribe();
-  }, [navigate]);
+  if (!auth.currentUser) {
+    console.log("No authenticated user, redirecting to auth page");
+    navigate("/auth");
+    return null;
+  }
 
-  const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
+  const { data: entries, isLoading, error } = useQuery<DiaryEntry[]>({
     queryKey: ["/api/entries"],
-    enabled: !!auth.currentUser && isAuthChecked,
+    enabled: !!auth.currentUser,
   });
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollRestoredRef = useRef(false);
-
-  useEffect(() => {
-    if (!entries || entries.length === 0 || scrollRestoredRef.current) return;
-
-    const restoreScroll = () => {
-      const lastViewedEntryId = sessionStorage.getItem('lastViewedEntryId');
-      const container = document.querySelector('.diary-content');
-
-      if (container) {
-        if (lastViewedEntryId) {
-          const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
-          if (entryElement) {
-            container.scrollTop = 0;
-            entryElement.scrollIntoView({ behavior: 'instant', block: 'center' });
-            scrollRestoredRef.current = true;
-            return;
-          }
-        }
-
-        const savedPosition = sessionStorage.getItem('homeScrollPosition');
-        if (savedPosition) {
-          container.scrollTop = parseInt(savedPosition);
-          scrollRestoredRef.current = true;
-        }
-      }
-    };
-
-    setTimeout(restoreScroll, 50);
-  }, [entries]);
+  console.log("Home page render:", { 
+    hasUser: !!auth.currentUser, 
+    isLoading, 
+    hasEntries: !!entries,
+    error 
+  });
 
   const handleSignOut = async () => {
     try {
@@ -70,106 +41,101 @@ export default function Home() {
       navigate("/auth");
     } catch (error) {
       console.error("Error signing out:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  if (!isAuthChecked || isLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background overflow-auto diary-content">
-        <div className="sticky top-0 z-10 bg-background border-b px-4 py-4">
-          <Skeleton className="h-10 w-48" />
-        </div>
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-64 w-full" />
-          ))}
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-40 w-full" />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!auth.currentUser) {
-    navigate("/auth");
-    return null;
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl font-bold text-red-500">Error loading entries</h2>
+          <p className="text-muted-foreground mt-2">Please try refreshing the page</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="mt-4"
+            variant="outline"
+          >
+            Refresh Page
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <PageTransition direction={-1}>
-      <div 
-        ref={containerRef}
-        className="min-h-screen bg-background overflow-auto diary-content"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'none',
-          touchAction: 'pan-y pinch-zoom',
-        }}
-      >
-        <div className="sticky top-0 z-10 bg-card border-b">
-          <div className="flex justify-between items-center px-4 py-3">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              My Diary
-            </h1>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-              >
+    <PageTransition>
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">My Journal</h1>
+            <div className="flex gap-4">
+              <Button onClick={handleSignOut} variant="outline">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
-              <Button onClick={() => navigate("/editor")} className="flex gap-2">
-                <FileEdit className="w-4 h-4" />
+              <Button onClick={() => navigate("/new")}>
+                <PlusCircle className="h-4 w-4 mr-2" />
                 New Entry
               </Button>
             </div>
           </div>
-        </div>
 
-        {!entries?.length ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+          {(!entries || entries.length === 0) ? (
+            <div className="text-center py-12">
               <h2 className="text-2xl font-bold mb-4">No entries yet</h2>
               <p className="text-muted-foreground mb-8">
-                Start capturing your memories with text, photos, and more.
+                Start writing your first journal entry
               </p>
-              <Button 
-                size="lg" 
-                className="flex gap-2"
-                onClick={() => navigate("/editor")}
-              >
-                <PlusCircle className="w-5 h-5" />
-                Create Your First Entry
+              <Button onClick={() => navigate("/new")} size="lg">
+                <PlusCircle className="h-5 w-5 mr-2" />
+                Create First Entry
               </Button>
-            </motion.div>
-          </div>
-        ) : (
-          <AnimatePresence>
-            <div className="space-y-2">
-              {entries.map((entry, index) => (
-                <motion.div
-                  key={entry.id}
-                  id={`entry-${entry.id}`}
-                  className="bg-card"
-                  variants={cardVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ delay: index * 0.05 }}
-                  whileHover="hover"
-                >
-                  <EntryCard 
-                    entry={entry} 
-                    setSelectedEntryId={setSelectedEntryId} 
-                  />
-                </motion.div>
-              ))}
             </div>
-          </AnimatePresence>
-        )}
+          ) : (
+            <AnimatePresence>
+              <div className="space-y-4">
+                {entries.map((entry, index) => (
+                  <motion.div
+                    key={entry.id}
+                    variants={cardVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <EntryCard 
+                      entry={entry} 
+                      setSelectedEntryId={setSelectedEntryId}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </AnimatePresence>
+          )}
+        </div>
       </div>
     </PageTransition>
   );

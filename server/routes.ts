@@ -62,15 +62,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/entries", async (req, res) => {
     try {
-      const userId = req.query.userId as string;
-      
-      // If userId is provided, filter entries by user
-      if (userId) {
-        const userEntries = await storage.getEntriesByUserId(userId);
-        return res.json(userEntries);
-      }
-      
-      // Otherwise return all entries (for admin purposes)
       const entries = await storage.getAllEntries();
       res.json(entries);
     } catch (error) {
@@ -201,30 +192,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting comment:", error);
       res.status(500).json({ message: "Failed to delete comment" });
-    }
-  });
-
-  // User last login endpoints
-  app.get("/api/users/:userId/lastLogin", async (req, res) => {
-    try {
-      const userId = req.params.userId;
-      const lastLogin = await storage.getUserLastLogin(userId);
-      res.json({ lastLogin });
-    } catch (error) {
-      console.error("Error fetching last login:", error);
-      res.status(500).json({ message: "Failed to fetch last login information" });
-    }
-  });
-
-  app.post("/api/users/:userId/lastLogin", async (req, res) => {
-    try {
-      const userId = req.params.userId;
-      const { lastLogin } = req.body;
-      await storage.updateUserLastLogin(userId, lastLogin);
-      res.status(200).json({ success: true });
-    } catch (error) {
-      console.error("Error updating last login:", error);
-      res.status(500).json({ message: "Failed to update last login information" });
     }
   });
 

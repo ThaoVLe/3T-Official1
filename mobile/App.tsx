@@ -1,43 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, View } from 'react-native';
-import { AuthScreen } from './src/screens/AuthScreen';
-import { HomeScreen } from './src/screens/HomeScreen';
-import { EntryScreen } from './src/screens/EntryScreen';
-import type { RootStackParamList } from './src/navigation/types';
-import { auth } from './src/services/firebase';
-import { onAuthStateChanged } from '@firebase/auth';
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ *
+ * Generated with the TypeScript template
+ * https://github.com/react-native-community/react-native-template-typescript
+ *
+ * @format
+ */
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {AuthScreen} from './screens/AuthScreen';
+import {HomeScreen} from './screens/HomeScreen';
+import {EntryScreen} from './screens/EntryScreen';
 
-export default function App() {
-  const [initializing, setInitializing] = useState(true);
-  const [user, setUser] = useState(null);
+const Stack = createStackNavigator();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setInitializing(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (initializing) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
-
+const App = () => {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <Stack.Navigator
+        <Stack.Navigator 
           initialRouteName="Auth"
           screenOptions={{
             headerStyle: {
@@ -52,28 +37,25 @@ export default function App() {
           <Stack.Screen 
             name="Auth" 
             component={AuthScreen}
-            options={{ headerShown: false }}
+            options={{headerShown: false}}
           />
-          {user && (
-            <>
-              <Stack.Screen 
-                name="Home" 
-                component={HomeScreen}
-                options={{
-                  title: 'My Journal',
-                  headerLeft: () => null,
-                }}
-              />
-              <Stack.Screen 
-                name="Entry" 
-                component={EntryScreen}
-                options={{ title: 'Journal Entry' }}
-              />
-            </>
-          )}
+          <Stack.Screen 
+            name="Home" 
+            component={HomeScreen}
+            options={{
+              title: 'My Journal',
+              headerLeft: () => null,
+            }}
+          />
+          <Stack.Screen 
+            name="Entry" 
+            component={EntryScreen}
+            options={{title: 'Journal Entry'}}
+          />
         </Stack.Navigator>
-        <StatusBar style="auto" />
       </NavigationContainer>
     </SafeAreaProvider>
   );
-}
+};
+
+export default App;

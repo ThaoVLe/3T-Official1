@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, LogOut, FileEdit } from "lucide-react";
 import EntryCard from "@/components/entry-card";
@@ -15,6 +15,7 @@ export default function Home() {
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Get email from localStorage
@@ -26,9 +27,14 @@ export default function Home() {
     }
   }, [navigate]);
 
-  const { data: allEntries, isLoading, error } = useQuery<DiaryEntry[]>({
+  const { data: allEntries, isLoading, error } = useQuery({
     queryKey: ["/api/entries"],
     enabled: !!userEmail,
+    onSuccess: () => {
+      //Added to force a refetch after a successful entry creation.  This assumes the API endpoint updates correctly.
+      //A more robust solution would involve a more sophisticated state management solution
+      queryClient.invalidateQueries(["/api/entries"])
+    }
   });
 
   // Filter entries by the current user's email

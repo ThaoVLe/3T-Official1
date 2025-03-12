@@ -9,7 +9,6 @@ export const diaryEntries = pgTable("diary_entries", {
   mediaUrls: jsonb("media_urls").$type<string[]>().default([]),
   feeling: jsonb("feeling").$type<{ emoji: string; label: string } | null>().default(null),
   location: text("location"),
-  sensitive: boolean("sensitive").default(false).notNull(),
   userEmail: text("user_email").default("user@example.com"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

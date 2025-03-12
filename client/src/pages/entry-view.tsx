@@ -2,7 +2,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { DiaryEntry } from "@shared/schema";
 import { format } from "date-fns";
-import { ArrowLeft, MessageCircle, Share2, FileEdit, Trash2, Play, Lock, Unlock } from "lucide-react";
+import { ArrowLeft, MessageCircle, Share2, FileEdit, Trash2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -55,22 +55,6 @@ export default function EntryView() {
     enabled: !!id,
   });
 
-  const toggleSensitiveMutation = useMutation({
-    mutationFn: async () => {
-      if (!entry) return;
-      await apiRequest("PATCH", `/api/entries/${id}`, {
-        ...entry,
-        sensitive: !entry.sensitive,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/entries/${id}`] });
-      toast({
-        title: "Entry updated",
-        description: `Entry marked as ${entry?.sensitive ? "not sensitive" : "sensitive"}`,
-      });
-    },
-  });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -240,9 +224,7 @@ export default function EntryView() {
               <h1 className="text-lg font-semibold text-foreground flex-grow">
                 {entry.title || "Untitled Entry"}
               </h1>
-              {entry.sensitive && settings.isPasswordProtectionEnabled && (
-                <Lock className="h-5 w-5 text-amber-600 flex-shrink-0" />
-              )}
+              
             </div>
           </div>
         </div>
@@ -379,16 +361,7 @@ export default function EntryView() {
                     >
                       <Share2 className="h-4 w-4"/>
                     </Button>
-                    {settings.isPasswordProtectionEnabled && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => toggleSensitiveMutation.mutate()}
-                        className={`h-8 w-8 ${entry.sensitive ? 'text-amber-600 hover:bg-amber-100' : 'hover:bg-muted'}`}
-                      >
-                        {entry.sensitive ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                      </Button>
-                    )}
+                    
                     <Button
                       size="icon"
                       variant="ghost"

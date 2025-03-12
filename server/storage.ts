@@ -38,8 +38,7 @@ export class DatabaseStorage implements IStorage {
         content: entry.content,
         mediaUrls: entry.mediaUrls || [],
         feeling: entry.feeling,
-        location: entry.location,
-        sensitive: entry.sensitive || false
+        location: entry.location
       })
       .returning();
     return newEntry;
@@ -53,8 +52,7 @@ export class DatabaseStorage implements IStorage {
         content: entry.content,
         mediaUrls: entry.mediaUrls || [],
         feeling: entry.feeling,
-        location: entry.location,
-        sensitive: entry.sensitive || false
+        location: entry.location
       })
       .where(eq(diaryEntries.id, id))
       .returning();

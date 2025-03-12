@@ -86,10 +86,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Ensure email is lowercase
+      // Ensure email is lowercase and using the correct field name
       const entryData = {
-        ...result.data,
-        userEmail: result.data.userEmail.toLowerCase()
+        userEmail: result.data.userEmail.toLowerCase(),
+        content: result.data.content
       };
 
       console.log("Creating entry with data:", entryData);
@@ -100,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating entry:", error);
       res.status(500).json({ 
-        message: "Failed to create entry", 
+        message: "Failed to create entry",
         error: error instanceof Error ? error.message : String(error)
       });
     }

@@ -89,7 +89,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/entries", async (req, res) => {
     try {
+      // Add headers to prevent caching
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.setHeader('Expires', '0');
+      res.setHeader('Pragma', 'no-cache');
+      
       const entries = await storage.getAllEntries();
+      console.log("Fetched entries from database:", entries);
       res.json(entries);
     } catch (error) {
       console.error("Error fetching entries:", error);

@@ -59,44 +59,10 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded files
   app.use('/uploads', express.static(uploadsDir));
-  
-  // Add a health check endpoint
-  app.get('/api/health', (req, res) => {
-    res.json({
-      status: 'ok',
-      time: new Date().toISOString(),
-      headers: req.headers
-    });
-  });
-  
-  // Diagnostic route to check client routing
-  app.get('/debug', (req, res) => {
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Debug Page</title>
-        </head>
-        <body>
-          <h1>Debug Page</h1>
-          <p>If you can see this, your server is running correctly.</p>
-          <p>Current time: ${new Date().toISOString()}</p>
-          <p>Try accessing: <a href="/">Home Page</a></p>
-        </body>
-      </html>
-    `);
-  });
 
   app.get("/api/entries", async (req, res) => {
     try {
-      // Add headers to prevent caching
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-      res.setHeader('Expires', '0');
-      res.setHeader('Pragma', 'no-cache');
-      
-      // Get all entries without filtering by userId (for testing)
       const entries = await storage.getAllEntries();
-      console.log("Fetched entries from database:", entries);
       res.json(entries);
     } catch (error) {
       console.error("Error fetching entries:", error);

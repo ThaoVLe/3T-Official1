@@ -26,10 +26,6 @@ export default function SettingsPage() {
   const [, navigate] = useLocation();
   const settings = useSettings();
 
-  // Swipe animation state
-  const [swipeProgress, setSwipeProgress] = React.useState(0);
-  const [isNavigating, setIsNavigating] = React.useState(false);
-
   // Touch swipe handling
   const [touchStartX, setTouchStartX] = React.useState(0);
   const [touchStartY, setTouchStartY] = React.useState(0);
@@ -58,24 +54,25 @@ export default function SettingsPage() {
       const verticalDistance = Math.abs(touchEndY - touchStartY);
       const swipeTime = touchEndTime - touchStartTime;
 
+      console.log("Swipe detected:", {
+        swipeDistance,
+        verticalDistance,
+        swipeTime,
+        condition: ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30)
+      });
+
       // If swiped right far enough and fast enough (not too much vertical movement)
       if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
-        setIsNavigating(true);
-        setSwipeProgress(1); //Animate to the right
-        setTimeout(() => {
-          // Get the last scroll position from session storage
-          const lastScrollPosition = sessionStorage.getItem('homeScrollPosition');
+        // Get the last scroll position from session storage
+        const lastScrollPosition = sessionStorage.getItem('homeScrollPosition');
 
-          // Navigate back to home
-          navigate('/');
+        // Navigate back to home
+        navigate('/');
 
-          // After navigation, restore scroll position (needs to be handled in the main page)
-          if (lastScrollPosition) {
-            sessionStorage.setItem('shouldRestoreScroll', 'true');
-          }
-          setSwipeProgress(0);
-          setIsNavigating(false);
-        }, 300); // Adjust animation duration as needed
+        // After navigation, restore scroll position (needs to be handled in the main page)
+        if (lastScrollPosition) {
+          sessionStorage.setItem('shouldRestoreScroll', 'true');
+        }
       }
     };
 
@@ -92,8 +89,7 @@ export default function SettingsPage() {
       element.removeEventListener('touchmove', handleTouchMove);
       element.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [navigate]);
-
+  }, [navigate, touchStartX, touchStartY]);
 
   // Save scroll position when leaving settings page
   React.useEffect(() => {
@@ -114,41 +110,10 @@ export default function SettingsPage() {
     { value: "60", label: "1 hour" },
   ];
 
+
   return (
     <PageTransition direction={1}>
-      <div 
-        ref={pageRef} 
-        className="min-h-screen bg-background relative overflow-hidden"
-        style={{
-          transform: `translateX(${-swipeProgress * 100}%)`,
-          transition: isNavigating ? 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
-          opacity: isNavigating ? 1 - swipeProgress : 1
-        }}
-      >
-        {/* Swipe indicator overlay */}
-        <div 
-          className="fixed inset-0 pointer-events-none z-50 flex items-center justify-start pl-4"
-          style={{
-            opacity: swipeProgress * 0.7,
-            transition: 'opacity 0.2s ease'
-          }}
-        >
-          <div className="rounded-full bg-primary/20 p-3 backdrop-blur-sm">
-            <svg 
-              className="w-6 h-6 text-primary" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-              style={{
-                transform: `translateX(${-swipeProgress * 10}px)`,
-                transition: 'transform 0.1s ease-out'
-              }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </div>
-        </div>
-
+      <div ref={pageRef} className="min-h-screen bg-background">
         {/* Header */}
         <div className="sticky top-0 z-10 border-b bg-background">
           <div className="container flex h-14 max-w-screen-2xl items-center">
@@ -156,15 +121,7 @@ export default function SettingsPage() {
               variant="ghost"
               size="sm"
               className="mr-2"
-              onClick={() => {
-                setIsNavigating(true);
-                setSwipeProgress(1);
-                setTimeout(() => {
-                  navigate("/");
-                  setSwipeProgress(0);
-                  setIsNavigating(false);
-                }, 300);
-              }}
+              onClick={() => navigate("/")}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>

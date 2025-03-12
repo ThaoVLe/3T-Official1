@@ -1,241 +1,169 @@
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileEdit, LogOut, Settings } from "lucide-react";
+import { PlusCircle, FileEdit } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PageTransition } from "@/components/animations";
-import { useToast } from "@/hooks/use-toast";
+import { PageTransition, cardVariants } from "@/components/animations";
 
 export default function Home() {
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
-  const userEmail = localStorage.getItem('userEmail');
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const entriesContainerRef = useRef<HTMLDivElement>(null);
-  const prevScrollY = useRef<number>(0);
-  const [isScrolling, setIsScrolling] = useState(false);
-
-  // Check if user is logged in
-  useEffect(() => {
-    if (!userEmail) {
-      navigate("/auth");
-    }
-  }, [navigate]);
-
-  // Fetch entries for the current user
-  const { data: allEntries = [], isLoading, error } = useQuery<DiaryEntry[]>({
+  const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
     queryKey: ["/api/entries"],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/entries');
-        if (!response.ok) throw new Error('Failed to fetch entries');
-        return response.json();
-      } catch (err) {
-        console.error('Error fetching entries:', err);
-        throw err;
-      }
-    },
-    enabled: !!userEmail,
-    refetchInterval: 2000, // Refetch every 2 seconds
-    refetchOnWindowFocus: true,
-    staleTime: 0
   });
 
-  console.log("All entries from API:", allEntries);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRestoredRef = useRef(false);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
-  // Filter entries by userId client-side
-  const entries = allEntries.filter(entry =>
-    entry.userId && userEmail &&
-    entry.userId.toLowerCase() === userEmail.toLowerCase()
-  );
-
-  console.log("Home page render:", { userEmail, entriesCount: entries?.length, filteredEntries: entries });
-
-  const handleSignOut = () => {
-    localStorage.removeItem('userEmail');
-    navigate("/auth");
-  };
-
-  // Enhanced scroll restoration
   useEffect(() => {
-    const shouldRestore = sessionStorage.getItem('shouldRestoreScroll');
-    if (shouldRestore === 'true') {
-      const position = parseInt(sessionStorage.getItem('homeScrollPosition') || '0');
-      window.scrollTo({ top: position, behavior: 'smooth' });
-      sessionStorage.removeItem('shouldRestoreScroll');
-    }
+    const storeScrollPosition = () => {
+      const container = document.querySelector('.diary-content');
+      if (container) {
+        sessionStorage.setItem('homeScrollPosition', String(container.scrollTop));
+      }
+    };
+
+    window.addEventListener('visibilitychange', storeScrollPosition);
+    window.addEventListener('beforeunload', storeScrollPosition);
+
+    return () => {
+      storeScrollPosition(); 
+      window.removeEventListener('visibilitychange', storeScrollPosition);
+      window.removeEventListener('beforeunload', storeScrollPosition);
+    };
   }, []);
 
-  // Save scroll position before navigating away
   useEffect(() => {
-    const handleScroll = () => {
-      if (!isScrolling) {
-        prevScrollY.current = window.scrollY;
-        sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
+    if (!entries || entries.length === 0 || scrollRestoredRef.current) return;
+
+    const restoreScroll = () => {
+      const lastViewedEntryId = sessionStorage.getItem('lastViewedEntryId');
+      const container = document.querySelector('.diary-content');
+
+      if (container) {
+        if (lastViewedEntryId) {
+          const entryElement = document.getElementById(`entry-${lastViewedEntryId}`);
+          if (entryElement) {
+            container.scrollTop = 0;
+            entryElement.scrollIntoView({ behavior: 'instant', block: 'center' });
+            scrollRestoredRef.current = true;
+            return;
+          }
+        }
+
+        const savedPosition = sessionStorage.getItem('homeScrollPosition');
+        if (savedPosition) {
+          container.scrollTop = parseInt(savedPosition);
+          scrollRestoredRef.current = true;
+        }
       }
     };
 
-    const handleBeforeUnload = () => {
-      sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
-    };
+    setTimeout(restoreScroll, 50);
+  }, [entries]);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [isScrolling]);
-
-
-  // Handle swipe gestures similar to social media apps
   useEffect(() => {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchStartTime = 0;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const touchEndTime = Date.now();
-
-      const deltaX = touchEndX - touchStartX;
-      const deltaY = Math.abs(touchEndY - touchStartY);
-      const swipeTime = touchEndTime - touchStartTime;
-
-      // Left swipe to navigate to settings (horizontal swipe with low vertical movement)
-      if (deltaX < -80 && deltaY < 50 && swipeTime < 300) {
-        navigate('/settings');
-      }
-
-      // Right swipe (future use)
-      if (deltaX > 80 && deltaY < 50 && swipeTime < 300) {
-        // Optional: Add functionality for right swipe
-        console.log('Right swipe detected');
-      }
-    };
-
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
-
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
+      scrollRestoredRef.current = false;
     };
-  }, [navigate]);
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 bg-card border-b">
-          <div className="flex justify-between items-center px-4 py-3">
-            <Skeleton className="h-10 w-48" />
-            <div className="flex gap-2">
-              <Skeleton className="h-10 w-24" />
-              <Skeleton className="h-10 w-24" />
-            </div>
-          </div>
+      <div className="min-h-screen bg-background overflow-auto diary-content">
+        <div className="sticky top-0 z-10 bg-background border-b px-4 py-4">
+          <Skeleton className="h-10 w-48" />
         </div>
-        <div className="p-4 space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-40 w-full" />
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-64 w-full" />
           ))}
         </div>
       </div>
     );
   }
 
-  return (
-    <PageTransition>
-      <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 bg-card border-b">
-          <div className="flex justify-between items-center px-4 py-3">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              My Journal
+  if (!entries?.length) {
+    return (
+      <PageTransition direction={-1}>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4 bg-background">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Welcome to Your Diary
             </h1>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
-              <Button onClick={() => navigate("/new")} className="flex gap-2">
-                <FileEdit className="w-4 h-4" />
-                New Entry
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4" ref={scrollAreaRef}>
-          {error ? (
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold text-destructive">Error loading entries</h2>
-              <p className="text-muted-foreground mt-2">Please try refreshing the page</p>
-              <Button
-                onClick={() => window.location.reload()}
-                className="mt-4"
-                variant="outline"
-              >
-                Refresh Page
-              </Button>
-            </div>
-          ) : !entries?.length ? (
-            <motion.div
-              className="text-center py-12"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <h2 className="text-2xl font-bold mb-4">No entries yet</h2>
-              <p className="text-muted-foreground mb-8">
-                Start capturing your memories with text, photos, and more.
-              </p>
-              <Button
-                size="lg"
-                className="flex gap-2"
-                onClick={() => navigate("/new")}
-              >
+            <p className="text-muted-foreground mb-8 max-w-md">
+              Start capturing your memories with text, photos, videos, and audio recordings.
+            </p>
+            <Link href="/new">
+              <Button size="lg" className="flex gap-2">
                 <PlusCircle className="w-5 h-5" />
                 Create Your First Entry
               </Button>
-            </motion.div>
-          ) : (
-            <AnimatePresence initial={false} custom={{direction: 'left'}}>
-              <div className="space-y-4 max-w-4xl mx-auto" ref={entriesContainerRef}>
-                {entries.map((entry, index) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: index * 0.1, type: 'spring', stiffness: 100 }}
-                    className="border rounded-lg overflow-hidden shadow-sm transition-all duration-300 transform hover:translate-y-[-2px] hover:shadow-md active:scale-[0.98]"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <EntryCard
-                      entry={entry}
-                      onClick={() => navigate(`/entries/${entry.id}`)}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </AnimatePresence>
-          )}
+            </Link>
+          </motion.div>
         </div>
+      </PageTransition>
+    );
+  }
+
+  return (
+    <PageTransition direction={-1}>
+      <div 
+        ref={containerRef}
+        className="min-h-screen bg-background overflow-auto diary-content"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'none',
+          touchAction: 'pan-y pinch-zoom',
+        }}
+      >
+        <div className="sticky top-0 z-10 bg-card border-b">
+          <div className="flex justify-between items-center px-4 py-3">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              My Diary
+            </h1>
+            <Link href="/new">
+              <Button className="flex gap-2">
+                <FileEdit className="w-4 h-4" />
+                New Entry
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          <div className="space-y-2">
+            {entries.map((entry, index) => (
+              <motion.div
+                key={entry.id}
+                id={`entry-${entry.id}`}
+                className="bg-card"
+                variants={cardVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ delay: index * 0.05 }}
+                whileHover="hover"
+              >
+                <EntryCard 
+                  entry={entry} 
+                  setSelectedEntryId={setSelectedEntryId} 
+                />
+              </motion.div>
+            ))}
+          </div>
+        </AnimatePresence>
       </div>
     </PageTransition>
   );

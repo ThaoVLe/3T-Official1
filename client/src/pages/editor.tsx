@@ -65,53 +65,64 @@ const EditorContent = () => {
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchStartRef.current.x;
     const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+    const swipeTime = Date.now() - touchStartRef.current.time;
 
-    // Prevent vertical scrolling from triggering swipe
-    if (deltaY > Math.abs(deltaX)) {
-      isDraggingRef.current = false;
+    // Only handle horizontal swipes (prevent interference with vertical scrolling)
+    if (deltaY > 40) {
       setSwipeProgress(0);
       return;
     }
 
-    // Only allow right swipe
-    if (deltaX > 0) {
-      const progress = Math.min(deltaX / window.innerWidth, 1);
-      setSwipeProgress(progress);
+    // Prevent default if it's likely a horizontal swipe
+    if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > 10) {
+      e.preventDefault();
+    }
 
-      if (containerRef.current) {
-        containerRef.current.style.transform = `translateX(${deltaX}px)`;
-        containerRef.current.style.opacity = `${1 - progress * 0.3}`;
+    // Right to left swipe for exiting
+    if (deltaX < 0) {
+      // Calculate swipe progress (0 to 1) with easing
+      const progress = Math.min(1, Math.pow(Math.abs(deltaX) / 200, 0.8));
+
+      // Add haptic feedback if supported
+      if (progress > 0.5 && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(10); // Short vibration for feedback
+        } catch (e) {
+          // Ignore vibration errors
+        }
       }
+
+      setSwipeProgress(progress);
     }
   };
 
   const handleTouchEnd = (e: TouchEvent) => {
     if (!isDraggingRef.current) return;
+
     isDraggingRef.current = false;
+    const touchEndX = e.changedTouches[0].clientX;
+    const deltaX = touchEndX - touchStartRef.current.x;
+    const swipeTime = Date.now() - touchStartRef.current.time;
+    const swipeVelocity = Math.abs(deltaX) / swipeTime;
 
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - touchStartRef.current.x;
-    const deltaTime = Date.now() - touchStartRef.current.time;
-    const velocity = deltaX / deltaTime;
+    // If swiped enough or with enough velocity, trigger exit
+    if (swipeProgress > 0.4 || (swipeProgress > 0.2 && swipeVelocity > 0.8)) {
+      // Add haptic feedback if supported
+      if ('vibrate' in navigator) {
+        try {
+          navigator.vibrate(20); // Stronger vibration for confirmation
+        } catch (e) {
+          // Ignore vibration errors
+        }
+      }
 
-    const shouldExit =
-      (deltaX > SWIPE_THRESHOLD && velocity > VELOCITY_THRESHOLD) ||
-      deltaX > window.innerWidth * 0.4;
-
-    if (shouldExit) {
       setIsExiting(true);
-      if (containerRef.current) {
-        containerRef.current.style.transition = 'all 0.3s ease-out';
-        containerRef.current.style.transform = `translateX(${window.innerWidth}px)`;
-        containerRef.current.style.opacity = '0';
-      }
-      setTimeout(() => navigate("/home"), 300);
+      setTimeout(() => {
+        handleSave();
+        navigate('/');
+      }, 300);
     } else {
-      if (containerRef.current) {
-        containerRef.current.style.transition = 'all 0.3s ease-out';
-        containerRef.current.style.transform = 'translateX(0)';
-        containerRef.current.style.opacity = '1';
-      }
+      // Spring back animation
       setSwipeProgress(0);
     }
   };
@@ -296,6 +307,9 @@ const EditorContent = () => {
     return window.innerWidth < 768;
   };
 
+  const handleSave = () => {
+    form.handleSubmit((data) => mutation.mutate(data))
+  }
 
   if (!isAuthChecked) {
     return <div>Loading...</div>;
@@ -307,161 +321,192 @@ const EditorContent = () => {
   }
 
   return (
-    <motion.div
+    <div 
+      className={`min-h-screen bg-background overflow-hidden relative ${isExiting ? 'transition-opacity duration-300 opacity-0' : ''}`} 
       ref={containerRef}
-      className={`flex flex-col h-full bg-background ${isExiting ? 'pointer-events-none' : ''}`}
-      initial={{ x: 0 }}
       style={{
-        touchAction: 'pan-y pinch-zoom',
-        willChange: 'transform',
-      }}
+        '--swipe-progress': swipeProgress,
+      } as React.CSSProperties}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="relative px-4 sm:px-6 py-3 border-b border-border bg-card sticky top-0 z-10">
-        <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/home")}
-            className="whitespace-nowrap"
+      {/* Swipe indicator overlay - becomes visible during swipe */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-50 flex items-center justify-start pl-4 opacity-0 transition-opacity"
+        style={{
+          opacity: swipeProgress * 0.8,
+        }}
+      >
+        <div className="rounded-full bg-primary/20 p-3 backdrop-blur-sm">
+          <svg 
+            className="w-6 h-6 text-primary" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+            style={{
+              transform: `translateX(${-10 + swipeProgress * 10}px)`,
+              transition: 'transform 0.1s ease-out'
+            }}
           >
-            <X className="h-4 w-4 mr-1" />
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={form.handleSubmit((data) => mutation.mutate(data))}
-            disabled={mutation.isPending}
-            className="bg-primary hover:bg-primary/90 whitespace-nowrap"
-          >
-            <Save className="h-4 w-4 mr-1" />
-            {id ? "Update" : "Create"}
-          </Button>
-        </div>
-        <div className="max-w-full sm:max-w-2xl pr-24">
-          <Input
-            {...form.register("title")}
-            className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full bg-transparent text-foreground"
-            placeholder="Untitled Entry..."
-          />
-          {form.watch("feeling") && (
-            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-              <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
-                {form.watch("feeling").label.includes(',') ? (
-                  <>
-                    {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
-                    {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
-                  </>
-                ) : (
-                  <>
-                    {form.watch("feeling").label} {form.watch("feeling").emoji}
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
         </div>
       </div>
 
-      <div
-        className="flex-1 flex flex-col overflow-auto w-full bg-background relative"
-      >
-        <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
-          <TipTapEditor
-            value={form.watch("content")}
-            onChange={(value) => form.setValue("content", value)}
-          />
+      {isExiting && (
+        <div className="fixed inset-0 bg-background z-50 animate-fade-in" />
+      )}
+
+      {!isAuthChecked ? (
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-
-        {form.watch("mediaUrls")?.length > 0 && (
-          <div className="p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
-            <MediaPreview
-              urls={form.watch("mediaUrls")}
-              onRemove={onMediaRemove}
-              loading={isUploading}
-              uploadProgress={uploadProgress}
-            />
+      ) : (
+        <div className="relative px-4 sm:px-6 py-3 border-b border-border bg-card sticky top-0 z-10">
+          <div className="absolute top-3 right-4 sm:right-6 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/home")}
+              className="whitespace-nowrap"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={form.handleSubmit((data) => mutation.mutate(data))}
+              disabled={mutation.isPending}
+              className="bg-primary hover:bg-primary/90 whitespace-nowrap"
+            >
+              <Save className="h-4 w-4 mr-1" />
+              {id ? "Update" : "Create"}
+            </Button>
           </div>
-        )}
-
-        <div className="fixed bottom-24 right-6 z-20">
-          <Button
-            type="button"
-            size="icon"
-            onClick={form.handleSubmit((data) => mutation.mutate(data))}
-            disabled={mutation.isPending}
-            className="h-11 w-11 rounded-full hover:bg-muted"
-          >
-            <Save className="h-6 w-6" />
-          </Button>
+          <div className="max-w-full sm:max-w-2xl pr-24">
+            <Input
+              {...form.register("title")}
+              className="text-xl font-semibold border-0 px-0 h-auto focus-visible:ring-0 w-full bg-transparent text-foreground"
+              placeholder="Untitled Entry..."
+            />
+            {form.watch("feeling") && (
+              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                  {form.watch("feeling").label.includes(',') ? (
+                    <>
+                      {form.watch("feeling").label.split(',')[0].trim()} {form.watch("feeling").emoji.split(' ')[0]}
+                      {' - '}{form.watch("feeling").label.split(',')[1].trim()} {form.watch("feeling").emoji.split(' ')[1]}
+                    </>
+                  ) : (
+                    <>
+                      {form.watch("feeling").label} {form.watch("feeling").emoji}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div
-          className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out"
-          style={{
-            transform: `translateY(${isKeyboardVisible ? -keyboardHeight : 0}px)`,
-            paddingBottom: 'env(safe-area-inset-bottom)'
-          }}
+          className="flex-1 flex flex-col overflow-auto w-full bg-background relative"
         >
-          <div className="bg-background/80 backdrop-blur-sm border-t border-border">
-            <div className="flex items-center justify-around px-4 py-2">
-              <FeelingSelector
-                selectedFeeling={form.getValues("feeling")}
-                onSelect={async (feeling) => {
-                  await hideKeyboard();
-                  form.setValue("feeling", feeling);
-                }}
-                trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-11 w-11 rounded-full hover:bg-muted"
-                  >
-                    <SmilePlus className="h-6 w-6" />
-                    <span className="sr-only">Select Feeling</span>
-                  </Button>
-                }
-              />
+          <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+            <TipTapEditor
+              value={form.watch("content")}
+              onChange={(value) => form.setValue("content", value)}
+            />
+          </div>
 
-              <MediaRecorder
-                onCapture={onMediaUpload}
-                trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-11 w-11 rounded-full hover:bg-muted"
-                  >
-                    <ImagePlus className="h-6 w-6" />
-                    <span className="sr-only">Add Media</span>
-                  </Button>
-                }
+          {form.watch("mediaUrls")?.length > 0 && (
+            <div className="p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
+              <MediaPreview
+                urls={form.watch("mediaUrls")}
+                onRemove={onMediaRemove}
+                loading={isUploading}
+                uploadProgress={uploadProgress}
               />
+            </div>
+          )}
 
-              <LocationSelector
-                selectedLocation={form.getValues("location")}
-                onSelect={(location) => {
-                  hideKeyboard();
-                  form.setValue("location", location);
-                }}
-                trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-11 w-11 rounded-full hover:bg-muted"
-                  >
-                    <MapPin className="h-6 w-6" />
-                    <span className="sr-only">Add Location</span>
-                  </Button>
-                }
-              />
+          <div className="fixed bottom-24 right-6 z-20">
+            <Button
+              type="button"
+              size="icon"
+              onClick={form.handleSubmit((data) => mutation.mutate(data))}
+              disabled={mutation.isPending}
+              className="h-11 w-11 rounded-full hover:bg-muted"
+            >
+              <Save className="h-6 w-6" />
+            </Button>
+          </div>
+
+          <div
+            className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out"
+            style={{
+              transform: `translateY(${isKeyboardVisible ? -keyboardHeight : 0}px)`,
+              paddingBottom: 'env(safe-area-inset-bottom)'
+            }}
+          >
+            <div className="bg-background/80 backdrop-blur-sm border-t border-border">
+              <div className="flex items-center justify-around px-4 py-2">
+                <FeelingSelector
+                  selectedFeeling={form.getValues("feeling")}
+                  onSelect={async (feeling) => {
+                    await hideKeyboard();
+                    form.setValue("feeling", feeling);
+                  }}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-11 w-11 rounded-full hover:bg-muted"
+                    >
+                      <SmilePlus className="h-6 w-6" />
+                      <span className="sr-only">Select Feeling</span>
+                    </Button>
+                  }
+                />
+
+                <MediaRecorder
+                  onCapture={onMediaUpload}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-11 w-11 rounded-full hover:bg-muted"
+                    >
+                      <ImagePlus className="h-6 w-6" />
+                      <span className="sr-only">Add Media</span>
+                    </Button>
+                  }
+                />
+
+                <LocationSelector
+                  selectedLocation={form.getValues("location")}
+                  onSelect={(location) => {
+                    hideKeyboard();
+                    form.setValue("location", location);
+                  }}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-11 w-11 rounded-full hover:bg-muted"
+                    >
+                      <MapPin className="h-6 w-6" />
+                      <span className="sr-only">Add Location</span>
+                    </Button>
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+      )}
+    </div>
   );
 };
 

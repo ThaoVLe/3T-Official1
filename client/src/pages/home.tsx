@@ -1,11 +1,11 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileEdit, LogOut } from "lucide-react";
+import { PlusCircle, FileEdit, LogOut, Settings } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/animations";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,10 @@ export default function Home() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const userEmail = localStorage.getItem('userEmail');
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const entriesContainerRef = useRef<HTMLDivElement>(null);
+  const prevScrollY = useRef<number>(0);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   // Check if user is logged in
   useEffect(() => {
@@ -42,10 +46,10 @@ export default function Home() {
   });
 
   console.log("All entries from API:", allEntries);
-  
+
   // Filter entries by userId client-side
-  const entries = allEntries.filter(entry => 
-    entry.userId && userEmail && 
+  const entries = allEntries.filter(entry =>
+    entry.userId && userEmail &&
     entry.userId.toLowerCase() === userEmail.toLowerCase()
   );
 
@@ -55,6 +59,81 @@ export default function Home() {
     localStorage.removeItem('userEmail');
     navigate("/auth");
   };
+
+  // Enhanced scroll restoration
+  useEffect(() => {
+    const shouldRestore = sessionStorage.getItem('shouldRestoreScroll');
+    if (shouldRestore === 'true') {
+      const position = parseInt(sessionStorage.getItem('homeScrollPosition') || '0');
+      window.scrollTo({ top: position, behavior: 'smooth' });
+      sessionStorage.removeItem('shouldRestoreScroll');
+    }
+  }, []);
+
+  // Save scroll position before navigating away
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!isScrolling) {
+        prevScrollY.current = window.scrollY;
+        sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isScrolling]);
+
+
+  // Handle swipe gestures similar to social media apps
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndTime = Date.now();
+
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = Math.abs(touchEndY - touchStartY);
+      const swipeTime = touchEndTime - touchStartTime;
+
+      // Left swipe to navigate to settings (horizontal swipe with low vertical movement)
+      if (deltaX < -80 && deltaY < 50 && swipeTime < 300) {
+        navigate('/settings');
+      }
+
+      // Right swipe (future use)
+      if (deltaX > 80 && deltaY < 50 && swipeTime < 300) {
+        // Optional: Add functionality for right swipe
+        console.log('Right swipe detected');
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [navigate]);
 
   if (isLoading) {
     return (
@@ -101,13 +180,13 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="p-4">
+        <div className="p-4" ref={scrollAreaRef}>
           {error ? (
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold text-destructive">Error loading entries</h2>
               <p className="text-muted-foreground mt-2">Please try refreshing the page</p>
-              <Button 
-                onClick={() => window.location.reload()} 
+              <Button
+                onClick={() => window.location.reload()}
                 className="mt-4"
                 variant="outline"
               >
@@ -125,8 +204,8 @@ export default function Home() {
               <p className="text-muted-foreground mb-8">
                 Start capturing your memories with text, photos, and more.
               </p>
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="flex gap-2"
                 onClick={() => navigate("/new")}
               >
@@ -135,17 +214,19 @@ export default function Home() {
               </Button>
             </motion.div>
           ) : (
-            <AnimatePresence>
-              <div className="space-y-4 max-w-4xl mx-auto">
+            <AnimatePresence initial={false} custom={{direction: 'left'}}>
+              <div className="space-y-4 max-w-4xl mx-auto" ref={entriesContainerRef}>
                 {entries.map((entry, index) => (
                   <motion.div
                     key={entry.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: index * 0.1 }}
+                    transition={{ delay: index * 0.1, type: 'spring', stiffness: 100 }}
+                    className="border rounded-lg overflow-hidden shadow-sm transition-all duration-300 transform hover:translate-y-[-2px] hover:shadow-md active:scale-[0.98]"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <EntryCard 
+                    <EntryCard
                       entry={entry}
                       onClick={() => navigate(`/entries/${entry.id}`)}
                     />

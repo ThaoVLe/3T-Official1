@@ -8,10 +8,14 @@ interface Settings {
   isLargeText: boolean;
   // Privacy settings
   isPublicSharingEnabled: boolean;
+  isPasswordProtectionEnabled: boolean;
+  autoLockTimeout: number; // in minutes, 0 means disabled
   // Methods
   setTheme: (theme: Theme) => void;
   setLargeText: (isLarge: boolean) => void;
   setPublicSharing: (enabled: boolean) => void;
+  setPasswordProtection: (enabled: boolean) => void;
+  setAutoLockTimeout: (minutes: number) => void;
 }
 
 export const useSettings = create<Settings>()(
@@ -21,10 +25,14 @@ export const useSettings = create<Settings>()(
       isLargeText: false,
       // Privacy defaults
       isPublicSharingEnabled: false,
+      isPasswordProtectionEnabled: false,
+      autoLockTimeout: 0,
       // Methods
       setTheme: (theme) => set({ theme }),
       setLargeText: (isLargeText) => set({ isLargeText }),
       setPublicSharing: (isPublicSharingEnabled) => set({ isPublicSharingEnabled }),
+      setPasswordProtection: (isPasswordProtectionEnabled) => set({ isPasswordProtectionEnabled }),
+      setAutoLockTimeout: (autoLockTimeout) => set({ autoLockTimeout }),
     }),
     {
       name: 'diary-settings',

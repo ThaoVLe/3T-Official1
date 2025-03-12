@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileEdit, Trash2, Share2, MessageCircle, Play } from "lucide-react";
+import { FileEdit, Trash2, Share2, MessageCircle, Play, Lock } from "lucide-react";
 import type { DiaryEntry } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { ProgressiveImage } from './progressive-image';
-
+import { useSettings } from "@/lib/settings";
 
 interface EntryCardProps {
   entry: DiaryEntry;
@@ -29,7 +29,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchStartTimeRef = useRef<number>(0);
-  //const settings = useSettings(); //Removed
+  const settings = useSettings();
 
   useEffect(() => {
     const container = mediaScrollRef.current;
@@ -199,9 +199,14 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       <CardHeader className="space-y-0 pb-2 pt-3 px-0">
         <div className="flex justify-between items-start px-4">
           <div className="flex flex-col space-y-1.5">
-            <CardTitle className="text-[18px] font-semibold text-foreground">
-              {entry.title || "Untitled Entry"}
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-[18px] font-semibold text-foreground">
+                {entry.title || "Untitled Entry"}
+              </CardTitle>
+              {entry.sensitive && settings.isPasswordProtectionEnabled && (
+                <Lock className="h-4 w-4 text-amber-600" />
+              )}
+            </div>
 
             <div className="text-sm text-muted-foreground">
               {formatTimeAgo(entry.createdAt)}

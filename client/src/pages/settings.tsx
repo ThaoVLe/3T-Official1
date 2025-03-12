@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PasswordDialog } from "@/components/password-dialog";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Placeholder for toast function - replace with your actual implementation
 const toast = ({ title, description, variant }: { title: string; description: string; variant?: string }) => {
@@ -110,6 +113,32 @@ export default function SettingsPage() {
     { value: "60", label: "1 hour" },
   ];
 
+  const [showPasswordDialog, setShowPasswordDialog] = React.useState(false);
+
+  const updatePasswordMutation = useMutation({
+    mutationFn: async (password: string) => {
+      await apiRequest("POST", "/api/settings/password", { password });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password updated",
+        description: "Your protection password has been set successfully.",
+      });
+      setShowPasswordDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update password",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePasswordSet = (password: string) => {
+    updatePasswordMutation.mutate(password);
+  };
 
   return (
     <PageTransition direction={1}>
@@ -208,6 +237,51 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Security</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Password Protection</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Require password for sensitive entries
+                      </div>
+                    </div>
+                    <Switch
+                      checked={settings.isPasswordProtectionEnabled}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setShowPasswordDialog(true);
+                        }
+                        settings.setPasswordProtection(checked);
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Auto-Lock</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Lock app after period of inactivity
+                      </div>
+                    </div>
+                    <Select
+                      value={settings.autoLockTimeout.toString()}
+                      onValueChange={(value) => settings.setAutoLockTimeout(parseInt(value))}
+                    >
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Select time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {autoLockOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </Card>
             </TabsContent>
 
@@ -223,6 +297,12 @@ export default function SettingsPage() {
           </Tabs>
         </div>
       </div>
+      <PasswordDialog
+        open={showPasswordDialog}
+        onOpenChange={setShowPasswordDialog}
+        onSubmit={handlePasswordSet}
+        mode="set"
+      />
     </PageTransition>
   );
 }

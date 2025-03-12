@@ -10,15 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
 
 export default function Home() {
-  const userEmail = localStorage.getItem("userEmail");
-
   const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
-    queryKey: ["/api/entries", userEmail],
-    queryFn: async () => {
-      const response = await fetch(`/api/entries?email=${encodeURIComponent(userEmail!)}`);
-      if (!response.ok) throw new Error("Failed to fetch entries");
-      return response.json();
-    },
+    queryKey: ["/api/entries"],
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,54 +75,9 @@ export default function Home() {
     window.scrollTo(0, 0);
   }, []);
 
-  // State for filters
-  const [filters, setFilters] = useState({
-    feeling: "",
-    location: "",
-    tag: "",
-    startDate: "",
-    endDate: ""
-  });
-  
-  // Function to apply filters
-  const applyFilters = async () => {
-    setIsLoading(true);
-    try {
-      // Build query string from non-empty filters
-      const queryParams = new URLSearchParams();
-      queryParams.append("email", user.email);
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-      
-      const response = await fetch(`/api/entries?${queryParams.toString()}`);
-      if (!response.ok) throw new Error("Failed to fetch entries");
-      
-      const data = await response.json();
-      setEntries(data);
-    } catch (error) {
-      console.error("Error applying filters:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Reset filters
-  const resetFilters = () => {
-    setFilters({
-      feeling: "",
-      location: "",
-      tag: "",
-      startDate: "",
-      endDate: ""
-    });
-    fetchEntries(); // Fetch all entries without filters
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background overflow-auto diary-content">
         <div className="sticky top-0 z-10 bg-background border-b px-4 py-4">
           <Skeleton className="h-10 w-48" />
         </div>
@@ -141,76 +89,6 @@ export default function Home() {
       </div>
     );
   }
-
-  // Add filter UI component
-  const FilterPanel = () => (
-    <div className="bg-card p-4 mb-4 rounded-lg">
-      <h3 className="font-semibold mb-2">Filter Entries</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div>
-          <label className="text-sm text-muted-foreground">Feeling</label>
-          <select 
-            className="w-full p-2 bg-background border rounded"
-            value={filters.feeling}
-            onChange={(e) => setFilters({...filters, feeling: e.target.value})}
-          >
-            <option value="">Any feeling</option>
-            <option value="happy">Happy</option>
-            <option value="sad">Sad</option>
-            <option value="excited">Excited</option>
-            <option value="calm">Calm</option>
-          </select>
-        </div>
-        
-        <div>
-          <label className="text-sm text-muted-foreground">Location</label>
-          <input 
-            className="w-full p-2 bg-background border rounded"
-            placeholder="Filter by location"
-            value={filters.location}
-            onChange={(e) => setFilters({...filters, location: e.target.value})}
-          />
-        </div>
-        
-        <div>
-          <label className="text-sm text-muted-foreground">Tag</label>
-          <input 
-            className="w-full p-2 bg-background border rounded"
-            placeholder="Filter by tag"
-            value={filters.tag}
-            onChange={(e) => setFilters({...filters, tag: e.target.value})}
-          />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-        <div>
-          <label className="text-sm text-muted-foreground">Start Date</label>
-          <input 
-            type="date"
-            className="w-full p-2 bg-background border rounded"
-            value={filters.startDate}
-            onChange={(e) => setFilters({...filters, startDate: e.target.value})}
-          />
-        </div>
-        
-        <div>
-          <label className="text-sm text-muted-foreground">End Date</label>
-          <input 
-            type="date"
-            className="w-full p-2 bg-background border rounded"
-            value={filters.endDate}
-            onChange={(e) => setFilters({...filters, endDate: e.target.value})}
-          />
-        </div>
-      </div>
-      
-      <div className="flex justify-end mt-3 gap-2">
-        <Button variant="outline" onClick={resetFilters}>Reset</Button>
-        <Button onClick={applyFilters}>Apply Filters</Button>
-      </div>
-    </div>
-  );
 
   if (!entries?.length) {
     return (
@@ -264,7 +142,6 @@ export default function Home() {
           </div>
         </div>
 
-        <FilterPanel />
         <AnimatePresence>
           <div className="space-y-2">
             {entries.map((entry, index) => (

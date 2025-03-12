@@ -1,78 +1,25 @@
-import { diaryEntries, users, type DiaryEntry, type InsertEntry, type User, type InsertUser } from "@shared/schema";
+import { diaryEntries, comments, settings, type DiaryEntry, type InsertEntry, type Comment, type InsertComment, type Settings, type InsertSettings } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, like, gte, lt } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
-  // User methods
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-
-  // Diary entry methods
-  getAllEntriesByEmail(email: string, filters: any): Promise<DiaryEntry[]>;
+  getAllEntries(): Promise<DiaryEntry[]>;
   getEntry(id: number): Promise<DiaryEntry | undefined>;
   createEntry(entry: InsertEntry): Promise<DiaryEntry>;
-  updateEntry(id: number, entry: Partial<InsertEntry>): Promise<DiaryEntry | undefined>;
+  updateEntry(id: number, entry: InsertEntry): Promise<DiaryEntry | undefined>;
   deleteEntry(id: number): Promise<boolean>;
+  // Settings methods
+  getSettings(userId: number): Promise<Settings | undefined>;
+  updateSettings(userId: number, settings: Partial<InsertSettings>): Promise<Settings>;
+  // Comment methods
+  getComments(entryId: number): Promise<Comment[]>;
+  addComment(comment: InsertComment): Promise<Comment>;
+  deleteComment(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email.toLowerCase()));
-    return user;
-  }
-
-  async createUser(user: InsertUser): Promise<User> {
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        ...user,
-        email: user.email.toLowerCase()
-      })
-      .returning();
-    return newUser;
-  }
-
-  async getAllEntriesByEmail(email: string, filters: any = {}): Promise<DiaryEntry[]> {
-    try {
-      let query = and(eq(diaryEntries.userEmail, email.toLowerCase()));
-
-      // Add filters if they exist
-      if (filters.feeling) {
-        query = and(query, like(diaryEntries.feeling, `%${filters.feeling}%`));
-      }
-
-      if (filters.location) {
-        query = and(query, like(diaryEntries.location, `%${filters.location}%`));
-      }
-
-      if (filters.tags) {
-        query = and(query, like(diaryEntries.tags, `%${filters.tags}%`));
-      }
-
-      if (filters.startDate) {
-        query = and(query, gte(diaryEntries.createdAt, new Date(filters.startDate)));
-      }
-
-      if (filters.endDate) {
-        const endDate = new Date(filters.endDate);
-        endDate.setDate(endDate.getDate() + 1); // Include the end date fully
-        query = and(query, lt(diaryEntries.createdAt, endDate));
-      }
-
-      const entries = await db
-        .select()
-        .from(diaryEntries)
-        .where(query)
-        .orderBy(desc(diaryEntries.createdAt));
-
-      return entries;
-    } catch (error) {
-      console.error('Error getting entries by email:', error);
-      throw error;
-    }
+  async getAllEntries(): Promise<DiaryEntry[]> {
+    return await db.select().from(diaryEntries).orderBy(desc(diaryEntries.createdAt));
   }
 
   async getEntry(id: number): Promise<DiaryEntry | undefined> {
@@ -84,39 +31,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEntry(entry: InsertEntry): Promise<DiaryEntry> {
-    console.log("Creating entry with data:", entry);
-    // Ensure userEmail is stored
-    if (!entry.userEmail) {
-      throw new Error("User email is required");
-    }
-
-    const entryToInsert = {
-      ...entry,
-      userEmail: entry.userEmail.toLowerCase(), //Added to maintain consistency with other functions
-      date: entry.date || new Date().toISOString(),
-    };
-
-    console.log("Creating entry with formatted data:", entryToInsert);
-
-    try {
-      const [newEntry] = await db
-        .insert(diaryEntries)
-        .values(entryToInsert)
-        .returning();
-      console.log("Entry created:", newEntry);
-      return newEntry;
-    } catch (error) {
-      console.error("Database error when creating entry:", error);
-      throw error;
-    }
+    const [newEntry] = await db
+      .insert(diaryEntries)
+      .values({
+        title: entry.title,
+        content: entry.content,
+        mediaUrls: entry.mediaUrls || [],
+        feeling: entry.feeling,
+        location: entry.location,
+        sensitive: entry.sensitive || false
+      })
+      .returning();
+    return newEntry;
   }
 
-  async updateEntry(id: number, entry: Partial<InsertEntry>): Promise<DiaryEntry | undefined> {
+  async updateEntry(id: number, entry: InsertEntry): Promise<DiaryEntry | undefined> {
     const [updated] = await db
       .update(diaryEntries)
       .set({
-        ...entry,
-        userEmail: entry.userEmail?.toLowerCase()
+        title: entry.title,
+        content: entry.content,
+        mediaUrls: entry.mediaUrls || [],
+        feeling: entry.feeling,
+        location: entry.location,
+        sensitive: entry.sensitive || false
       })
       .where(eq(diaryEntries.id, id))
       .returning();
@@ -127,6 +65,59 @@ export class DatabaseStorage implements IStorage {
     const [deleted] = await db
       .delete(diaryEntries)
       .where(eq(diaryEntries.id, id))
+      .returning();
+    return !!deleted;
+  }
+
+  // Settings methods
+  async getSettings(userId: number): Promise<Settings | undefined> {
+    const [userSettings] = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.userId, userId));
+    return userSettings;
+  }
+
+  async updateSettings(userId: number, settingsData: Partial<InsertSettings>): Promise<Settings> {
+    const existingSettings = await this.getSettings(userId);
+
+    if (existingSettings) {
+      const [updated] = await db
+        .update(settings)
+        .set(settingsData)
+        .where(eq(settings.userId, userId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(settings)
+        .values({ ...settingsData, userId })
+        .returning();
+      return created;
+    }
+  }
+
+  // Comment methods
+  async getComments(entryId: number): Promise<Comment[]> {
+    return await db
+      .select()
+      .from(comments)
+      .where(eq(comments.entryId, entryId))
+      .orderBy(desc(comments.createdAt));
+  }
+
+  async addComment(comment: InsertComment): Promise<Comment> {
+    const [newComment] = await db
+      .insert(comments)
+      .values(comment)
+      .returning();
+    return newComment;
+  }
+
+  async deleteComment(id: number): Promise<boolean> {
+    const [deleted] = await db
+      .delete(comments)
+      .where(eq(comments.id, id))
       .returning();
     return !!deleted;
   }

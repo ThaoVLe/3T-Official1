@@ -64,23 +64,29 @@ const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunct
     const port = 5000;
     log(`Attempting to bind to port ${port}...`);
 
-    await new Promise<void>((resolve, reject) => {
-      server.listen({
-        port,
-        host: "0.0.0.0",
-      })
-      .once('listening', () => {
-        log(`Server successfully listening on port ${port}`);
-        resolve();
-      })
-      .once('error', (err: NodeJS.ErrnoException) => {
-        if (err.code === 'EADDRINUSE') {
-          reject(new Error(`Port ${port} is already in use. Please ensure no other server is running on this port.`));
-        } else {
-          reject(err);
-        }
-      });
-    });
+    // Add timeout to prevent hanging
+    await Promise.race([
+      new Promise<void>((resolve, reject) => {
+        server.listen({
+          port,
+          host: "0.0.0.0",
+        })
+        .once('listening', () => {
+          log(`Server successfully listening on port ${port}`);
+          resolve();
+        })
+        .once('error', (err: NodeJS.ErrnoException) => {
+          if (err.code === 'EADDRINUSE') {
+            reject(new Error(`Port ${port} is already in use. Please ensure no other server is running on this port.`));
+          } else {
+            reject(err);
+          }
+        });
+      }),
+      new Promise((_resolve, reject) => 
+        setTimeout(() => reject(new Error('Server startup timed out after 20 seconds')), 20000)
+      )
+    ]);
 
   } catch (err) {
     log(`Fatal error starting server: ${(err as Error).message}`);

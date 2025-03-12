@@ -4,7 +4,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { insertEntrySchema, insertUserSchema } from "@shared/schema";
+import { insertEntrySchema, insertCommentSchema } from "@shared/schema";
 import express from 'express';
 
 // Ensure uploads directory exists
@@ -12,6 +12,17 @@ const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+
+// Update video MIME types support
+const validVideoTypes = [
+  'video/mp4',
+  'video/quicktime',
+  'video/x-m4v',
+  'video/webm',
+  'video/3gpp',
+  'video/x-matroska',
+  'video/mov'  // Add explicit MOV support
+];
 
 // Configure multer for file uploads
 const upload = multer({
@@ -24,6 +35,24 @@ const upload = multer({
   }),
   limits: { 
     fileSize: 50 * 1024 * 1024 // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const validImageTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/heic',
+      'image/heif'
+    ];
+
+    const allowedTypes = [...validImageTypes, ...validVideoTypes];
+
+    if (!allowedTypes.includes(file.mimetype)) {
+      cb(new Error('Invalid file type. Please upload an image or video file.'));
+      return;
+    }
+
+    cb(null, true);
   }
 });
 
@@ -31,57 +60,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded files
   app.use('/uploads', express.static(uploadsDir));
 
-  // Authentication routes
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const result = insertUserSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: "Invalid user data", 
-          errors: result.error.errors 
-        });
-      }
-
-      // Convert email to lowercase
-      const email = result.data.email.toLowerCase();
-      let user = await storage.getUserByEmail(email);
-      if (!user) {
-        // Create new user if they don't exist
-        user = await storage.createUser({ ...result.data, email });
-      }
-
-      res.status(200).json(user);
-    } catch (error) {
-      console.error("Error in login:", error);
-      res.status(500).json({ message: "Failed to process login" });
-    }
-  });
-
-  // Diary entry routes
   app.get("/api/entries", async (req, res) => {
     try {
-      const email = (req.query.email as string)?.toLowerCase();
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
-      }
-
-      // Extract filter parameters
-      const feeling = req.query.feeling as string;
-      const location = req.query.location as string;
-      const tag = req.query.tag as string;
-      const startDate = req.query.startDate as string;
-      const endDate = req.query.endDate as string;
-
-      // Build filter object
-      const filters: any = {};
-      if (feeling) filters.feeling = feeling;
-      if (location) filters.location = location;
-      if (tag) filters.tags = tag;
-      if (startDate) filters.startDate = startDate;
-      if (endDate) filters.endDate = endDate;
-
-      // Get entries with optional filters
-      const entries = await storage.getAllEntriesByEmail(email, filters);
+      const entries = await storage.getAllEntries();
       res.json(entries);
     } catch (error) {
       console.error("Error fetching entries:", error);
@@ -89,37 +70,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/entries/:id", async (req, res) => {
+    try {
+      const entry = await storage.getEntry(parseInt(req.params.id));
+      if (!entry) return res.status(404).json({ message: "Entry not found" });
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching entry:", error);
+      res.status(500).json({ message: "Failed to fetch entry" });
+    }
+  });
+
   app.post("/api/entries", async (req, res) => {
     try {
-      console.log("Received entry data:", req.body);
-
       const result = insertEntrySchema.safeParse(req.body);
       if (!result.success) {
-        console.error("Validation errors:", result.error.errors);
         return res.status(400).json({ 
           message: "Invalid entry data", 
           errors: result.error.errors 
         });
       }
-
-      // Ensure email is lowercase and preserve all fields
-      const entryData = {
-        ...result.data,
-        userEmail: result.data.userEmail.toLowerCase(),
-        date: result.data.date || new Date().toISOString()
-      };
-
-      console.log("Creating entry with data:", entryData);
-      const entry = await storage.createEntry(entryData);
-      console.log("Entry created successfully:", entry);
-
+      const entry = await storage.createEntry(result.data);
       res.status(201).json(entry);
     } catch (error) {
       console.error("Error creating entry:", error);
-      res.status(500).json({ 
-        message: "Failed to create entry",
-        error: error instanceof Error ? error.message : String(error)
-      });
+      res.status(500).json({ message: "Failed to create entry" });
     }
   });
 
@@ -132,14 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errors: result.error.errors 
         });
       }
-
-      // Ensure email is lowercase if it's being updated
-      const updateData = {
-        ...result.data,
-        userEmail: result.data.userEmail?.toLowerCase()
-      };
-
-      const entry = await storage.updateEntry(parseInt(req.params.id), updateData);
+      const entry = await storage.updateEntry(parseInt(req.params.id), result.data);
       if (!entry) return res.status(404).json({ message: "Entry not found" });
       res.json(entry);
     } catch (error) {
@@ -168,6 +136,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         return res.status(400).json({ message: "Error uploading file" });
       } else if (err) {
+        if (err.message === 'Invalid file type') {
+          return res.status(400).json({ message: "Invalid file type. Please upload an image or video file." });
+        }
         return res.status(500).json({ message: "Server error while uploading file" });
       }
 
@@ -178,6 +149,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileUrl = `/uploads/${req.file.filename}`;
       res.json({ url: fileUrl });
     });
+  });
+
+  // Comment routes
+  app.get("/api/entries/:id/comments", async (req, res) => {
+    try {
+      const comments = await storage.getComments(parseInt(req.params.id));
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post("/api/entries/:id/comments", async (req, res) => {
+    try {
+      const result = insertCommentSchema.safeParse({
+        entryId: parseInt(req.params.id),
+        content: req.body.content
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid comment data", 
+          errors: result.error.errors 
+        });
+      }
+
+      const comment = await storage.addComment(result.data);
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  app.delete("/api/entries/:id/comments/:commentId", async (req, res) => {
+    try {
+      const success = await storage.deleteComment(parseInt(req.params.commentId));
+      if (!success) return res.status(404).json({ message: "Comment not found" });
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
   });
 
   const httpServer = createServer(app);

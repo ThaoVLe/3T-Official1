@@ -16,23 +16,22 @@ import { ScrollToTop } from "./components/scroll-to-top";
 function AppRoutes() {
   return (
     <Switch>
-      <Route path="/" component={Auth} />
       <Route path="/auth" component={Auth} />
-      <AuthRequired>
-        <Layout>
-          <Switch>
-            <Route path="/home" component={Home} />
-            <Route path="/new" component={Editor} />
-            <Route path="/edit/:id" component={Editor} />
-            <Route path="/entry/:id" component={EntryView} />
-            <Route path="/settings" component={Settings} />
-            <Route path="/recent" component={Home} />
-            <Route path="/calendar" component={Home} />
-            <Route path="/entries" component={Home} />
-            <Route component={NotFound} />
-          </Switch>
-        </Layout>
-      </AuthRequired>
+      <Route path="/">
+        <AuthRequired>
+          <Layout>
+            <Switch>
+              <Route path="/" component={Home} />
+              <Route path="/home" component={Home} />
+              <Route path="/new" component={Editor} />
+              <Route path="/edit/:id" component={Editor} />
+              <Route path="/entry/:id" component={EntryView} />
+              <Route path="/settings" component={Settings} />
+              <Route component={NotFound} />
+            </Switch>
+          </Layout>
+        </AuthRequired>
+      </Route>
     </Switch>
   );
 }

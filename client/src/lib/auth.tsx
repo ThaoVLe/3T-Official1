@@ -19,6 +19,7 @@ export function AuthRequired({ children }: { children: ReactNode }) {
 
     if (!userEmail || !loginTimestamp) {
       // No user info, show login
+      navigate("/auth");
       return;
     }
 
@@ -27,11 +28,9 @@ export function AuthRequired({ children }: { children: ReactNode }) {
       // Login expired, clear storage
       localStorage.removeItem("userEmail");
       localStorage.removeItem("loginTimestamp");
+      navigate("/auth");
       return;
     }
-
-    // Valid login, redirect to home
-    navigate("/");
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -58,7 +57,7 @@ export function AuthRequired({ children }: { children: ReactNode }) {
       const user = await response.json();
       localStorage.setItem("userEmail", user.email.toLowerCase());
       localStorage.setItem("loginTimestamp", Date.now().toString());
-      navigate('/');
+      navigate("/home");
     } catch (error) {
       toast({
         title: "Error",

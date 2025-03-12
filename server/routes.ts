@@ -94,6 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Expires', '0');
       res.setHeader('Pragma', 'no-cache');
       
+      // Get all entries without filtering by userId (for testing)
       const entries = await storage.getAllEntries();
       console.log("Fetched entries from database:", entries);
       res.json(entries);

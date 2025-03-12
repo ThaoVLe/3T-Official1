@@ -15,12 +15,18 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getAllEntries(userId: string): Promise<DiaryEntry[]> {
-    return await db
+  async getAllEntries(userId?: string): Promise<DiaryEntry[]> {
+    // If userId is provided, filter by it, otherwise return all entries
+    const query = db
       .select()
       .from(diaryEntries)
-      .where(eq(diaryEntries.userId, userId))
       .orderBy(desc(diaryEntries.createdAt));
+    
+    if (userId) {
+      return await query.where(eq(diaryEntries.userId, userId));
+    }
+    
+    return await query;
   }
 
   async getEntry(id: number, userId: string): Promise<DiaryEntry | undefined> {

@@ -22,13 +22,23 @@ export default function Home() {
     }
   }, [navigate]);
 
-  // Query entries with proper type
+  // Fetch entries for the current user
   const { data: entries = [], isLoading, error } = useQuery<DiaryEntry[]>({
-    queryKey: ["/api/entries", userEmail],
+    queryKey: ["/api/entries", { userEmail }],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/entries?userEmail=${encodeURIComponent(userEmail || '')}`);
+        if (!response.ok) throw new Error('Failed to fetch entries');
+        return response.json();
+      } catch (err) {
+        console.error('Error fetching entries:', err);
+        throw err;
+      }
+    },
     enabled: !!userEmail,
   });
 
-  console.log("Home page data:", { userEmail, entriesCount: entries.length });
+  console.log("Home page render:", { userEmail, entriesCount: entries?.length });
 
   const handleSignOut = () => {
     localStorage.removeItem('userEmail');

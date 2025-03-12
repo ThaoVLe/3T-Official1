@@ -44,6 +44,7 @@ export default function NewEntry() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
+      console.log("Creating entry with data:", { ...data, userId: userEmail });
       const response = await apiRequest("POST", "/api/entries", {
         ...data,
         userId: userEmail,
@@ -51,9 +52,9 @@ export default function NewEntry() {
       return response;
     },
     onSuccess: () => {
-      // Invalidate both the general entries query and the user-specific query
+      // Invalidate queries to refresh the entries list
       queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/entries", userEmail] });
+      queryClient.invalidateQueries({ queryKey: ["/api/entries", { userEmail }] });
 
       toast({
         title: "Success",
@@ -62,6 +63,7 @@ export default function NewEntry() {
       navigate("/");
     },
     onError: (error) => {
+      console.error("Failed to create entry:", error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to create entry",

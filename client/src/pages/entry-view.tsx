@@ -398,14 +398,7 @@ export default function EntryView() {
           </div>
         </div>
       </div>
-      <PasswordDialog
-        open={showPasswordDialog}
-        onOpenChange={setShowPasswordDialog}
-        onSubmit={verifyPassword}
-        mode="verify"
-        title="Protected Entry"
-        description="This entry is password protected. Please enter your password to view it."
-      />
+      {/* Password protection removed */}
     </PageTransition>
   );
 }

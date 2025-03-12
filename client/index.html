@@ -4,9 +4,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>My Diary</title>
+    <style>
+      .error-container {
+        display: none;
+        margin: 2rem;
+        padding: 1rem;
+        border: 1px solid #f56565;
+        background-color: #fff5f5;
+        color: #c53030;
+        border-radius: 0.25rem;
+      }
+    </style>
   </head>
   <body class="min-h-screen bg-background font-sans antialiased">
     <div id="root"></div>
+    <div id="error-container" class="error-container">
+      <h2>Loading Error</h2>
+      <p>There was a problem loading the application. Please check your connection and try again.</p>
+      <div id="error-details"></div>
+    </div>
+    <script>
+      // Simple error handling in case the main script fails to load
+      window.addEventListener('error', function(event) {
+        console.error('Page error:', event.error);
+        document.getElementById('error-container').style.display = 'block';
+        const errorDetails = document.getElementById('error-details');
+        if (errorDetails) {
+          errorDetails.textContent = event.message;
+        }
+      });
+      
+      // Set a timeout to show an error if the app doesn't load in 10 seconds
+      const loadTimeout = setTimeout(function() {
+        if (!window.appLoaded) {
+          document.getElementById('error-container').style.display = 'block';
+          const errorDetails = document.getElementById('error-details');
+          if (errorDetails) {
+            errorDetails.textContent = 'Application failed to initialize within the expected time.';
+          }
+        }
+      }, 10000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Mark the app as loaded when the main script executes
+      window.appLoaded = true;
+      clearTimeout(loadTimeout);
+    </script>
   </body>
 </html>

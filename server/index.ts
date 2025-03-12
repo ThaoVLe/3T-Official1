@@ -41,7 +41,17 @@ const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunct
   console.error('Server error:', err);
   const status = (err as any).status || (err as any).statusCode || 500;
   const message = err.message || "Internal Server Error";
-  res.status(status).json({ message });
+  
+  // Log more details about the error
+  console.error(`Error details: ${err.stack}`);
+  
+  // Check if it's a client-facing request
+  if (_req.originalUrl.startsWith('/api')) {
+    res.status(status).json({ message, timestamp: new Date().toISOString() });
+  } else {
+    // For non-API routes, we might be serving the SPA, so let Vite handle it
+    _next(err);
+  }
 };
 
 // Improved server startup with better error handling

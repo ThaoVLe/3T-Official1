@@ -1,43 +1,42 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileEdit, LogOut } from "lucide-react";
+import { PlusCircle, LogOut } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/animations";
-import { auth } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [, navigate] = useLocation();
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState(auth.currentUser);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check auth state
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setCurrentUser(user);
-      if (!user) {
-        navigate("/auth");
-      }
-    });
+    // Get email from localStorage
+    const email = localStorage.getItem('userEmail');
+    setUserEmail(email);
 
-    return () => unsubscribe();
+    if (!email) {
+      navigate("/auth");
+    }
   }, [navigate]);
 
-  const { data: entries, isLoading, error } = useQuery<DiaryEntry[]>({
-    queryKey: ["/api/entries", currentUser?.email],
-    enabled: !!currentUser,
-    select: (data) => data.filter(entry => entry.userId === currentUser?.email),
+  const { data: allEntries, isLoading, error } = useQuery<DiaryEntry[]>({
+    queryKey: ["/api/entries"],
+    enabled: !!userEmail,
   });
+
+  // Filter entries by the current user's email
+  const entries = allEntries?.filter(entry => entry.userId === userEmail) || [];
 
   const handleSignOut = async () => {
     try {
-      await auth.signOut();
+      localStorage.removeItem('userEmail');
       navigate("/auth");
     } catch (error) {
       console.error("Error signing out:", error);

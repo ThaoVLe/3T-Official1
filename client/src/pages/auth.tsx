@@ -21,7 +21,8 @@ export default function AuthPage() {
     if (storedEmail && loginTimestamp) {
       const timeSinceLogin = Date.now() - parseInt(loginTimestamp);
       if (timeSinceLogin <= AUTH_TIMEOUT) {
-        navigate("/home");
+        navigate("/");
+        return;
       }
     }
   }, [navigate]);
@@ -50,7 +51,7 @@ export default function AuthPage() {
       const user = await response.json();
       localStorage.setItem("userEmail", user.email.toLowerCase());
       localStorage.setItem("loginTimestamp", Date.now().toString());
-      navigate("/home");
+      navigate("/");
     } catch (error) {
       toast({
         title: "Error",

@@ -131,6 +131,17 @@ export default function AuthPage() {
             >
               {isLogin ? "Need an account? Sign up" : "Have an account? Log in"}
             </Button>
+            {isLogin && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mt-2"
+                onClick={() => window.location.href = "/new"}
+                disabled={loading}
+              >
+                Create First Entry
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>

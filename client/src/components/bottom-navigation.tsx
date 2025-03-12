@@ -41,7 +41,9 @@ export function BottomNavigation() {
         <button 
           type="button" 
           className="inline-flex flex-col items-center justify-center w-full hover:bg-accent"
-          onClick={() => window.location.href = '/new'}
+          onClick={() => {
+            window.location.href = '/new';
+          }}
         >
           <Plus className="w-6 h-6 mb-1 text-foreground" />
           <span className="text-xs text-foreground">New</span>

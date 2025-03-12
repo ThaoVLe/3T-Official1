@@ -28,6 +28,10 @@ export default function App() {
     // Check for authentication state when the app loads
     console.log('Checking authentication state...');
     const subscriber = onAuthStateChanged(auth, onAuthStateChange);
+    
+    // For debugging - log the current auth state
+    console.log('Current auth state:', auth.currentUser ? 'User logged in' : 'No user logged in');
+    
     return subscriber; // unsubscribe on unmount
   }, []);
 

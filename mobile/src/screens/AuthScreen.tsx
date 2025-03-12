@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -37,23 +36,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation, route }) => 
   }, [route.params]);
 
   const handleAuth = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
-    setLoading(true);
-    
     try {
-      if (isLogin) {
-        // Handle login
-        await signInWithEmailAndPassword(auth, email, password);
-        console.log('User logged in successfully');
-      } else {
-        // Handle signup
-        await createUserWithEmailAndPassword(auth, email, password);
-        console.log('User created successfully');
+      if (!email || !password) {
+        Alert.alert('Error', 'Please fill in all fields');
+        return;
       }
+
+      console.log('Attempting auth with:', isLogin ? 'login' : 'signup');
+
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+      // No need to navigate - the onAuthStateChanged listener in App.tsx will handle this
     } catch (error) {
       console.error('Auth error:', error);
       Alert.alert(
@@ -67,57 +63,44 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation, route }) => 
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Personal Journal</Text>
-          <Text style={styles.subtitle}>
-            {isLogin ? 'Sign in to continue' : 'Create a new account'}
-          </Text>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoText}>Personal Journal</Text>
+        </View>
+
+        <View style={styles.formContainer}>
+          <Text style={styles.headerText}>{isLogin ? 'Sign In' : 'Create Account'}</Text>
 
           <TextInput
             style={styles.input}
             placeholder="Email"
             value={email}
             onChangeText={setEmail}
-            autoCapitalize="none"
             keyboardType="email-address"
-            testID="email-input"
+            autoCapitalize="none"
           />
-          
+
           <TextInput
             style={styles.input}
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            testID="password-input"
           />
-          
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handleAuth}
-            disabled={loading}
-            testID="auth-button"
-          >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.buttonText}>
-                {isLogin ? 'Log In' : 'Sign Up'}
-              </Text>
-            )}
+
+          <TouchableOpacity style={styles.button} onPress={handleAuth}>
+            <Text style={styles.buttonText}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity 
+            style={styles.switchButton} 
             onPress={() => setIsLogin(!isLogin)}
-            style={styles.switchButton}
-            testID="toggle-auth-mode"
           >
-            <Text style={styles.switchText}>
-              {isLogin ? 'Need an account? Sign up' : 'Have an account? Log in'}
+            <Text style={styles.switchButtonText}>
+              {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -131,54 +114,64 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  scrollContent: {
+  scrollContainer: {
     flexGrow: 1,
-  },
-  content: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#212529',
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
   },
-  subtitle: {
-    fontSize: 16,
-    marginBottom: 30,
-    color: '#6c757d',
+  logoText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  formContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
   },
   input: {
-    width: '100%',
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
+    height: 50,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: '#ddd',
+    borderRadius: 8,
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    backgroundColor: '#f9f9f9',
   },
   button: {
-    width: '100%',
-    backgroundColor: '#007bff',
-    borderRadius: 8,
+    backgroundColor: '#007AFF',
     padding: 15,
+    borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
   },
   buttonText: {
-    color: '#ffffff',
+    color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   switchButton: {
     marginTop: 20,
-    padding: 10,
+    alignItems: 'center',
   },
-  switchText: {
-    color: '#007bff',
-    fontSize: 16,
+  switchButtonText: {
+    color: '#007AFF',
+    fontSize: 14,
   },
 });

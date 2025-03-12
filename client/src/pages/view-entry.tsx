@@ -57,7 +57,7 @@ export default function ViewEntry() {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error || 'Entry not found'}
         </div>
-        <Button onClick={() => navigate('/home')} className="mt-4">
+        <Button onClick={() => window.location.href = '/home'} className="mt-4">
           Go back to home
         </Button>
       </div>
@@ -68,7 +68,7 @@ export default function ViewEntry() {
     <PageTransition>
       <div className="container mx-auto py-8">
         <div className="mb-6">
-          <Button variant="ghost" onClick={() => navigate('/home')} className="gap-2">
+          <Button variant="ghost" onClick={() => window.location.href = '/home'} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to entries
           </Button>
@@ -76,7 +76,7 @@ export default function ViewEntry() {
 
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{entry.title}</h1>
-          <Button variant="outline" onClick={() => navigate(`/edit/${entry.id}`)} className="gap-2">
+          <Button variant="outline" onClick={() => window.location.href = `/edit/${entry.id}`} className="gap-2">
             <Edit className="h-4 w-4" />
             Edit
           </Button>

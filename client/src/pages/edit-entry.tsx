@@ -134,16 +134,17 @@ export default function EditEntry() {
               <Button
                 type="button"
                 variant="outline"
-                className="gap-2"
-                onClick={() => navigate(`/entries/${id}`)}
+                onClick={() => window.location.href = `/entries/${id}`}
               >
                 Cancel
               </Button>
 
               <Button
                 type="submit"
-                className="gap-2"
                 disabled={form.formState.isSubmitting}
+                onClick={(e) => {
+                  if (form.formState.isSubmitting) e.preventDefault(); // Prevent double submission
+                }}
               >
                 {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
               </Button>

@@ -36,11 +36,35 @@ export default function AuthPage() {
         console.log("User created successfully");
       }
       navigate("/home");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Authentication error:", error);
+      let errorMessage = "Failed to authenticate";
+
+      // Handle specific Firebase auth errors
+      switch (error.code) {
+        case 'auth/operation-not-allowed':
+          errorMessage = "Email/Password sign-in is not enabled. Please contact support.";
+          break;
+        case 'auth/email-already-in-use':
+          errorMessage = "This email is already registered. Try logging in instead.";
+          break;
+        case 'auth/invalid-email':
+          errorMessage = "Please enter a valid email address.";
+          break;
+        case 'auth/weak-password':
+          errorMessage = "Password should be at least 6 characters long.";
+          break;
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          errorMessage = "Invalid email or password.";
+          break;
+        default:
+          errorMessage = error.message || "Authentication failed. Please try again.";
+      }
+
       toast({
         title: "Authentication Error",
-        description: error instanceof Error ? error.message : "Failed to authenticate",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -74,6 +98,7 @@ export default function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
                 required
+                minLength={6}
               />
             </div>
             <Button

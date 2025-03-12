@@ -14,7 +14,6 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
@@ -22,9 +21,8 @@ export default function AuthPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        navigate("/home", { replace: true });
+        navigate("/home");
       }
-      setIsAuthChecking(false);
     });
 
     return () => unsubscribe();
@@ -48,7 +46,6 @@ export default function AuthPage() {
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
       }
-      // Navigation will be handled by the onAuthStateChanged listener
     } catch (error: any) {
       console.error("Authentication error:", error);
       let errorMessage = "Failed to authenticate";
@@ -91,14 +88,6 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
-
-  if (isAuthChecking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <PageTransition>

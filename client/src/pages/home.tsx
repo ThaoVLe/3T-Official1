@@ -32,26 +32,26 @@ export default function Home() {
     enabled: !!userEmail,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    staleTime: 0
+    staleTime: 0,
+    refetchInterval: 2000, // Poll every 2 seconds
+    cacheTime: 0 // Don't cache at all
   });
 
-  // Debugging log
   console.log("User email:", userEmail);
   console.log("All entries:", allEntries);
-  
-  // Filter entries by the current user's email - handle case sensitivity
-  const entries = allEntries?.filter(entry => {
-    // Case insensitive comparison
-    return entry.userId && userEmail && 
-           entry.userId.toLowerCase() === userEmail.toLowerCase();
-  }) || [];
-  
-  console.log("Filtered entries:", entries);
-  
-  // Force a refetch when component mounts
+
+  // Filter entries by the current user's email
+  const entries = allEntries || [];
+
+  console.log("All entries available:", entries);
+
+  // Force a refetch when component mounts and when userEmail changes
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    if (userEmail) {
+      console.log("Fetching entries for user:", userEmail);
+      refetch();
+    }
+  }, [refetch, userEmail]);
 
   const handleSignOut = async () => {
     try {

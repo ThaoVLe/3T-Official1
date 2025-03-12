@@ -344,8 +344,8 @@ const NewEntry: React.FC = () => {
             </div>
           </form>
         </div>
-    </PageTransition>
-  );
+      </PageTransition>
+    );
 };
 
 export default NewEntry;

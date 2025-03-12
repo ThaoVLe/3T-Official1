@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
 import { auth } from "@/lib/firebase";
+import { LogOut } from "lucide-react";
+
 
 export default function Home() {
   const [, navigate] = useLocation();
@@ -61,6 +63,11 @@ export default function Home() {
     setTimeout(restoreScroll, 50);
   }, [entries]);
 
+  const handleSignOut = () => {
+    auth.signOut();
+    navigate("/auth");
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background overflow-auto diary-content">
@@ -95,10 +102,7 @@ export default function Home() {
             <div className="flex gap-2">
               <Button
                 variant="ghost"
-                onClick={() => {
-                  auth.signOut();
-                  navigate("/auth");
-                }}
+                onClick={handleSignOut}
               >
                 Sign Out
               </Button>
@@ -124,7 +128,7 @@ export default function Home() {
                 Start capturing your memories with text, photos, and more.
               </p>
               <Link href="/editor">
-                <Button size="lg" className="flex gap-2">
+                <Button size="lg" className="flex gap-2" onClick={() => window.location.href = "/editor"}>
                   <PlusCircle className="w-5 h-5" />
                   Create Your First Entry
                 </Button>

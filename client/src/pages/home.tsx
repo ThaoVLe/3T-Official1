@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LogOut, FileEdit } from "lucide-react";
+import { PlusCircle, FileEdit, LogOut } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,59 +12,27 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [, navigate] = useLocation();
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const { toast } = useToast();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const queryClient = useQueryClient();
+  const userEmail = localStorage.getItem('userEmail');
 
+  // Check if user is logged in
   useEffect(() => {
-    // Get email from localStorage
-    const email = localStorage.getItem('userEmail');
-    setUserEmail(email);
-
-    if (!email) {
+    if (!userEmail) {
       navigate("/auth");
     }
   }, [navigate]);
 
-  const { data: allEntries, isLoading, error, refetch } = useQuery({
-    queryKey: ["/api/entries"],
+  // Query entries with proper type
+  const { data: entries = [], isLoading, error } = useQuery<DiaryEntry[]>({
+    queryKey: ["/api/entries", userEmail],
     enabled: !!userEmail,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    staleTime: 0,
-    refetchInterval: 2000, // Poll every 2 seconds
-    cacheTime: 0 // Don't cache at all
   });
 
-  console.log("User email:", userEmail);
-  console.log("All entries:", allEntries);
+  console.log("Home page data:", { userEmail, entriesCount: entries.length });
 
-  // Filter entries by the current user's email
-  const entries = allEntries || [];
-
-  console.log("All entries available:", entries);
-
-  // Force a refetch when component mounts and when userEmail changes
-  useEffect(() => {
-    if (userEmail) {
-      console.log("Fetching entries for user:", userEmail);
-      refetch();
-    }
-  }, [refetch, userEmail]);
-
-  const handleSignOut = async () => {
-    try {
-      localStorage.removeItem('userEmail');
-      navigate("/auth");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleSignOut = () => {
+    localStorage.removeItem('userEmail');
+    navigate("/auth");
   };
 
   if (isLoading) {

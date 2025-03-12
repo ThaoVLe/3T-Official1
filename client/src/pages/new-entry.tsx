@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { FeelingSelector } from "@/components/feeling-selector";
-import { LocationSelector } from "@/components/location-selector";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,16 +10,25 @@ import MediaRecorder from "@/components/media-recorder";
 import MediaPreview from "@/components/media-preview";
 import { useToast } from "@/hooks/use-toast";
 import { Save, X, SmilePlus, ImagePlus, MapPin } from 'lucide-react';
-import { useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { PageTransition } from "@/components/animations";
-
+import { FeelingSelector } from "@/components/feeling-selector";
+import { LocationSelector } from "@/components/location-selector";
 
 export default function NewEntry() {
   const [, navigate] = useLocation();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const userEmail = localStorage.getItem('userEmail');
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Redirect if not logged in
+  if (!userEmail) {
+    navigate("/auth");
+    return null;
+  }
 
   const form = useForm<InsertEntry>({
     resolver: zodResolver(insertEntrySchema),
@@ -31,24 +38,23 @@ export default function NewEntry() {
       mediaUrls: [],
       feeling: null,
       location: null,
-      userId: userEmail || "",
+      userId: userEmail,
     },
   });
 
-  const { toast } = useToast();
-
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
-      if (!userEmail) {
-        throw new Error("Please log in to create entries");
-      }
-      await apiRequest("POST", "/api/entries", {
+      const response = await apiRequest("POST", "/api/entries", {
         ...data,
         userId: userEmail,
       });
+      return response;
     },
     onSuccess: () => {
+      // Invalidate both the general entries query and the user-specific query
       queryClient.invalidateQueries({ queryKey: ["/api/entries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/entries", userEmail] });
+
       toast({
         title: "Success",
         description: "Entry created successfully",
@@ -103,6 +109,11 @@ export default function NewEntry() {
     form.setValue("mediaUrls", newUrls);
   };
 
+  const handleSubmit = form.handleSubmit((data) => {
+    console.log("Submitting entry:", { ...data, userId: userEmail });
+    mutation.mutate(data);
+  });
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
@@ -125,7 +136,7 @@ export default function NewEntry() {
                 Cancel
               </Button>
               <Button
-                onClick={form.handleSubmit((data) => mutation.mutate(data))}
+                onClick={handleSubmit}
                 disabled={mutation.isPending}
                 className="gap-2"
               >

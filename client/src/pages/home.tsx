@@ -39,8 +39,12 @@ export default function Home() {
   console.log("User email:", userEmail);
   console.log("All entries:", allEntries);
   
-  // Filter entries by the current user's email
-  const entries = allEntries?.filter(entry => entry.userId === userEmail) || [];
+  // Filter entries by the current user's email - handle case sensitivity
+  const entries = allEntries?.filter(entry => {
+    // Case insensitive comparison
+    return entry.userId && userEmail && 
+           entry.userId.toLowerCase() === userEmail.toLowerCase();
+  }) || [];
   
   console.log("Filtered entries:", entries);
   

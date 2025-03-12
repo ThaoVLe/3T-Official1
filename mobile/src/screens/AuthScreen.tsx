@@ -29,12 +29,25 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation, route }) => 
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // Check if we've been redirected here due to session expiry
+  // Check if we've been redirected here due to session expiry or if user is already authenticated
   useEffect(() => {
+    // Check for session expiry
     if (route.params?.sessionExpired) {
       Alert.alert('Session Expired', 'Please sign in again to continue');
     }
-  }, [route.params]);
+    
+    // Check if user is already authenticated
+    const checkAuth = async () => {
+      const currentUser = auth.currentUser;
+      console.log('Auth screen - Current user:', currentUser ? 'Logged in' : 'Not logged in');
+      if (currentUser) {
+        // User is already logged in, redirect to Home
+        navigation.replace('Home');
+      }
+    };
+    
+    checkAuth();
+  }, [route.params, navigation]);
 
   const handleAuth = async () => {
     try {

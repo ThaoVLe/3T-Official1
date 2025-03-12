@@ -86,7 +86,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName={user ? 'Home' : 'Auth'} //Simplified routing
+          initialRouteName="Auth"
           screenOptions={{
             headerStyle: {
               backgroundColor: '#ffffff',
@@ -97,31 +97,24 @@ export default function App() {
             },
           }}
         >
-          {!user ? (
-            // Auth screen stack
-            <Stack.Screen
-              name="Auth"
-              component={AuthScreen}
-              options={{ headerShown: false }}
-            />
-          ) : (
-            // Main app screens when user is authenticated
-            <>
-              <Stack.Screen
-                name="Home"
-                component={HomeScreen}
-                options={{
-                  title: 'My Journal',
-                  headerLeft: () => null,
-                }}
-              />
-              <Stack.Screen
-                name="Entry"
-                component={EntryScreen}
-                options={{ title: 'Journal Entry' }}
-              />
-            </>
-          )}
+          <Stack.Screen
+            name="Auth"
+            component={AuthScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{
+              title: 'My Journal',
+              headerLeft: () => null,
+            }}
+          />
+          <Stack.Screen
+            name="Entry"
+            component={EntryScreen}
+            options={{ title: 'Journal Entry' }}
+          />
         </Stack.Navigator>
         <StatusBar style="auto" />
       </NavigationContainer>

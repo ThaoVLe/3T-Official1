@@ -9,6 +9,7 @@ import {
   signInWithPopup
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 
 // Firebase configuration - you should place these in environment variables in production
 const firebaseConfig = {
@@ -23,6 +24,8 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app); // Initialize Firestore
+
 
 // Export auth functions
 const createUserWithEmailAndPassword = (email, password) => {
@@ -43,55 +46,50 @@ const SESSION_KEY = 'auth_session_timestamp';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Function to check if session is expired by checking database
-export const isSessionExpired = async (userId: string) => {
+export const isSessionExpired = async (userId) => {
   try {
     if (!userId) {
       console.log('No user ID provided');
       return true;
     }
-    
-    // Fetch user's last login time from the server
-    const response = await fetch(`/api/users/${userId}/lastLogin`);
-    if (!response.ok) {
-      console.error('Failed to fetch last login info');
-      return true;
+
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
+      const lastLogin = userDoc.data().last_login;
+      if (!lastLogin) return true;
+
+      // Convert Firebase timestamp to JS Date
+      const lastLoginDate = lastLogin.toDate();
+      const currentDate = new Date();
+
+      // Check if it's been more than 24 hours (86400000 ms) since last login
+      return currentDate.getTime() - lastLoginDate.getTime() > 86400000;
     }
-    
-    const data = await response.json();
-    if (!data.lastLogin) {
-      console.log('No last login record found');
-      return true;
-    }
-    
-    const lastLoginTime = new Date(data.lastLogin).getTime();
-    const currentTime = Date.now();
-    const isExpired = (currentTime - lastLoginTime) > SESSION_DURATION;
-    console.log('Session expired:', isExpired);
-    return isExpired;
+    return true; // No last_login record, treat as expired
   } catch (error) {
-    console.error('Error checking session:', error);
-    return true; // Default to expired on error
+    console.error('Error checking session expiry:', error);
+    return true; // On error, treat as expired for security
   }
 };
 
 // Update last login in database
-export const updateLastLogin = async (userId: string) => {
+export const updateLastLogin = async (userId) => {
   try {
-    const response = await fetch(`/api/users/${userId}/lastLogin`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        lastLogin: new Date().toISOString()
-      })
+    // Update last login timestamp
+    // This implementation will depend on how your backend is set up
+    console.log('Updating last login for user:', userId);
+
+    // Update the user's last login timestamp
+    const userDocRef = doc(db, 'users', userId);
+    await updateDoc(userDocRef, {
+      last_login: serverTimestamp()
     });
-    
-    if (!response.ok) {
-      console.error('Failed to update last login time');
-    }
+
+    console.log('Last login timestamp updated successfully');
   } catch (error) {
-    console.error('Error updating last login:', error);
+    console.error('Failed to update last login:', error);
   }
 };
 const updateSessionTimestamp = async () => {

@@ -73,19 +73,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/entries", async (req, res) => {
     try {
+      console.log("Received entry data:", req.body);
+      
       const result = insertEntrySchema.safeParse(req.body);
       if (!result.success) {
+        console.error("Validation errors:", result.error.errors);
         return res.status(400).json({ 
           message: "Invalid entry data", 
           errors: result.error.errors 
         });
       }
 
-      const entry = await storage.createEntry(result.data);
+      // Ensure we're using the correct field name in the database
+      const entryData = {
+        ...result.data,
+        user_email: result.data.userEmail
+      };
+      
+      console.log("Creating entry with data:", entryData);
+      const entry = await storage.createEntry(entryData);
+      console.log("Entry created successfully:", entry);
+      
       res.status(201).json(entry);
     } catch (error) {
       console.error("Error creating entry:", error);
-      res.status(500).json({ message: "Failed to create entry" });
+      res.status(500).json({ 
+        message: "Failed to create entry", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

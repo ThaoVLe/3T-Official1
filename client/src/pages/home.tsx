@@ -9,7 +9,6 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
 import { auth } from "@/lib/firebase";
-import { useNavigate } from "wouter";
 
 export default function Home() {
   const [, navigate] = useLocation();
@@ -141,13 +140,7 @@ export default function Home() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-64 w-full" />
-            ))}
-          </div>
-        ) : !entries?.length ? (
+        {!entries?.length ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

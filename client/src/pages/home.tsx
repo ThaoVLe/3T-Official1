@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LogOut } from "lucide-react";
+import { PlusCircle, LogOut, FileEdit } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";

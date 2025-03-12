@@ -5,19 +5,34 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 
+const AUTH_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 export function AuthRequired({ children }: { children: ReactNode }) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const userEmail = localStorage.getItem("userEmail");
 
   useEffect(() => {
-    // If no user email is found, show login form
-    if (!userEmail) {
-      navigate('/'); // This will trigger the login form display
+    const userEmail = localStorage.getItem("userEmail");
+    const loginTimestamp = localStorage.getItem("loginTimestamp");
+
+    if (!userEmail || !loginTimestamp) {
+      // No user info, show login
+      return;
     }
-  }, [userEmail, navigate]);
+
+    const timeSinceLogin = Date.now() - parseInt(loginTimestamp);
+    if (timeSinceLogin > AUTH_TIMEOUT) {
+      // Login expired, clear storage
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("loginTimestamp");
+      return;
+    }
+
+    // Valid login, redirect to home
+    navigate("/");
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +57,8 @@ export function AuthRequired({ children }: { children: ReactNode }) {
 
       const user = await response.json();
       localStorage.setItem("userEmail", user.email.toLowerCase());
-      navigate('/'); // Navigate to home after successful login
+      localStorage.setItem("loginTimestamp", Date.now().toString());
+      navigate('/');
     } catch (error) {
       toast({
         title: "Error",
@@ -54,7 +70,12 @@ export function AuthRequired({ children }: { children: ReactNode }) {
     }
   };
 
-  if (!userEmail) {
+  const userEmail = localStorage.getItem("userEmail");
+  const loginTimestamp = localStorage.getItem("loginTimestamp");
+  const isValidSession = userEmail && loginTimestamp && 
+    (Date.now() - parseInt(loginTimestamp)) <= AUTH_TIMEOUT;
+
+  if (!isValidSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-full max-w-md p-6 space-y-6">

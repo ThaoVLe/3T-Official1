@@ -4,18 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+
+const AUTH_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [email, setEmail] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Check if user is already logged in
   React.useEffect(() => {
     const storedEmail = localStorage.getItem("userEmail");
-    if (storedEmail) {
-      navigate("/diary");
+    const loginTimestamp = localStorage.getItem("loginTimestamp");
+
+    if (storedEmail && loginTimestamp) {
+      const timeSinceLogin = Date.now() - parseInt(loginTimestamp);
+      if (timeSinceLogin <= AUTH_TIMEOUT) {
+        navigate("/home");
+      } else {
+        // Clear expired session
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("loginTimestamp");
+      }
     }
   }, [navigate]);
 
@@ -43,8 +55,9 @@ export default function AuthPage() {
       }
 
       const user = await response.json();
-      localStorage.setItem("userEmail", user.email);
-      navigate("/diary");
+      localStorage.setItem("userEmail", user.email.toLowerCase());
+      localStorage.setItem("loginTimestamp", Date.now().toString());
+      navigate("/home");
     } catch (error) {
       toast({
         title: "Error",

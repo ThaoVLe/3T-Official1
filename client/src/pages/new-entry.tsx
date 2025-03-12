@@ -44,7 +44,11 @@ export default function NewEntryPage() {
         body: JSON.stringify({ 
           userEmail, 
           content,
-          date: new Date().toISOString()
+          title: "New Entry", // Add a default title
+          date: new Date().toISOString(),
+          feeling: null,      // Include feeling field
+          location: null,     // Include location field
+          tags: []            // Include tags field
         }),
       });
 

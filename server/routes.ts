@@ -102,10 +102,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Ensure email is lowercase and using the correct field name
+      // Ensure email is lowercase and preserve all fields
       const entryData = {
+        ...result.data,
         userEmail: result.data.userEmail.toLowerCase(),
-        content: result.data.content
+        date: result.data.date || new Date().toISOString()
       };
 
       console.log("Creating entry with data:", entryData);

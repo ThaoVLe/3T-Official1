@@ -52,19 +52,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createEntry(entry: InsertEntry): Promise<DiaryEntry> {
-    // Ensure we're handling both column naming styles
-    const entryData = {
+    console.log("Creating entry with data:", entry);
+    // Ensure userEmail is stored
+    if (!entry.userEmail) {
+      throw new Error("User email is required");
+    }
+
+    const entryToInsert = {
       ...entry,
-      userEmail: entry.userEmail.toLowerCase() 
+      userEmail: entry.userEmail.toLowerCase(), //Added to maintain consistency with other functions
+      date: entry.date || new Date().toISOString(),
     };
 
-    console.log("Creating entry with formatted data:", entryData);
+    console.log("Creating entry with formatted data:", entryToInsert);
 
     try {
       const [newEntry] = await db
         .insert(diaryEntries)
-        .values(entryData)
+        .values(entryToInsert)
         .returning();
+      console.log("Entry created:", newEntry);
       return newEntry;
     } catch (error) {
       console.error("Database error when creating entry:", error);

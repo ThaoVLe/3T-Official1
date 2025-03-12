@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import TipTapEditor from "@/components/tiptap-editor";
@@ -9,20 +10,29 @@ import { useRouter } from "@/hooks/use-router";
 
 export default function NewEntryPage() {
   const { userEmail } = useAuth();
-  const { navigate, goBack } = useRouter();
+  const { navigate } = useRouter();
   const { toast } = useToast();
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const handleCancel = () => {
-    goBack();
+    navigate("/diary");
   };
 
   const handleSave = async () => {
-    if (!content.trim() || !userEmail) {
+    if (!content.trim()) {
       toast({
         title: "Error",
         description: "Please enter some content for your diary entry",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!userEmail) {
+      toast({
+        title: "Error",
+        description: "You need to be logged in to save an entry",
         variant: "destructive",
       });
       return;
@@ -34,7 +44,11 @@ export default function NewEntryPage() {
       const response = await fetch("/api/entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userEmail, content }),
+        body: JSON.stringify({ 
+          userEmail, 
+          content,
+          date: new Date().toISOString()
+        }),
       });
 
       if (!response.ok) {
@@ -74,8 +88,9 @@ export default function NewEntryPage() {
             </div>
             <Button 
               onClick={handleSave} 
-              disabled={isSaving || !content.trim()} 
+              disabled={isSaving} 
               className="bg-primary hover:bg-primary/90"
+              type="button"
             >
               {isSaving ? "Saving..." : "Save"}
               <Save className="h-4 w-4 ml-2" />
@@ -84,11 +99,10 @@ export default function NewEntryPage() {
         </div>
 
         <div className="flex-1 p-4">
-          <TipTapEditor
-            content=""
-            onChange={setContent}
-            placeholder="How are you feeling today?"
-            className="min-h-[200px] p-4 border rounded-md"
+          <TipTapEditor 
+            content={content} 
+            onChange={setContent} 
+            placeholder="What's on your mind today?"
           />
         </div>
       </div>

@@ -9,13 +9,16 @@ import Editor from "@/pages/editor";
 import EntryView from "@/pages/entry-view";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
+import AuthPage from "@/pages/auth";
 import { ScrollToTop } from "./components/scroll-to-top";
 
 function AppRoutes() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/auth" component={AuthPage} />
+        <Route path="/" component={AuthPage} />
+        <Route path="/home" component={Home} />
         <Route path="/new" component={Editor} />
         <Route path="/edit/:id" component={Editor} />
         <Route path="/entry/:id" component={EntryView} />

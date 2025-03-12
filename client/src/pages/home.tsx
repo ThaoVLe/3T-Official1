@@ -27,18 +27,27 @@ export default function Home() {
     }
   }, [navigate]);
 
-  const { data: allEntries, isLoading, error } = useQuery({
+  const { data: allEntries, isLoading, error, refetch } = useQuery({
     queryKey: ["/api/entries"],
     enabled: !!userEmail,
-    onSuccess: () => {
-      //Added to force a refetch after a successful entry creation.  This assumes the API endpoint updates correctly.
-      //A more robust solution would involve a more sophisticated state management solution
-      queryClient.invalidateQueries(["/api/entries"])
-    }
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0
   });
 
+  // Debugging log
+  console.log("User email:", userEmail);
+  console.log("All entries:", allEntries);
+  
   // Filter entries by the current user's email
   const entries = allEntries?.filter(entry => entry.userId === userEmail) || [];
+  
+  console.log("Filtered entries:", entries);
+  
+  // Force a refetch when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const handleSignOut = async () => {
     try {

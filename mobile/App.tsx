@@ -6,6 +6,7 @@ import { HomeScreen } from './screens/HomeScreen';
 import { EntryScreen } from './screens/EntryScreen';
 import { AuthScreen } from './screens/AuthScreen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 
 // Define the type for our stack navigator
 export type RootStackParamList = {
@@ -29,13 +30,13 @@ function App(): JSX.Element {
     }, 1000);
   }, []);
 
-  // This function allows the AuthScreen to update the login state
-  const login = () => {
-    setIsLoggedIn(true);
-  };
-
   if (isLoading) {
-    return null; // Or a loading screen
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
   }
 
   return (
@@ -56,17 +57,42 @@ function App(): JSX.Element {
               />
             </>
           ) : (
-            <Stack.Screen 
-              name="Auth" 
-              component={AuthScreen}
-              options={{ headerShown: false }}
-              initialParams={{ login }}
-            />
+            <>
+              <Stack.Screen 
+                name="Auth" 
+                component={AuthScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Home" 
+                component={HomeScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Entry" 
+                component={EntryScreen} 
+                options={{ headerShown: false }}
+              />
+            </>
           )}
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+});
 
 export default App;

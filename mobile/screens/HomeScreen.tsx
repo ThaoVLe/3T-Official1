@@ -1,14 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  FlatList,
   TouchableOpacity,
   StyleSheet,
-  FlatList,
   ActivityIndicator,
-  SafeAreaView,
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 
 type HomeScreenProps = {
@@ -34,6 +35,12 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     }, 1000);
   }, []);
 
+  const handleLogout = () => {
+    // Here you would clear authentication state
+    // For now, just navigate back to Auth screen
+    navigation.replace('Auth');
+  };
+
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
       style={styles.entryItem}
@@ -44,39 +51,49 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text style={styles.loadingText}>Loading entries...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Journal</Text>
-        <TouchableOpacity 
-          style={styles.newButton}
-          onPress={() => navigation.navigate('Entry')}
-        >
-          <Text style={styles.newButtonText}>+ New Entry</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.newButton}
+            onPress={() => navigation.navigate('Entry')}
+          >
+            <Text style={styles.newButtonText}>+ New Entry</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
+      {entries.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No journal entries yet.</Text>
+          <Text style={styles.emptySubText}>Create your first entry!</Text>
         </View>
-      ) : entries.length > 0 ? (
+      ) : (
         <FlatList
           data={entries}
           renderItem={renderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.list}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
         />
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No journal entries yet</Text>
-          <TouchableOpacity 
-            style={styles.createFirstButton}
-            onPress={() => navigation.navigate('Entry')}
-          >
-            <Text style={styles.createFirstButtonText}>Create Your First Entry</Text>
-          </TouchableOpacity>
-        </View>
       )}
     </SafeAreaView>
   );
@@ -85,80 +102,91 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  newButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  newButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  list: {
-    padding: 16,
-  },
-  entryItem: {
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
-  },
-  entryTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  entryDate: {
-    fontSize: 14,
-    color: '#666',
+    backgroundColor: '#fff',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  newButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 4,
+  },
+  newButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  logoutButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  logoutButtonText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  listContent: {
+    padding: 16,
+  },
+  entryItem: {
+    backgroundColor: '#f9f9f9',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  entryTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  entryDate: {
+    fontSize: 14,
+    color: '#666',
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
   },
   emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  emptySubText: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 16,
     textAlign: 'center',
-  },
-  createFirstButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  createFirstButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
 });

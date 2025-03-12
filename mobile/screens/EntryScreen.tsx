@@ -6,15 +6,15 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
+  ScrollView,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  Alert,
-  SafeAreaView,
-  ActivityIndicator
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
 
 type EntryScreenProps = {
@@ -69,8 +69,11 @@ export function EntryScreen({ navigation, route }: EntryScreenProps) {
 
   if (initialLoading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text style={styles.loadingText}>Loading entry...</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -82,40 +85,50 @@ export function EntryScreen({ navigation, route }: EntryScreenProps) {
         style={styles.container}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>{isEditing ? 'Edit Entry' : 'New Entry'}</Text>
+          <Text style={styles.headerTitle}>
+            {isEditing ? 'Edit Entry' : 'New Entry'}
+          </Text>
           <View style={styles.headerButtons}>
-            <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+            >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={loading}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSave}
+              disabled={loading}
+            >
               {loading ? (
-                <ActivityIndicator size="small" color="white" />
+                <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.saveButtonText}>Save</Text>
               )}
             </TouchableOpacity>
           </View>
         </View>
-
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.titleInput}
-              placeholder="Title"
-              value={title}
-              onChangeText={setTitle}
-              placeholderTextColor="#999"
-            />
-            
-            <TextInput
-              style={styles.contentInput}
-              placeholder="Write your journal entry here..."
-              value={content}
-              onChangeText={setContent}
-              multiline={true}
-              placeholderTextColor="#999"
-            />
-          </View>
+        
+        <ScrollView style={styles.formContainer}>
+          <Text style={styles.label}>Title</Text>
+          <TextInput
+            style={styles.titleInput}
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Enter title"
+            placeholderTextColor="#999"
+          />
+          
+          <Text style={styles.label}>Content</Text>
+          <TextInput
+            style={styles.contentInput}
+            value={content}
+            onChangeText={setContent}
+            placeholder="Write your thoughts..."
+            placeholderTextColor="#999"
+            multiline
+            textAlignVertical="top"
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -125,31 +138,36 @@ export function EntryScreen({ navigation, route }: EntryScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#fff',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: '#eee',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#333',
   },
   headerButtons: {
     flexDirection: 'row',
   },
   cancelButton: {
-    marginRight: 12,
+    marginRight: 10,
     padding: 8,
   },
   cancelButtonText: {
@@ -157,49 +175,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   saveButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 8,
+    backgroundColor: '#4A90E2',
     paddingHorizontal: 16,
-    borderRadius: 8,
-    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 4,
     alignItems: 'center',
-    minWidth: 70,
+    justifyContent: 'center',
   },
   saveButtonText: {
-    color: 'white',
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
   },
-  scrollView: {
+  formContainer: {
     flex: 1,
-  },
-  inputContainer: {
     padding: 16,
   },
-  titleInput: {
-    fontSize: 18,
+  label: {
+    fontSize: 16,
     fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  titleInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
     padding: 12,
-    backgroundColor: 'white',
-    borderRadius: 8,
+    fontSize: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
+    color: '#333',
   },
   contentInput: {
-    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
     padding: 12,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    height: 300,
-    textAlignVertical: 'top',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
+    fontSize: 16,
+    minHeight: 200,
+    color: '#333',
   },
 });

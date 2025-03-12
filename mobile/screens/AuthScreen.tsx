@@ -6,13 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  ActivityIndicator,
-  SafeAreaView
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 
 type AuthScreenProps = {
@@ -20,28 +20,19 @@ type AuthScreenProps = {
 };
 
 export function AuthScreen({ navigation }: AuthScreenProps) {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-  };
-
   const handleAuth = () => {
-    // Simple validation
-    if (!email.trim() || !password.trim()) {
-      alert('Please enter both email and password');
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email');
       return;
     }
 
-    if (!isLogin && password !== confirmPassword) {
-      alert('Passwords do not match');
+    if (!password.trim()) {
+      Alert.alert('Error', 'Please enter your password');
       return;
     }
 
@@ -50,9 +41,14 @@ export function AuthScreen({ navigation }: AuthScreenProps) {
     // Simulate authentication
     setTimeout(() => {
       setLoading(false);
-      // Navigate to Home screen upon successful auth
-      // In a real app, you would update isLoggedIn state in App.tsx
-      navigation.navigate('Home');
+      
+      // Simple validation for demo
+      if (password.length >= 6) {
+        // Navigate to Home screen after successful login
+        navigation.replace('Home');
+      } else {
+        Alert.alert('Error', 'Invalid credentials. Please try again.');
+      }
     }, 1500);
   };
 
@@ -62,71 +58,60 @@ export function AuthScreen({ navigation }: AuthScreenProps) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.authContainer}>
-            <Text style={styles.title}>Personal Journal</Text>
-            <Text style={styles.subtitle}>
-              {isLogin ? 'Sign in to your account' : 'Create a new account'}
-            </Text>
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>Personal Journal</Text>
+          <Text style={styles.subtitle}>
+            {isLogin ? 'Sign in to your account' : 'Create a new account'}
+          </Text>
 
-            <View style={styles.form}>
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                placeholderTextColor="#999"
-              />
+          <View style={styles.form}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              placeholderTextColor="#999"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                placeholderTextColor="#999"
-              />
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your password"
+              placeholderTextColor="#999"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
 
-              {!isLogin && (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  placeholderTextColor="#999"
-                />
-              )}
-
-              <TouchableOpacity
-                style={styles.authButton}
-                onPress={handleAuth}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text style={styles.authButtonText}>
-                    {isLogin ? 'Sign In' : 'Sign Up'}
-                  </Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.toggleButton}
-                onPress={toggleAuthMode}
-              >
-                <Text style={styles.toggleButtonText}>
-                  {isLogin
-                    ? "Don't have an account? Sign Up"
-                    : 'Already have an account? Sign In'}
+            <TouchableOpacity
+              style={styles.authButton}
+              onPress={handleAuth}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.authButtonText}>
+                  {isLogin ? 'Sign In' : 'Sign Up'}
                 </Text>
-              </TouchableOpacity>
-            </View>
+              )}
+            </TouchableOpacity>
           </View>
-        </ScrollView>
+
+          <TouchableOpacity
+            style={styles.switchButton}
+            onPress={() => setIsLogin(!isLogin)}
+          >
+            <Text style={styles.switchButtonText}>
+              {isLogin
+                ? "Don't have an account? Sign Up"
+                : 'Already have an account? Sign In'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -135,61 +120,61 @@ export function AuthScreen({ navigation }: AuthScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#fff',
   },
-  scrollContent: {
-    flexGrow: 1,
+  contentContainer: {
+    flex: 1,
+    padding: 20,
     justifyContent: 'center',
   },
-  authContainer: {
-    padding: 20,
-  },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
     color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#666',
-    marginBottom: 30,
+    marginBottom: 32,
     textAlign: 'center',
   },
   form: {
-    width: '100%',
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
   },
   input: {
-    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#ddd',
     borderRadius: 8,
-    padding: 15,
-    marginBottom: 16,
+    padding: 12,
     fontSize: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
+    marginBottom: 16,
+    color: '#333',
   },
   authButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4A90E2',
+    paddingVertical: 14,
     borderRadius: 8,
-    padding: 15,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 8,
   },
   authButtonText: {
-    color: 'white',
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  toggleButton: {
-    marginTop: 20,
+  switchButton: {
     alignItems: 'center',
   },
-  toggleButtonText: {
-    color: '#007AFF',
+  switchButtonText: {
+    color: '#4A90E2',
     fontSize: 16,
   },
 });

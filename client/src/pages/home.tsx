@@ -91,25 +91,6 @@ export default function Home() {
     endDate: ""
   });
   
-  // Function to fetch entries for the current user
-  const fetchEntries = async () => {
-    setIsLoading(true);
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.append("email", user.email);
-      
-      const response = await fetch(`/api/entries?${queryParams.toString()}`);
-      if (!response.ok) throw new Error("Failed to fetch entries");
-      
-      const data = await response.json();
-      setEntries(data);
-    } catch (error) {
-      console.error("Error fetching entries:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
   // Function to apply filters
   const applyFilters = async () => {
     setIsLoading(true);
@@ -145,13 +126,6 @@ export default function Home() {
     });
     fetchEntries(); // Fetch all entries without filters
   };
-  
-  // Load entries when component mounts or user changes
-  useEffect(() => {
-    if (user && user.email) {
-      fetchEntries();
-    }
-  }, [user]);
 
   if (isLoading) {
     return (

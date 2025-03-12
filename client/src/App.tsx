@@ -1,44 +1,31 @@
-import { Switch, Route } from "wouter";
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Home from './pages/home';
+import NewEntry from './pages/new-entry';
+import ViewEntry from './pages/view-entry';
+import EditEntry from './pages/edit-entry';
+import { Toaster } from './components/ui/toaster';
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
-import { Toaster } from "@/components/ui/toaster";
-import { Layout } from "@/components/layout";
 import { ThemeProvider } from "@/lib/theme-provider";
-import Home from "@/pages/home";
-import Editor from "@/pages/editor";
-import EntryView from "@/pages/entry-view";
-import Settings from "@/pages/settings";
-import NotFound from "@/pages/not-found";
-import AuthPage from "@/pages/auth";
 import { ScrollToTop } from "./components/scroll-to-top";
 
-function AppRoutes() {
-  return (
-    <Layout>
-      <Switch>
-        <Route path="/auth" component={AuthPage} />
-        <Route path="/" component={AuthPage} />
-        <Route path="/home" component={Home} />
-        <Route path="/new" component={Editor} />
-        <Route path="/edit/:id" component={Editor} />
-        <Route path="/entry/:id" component={EntryView} />
-        <Route path="/settings" component={Settings} />
-        <Route path="/recent" component={Home} />
-        <Route path="/calendar" component={Home} />
-        <Route path="/entries" component={Home} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
-  );
-}
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <ScrollToTop />
-        <AppRoutes />
-        <Toaster />
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/new" element={<NewEntry />} />
+            <Route path="/entries/:id" element={<ViewEntry />} />
+            <Route path="/entries/:id/edit" element={<EditEntry />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          <Toaster />
+        </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
-import { useLocation } from "wouter";
+import { useLocation, useNavigate } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertEntrySchema, type InsertEntry } from "@shared/schema";
@@ -124,6 +124,8 @@ const NewEntry: React.FC = () => {
   });
 
   const { toast } = useToast();
+  const navigation = useNavigate();
+
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {
@@ -135,7 +137,7 @@ const NewEntry: React.FC = () => {
         title: "Success",
         description: "Entry created",
       });
-      navigate("/");
+      navigation("/");
     },
   });
 
@@ -216,11 +218,15 @@ const NewEntry: React.FC = () => {
     form.setValue("mediaUrls", newUrls);
   };
 
+  const onSubmit = (data: InsertEntry) => {
+    mutation.mutate(data);
+  };
+
   return (
     <PageTransition direction={1}>
       <KeyboardAware> {/* KeyboardAware wrapper added */}
         <div ref={containerRef} className="relative min-h-screen">
-          <form ref={formRef} >
+          <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)}>
             <div className={`flex flex-col bg-white w-full ${isExiting ? 'pointer-events-none' : ''}`}>
               {/* Header */}
               <div className="relative px-4 sm:px-6 py-3 border-b bg-white sticky top-0 z-10 w-full">
@@ -235,9 +241,9 @@ const NewEntry: React.FC = () => {
                     Cancel
                   </Button>
                   <Button
-                    type="button"
+                    type="submit" // Changed to type="submit"
                     size="sm"
-                    onClick={form.handleSubmit((data) => mutation.mutate(data))}
+                    //onClick={form.handleSubmit((data) => mutation.mutate(data))} // Removed onClick handler
                     disabled={mutation.isPending}
                     className="bg-primary hover:bg-primary/90 whitespace-nowrap"
                   >

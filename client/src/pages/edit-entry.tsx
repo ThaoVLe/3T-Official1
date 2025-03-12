@@ -1,223 +1,156 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FeelingSelector } from "@/components/feeling-selector";
-import { LocationSelector } from "@/components/location-selector";
-import { useLocation } from "wouter";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ArrowLeft, Check, FileEdit, MapPin, X } from "lucide-react"; // Changed import
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { getEntry, updateEntry } from '../shared/api/entries';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import { toast } from '../components/ui/use-toast';
+import { PageTransition } from '../components/page-transition';
+import { MapPin } from 'lucide-react';
 
-interface Entry {
-  feeling: { emoji: string; label: string } | null;
-  location: string | null;
-  // ... other entry properties
-}
+const formSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  location: z.string().optional(),
+  media: z.array(z.string()).optional(),
+});
 
-const EditEntry: React.FC<{ entry: Entry; onSave: (entry: Entry) => void }> = ({ entry, onSave }) => {
-  const [feeling, setFeeling] = useState<{ emoji: string; label: string } | null>(
-    entry?.feeling
-  );
-  const [location, setLocation] = useState<string | null>(
-    entry?.location || null
-  );
-  const [, navigate] = useLocation();
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
-  // ... other state variables
+export default function EditEntry() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Reference to track swipe animation
-  const containerRef = useRef<HTMLDivElement>(null);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: "",
+      content: "",
+      location: undefined,
+      media: [],
+    },
+  });
 
+  // Fetch entry data
   useEffect(() => {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchStartTime = 0;
-    let isDragging = false;
-    let currentTranslateX = 0;
+    if (!id) return;
 
-    const handleTouchStart = (e: TouchEvent) => {
-      // Check if touch started inside the editing area or floating bar
-      const target = e.target as HTMLElement;
-      const isInsideEditor = target.closest('.tiptap-container, .ProseMirror') !== null;
-      const isInsideFloatingBar = target.closest('.floating-bar') !== null;
-
-      // Only allow swipe if touch is NOT inside editor area
-      if (isInsideEditor || isInsideFloatingBar) {
-        isDragging = false;
-        return;
+    async function fetchEntry() {
+      try {
+        setLoading(true);
+        const data = await getEntry(id);
+        form.reset({
+          title: data.title,
+          content: data.content,
+          location: data.location,
+          media: data.media || [],
+        });
+      } catch (err) {
+        console.error('Failed to fetch entry:', err);
+        setError('Failed to load journal entry');
+      } finally {
+        setLoading(false);
       }
-
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
-      isDragging = true;
-
-      // Reset transition during drag
-      if (containerRef.current) {
-        containerRef.current.style.transition = 'none';
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging) return;
-
-      const touchMoveX = e.touches[0].clientX;
-      const touchMoveY = e.touches[0].clientY;
-      const verticalDistance = Math.abs(touchMoveY - touchStartY);
-
-      // Prevent vertical scrolling interference
-      if (verticalDistance > 30) return;
-
-      // Calculate the horizontal distance moved
-      const moveDistance = touchMoveX - touchStartX;
-
-      // Only allow right swipes (positive distance)
-      if (moveDistance > 0) {
-        currentTranslateX = moveDistance;
-
-        // Apply transform with damping effect (using sqrt for more natural feel)
-        if (containerRef.current) {
-          const dampenedDistance = Math.sqrt(moveDistance) * 6;
-          containerRef.current.style.transform = `translateX(${Math.min(dampenedDistance, 100)}px)`;
-
-          // Gradually increase opacity of backdrop as user swipes
-          const opacity = Math.min(moveDistance / 150, 0.5);
-          containerRef.current.style.boxShadow = `-5px 0 15px rgba(0, 0, 0, ${opacity})`;
-        }
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (!isDragging) return;
-      isDragging = false;
-
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const touchEndTime = Date.now();
-      const swipeDistance = touchEndX - touchStartX;
-      const verticalDistance = Math.abs(touchEndY - touchStartY);
-      const swipeTime = touchEndTime - touchStartTime;
-
-      // Add transition for smooth animation back to original position
-      if (containerRef.current) {
-        containerRef.current.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease-out';
-      }
-
-      // If swiped far enough or fast enough (distance > 50px, time < 300ms, not too much vertical movement)
-      if ((swipeDistance > 80 || (swipeDistance > 50 && swipeTime < 300)) && verticalDistance < 30) {
-        // Show save dialog
-        setShowSaveDialog(true);
-
-        // Animate back to original position
-        if (containerRef.current) {
-          containerRef.current.style.transform = 'translateX(0)';
-          containerRef.current.style.boxShadow = 'none';
-        }
-      } else {
-        // Not swiped far enough, animate back to original position
-        if (containerRef.current) {
-          containerRef.current.style.transform = 'translateX(0)';
-          containerRef.current.style.boxShadow = 'none';
-        }
-      }
-    };
-
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({ ...entry, feeling, location }); // ... other properties
-  };
-
-  const handleSaveConfirm = () => {
-    if (formRef.current) {
-      // Trigger the form submission
-      const event = new Event('submit', { cancelable: true, bubbles: true });
-      formRef.current.dispatchEvent(event);
     }
-    setShowSaveDialog(false);
-  };
 
-  const handleCancel = () => {
-    setShowSaveDialog(false);
-    if (entry?.id) {
-      setIsExiting(true);
-      // Match the entry-view animation timing
-      setTimeout(() => navigate(`/entry/${entry.id}`), 100);
-    } else {
-      setIsExiting(true);
-      setTimeout(() => navigate('/'), 100);
-    }
-  };
+    fetchEntry();
+  }, [id, form]);
 
-  const handleSaveConfirm = () => {
-    if (formRef.current) {
-      // Trigger the form submission
-      const event = new Event('submit', { cancelable: true, bubbles: true });
-      formRef.current.dispatchEvent(event);
-    }
-    setShowSaveDialog(false);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!id) return;
 
-    // Add exit animation similar to the entry-view
-    if (containerRef.current) {
-      containerRef.current.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
-      containerRef.current.style.transform = 'translateX(-20px)';
-      containerRef.current.style.opacity = '0';
+    try {
+      await updateEntry(id, values);
+      toast({
+        title: "Entry updated",
+        description: "Your journal entry has been updated.",
+      });
+      navigate(`/entries/${id}`);
+    } catch (error) {
+      console.error("Failed to update entry:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update your entry. Please try again.",
+        variant: "destructive",
+      });
     }
-  };
+  }
+
+  if (loading) {
+    return <div className="container mx-auto py-8">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+        <Button onClick={() => navigate('/')} className="mt-4">
+          Go back to home
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <form ref={formRef} onSubmit={handleSubmit}>
-        <div className="flex flex-wrap gap-2 items-center">
-          <FeelingSelector
-            onSelect={setFeeling}
-            selectedFeeling={feeling}
-          />
-          <LocationSelector
-            onSelect={setLocation}
-            selectedLocation={location}
-          />
-        </div>
-        {/* ... other form elements */}
-        <button type="submit">Save</button>
-      </form>
+    <PageTransition>
+      <div className="container mx-auto py-8">
+        <h1 className="text-3xl font-bold mb-6">Edit Entry</h1>
+
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div>
+            <Input
+              placeholder="Title"
+              {...form.register("title")}
+              className="text-2xl font-semibold"
+            />
+            {form.formState.errors.title && (
+              <p className="text-red-500 text-sm mt-1">
+                {form.formState.errors.title.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Textarea
+              placeholder="What's on your mind today?"
+              {...form.register("content")}
+              className="min-h-[300px]"
+            />
+            {form.formState.errors.content && (
+              <p className="text-red-500 text-sm mt-1">
+                {form.formState.errors.content.message}
+              </p>
+            )}
+          </div>
+
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={() => navigate(`/entries/${id}`)}
+              >
+                Cancel
+              </Button>
+
+              {/* Location button would go here */}
+              <Button 
+                type="submit" 
+                className="gap-2"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </form>
       </div>
-
-      <AlertDialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <AlertDialogContent className="animate-in fade-in-0 zoom-in-95 slide-in-from-left-1/2 slide-in-from-top-[48%] duration-200">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Save Changes?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Do you want to save your changes before leaving?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancel}>No</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSaveConfirm}>Yes</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </PageTransition>
   );
-};
-
-export default EditEntry;
+}

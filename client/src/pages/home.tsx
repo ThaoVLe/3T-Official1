@@ -3,15 +3,22 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FileEdit } from "lucide-react";
 import EntryCard from "@/components/entry-card";
-import type { DiaryEntry } from "@shared/schema";
+import type { DiaryEntry } from "@shared/schema"; // Assuming this type is compatible or adjust as needed
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
 import { auth } from "@/lib/firebase";
+import { getAllEntries } from '../shared/api/entries'; //Import the API function - adjust path as needed
+import { formatDate } from '@shared/utils/date'; //Import date formatting function - adjust path as needed
+
 
 export default function Home() {
   const [, navigate] = useLocation();
+  const [entries, setEntries] = useState<DiaryEntry[]>([]); //State for entries
+  const [loading, setLoading] = useState(true); //Loading state
+  const [error, setError] = useState<string | null>(null); //Error state
+
 
   // Check if user is authenticated
   useEffect(() => {
@@ -23,10 +30,23 @@ export default function Home() {
     return () => unsubscribe();
   }, [navigate]);
 
-  const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
-    queryKey: ["/api/entries"],
-    enabled: !!auth.currentUser, // Only fetch when user is authenticated
-  });
+  useEffect(() => {
+    const fetchEntries = async () => {
+      try {
+        setLoading(true);
+        const data = await getAllEntries();
+        setEntries(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch entries:', err);
+        setError('Failed to load journal entries');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEntries();
+  }, []);
+
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRestoredRef = useRef(false);
@@ -44,7 +64,7 @@ export default function Home() {
     window.addEventListener('beforeunload', storeScrollPosition);
 
     return () => {
-      storeScrollPosition(); 
+      storeScrollPosition();
       window.removeEventListener('visibilitychange', storeScrollPosition);
       window.removeEventListener('beforeunload', storeScrollPosition);
     };
@@ -89,7 +109,7 @@ export default function Home() {
     window.scrollTo(0, 0);
   }, []);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background overflow-auto diary-content">
         <div className="sticky top-0 z-10 bg-background border-b px-4 py-4">
@@ -104,9 +124,13 @@ export default function Home() {
     );
   }
 
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <PageTransition direction={-1}>
-      <div 
+      <div
         ref={containerRef}
         className="min-h-screen bg-background overflow-auto diary-content"
         style={{
@@ -174,10 +198,7 @@ export default function Home() {
                   transition={{ delay: index * 0.05 }}
                   whileHover="hover"
                 >
-                  <EntryCard 
-                    entry={entry} 
-                    setSelectedEntryId={setSelectedEntryId} 
-                  />
+                  <EntryCard entry={entry} setSelectedEntryId={setSelectedEntryId} />
                 </motion.div>
               ))}
             </div>

@@ -42,10 +42,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      let user = await storage.getUserByEmail(result.data.email);
+      // Convert email to lowercase
+      const email = result.data.email.toLowerCase();
+      let user = await storage.getUserByEmail(email);
       if (!user) {
         // Create new user if they don't exist
-        user = await storage.createUser(result.data);
+        user = await storage.createUser({ ...result.data, email });
       }
 
       res.status(200).json(user);
@@ -58,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Diary entry routes
   app.get("/api/entries", async (req, res) => {
     try {
-      const email = req.query.email as string;
+      const email = (req.query.email as string)?.toLowerCase();
       if (!email) {
         return res.status(400).json({ message: "Email is required" });
       }
@@ -74,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/entries", async (req, res) => {
     try {
       console.log("Received entry data:", req.body);
-      
+
       const result = insertEntrySchema.safeParse(req.body);
       if (!result.success) {
         console.error("Validation errors:", result.error.errors);
@@ -84,16 +86,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Ensure we're using the correct field name in the database
+      // Ensure email is lowercase
       const entryData = {
         ...result.data,
-        user_email: result.data.userEmail
+        userEmail: result.data.userEmail.toLowerCase()
       };
-      
+
       console.log("Creating entry with data:", entryData);
       const entry = await storage.createEntry(entryData);
       console.log("Entry created successfully:", entry);
-      
+
       res.status(201).json(entry);
     } catch (error) {
       console.error("Error creating entry:", error);
@@ -114,7 +116,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const entry = await storage.updateEntry(parseInt(req.params.id), result.data);
+      // Ensure email is lowercase if it's being updated
+      const updateData = {
+        ...result.data,
+        userEmail: result.data.userEmail?.toLowerCase()
+      };
+
+      const entry = await storage.updateEntry(parseInt(req.params.id), updateData);
       if (!entry) return res.status(404).json({ message: "Entry not found" });
       res.json(entry);
     } catch (error) {

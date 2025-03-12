@@ -20,14 +20,17 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.email, email));
+      .where(eq(users.email, email.toLowerCase()));
     return user;
   }
 
   async createUser(user: InsertUser): Promise<User> {
     const [newUser] = await db
       .insert(users)
-      .values(user)
+      .values({
+        ...user,
+        email: user.email.toLowerCase()
+      })
       .returning();
     return newUser;
   }
@@ -36,7 +39,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(diaryEntries)
-      .where(eq(diaryEntries.userEmail, email))
+      .where(eq(diaryEntries.userEmail, email.toLowerCase()))
       .orderBy(desc(diaryEntries.createdAt));
   }
 
@@ -52,12 +55,11 @@ export class DatabaseStorage implements IStorage {
     // Ensure we're handling both column naming styles
     const entryData = {
       ...entry,
-      // Make sure user_email is set if it exists in the schema
-      user_email: entry.userEmail 
+      userEmail: entry.userEmail.toLowerCase() 
     };
-    
+
     console.log("Creating entry with formatted data:", entryData);
-    
+
     try {
       const [newEntry] = await db
         .insert(diaryEntries)
@@ -66,14 +68,6 @@ export class DatabaseStorage implements IStorage {
       return newEntry;
     } catch (error) {
       console.error("Database error when creating entry:", error);
-      // If there was an error with the user_email field, try again with just the original data
-      if (String(error).includes("user_email") || String(error).includes("duplicate key")) {
-        const [newEntry] = await db
-          .insert(diaryEntries)
-          .values(entry)
-          .returning();
-        return newEntry;
-      }
       throw error;
     }
   }
@@ -81,7 +75,10 @@ export class DatabaseStorage implements IStorage {
   async updateEntry(id: number, entry: Partial<InsertEntry>): Promise<DiaryEntry | undefined> {
     const [updated] = await db
       .update(diaryEntries)
-      .set(entry)
+      .set({
+        ...entry,
+        userEmail: entry.userEmail?.toLowerCase()
+      })
       .where(eq(diaryEntries.id, id))
       .returning();
     return updated;

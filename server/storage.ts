@@ -12,12 +12,39 @@ export interface IStorage {
   getComments(entryId: number): Promise<Comment[]>;
   addComment(comment: InsertComment): Promise<Comment>;
   deleteComment(id: number): Promise<boolean>;
-  getEntriesByUserId(userId: string): Promise<DiaryEntry[]>; // Added method
+  getEntriesByUserId(userId: string): Promise<DiaryEntry[]>;
+  // User auth methods
+  getUserLastLogin(userId: string): Promise<string | null>;
+  updateUserLastLogin(userId: string, lastLogin: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
   async getAllEntries(): Promise<DiaryEntry[]> {
     return await db.select().from(diaryEntries).orderBy(desc(diaryEntries.createdAt));
+  }
+  
+  async getUserLastLogin(userId: string): Promise<string | null> {
+    try {
+      const [user] = await db.execute(
+        sql`SELECT last_login FROM users WHERE id = ${userId}`
+      );
+      return user ? user.last_login : null;
+    } catch (error) {
+      console.error("Error getting user last login:", error);
+      return null;
+    }
+  }
+
+  async updateUserLastLogin(userId: string, lastLogin: string): Promise<boolean> {
+    try {
+      await db.execute(
+        sql`UPDATE users SET last_login = ${lastLogin} WHERE id = ${userId}`
+      );
+      return true;
+    } catch (error) {
+      console.error("Error updating user last login:", error);
+      return false;
+    }
   }
 
   async getEntry(id: number): Promise<DiaryEntry | undefined> {

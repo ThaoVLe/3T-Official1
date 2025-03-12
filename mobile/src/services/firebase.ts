@@ -42,16 +42,28 @@ const onAuthStateChanged = (callback) => {
 const SESSION_KEY = 'auth_session_timestamp';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-// Function to check if session is expired
-export const isSessionExpired = async () => {
+// Function to check if session is expired by checking database
+export const isSessionExpired = async (userId: string) => {
   try {
-    const timestamp = await AsyncStorage.getItem(SESSION_KEY);
-    if (!timestamp) {
-      console.log('No session timestamp found');
+    if (!userId) {
+      console.log('No user ID provided');
       return true;
     }
-
-    const lastLoginTime = parseInt(timestamp, 10);
+    
+    // Fetch user's last login time from the server
+    const response = await fetch(`/api/users/${userId}/lastLogin`);
+    if (!response.ok) {
+      console.error('Failed to fetch last login info');
+      return true;
+    }
+    
+    const data = await response.json();
+    if (!data.lastLogin) {
+      console.log('No last login record found');
+      return true;
+    }
+    
+    const lastLoginTime = new Date(data.lastLogin).getTime();
     const currentTime = Date.now();
     const isExpired = (currentTime - lastLoginTime) > SESSION_DURATION;
     console.log('Session expired:', isExpired);
@@ -62,7 +74,26 @@ export const isSessionExpired = async () => {
   }
 };
 
-// Update session timestamp
+// Update last login in database
+export const updateLastLogin = async (userId: string) => {
+  try {
+    const response = await fetch(`/api/users/${userId}/lastLogin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        lastLogin: new Date().toISOString()
+      })
+    });
+    
+    if (!response.ok) {
+      console.error('Failed to update last login time');
+    }
+  } catch (error) {
+    console.error('Error updating last login:', error);
+  }
+};
 const updateSessionTimestamp = async () => {
   try {
     await AsyncStorage.setItem(SESSION_KEY, Date.now().toString());

@@ -16,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, AuthScreenRouteProp } from '../navigation/types';
 import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '../services/firebase';
+import { updateLastLogin } from '../services/database'; // Placeholder for database interaction
 
 type AuthScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Auth'>;
@@ -45,11 +46,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ navigation, route }) => 
       console.log('Attempting auth with:', isLogin ? 'login' : 'signup');
 
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userId = userCredential.user.uid;
+        await updateLastLogin(userId); // Update last login in database
+        navigation.navigate('Home');
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
       }
-      // No need to navigate - the onAuthStateChanged listener in App.tsx will handle this
     } catch (error) {
       console.error('Auth error:', error);
       Alert.alert(

@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 
+console.log("Starting Firebase initialization...");
+
 // Verify environment variables are present
 const requiredEnvVars = [
   'VITE_FIREBASE_API_KEY',
@@ -24,17 +26,15 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Log configuration for debugging (will be removed in production)
-console.log('Firebase Config (without sensitive data):', {
+console.log('Initializing Firebase with config:', {
   projectId: firebaseConfig.projectId,
   authDomain: firebaseConfig.authDomain,
   hasApiKey: !!firebaseConfig.apiKey,
   hasAppId: !!firebaseConfig.appId
 });
 
-// Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 // Enable local persistence
 setPersistence(auth, browserLocalPersistence)
@@ -44,3 +44,5 @@ setPersistence(auth, browserLocalPersistence)
   .catch((error) => {
     console.error('Error enabling persistence:', error);
   });
+
+export { app, auth };

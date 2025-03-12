@@ -1,18 +1,21 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileEdit } from "lucide-react";
+import { PlusCircle, FileEdit, Camera, MapPin, SmilePlus } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
+import { Avatar } from "@/components/ui/avatar";
+import { AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Home() {
   const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
     queryKey: ["/api/entries"],
   });
+  const [, navigate] = useLocation();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRestoredRef = useRef(false);
@@ -71,49 +74,18 @@ export default function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background overflow-auto diary-content">
-        <div className="sticky top-0 z-10 bg-background border-b px-4 py-4">
-          <Skeleton className="h-10 w-48" />
+        <div className="sticky top-0 z-10 bg-background border-b p-4">
+          <Skeleton className="h-24 w-full" />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 p-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-64 w-full" />
           ))}
         </div>
       </div>
-    );
-  }
-
-  if (!entries?.length) {
-    return (
-      <PageTransition direction={-1}>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4 bg-background">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Welcome to Your Diary
-            </h1>
-            <p className="text-muted-foreground mb-8 max-w-md">
-              Start capturing your memories with text, photos, videos, and audio recordings.
-            </p>
-            <Link href="/new">
-              <Button size="lg" className="flex gap-2">
-                <PlusCircle className="w-5 h-5" />
-                Create Your First Entry
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-      </PageTransition>
     );
   }
 
@@ -129,41 +101,84 @@ export default function Home() {
         }}
       >
         <div className="sticky top-0 z-10 bg-card border-b">
-          <div className="flex justify-between items-center px-4 py-3">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              My Diary
-            </h1>
-            <Link href="/new">
-              <Button className="flex gap-2">
-                <FileEdit className="w-4 h-4" />
-                New Entry
+          <div className="container px-4 py-3 mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                My Diary
+              </h1>
+            </div>
+
+            <div className="flex items-start gap-3 pb-3" onClick={() => navigate('/new')}>
+              <Avatar className="w-10 h-10">
+                <AvatarImage src="/placeholder-avatar.jpg" />
+                <AvatarFallback>ME</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <button 
+                  className="w-full text-left px-4 py-2.5 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+                  onClick={() => navigate('/new')}
+                >
+                  What's on your mind?
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 flex items-center justify-center gap-2"
+                onClick={() => navigate('/new')}
+              >
+                <Camera className="w-4 h-4" />
+                <span className="hidden sm:inline">Photo/Video</span>
               </Button>
-            </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 flex items-center justify-center gap-2"
+                onClick={() => navigate('/new')}
+              >
+                <SmilePlus className="w-4 h-4" />
+                <span className="hidden sm:inline">Feeling</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 flex items-center justify-center gap-2"
+                onClick={() => navigate('/new')}
+              >
+                <MapPin className="w-4 h-4" />
+                <span className="hidden sm:inline">Location</span>
+              </Button>
+            </div>
           </div>
         </div>
 
-        <AnimatePresence>
-          <div className="space-y-2">
-            {entries.map((entry, index) => (
-              <motion.div
-                key={entry.id}
-                id={`entry-${entry.id}`}
-                className="bg-card"
-                variants={cardVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ delay: index * 0.05 }}
-                whileHover="hover"
-              >
-                <EntryCard 
-                  entry={entry} 
-                  setSelectedEntryId={setSelectedEntryId} 
-                />
-              </motion.div>
-            ))}
-          </div>
-        </AnimatePresence>
+        <div className="container px-4 py-4 mx-auto">
+          <AnimatePresence>
+            <div className="space-y-4">
+              {entries?.map((entry, index) => (
+                <motion.div
+                  key={entry.id}
+                  id={`entry-${entry.id}`}
+                  className="bg-card"
+                  variants={cardVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ delay: index * 0.05 }}
+                  whileHover="hover"
+                >
+                  <EntryCard 
+                    entry={entry} 
+                    setSelectedEntryId={setSelectedEntryId} 
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </AnimatePresence>
+        </div>
       </div>
     </PageTransition>
   );

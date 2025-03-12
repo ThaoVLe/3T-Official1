@@ -26,6 +26,7 @@ export default function App() {
 
   useEffect(() => {
     // Check for authentication state when the app loads
+    console.log('Checking authentication state...');
     const subscriber = onAuthStateChanged(auth, onAuthStateChange);
     return subscriber; // unsubscribe on unmount
   }, []);
@@ -42,7 +43,6 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName={!user ? "Auth" : "Home"}
           screenOptions={{
             headerStyle: {
               backgroundColor: '#ffffff',
@@ -54,12 +54,14 @@ export default function App() {
           }}
         >
           {!user ? (
+            // Auth screen stack
             <Stack.Screen 
               name="Auth" 
               component={AuthScreen}
               options={{ headerShown: false }}
             />
           ) : (
+            // Main app screens when user is authenticated
             <>
               <Stack.Screen 
                 name="Home" 

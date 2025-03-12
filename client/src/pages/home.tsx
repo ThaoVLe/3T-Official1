@@ -3,22 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FileEdit } from "lucide-react";
 import EntryCard from "@/components/entry-card";
-import type { DiaryEntry } from "@shared/schema"; // Assuming this type is compatible or adjust as needed
+import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
 import { auth } from "@/lib/firebase";
-import { getAllEntries } from '../shared/api/entries'; //Import the API function - adjust path as needed
-import { formatDate } from '@shared/utils/date'; //Import date formatting function - adjust path as needed
-
 
 export default function Home() {
   const [, navigate] = useLocation();
-  const [entries, setEntries] = useState<DiaryEntry[]>([]); //State for entries
-  const [loading, setLoading] = useState(true); //Loading state
-  const [error, setError] = useState<string | null>(null); //Error state
-
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -30,45 +24,13 @@ export default function Home() {
     return () => unsubscribe();
   }, [navigate]);
 
-  useEffect(() => {
-    const fetchEntries = async () => {
-      try {
-        setLoading(true);
-        const data = await getAllEntries();
-        setEntries(data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch entries:', err);
-        setError('Failed to load journal entries');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEntries();
-  }, []);
-
+  const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
+    queryKey: ["/api/entries"],
+    enabled: !!auth.currentUser,
+  });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRestoredRef = useRef(false);
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storeScrollPosition = () => {
-      const container = document.querySelector('.diary-content');
-      if (container) {
-        sessionStorage.setItem('homeScrollPosition', String(container.scrollTop));
-      }
-    };
-
-    window.addEventListener('visibilitychange', storeScrollPosition);
-    window.addEventListener('beforeunload', storeScrollPosition);
-
-    return () => {
-      storeScrollPosition();
-      window.removeEventListener('visibilitychange', storeScrollPosition);
-      window.removeEventListener('beforeunload', storeScrollPosition);
-    };
-  }, []);
 
   useEffect(() => {
     if (!entries || entries.length === 0 || scrollRestoredRef.current) return;
@@ -99,17 +61,7 @@ export default function Home() {
     setTimeout(restoreScroll, 50);
   }, [entries]);
 
-  useEffect(() => {
-    return () => {
-      scrollRestoredRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background overflow-auto diary-content">
         <div className="sticky top-0 z-10 bg-background border-b px-4 py-4">
@@ -124,13 +76,9 @@ export default function Home() {
     );
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
   return (
     <PageTransition direction={-1}>
-      <div
+      <div 
         ref={containerRef}
         className="min-h-screen bg-background overflow-auto diary-content"
         style={{
@@ -154,7 +102,7 @@ export default function Home() {
               >
                 Sign Out
               </Button>
-              <Link href="/new">
+              <Link href="/editor">
                 <Button className="flex gap-2">
                   <FileEdit className="w-4 h-4" />
                   New Entry
@@ -175,7 +123,7 @@ export default function Home() {
               <p className="text-muted-foreground mb-8">
                 Start capturing your memories with text, photos, and more.
               </p>
-              <Link href="/new">
+              <Link href="/editor">
                 <Button size="lg" className="flex gap-2">
                   <PlusCircle className="w-5 h-5" />
                   Create Your First Entry
@@ -198,7 +146,10 @@ export default function Home() {
                   transition={{ delay: index * 0.05 }}
                   whileHover="hover"
                 >
-                  <EntryCard entry={entry} setSelectedEntryId={setSelectedEntryId} />
+                  <EntryCard 
+                    entry={entry} 
+                    setSelectedEntryId={setSelectedEntryId} 
+                  />
                 </motion.div>
               ))}
             </div>

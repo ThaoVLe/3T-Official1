@@ -37,7 +37,7 @@ const EditorContent = () => {
   const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
   const isDraggingRef = useRef(false);
 
-  // Check authentication
+  // Authentication check
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
@@ -92,7 +92,7 @@ const EditorContent = () => {
     const deltaTime = Date.now() - touchStartRef.current.time;
     const velocity = deltaX / deltaTime;
 
-    const shouldExit = 
+    const shouldExit =
       (deltaX > SWIPE_THRESHOLD && velocity > VELOCITY_THRESHOLD) ||
       deltaX > window.innerWidth * 0.4;
 
@@ -275,7 +275,7 @@ const EditorContent = () => {
     temporaryInput.style.opacity = '0';
     temporaryInput.style.height = '0';
     temporaryInput.style.width = '100%';
-    temporaryInput.style.fontSize = '16px'; 
+    temporaryInput.style.fontSize = '16px';
 
     document.body.appendChild(temporaryInput);
 
@@ -313,9 +313,7 @@ const EditorContent = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              navigate("/home");
-            }}
+            onClick={() => navigate("/home")}
             className="whitespace-nowrap"
           >
             <X className="h-4 w-4 mr-1" />
@@ -357,7 +355,7 @@ const EditorContent = () => {
         </div>
       </div>
 
-      <div 
+      <div
         className="flex-1 flex flex-col overflow-auto w-full bg-background relative"
       >
         <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
@@ -390,9 +388,9 @@ const EditorContent = () => {
           </Button>
         </div>
 
-        <div 
+        <div
           className="fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-out"
-          style={{ 
+          style={{
             transform: `translateY(${isKeyboardVisible ? -keyboardHeight : 0}px)`,
             paddingBottom: 'env(safe-area-inset-bottom)'
           }}

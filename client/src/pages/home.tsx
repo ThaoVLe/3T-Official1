@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileEdit } from "lucide-react";
+import { PlusCircle, FileEdit, LogOut } from "lucide-react";
 import EntryCard from "@/components/entry-card";
 import type { DiaryEntry } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,12 +9,12 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, cardVariants } from "@/components/animations";
 import { auth } from "@/lib/firebase";
-import { LogOut } from "lucide-react";
 
 
 export default function Home() {
   const [, navigate] = useLocation();
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -22,13 +22,14 @@ export default function Home() {
       if (!user) {
         navigate("/auth");
       }
+      setIsAuthChecked(true);
     });
     return () => unsubscribe();
   }, [navigate]);
 
   const { data: entries, isLoading } = useQuery<DiaryEntry[]>({
     queryKey: ["/api/entries"],
-    enabled: !!auth.currentUser,
+    enabled: !!auth.currentUser && isAuthChecked,
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,12 +64,16 @@ export default function Home() {
     setTimeout(restoreScroll, 50);
   }, [entries]);
 
-  const handleSignOut = () => {
-    auth.signOut();
-    navigate("/auth");
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
-  if (isLoading) {
+  if (!isAuthChecked || isLoading) {
     return (
       <div className="min-h-screen bg-background overflow-auto diary-content">
         <div className="sticky top-0 z-10 bg-background border-b px-4 py-4">
@@ -81,6 +86,11 @@ export default function Home() {
         </div>
       </div>
     );
+  }
+
+  if (!auth.currentUser) {
+    navigate("/auth");
+    return null;
   }
 
   return (
@@ -104,14 +114,13 @@ export default function Home() {
                 variant="ghost"
                 onClick={handleSignOut}
               >
+                <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
-              <Link href="/editor">
-                <Button className="flex gap-2">
-                  <FileEdit className="w-4 h-4" />
-                  New Entry
-                </Button>
-              </Link>
+              <Button onClick={() => navigate("/editor")} className="flex gap-2">
+                <FileEdit className="w-4 h-4" />
+                New Entry
+              </Button>
             </div>
           </div>
         </div>
@@ -127,12 +136,14 @@ export default function Home() {
               <p className="text-muted-foreground mb-8">
                 Start capturing your memories with text, photos, and more.
               </p>
-              <Link href="/editor">
-                <Button size="lg" className="flex gap-2" onClick={() => window.location.href = "/editor"}>
-                  <PlusCircle className="w-5 h-5" />
-                  Create Your First Entry
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                className="flex gap-2"
+                onClick={() => navigate("/editor")}
+              >
+                <PlusCircle className="w-5 h-5" />
+                Create Your First Entry
+              </Button>
             </motion.div>
           </div>
         ) : (

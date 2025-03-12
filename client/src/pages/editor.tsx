@@ -27,6 +27,7 @@ const EditorContent = () => {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [tempMediaUrls, setTempMediaUrls] = useState<string[]>([]);
@@ -43,6 +44,7 @@ const EditorContent = () => {
       if (!user) {
         navigate("/auth");
       }
+      setIsAuthChecked(true);
     });
     return () => unsubscribe();
   }, [navigate]);
@@ -131,7 +133,7 @@ const EditorContent = () => {
 
   const { data: entry } = useQuery<DiaryEntry>({
     queryKey: [`/api/entries/${id}`],
-    enabled: !!id && !!auth.currentUser,
+    enabled: !!id && !!auth.currentUser && isAuthChecked,
   });
 
   const form = useForm<InsertEntry>({
@@ -147,10 +149,10 @@ const EditorContent = () => {
   });
 
   useEffect(() => {
-    if (entry) {
+    if (entry && auth.currentUser) {
       form.reset({
         ...entry,
-        userId: auth.currentUser?.uid || "",
+        userId: auth.currentUser.uid,
       });
     }
   }, [entry, form]);
@@ -294,6 +296,15 @@ const EditorContent = () => {
     return window.innerWidth < 768;
   };
 
+
+  if (!isAuthChecked) {
+    return <div>Loading...</div>;
+  }
+
+  if (!auth.currentUser) {
+    navigate("/auth");
+    return null;
+  }
 
   return (
     <motion.div

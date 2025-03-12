@@ -43,6 +43,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator
+          initialRouteName="Auth"
           screenOptions={{
             headerStyle: {
               backgroundColor: '#ffffff',

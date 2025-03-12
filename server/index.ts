@@ -44,10 +44,10 @@ const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunct
   res.status(status).json({ message });
 };
 
-// Improved server startup with better error handling
-(async () => {
+// Improved server startup with better error handling and port management
+const startServer = async (port: number, retries = 3): Promise<void> => {
   try {
-    log('Starting server initialization...');
+    log(`Starting server initialization (PID: ${process.pid})...`);
 
     // Force development mode during active development
     process.env.NODE_ENV = 'development';
@@ -61,33 +61,45 @@ const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunct
     await setupVite(app, server);
     log('Vite middleware setup complete');
 
-    const port = 5000;
     log(`Attempting to bind to port ${port}...`);
 
-    // Add timeout to prevent hanging
-    await Promise.race([
-      new Promise<void>((resolve, reject) => {
-        server.listen({
-          port,
-          host: "0.0.0.0",
-        })
-        .once('listening', () => {
-          log(`Server successfully listening on port ${port}`);
-          resolve();
-        })
-        .once('error', (err: NodeJS.ErrnoException) => {
-          if (err.code === 'EADDRINUSE') {
-            reject(new Error(`Port ${port} is already in use. Please ensure no other server is running on this port.`));
+    return new Promise((resolve, reject) => {
+      const onError = (err: NodeJS.ErrnoException) => {
+        if (err.code === 'EADDRINUSE') {
+          if (retries > 0) {
+            log(`Port ${port} is in use, trying port ${port + 1}...`);
+            server.close();
+            startServer(port + 1, retries - 1).then(resolve).catch(reject);
           } else {
-            reject(err);
+            reject(new Error(`Could not find an available port after ${3 - retries} attempts`));
           }
-        });
-      }),
-      new Promise((_resolve, reject) => 
-        setTimeout(() => reject(new Error('Server startup timed out after 20 seconds')), 20000)
-      )
-    ]);
+        } else {
+          reject(err);
+        }
+      };
 
+      server.once('error', onError);
+
+      server.listen({
+        port,
+        host: "0.0.0.0",
+      }, () => {
+        const actualPort = (server.address() as any).port;
+        log(`Server successfully listening on port ${actualPort} (PID: ${process.pid})`);
+        server.removeListener('error', onError);
+        resolve();
+      });
+    });
+  } catch (err) {
+    log(`Error during server startup: ${(err as Error).message}`);
+    throw err;
+  }
+};
+
+// Start the server with automatic port selection
+(async () => {
+  try {
+    await startServer(5000);
   } catch (err) {
     log(`Fatal error starting server: ${(err as Error).message}`);
     process.exit(1);

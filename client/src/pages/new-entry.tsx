@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FeelingSelector } from "@/components/feeling-selector";
 import { LocationSelector } from "@/components/location-selector";
-import { useLocation, useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertEntrySchema, type InsertEntry } from "@shared/schema";
@@ -51,7 +51,6 @@ const NewEntry: React.FC = () => {
   });
 
   const { toast } = useToast();
-  const navigation = useNavigate();
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEntry) => {

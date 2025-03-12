@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,9 +20,10 @@ const formSchema = z.object({
 
 export default function EditEntry() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,7 +47,7 @@ export default function EditEntry() {
           title: data.title,
           content: data.content,
           location: data.location,
-          media: data.media || [],
+          media: data.mediaUrls || [],
         });
       } catch (err) {
         console.error('Failed to fetch entry:', err);
@@ -89,7 +90,7 @@ export default function EditEntry() {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
         </div>
-        <Button onClick={() => navigate('/')} className="mt-4">
+        <Button onClick={() => navigate('/home')} className="mt-4">
           Go back to home
         </Button>
       </div>
@@ -139,7 +140,6 @@ export default function EditEntry() {
                 Cancel
               </Button>
 
-              {/* Location button would go here */}
               <Button
                 type="submit"
                 className="gap-2"

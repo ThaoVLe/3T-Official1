@@ -129,6 +129,7 @@ const EditorContent = () => {
       mediaUrls: [],
       feeling: null,
       location: null,
+      userEmail: "user@example.com", // Add default user email to pass validation
     },
   });
 
@@ -282,7 +283,16 @@ const EditorContent = () => {
             <X className="h-4 w-4 mr-1" />
             Cancel
           </Button>
-          {/*Removed Save button here */}
+          <Button
+            variant="default"
+            size="sm"
+            onClick={form.handleSubmit((data) => mutation.mutate(data))}
+            disabled={mutation.isPending}
+            className="whitespace-nowrap"
+          >
+            <FileEdit className="h-4 w-4 mr-1" />
+            Save
+          </Button>
         </div>
         <div className="max-w-full sm:max-w-2xl pr-24">
           <Input

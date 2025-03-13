@@ -109,7 +109,7 @@ export default function Home() {
               </h1>
             </div>
 
-            <div>
+            <div className="sticky top-0 z-10 bg-background pt-2 pb-0">
               <motion.div 
                 className="flex items-start gap-4 group"
                 onClick={() => navigate('/new')}
@@ -122,7 +122,7 @@ export default function Home() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Avatar className="w-12 h-12 border-2 border-transparent group-hover:border-primary/20 transition-all duration-300">
+                  <Avatar className="w-12 h-12 border-0 border-transparent group-hover:border-primary/20 transition-all duration-300">
                     <AvatarImage src="/placeholder-avatar.jpg" className="object-cover" />
                     <AvatarFallback>ME</AvatarFallback>
                   </Avatar>
@@ -143,8 +143,8 @@ export default function Home() {
                   </motion.button>
                 </div>
               </motion.div>
+              <div className="border-t border-0 border-muted/30 mt-2"></div>
             </div>
-            <div className="border-t border-muted/30 mt-2"></div>
 
             {/* Floating bar with buttons removed */}
 

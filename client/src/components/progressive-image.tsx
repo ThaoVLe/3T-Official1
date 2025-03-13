@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useImageCache } from '@/lib/image-cache';
@@ -24,14 +25,24 @@ export function ProgressiveImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
   const { getFromCache, addToCache } = useImageCache();
-  const cachedImage = src ? getFromCache(src) : null;
-
-  // Check if it's a blob URL and make a direct image source
+  
+  // Determine if it's a blob URL
   const isBlob = src?.startsWith('blob:');
-  // Don't add query parameters to blob URLs as they can cause issues
-  const finalSrc = isBlob ? src : (src ? (src + (src.includes('?') ? '&' : '?') + 'q=80&maxSize=500') : '');
+  
+  // Only use cache for non-blob URLs
+  const cachedImage = !isBlob && src ? getFromCache(src) : null;
+  
+  // For blob URLs, use the original URL without modifications
+  // For regular URLs, add query parameters
+  const finalSrc = isBlob 
+    ? src 
+    : (src ? (src + (src.includes('?') ? '&' : '?') + 'q=80&maxSize=500') : '');
 
   useEffect(() => {
+    // Reset states when src changes
+    setIsLoaded(false);
+    setError(false);
+    
     if (cachedImage) {
       setIsLoaded(true);
       return;
@@ -42,11 +53,10 @@ export function ProgressiveImage({
       return;
     }
 
-    // For blob URLs, try to load directly without modifications
     const img = new Image();
     
-    // Set crossOrigin to anonymous for blob URLs to help with CORS issues
-    if (isBlob) {
+    // Don't set crossOrigin for blob URLs as it can cause CORS issues
+    if (!isBlob) {
       img.crossOrigin = "anonymous";
     }
     
@@ -55,7 +65,10 @@ export function ProgressiveImage({
     img.onload = () => {
       setIsLoaded(true);
       setError(false);
-      if (src && !isBlob) addToCache(src, img); // Only cache non-blob images
+      // Only cache non-blob images
+      if (src && !isBlob) {
+        addToCache(src, img);
+      }
     };
 
     img.onerror = () => {
@@ -106,6 +119,7 @@ export function ProgressiveImage({
           className
         )}
         style={{width, height}}
+        onError={() => setError(true)}
       />
     </div>
   );

@@ -27,11 +27,10 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
   const renderMedia = useCallback((url: string, index: number) => {
     if (!url) return null;
 
-    const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
-
-    const handleImageError = () => {
-      setImageErrors([...imageErrors, url]);
-    };
+    // Better detection for videos
+    const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) || 
+                    url.includes('video') || 
+                    url.toLowerCase().includes('.mov');
 
     return (
       <div className="embla__slide relative w-full flex items-center justify-center min-w-0">
@@ -43,17 +42,17 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
             className="max-w-full max-h-[80vh] w-auto h-auto"
           />
         ) : (
-          <ProgressiveImage
-            src={url}
-            alt={`Media ${index + 1}`}
-            className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
-            // Remove unsupported props
-          />
+          <div className="flex items-center justify-center w-full h-full">
+            <ProgressiveImage
+              src={url}
+              alt={`Media ${index + 1}`}
+              className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
+            />
+          </div>
         )}
-        {imageErrors.includes(url) && <p>Error loading image</p>} {/* Display error message */}
       </div>
     );
-  }, [imageErrors]);
+  }, []);
 
   if (!urls?.length) return null;
 

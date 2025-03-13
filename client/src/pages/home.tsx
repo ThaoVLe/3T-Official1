@@ -131,7 +131,7 @@ export default function Home() {
                 <AvatarFallback>ME</AvatarFallback>
               </Avatar>
               <motion.button 
-                className="flex-1 text-left px-4 py-2.5 rounded-full bg-muted/50 hover:bg-muted/70 text-muted-foreground/80"
+                className="flex-1 text-left px-4 py-2.5 rounded-full bg-muted/50 hover:bg-muted/70 text-muted-foreground/80 border-0"
                 onClick={() => navigate('/new')}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}

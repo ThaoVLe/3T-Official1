@@ -33,16 +33,9 @@ export function ProgressiveImage({
   // Only use cache for non-blob URLs
   const cachedImage = !isBlob && src ? getFromCache(src) : null;
 
-  // For blob URLs, use the original URL without modifications
-  // For regular URLs, add quality and size parameters
-  const finalSrc = isBlob 
-    ? src 
-    : src ? `${src}${src.includes('?') ? '&' : '?'}q=80&w=800` : '';
-
-  // Generate a smaller preview URL for progressive loading
-  const previewSrc = isBlob 
-    ? src 
-    : src ? `${src}${src.includes('?') ? '&' : '?'}q=10&w=20&blur=1` : '';
+  // For blob URLs, use the original URL
+  // For regular URLs, only add quality parameter
+  const finalSrc = isBlob ? src : src ? `${src}${src.includes('?') ? '&' : '?'}q=85` : '';
 
   useEffect(() => {
     // Reset states when src changes
@@ -59,20 +52,12 @@ export function ProgressiveImage({
       return;
     }
 
-    // Load preview image first (only for non-blob URLs)
-    if (!isBlob && previewSrc) {
-      const previewImg = new Image();
-      previewImg.src = previewSrc;
-    }
-
-    // Load full resolution image
     const img = new Image();
 
+    // Only set crossOrigin for non-blob URLs
     if (!isBlob) {
       img.crossOrigin = "anonymous";
     }
-
-    img.src = finalSrc;
 
     img.onload = () => {
       setIsLoaded(true);
@@ -88,11 +73,13 @@ export function ProgressiveImage({
       setIsLoaded(false);
     };
 
+    img.src = finalSrc;
+
     return () => {
       img.onload = null;
       img.onerror = null;
     };
-  }, [src, addToCache, finalSrc, previewSrc, cachedImage, isBlob]);
+  }, [src, addToCache, finalSrc, cachedImage, isBlob]);
 
   // If there's an error loading the image
   if (error) {
@@ -102,7 +89,7 @@ export function ProgressiveImage({
           "flex items-center justify-center bg-muted/50 rounded overflow-hidden", 
           className
         )}
-        style={{width, height, minHeight: '80px'}}
+        style={{width, height}}
       >
         <span className="text-muted-foreground text-sm">Failed to load image</span>
       </div>
@@ -115,11 +102,9 @@ export function ProgressiveImage({
         <div
           className={cn("w-full h-full absolute inset-0", loadingClassName)}
           style={{
-            backgroundImage: previewSrc ? `url(${previewSrc})` : placeholder ? `url(${placeholder})` : undefined,
+            backgroundImage: placeholder ? `url(${placeholder})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            filter: 'blur(8px)',
-            transform: 'scale(1.1)'
           }}
         />
       )}

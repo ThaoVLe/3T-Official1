@@ -20,6 +20,7 @@ export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRestoredRef = useRef(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     const storeScrollPosition = () => {
@@ -108,23 +109,86 @@ export default function Home() {
               </h1>
             </div>
 
-            <div className="flex items-start gap-4 pb-4" onClick={() => navigate('/new')}>
-              <Avatar className="w-12 h-12">
-                <AvatarImage src="/placeholder-avatar.jpg" />
-                <AvatarFallback>ME</AvatarFallback>
-              </Avatar>
+            <motion.div 
+              className="flex items-start gap-4 pb-4 group"
+              onClick={() => navigate('/new')}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onHoverStart={() => setIsHovering(true)}
+              onHoverEnd={() => setIsHovering(false)}
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Avatar className="w-12 h-12 border-2 border-transparent group-hover:border-primary/20 transition-all duration-300">
+                  <AvatarImage src="/placeholder-avatar.jpg" className="object-cover" />
+                  <AvatarFallback>ME</AvatarFallback>
+                </Avatar>
+              </motion.div>
               <div className="flex-1">
-                <button 
-                  className="w-full text-left px-5 py-3.5 rounded-full bg-muted/50 hover:bg-muted/70 text-muted-foreground/80 transition-colors text-[15px]"
+                <motion.button 
+                  className="w-full text-left px-5 py-3.5 rounded-full bg-muted/50 hover:bg-muted/70 text-muted-foreground/80 transition-all duration-300 relative overflow-hidden group"
+                  onClick={() => navigate('/new')}
+                  whileHover={{ scale: 1.005 }}
+                  whileTap={{ scale: 0.995 }}
+                >
+                  <span className="relative z-10">What's on your mind?</span>
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 transition-opacity duration-300"
+                    initial={false}
+                    animate={{ opacity: isHovering ? 1 : 0 }}
+                  />
+                </motion.button>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              className="flex items-center justify-between pt-4 border-t"
+              initial={{ opacity: 0.8 }}
+              animate={{ opacity: 1 }}
+            >
+              <motion.div 
+                className="flex w-full gap-2"
+                variants={{
+                  hover: {
+                    scale: 1.02,
+                    transition: { duration: 0.2 }
+                  }
+                }}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1 flex items-center justify-center gap-2 py-5 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
                   onClick={() => navigate('/new')}
                 >
-                  What's on your mind?
-                </button>
-              </div>
-            </div>
-
-
+                  <Camera className="w-5 h-5" />
+                  <span className="hidden sm:inline">Photo/Video</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1 flex items-center justify-center gap-2 py-5 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-300"
+                  onClick={() => navigate('/new')}
+                >
+                  <SmilePlus className="w-5 h-5" />
+                  <span className="hidden sm:inline">Feeling</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1 flex items-center justify-center gap-2 py-5 hover:bg-green-50 hover:text-green-600 transition-colors duration-300"
+                  onClick={() => navigate('/new')}
+                >
+                  <MapPin className="w-5 h-5" />
+                  <span className="hidden sm:inline">Location</span>
+                </Button>
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
+
         <div className="container px-4 py-4 mx-auto">
           <AnimatePresence>
             <div className="space-y-4">

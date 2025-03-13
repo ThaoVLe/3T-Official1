@@ -3,8 +3,8 @@ import { X } from "lucide-react";
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
-// Added import for ProgressiveImage -  assuming this component exists or needs to be created
-import ProgressiveImage from './ProgressiveImage';
+// Import ProgressiveImage from the correct path
+import { ProgressiveImage } from './progressive-image';
 
 
 interface MediaDialogProps {

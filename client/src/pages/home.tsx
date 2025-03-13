@@ -123,7 +123,7 @@ export default function Home() {
         ref={containerRef}
         className="min-h-screen bg-background overflow-auto diary-content"
       >
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
           <div className="container px-4 py-4 mx-auto">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10">

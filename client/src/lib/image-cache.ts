@@ -1,42 +1,42 @@
-import { useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-// Simple in-memory cache for images
+// Create a singleton cache that persists across component renders
 const imageCache = new Map<string, HTMLImageElement>();
 
 export function useImageCache() {
-  // Add a new image to the cache
+  const getFromCache = useCallback((src: string) => {
+    return imageCache.get(src);
+  }, []);
+
   const addToCache = useCallback((src: string, img: HTMLImageElement) => {
     if (!imageCache.has(src)) {
       imageCache.set(src, img);
     }
   }, []);
 
-  // Get an image from the cache
-  const getFromCache = useCallback((src: string) => {
-    return imageCache.get(src);
-  }, []);
-
-  // Clear the cache
-  const clearCache = useCallback(() => {
-    imageCache.clear();
-  }, []);
-
-  return { addToCache, getFromCache, clearCache };
+  return { getFromCache, addToCache };
 }
+
+// Helper function to check if a URL is a blob URL
+export const isBlobUrl = (url: string | undefined): boolean => {
+  return !!url && url.startsWith('blob:');
+};
+
+// Helper function to safely handle image URLs
+export const safeImageUrl = (url: string | undefined): string => {
+  if (!url) return '';
+  // Don't modify blob URLs
+  if (isBlobUrl(url)) return url;
+  // Add quality parameter to non-blob URLs
+  return `${url}${url.includes('?') ? '&' : '?'}q=85`;
+};
 
 // Helper to preload images
 export function preloadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    // Skip preloading if source is empty or blob URL
-    if (!src || src.startsWith('blob:')) {
-      const mockImg = new Image();
-      resolve(mockImg);
-      return;
-    }
-
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = src;
+    img.src = safeImageUrl(src);
 
     img.onload = () => {
       imageCache.set(src, img);
@@ -61,7 +61,7 @@ export function prefetchGalleryImages(srcs: string[]): void {
     validSrcs.forEach(src => {
       if (!imageCache.has(src)) {
         const img = new Image();
-        img.src = src;
+        img.src = safeImageUrl(src);
       }
     });
   }, 500);

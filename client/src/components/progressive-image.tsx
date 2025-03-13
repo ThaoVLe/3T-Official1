@@ -1,79 +1,108 @@
+
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useImageCache, isBlobUrl, safeImageUrl } from '@/lib/image-cache';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface ProgressiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  src: string;
-  alt: string;
+interface ProgressiveImageProps {
+  src?: string;
+  alt?: string;
   className?: string;
-  containerClassName?: string;
+  sizes?: string;
+  priority?: boolean;
 }
 
 export function ProgressiveImage({
   src,
-  alt,
+  alt = '',
   className,
-  containerClassName,
-  ...props
+  sizes,
+  priority = false,
 }: ProgressiveImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const { getFromCache, addToCache } = useImageCache();
+
+  // Early return if no src
+  if (!src) {
+    return (
+      <div className={cn("relative bg-muted", className)}>
+        <Skeleton className="w-full h-full absolute inset-0" />
+      </div>
+    );
+  }
+
+  // Get from cache if available
+  const cachedImage = !isBlobUrl(src) ? getFromCache(src) : null;
 
   useEffect(() => {
+    // Reset states when src changes
     setIsLoaded(false);
     setError(false);
-
-    // Don't proceed if src is empty
-    if (!src) {
-      setError(true);
+    
+    if (cachedImage) {
+      setIsLoaded(true);
       return;
     }
 
+    // Create a new image element
     const img = new Image();
-
+    
+    // Set up load handlers
     img.onload = () => {
       setIsLoaded(true);
+      setError(false);
+      // Only cache non-blob images
+      if (src && !isBlobUrl(src)) {
+        addToCache(src, img);
+      }
     };
 
     img.onerror = () => {
       console.error(`Failed to load image: ${src}`);
       setError(true);
+      setIsLoaded(false);
     };
 
-    img.src = src;
+    // Set the src - for blob URLs use directly, for others add quality
+    img.src = safeImageUrl(src);
 
+    // Cleanup
     return () => {
       img.onload = null;
       img.onerror = null;
     };
-  }, [src]);
+  }, [src, addToCache, cachedImage]);
 
+  // If there's an error loading the image
   if (error) {
     return (
-      <div className={cn(
-        "bg-muted flex items-center justify-center", 
-        containerClassName
-      )}>
-        <div className="text-muted-foreground text-sm">Image not available</div>
+      <div
+        className={cn(
+          "relative bg-muted/50 flex items-center justify-center",
+          className
+        )}
+      >
+        <span className="text-muted-foreground text-sm">Image failed to load</span>
       </div>
     );
   }
 
   return (
-    <div className={cn("relative overflow-hidden", containerClassName)}>
-      {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse" />
+    <div className={cn("relative overflow-hidden", className)}>
+      {!isLoaded && !priority && (
+        <Skeleton className="w-full h-full absolute inset-0" />
       )}
       <img
-        src={src}
+        src={safeImageUrl(src)}
         alt={alt}
+        sizes={sizes}
         className={cn(
-          "transition-opacity duration-300",
+          "w-full h-full object-cover transition-opacity duration-300",
           isLoaded ? "opacity-100" : "opacity-0",
           className
         )}
-        onLoad={() => setIsLoaded(true)}
-        onError={() => setError(true)}
-        {...props}
+        loading={priority ? "eager" : "lazy"}
       />
     </div>
   );

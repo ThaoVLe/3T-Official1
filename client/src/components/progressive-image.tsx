@@ -1,154 +1,141 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
+import React, { useState, useEffect } from 'react';
+import { ImageCache } from '../lib/image-cache';
 
 interface ProgressiveImageProps {
   src: string;
   alt: string;
   className?: string;
-  sizes?: string;
-  previewSize?: 'small' | 'medium' | 'large';
-  priority?: boolean;
-  maxSize?: number; // In KB, defaults to 500KB
+  placeholderClassName?: string;
+  width?: number;
+  height?: number;
+  quality?: number;
+  previewSize?: number;
+  onClick?: () => void;
 }
 
-export function ProgressiveImage({ 
-  src, 
-  alt, 
-  className = '', 
-  sizes = '(max-width: 768px) 100vw, 50vw', 
-  previewSize = 'medium',
-  priority = false,
-  maxSize = 500
-}: ProgressiveImageProps) {
+export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
+  src,
+  alt,
+  className = '',
+  placeholderClassName = '',
+  width,
+  height,
+  quality = 80,
+  previewSize = 10,
+  onClick,
+}) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState('');
-  const [error, setError] = useState(false);
-  const imageRef = useRef<HTMLImageElement>(null);
-  
-  // Check if this is a video to skip optimization for video files
-  const isVideo = src.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
-  
-  // Only optimize if it's not a video
-  const shouldOptimize = !isVideo;
-  
-  // Get the exact width for preview based on previewSize
-  const previewWidth = {
-    small: 100,
-    medium: 300,
-    large: 600
-  }[previewSize];
-  
-  // Generate optimized URLs
-  const optimizedFullSrc = shouldOptimize ? `${src}?w=1200&maxSize=${maxSize}` : src;
-  const placeholderUrl = shouldOptimize ? `${src}?w=${previewWidth}&q=30` : src;
-  
-  // Use intersection observer for lazy loading
+  const [isError, setIsError] = useState(false);
+  const [imageSrc, setImageSrc] = useState('');
+
   useEffect(() => {
-    if (imageRef.current && !priority) {
-      const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          loadImages();
-          observer.disconnect();
-        }
-      }, {
-        rootMargin: '200px', // Start loading 200px before it's visible
-      });
-      
-      observer.observe(imageRef.current);
-      return () => observer.disconnect();
-    } else if (priority) {
-      // If priority is true, load immediately without intersection observer
-      loadImages();
-    }
-  }, [src]);
-  
-  // Function to handle image loading sequence
-  const loadImages = () => {
-    // Reset state when src changes
+    if (!src) return;
+
+    // Reset states when src changes
     setIsLoaded(false);
-    setError(false);
-    
-    // If it's a video, just set it directly
-    if (isVideo) {
-      setCurrentSrc(src);
+    setIsError(false);
+
+    // Check if image is in cache
+    const cachedSrc = ImageCache.get(src);
+    if (cachedSrc) {
+      setImageSrc(cachedSrc);
       setIsLoaded(true);
       return;
     }
 
-    // Start with low quality placeholder
-    const placeholderImage = new Image();
-    placeholderImage.src = placeholderUrl;
-    placeholderImage.onload = () => {
-      setCurrentSrc(placeholderUrl);
-    };
-    placeholderImage.onerror = () => {
-      setError(true);
-    };
+    // Create optimized URL with query parameters
+    let optimizedSrc = src;
+    const queryParams = new URLSearchParams();
+    
+    if (width) queryParams.append('w', width.toString());
+    if (quality) queryParams.append('q', quality.toString());
+    
+    // Add size constraint for thumbnail preview (500KB)
+    queryParams.append('maxSize', '500');
+    
+    // Add URL parameters if there are any
+    if (queryParams.toString()) {
+      optimizedSrc += (src.includes('?') ? '&' : '?') + queryParams.toString();
+    }
 
-    // Load optimized high quality image
-    const highQualityImage = new Image();
-    highQualityImage.src = optimizedFullSrc;
-    highQualityImage.onload = () => {
-      // Check if component is still mounted
-      if (imageRef.current) {
-        setCurrentSrc(optimizedFullSrc);
+    // Create a tiny thumbnail version for immediate display
+    const previewSrc = src + (src.includes('?') ? '&' : '?') + `w=${previewSize}&q=30`;
+    
+    // Load the preview first
+    const previewImg = new Image();
+    previewImg.src = previewSrc;
+    previewImg.onload = () => {
+      setImageSrc(previewSrc);
+      
+      // Then load the full version
+      const fullImg = new Image();
+      fullImg.src = optimizedSrc;
+      
+      fullImg.onload = () => {
+        setImageSrc(optimizedSrc);
         setIsLoaded(true);
-        
-        // Cache the image for future use
-        if (typeof window !== 'undefined') {
-          try {
-            const { setCachedImage } = require('@/lib/image-cache');
-            setCachedImage(src, optimizedFullSrc);
-          } catch (e) {
-            // Silently fail if image cache module is not available
-          }
-        }
-      }
+        ImageCache.set(src, optimizedSrc);
+      };
+      
+      fullImg.onerror = () => {
+        console.error(`Failed to load image: ${optimizedSrc}`);
+        setIsError(true);
+        // Still show preview if available
+      };
     };
-  };
+    
+    previewImg.onerror = () => {
+      console.error(`Failed to load preview: ${previewSrc}`);
+      // Try loading the full image directly
+      const fullImg = new Image();
+      fullImg.src = optimizedSrc;
+      
+      fullImg.onload = () => {
+        setImageSrc(optimizedSrc);
+        setIsLoaded(true);
+        ImageCache.set(src, optimizedSrc);
+      };
+      
+      fullImg.onerror = () => {
+        console.error(`Failed to load image: ${optimizedSrc}`);
+        setIsError(true);
+      };
+    };
+    
+    // Cleanup function
+    return () => {
+      previewImg.onload = null;
+      previewImg.onerror = null;
+    };
+  }, [src, width, quality, previewSize]);
+
+  if (isError) {
+    return (
+      <div 
+        className={`bg-gray-200 flex items-center justify-center ${className}`} 
+        style={{ width: width ? `${width}px` : '100%', height: height ? `${height}px` : '200px' }}
+        onClick={onClick}
+      >
+        <span className="text-gray-500">Image unavailable</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      <AnimatePresence mode="wait">
-        {!isLoaded && !error && (
-          <motion.div
-            key="placeholder"
-            className="absolute inset-0 bg-muted animate-pulse"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          />
-        )}
-        
-        {error && (
-          <motion.div
-            key="error"
-            className="absolute inset-0 flex items-center justify-center bg-muted/20"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div className="text-sm text-muted-foreground">
-              Failed to load image
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
-      {!error && (
-        <motion.img
-          ref={imageRef}
-          src={currentSrc}
-          alt={alt}
-          className={`${className} ${!isLoaded ? 'blur-sm scale-105' : ''}`}
-          style={{ 
-            transition: 'filter 0.3s ease-out, transform 0.3s ease-out',
-          }}
-          sizes={sizes}
-          loading={priority ? "eager" : "lazy"}
-          decoding="async"
-          onError={() => setError(true)}
-        />
-      )}
-    </div>
+    <img
+      src={imageSrc}
+      alt={alt}
+      className={`${className} ${isLoaded ? 'loaded' : 'loading'} ${!isLoaded ? placeholderClassName : ''}`}
+      style={{
+        width: width ? `${width}px` : '100%',
+        height: height ? `${height}px` : 'auto',
+        transition: 'filter 0.3s ease-out',
+        filter: isLoaded ? 'none' : 'blur(8px)',
+      }}
+      loading="lazy"
+      onClick={onClick}
+      onError={() => setIsError(true)}
+    />
   );
-}
+};

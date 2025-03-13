@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import MediaDialog from "./media-dialog";
+import { ProgressiveImage } from './progressive-image'; // Added import for ProgressiveImage
 
 interface MediaPreviewProps {
   urls: string[];
@@ -110,7 +111,7 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
                 />
               )}
               {!isVideo && (
-                <ProgressiveImage
+                <ProgressiveImage // Replaced <img> with <ProgressiveImage>
                   src={url}
                   alt={`Media ${index + 1}`}
                   className="w-full h-full object-cover"

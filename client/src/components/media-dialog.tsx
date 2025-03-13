@@ -1,7 +1,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import useEmblaCarousel from 'embla-carousel-react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 // Added import for ProgressiveImage -  assuming this component exists or needs to be created
 import ProgressiveImage from './ProgressiveImage';
@@ -16,6 +16,7 @@ interface MediaDialogProps {
 
 export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange }: MediaDialogProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ startIndex: initialIndex });
+  const [imageErrors, setImageErrors] = useState<string[]>([]); // Track image load errors
 
   useEffect(() => {
     if (emblaApi) {
@@ -27,6 +28,10 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
     if (!url) return null;
 
     const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
+
+    const handleImageError = () => {
+      setImageErrors([...imageErrors, url]);
+    };
 
     return (
       <div className="embla__slide relative w-full flex items-center justify-center min-w-0">
@@ -42,14 +47,16 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
             src={url}
             alt={`Media ${index + 1}`}
             className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
-            previewSize="medium" // Added previewSize prop
-            maxSize={500} // Added maxSize prop for size limitation.
-            priority={index === 0} // Prioritize the first image
+            onError={handleImageError} // Add error handler
+            previewSize="medium" 
+            maxSize={500} 
+            priority={index === 0} 
           />
         )}
+        {imageErrors.includes(url) && <p>Error loading image</p>} {/* Display error message */}
       </div>
     );
-  }, []);
+  }, [imageErrors]);
 
   if (!urls?.length) return null;
 

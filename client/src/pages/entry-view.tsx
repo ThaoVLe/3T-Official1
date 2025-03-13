@@ -57,6 +57,24 @@ export default function EntryView() {
 
 
   const deleteMutation = useMutation({
+
+useEffect(() => {
+  // Debug image loading
+  console.log("Images in entry view:", entries.flatMap(entry => 
+    entry.media ? entry.media.map(m => m.url) : []
+  ));
+  
+  // Try to load one image directly
+  if (entries.length > 0 && entries[0].media && entries[0].media.length > 0) {
+    const testUrl = entries[0].media[0].url;
+    console.log("Testing image load for:", testUrl);
+    const img = new Image();
+    img.onload = () => console.log("Test image loaded successfully:", testUrl);
+    img.onerror = (e) => console.error("Test image failed to load:", testUrl, e);
+    img.src = testUrl;
+  }
+}, [entries]);
+
     mutationFn: async () => {
       await apiRequest("DELETE", `/api/entries/${id}`);
     },

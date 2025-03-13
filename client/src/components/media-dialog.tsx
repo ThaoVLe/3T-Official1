@@ -1,11 +1,10 @@
+
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import useEmblaCarousel from 'embla-carousel-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-// Import ProgressiveImage from the correct path
-import { ProgressiveImage } from './progressive-image';
-
+import { Play } from "lucide-react";
 
 interface MediaDialogProps {
   urls: string[];
@@ -16,7 +15,6 @@ interface MediaDialogProps {
 
 export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange }: MediaDialogProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ startIndex: initialIndex });
-  const [imageErrors, setImageErrors] = useState<string[]>([]); // Track image load errors
 
   useEffect(() => {
     if (emblaApi) {
@@ -29,9 +27,6 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
                     url.includes('video') || 
                     url.toLowerCase().includes('.mov');
 
-    // For blob URLs, don't process them further
-    const isBlob = url.startsWith('blob:');
-
     return (
       <div className="embla__slide relative w-full flex items-center justify-center min-w-0">
         {isVideo ? (
@@ -43,12 +38,22 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
           />
         ) : (
           <div className="flex items-center justify-center w-full h-full">
-            {/* Use a simple img tag for all cases to avoid complexity */}
             <img 
               src={url}
               alt={`Media ${index + 1}`}
               className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
-              onError={(e) => console.error(`Failed to load image: ${url}`)}
+              onError={(e) => {
+                console.error(`Failed to load image: ${url}`);
+                // Set a fallback source or placeholder
+                (e.target as HTMLImageElement).style.display = 'none';
+                const parent = (e.target as HTMLImageElement).parentElement;
+                if (parent) {
+                  const errorDiv = document.createElement('div');
+                  errorDiv.className = "text-white text-sm p-4 bg-black/50 rounded";
+                  errorDiv.innerText = "Image failed to load";
+                  parent.appendChild(errorDiv);
+                }
+              }}
             />
           </div>
         )}

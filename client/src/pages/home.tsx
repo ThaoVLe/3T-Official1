@@ -21,6 +21,33 @@ export default function Home() {
   const scrollRestoredRef = useRef(false);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const container = document.querySelector('.diary-content');
+      if (container) {
+        if (container.scrollTop > 50) {
+          setIsScrolled(true);
+          container.classList.add('scrolled');
+        } else {
+          setIsScrolled(false);
+          container.classList.remove('scrolled');
+        }
+      }
+    };
+
+    const container = document.querySelector('.diary-content');
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const storeScrollPosition = () => {
@@ -104,7 +131,7 @@ export default function Home() {
               </h1>
             </div>
 
-            <div className="relative">
+            <div className="pb-2 border-b-0 border-transparent what-on-your-mind">
               <motion.div 
                 className="flex items-start gap-4 group"
                 onClick={() => navigate('/new')}
@@ -139,7 +166,7 @@ export default function Home() {
                 </div>
               </motion.div>
             </div>
-
+            
             {/* Floating bar with buttons removed */}
 
           </div>

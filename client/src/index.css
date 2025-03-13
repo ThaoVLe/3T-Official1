@@ -55,6 +55,28 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
+
+/* Ensure scroll behavior for the main content area */
+.diary-content {
+  height: 100vh;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+  position: relative;
+}
+
+/* Hide the "What's on your mind" section when scrolled */
+.diary-content.scrolled .what-on-your-mind {
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+/* Transition for the section */
+.what-on-your-mind {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
     height: 100%;
     transition: height 0.3s ease-out;
   }

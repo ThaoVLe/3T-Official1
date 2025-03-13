@@ -229,7 +229,7 @@
   .whats-on-your-mind {
     margin-top: 2rem;
     padding: 1rem;
-    border: 0;
+    border: 1px solid #ddd;
     border-radius: 5px;
   }
 

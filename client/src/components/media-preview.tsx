@@ -110,10 +110,12 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
                 />
               )}
               {!isVideo && (
-                <img
+                <ProgressiveImage
                   src={url}
                   alt={`Media ${index + 1}`}
                   className="w-full h-full object-cover"
+                  previewSize="small"
+                  maxSize={100}
                 />
               )}
 

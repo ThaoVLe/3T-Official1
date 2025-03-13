@@ -6,11 +6,18 @@ import fs from "fs";
 import { storage } from "./storage";
 import { insertEntrySchema, insertCommentSchema } from "@shared/schema";
 import express from 'express';
+import sharp from 'sharp';
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Create cache directory for resized images
+const resizedCacheDir = path.join(process.cwd(), "uploads", ".cache");
+if (!fs.existsSync(resizedCacheDir)) {
+  fs.mkdirSync(resizedCacheDir, { recursive: true });
 }
 
 // Update video MIME types support
@@ -57,7 +64,103 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Serve uploaded files
+  // Image resizing middleware for optimization
+  app.use('/uploads', async (req, res, next) => {
+    const filename = path.basename(req.path);
+    const filePath = path.join(uploadsDir, filename);
+    
+    // Skip processing for non-existent files
+    if (!fs.existsSync(filePath)) {
+      return next();
+    }
+    
+    // Handle query parameters for image resizing
+    const width = req.query.w ? parseInt(req.query.w as string) : null;
+    const quality = req.query.q ? parseInt(req.query.q as string) : 85;
+    const maxSize = req.query.maxSize ? parseInt(req.query.maxSize as string) : null;
+    
+    // Skip processing for videos and non-image files
+    const isVideo = filename.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
+    const isImage = filename.match(/\.(jpe?g|png|gif|webp|heic|heif)$/i);
+    
+    if (isVideo || !isImage || (!width && !maxSize && quality === 85)) {
+      return next();
+    }
+    
+    try {
+      // Create a cache key based on the parameters
+      const cacheKey = `${path.parse(filename).name}-w${width}-q${quality}-m${maxSize}${path.parse(filename).ext}`;
+      const cachePath = path.join(resizedCacheDir, cacheKey);
+      
+      // Use cached version if it exists
+      if (fs.existsSync(cachePath)) {
+        return res.sendFile(cachePath);
+      }
+      
+      // Process the image with sharp
+      let sharpInstance = sharp(filePath);
+      const metadata = await sharpInstance.metadata();
+      
+      // Resize if width is specified
+      if (width) {
+        sharpInstance = sharpInstance.resize(width);
+      }
+      
+      // Set output format based on original (use webp for jpg/jpeg for better compression)
+      let outputOptions: any = {};
+      let outputFormat: string;
+      
+      if (metadata.format === 'jpeg' || metadata.format === 'jpg') {
+        outputFormat = 'jpeg';
+        outputOptions = { quality };
+      } else if (metadata.format === 'png') {
+        outputFormat = 'png';
+        outputOptions = { quality };
+      } else if (metadata.format === 'webp') {
+        outputFormat = 'webp';
+        outputOptions = { quality };
+      } else {
+        outputFormat = 'jpeg';
+        outputOptions = { quality };
+      }
+      
+      // Process and save to cache
+      const resizedImgBuffer = await sharpInstance
+        .toFormat(outputFormat as keyof sharp.FormatEnum, outputOptions)
+        .toBuffer();
+      
+      // Check if maxSize constraint is met
+      if (maxSize && resizedImgBuffer.length > maxSize * 1024) {
+        // Recalculate quality to meet size constraint
+        let adjustedQuality = quality;
+        let attempts = 0;
+        let finalBuffer = resizedImgBuffer;
+        
+        while (finalBuffer.length > maxSize * 1024 && adjustedQuality > 10 && attempts < 5) {
+          adjustedQuality = Math.max(10, adjustedQuality - 15);
+          finalBuffer = await sharpInstance
+            .toFormat(outputFormat as keyof sharp.FormatEnum, { quality: adjustedQuality })
+            .toBuffer();
+          attempts++;
+        }
+        
+        // Save to cache and return
+        fs.writeFileSync(cachePath, finalBuffer);
+        res.type(`image/${outputFormat === 'jpeg' ? 'jpeg' : outputFormat}`);
+        return res.send(finalBuffer);
+      }
+      
+      // Save to cache and return
+      fs.writeFileSync(cachePath, resizedImgBuffer);
+      res.type(`image/${outputFormat === 'jpeg' ? 'jpeg' : outputFormat}`);
+      return res.send(resizedImgBuffer);
+    } catch (error) {
+      console.error('Image processing error:', error);
+      next(); // Continue to static middleware if processing fails
+    }
+  });
+  
+  // Fallback to serve original files
   app.use('/uploads', express.static(uploadsDir));
 
   app.get("/api/entries", async (req, res) => {

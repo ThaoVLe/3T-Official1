@@ -3,6 +3,9 @@ import { X } from "lucide-react";
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+// Added import for ProgressiveImage -  assuming this component exists or needs to be created
+import ProgressiveImage from './ProgressiveImage';
+
 
 interface MediaDialogProps {
   urls: string[];
@@ -20,7 +23,7 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
     }
   }, [emblaApi, initialIndex]);
 
-  const renderMedia = useCallback((url: string) => {
+  const renderMedia = useCallback((url: string, index: number) => {
     if (!url) return null;
 
     const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
@@ -35,10 +38,13 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
             className="max-w-full max-h-[80vh] w-auto h-auto"
           />
         ) : (
-          <img
+          <ProgressiveImage
             src={url}
-            alt="Media preview"
+            alt={`Media ${index + 1}`}
             className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
+            previewSize="medium" // Added previewSize prop
+            maxSize={500} // Added maxSize prop for size limitation.
+            priority={index === 0} // Prioritize the first image
           />
         )}
       </div>
@@ -64,7 +70,7 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
           <div className="embla__container h-full flex touch-pan-y">
             {urls.map((url, index) => (
               <div key={index} className="relative flex-grow-0 flex-shrink-0 basis-full">
-                {renderMedia(url)}
+                {renderMedia(url, index)}
               </div>
             ))}
           </div>

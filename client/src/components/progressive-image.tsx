@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useImageCache } from '@/lib/image-cache';
@@ -29,19 +30,15 @@ export function ProgressiveImage({
 
   // Determine if it's a blob URL
   const isBlob = src?.startsWith('blob:');
-
+  
   // Only use cache for non-blob URLs
   const cachedImage = !isBlob && src ? getFromCache(src) : null;
-
-  // For blob URLs, use the original URL
-  // For regular URLs, only add quality parameter
-  const finalSrc = isBlob ? src : src ? `${src}${src.includes('?') ? '&' : '?'}q=85` : '';
-
+  
   useEffect(() => {
     // Reset states when src changes
     setIsLoaded(false);
     setError(false);
-
+    
     if (cachedImage) {
       setIsLoaded(true);
       return;
@@ -53,33 +50,29 @@ export function ProgressiveImage({
     }
 
     const img = new Image();
-
-    // Only set crossOrigin for non-blob URLs
-    if (!isBlob) {
-      img.crossOrigin = "anonymous";
-    }
-
+    
     img.onload = () => {
       setIsLoaded(true);
-      setError(false);
+      // Only cache non-blob images
       if (src && !isBlob) {
         addToCache(src, img);
       }
     };
 
     img.onerror = () => {
-      console.error(`Failed to load image: ${finalSrc}`);
+      console.error(`Failed to load image: ${src}`);
       setError(true);
-      setIsLoaded(false);
     };
 
-    img.src = finalSrc;
+    // For blob URLs, use the source directly without modifications
+    // For regular URLs, add quality parameter
+    img.src = isBlob ? src : `${src}${src.includes('?') ? '&' : '?'}q=85`;
 
     return () => {
       img.onload = null;
       img.onerror = null;
     };
-  }, [src, addToCache, finalSrc, cachedImage, isBlob]);
+  }, [src, addToCache, cachedImage, isBlob]);
 
   // If there's an error loading the image
   if (error) {
@@ -109,7 +102,7 @@ export function ProgressiveImage({
         />
       )}
       <img
-        src={finalSrc}
+        src={isBlob ? src : `${src}${src.includes('?') ? '&' : '?'}q=85`}
         alt={alt}
         sizes={sizes}
         className={cn(

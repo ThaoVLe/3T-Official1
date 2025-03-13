@@ -143,49 +143,8 @@ export default function Home() {
               </div>
             </motion.div>
 
-            <motion.div 
-              className="flex items-center justify-between pt-4 border-t"
-              initial={{ opacity: 0.8 }}
-              animate={{ opacity: 1 }}
-            >
-              <motion.div 
-                className="flex w-full gap-2"
-                variants={{
-                  hover: {
-                    scale: 1.02,
-                    transition: { duration: 0.2 }
-                  }
-                }}
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex-1 flex items-center justify-center gap-2 py-5 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
-                  onClick={() => navigate('/new')}
-                >
-                  <Camera className="w-5 h-5" />
-                  <span className="hidden sm:inline">Photo/Video</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex-1 flex items-center justify-center gap-2 py-5 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-300"
-                  onClick={() => navigate('/new')}
-                >
-                  <SmilePlus className="w-5 h-5" />
-                  <span className="hidden sm:inline">Feeling</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex-1 flex items-center justify-center gap-2 py-5 hover:bg-green-50 hover:text-green-600 transition-colors duration-300"
-                  onClick={() => navigate('/new')}
-                >
-                  <MapPin className="w-5 h-5" />
-                  <span className="hidden sm:inline">Location</span>
-                </Button>
-              </motion.div>
-            </motion.div>
+            {/* Floating bar with buttons removed */}
+
           </div>
         </div>
 

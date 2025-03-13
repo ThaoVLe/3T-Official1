@@ -11,8 +11,8 @@ export function FacebookHeader() {
       <div className="flex items-center justify-between h-full">
         {/* Left section - Logo and Search */}
         <div className="flex items-center">
-          <Link href="/">
-            <a className="text-primary font-bold text-2xl mr-2">f</a>
+          <Link href="/" className="text-primary font-bold text-2xl mr-2">
+            f
           </Link>
           <div className="relative hidden sm:block">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

@@ -123,38 +123,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1 flex items-center justify-center gap-2 py-5"
-                onClick={() => navigate('/new')}
-              >
-                <Camera className="w-5 h-5" />
-                <span className="hidden sm:inline">Photo/Video</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1 flex items-center justify-center gap-2 py-5"
-                onClick={() => navigate('/new')}
-              >
-                <SmilePlus className="w-5 h-5" />
-                <span className="hidden sm:inline">Feeling</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1 flex items-center justify-center gap-2 py-5"
-                onClick={() => navigate('/new')}
-              >
-                <MapPin className="w-5 h-5" />
-                <span className="hidden sm:inline">Location</span>
-              </Button>
-            </div>
-          </div>
-        </div>
 
+        </div>
         <div className="container px-4 py-4 mx-auto">
           <AnimatePresence>
             <div className="space-y-4">

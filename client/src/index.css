@@ -224,4 +224,34 @@
   .large-text h2, .large-text .text-xl { font-size: 1.5rem; }
   .large-text h3, .large-text .text-lg { font-size: 1.375rem; }
   .large-text .title { font-size: 1.625rem; }
+
+  /* Facebook-style 'What's on your mind' section styling */
+  .whats-on-your-mind {
+    margin-top: 2rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+
+  .whats-on-your-mind textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: none;
+    resize: vertical;
+    font-size: 1rem;
+    min-height: 80px;
+  }
+
+  .whats-on-your-mind .buttons {
+    margin-top: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+  }
+  .diary-content .avatar {
+    transition: transform 0.2s ease;
+  }
+
+  .diary-content .avatar:hover {
+    transform: scale(1.05);
+  }
 }

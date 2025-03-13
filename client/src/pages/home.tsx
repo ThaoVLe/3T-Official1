@@ -125,14 +125,20 @@ export default function Home() {
       >
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
           <div className="container px-4 py-4 mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                My Diary
-              </h1>
+            <div className="flex items-center gap-3">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src="/placeholder-avatar.jpg" className="object-cover" />
+                <AvatarFallback>ME</AvatarFallback>
+              </Avatar>
+              <motion.button 
+                className="flex-1 text-left px-4 py-2.5 rounded-full bg-muted/50 hover:bg-muted/70 text-muted-foreground/80"
+                onClick={() => navigate('/new')}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                What's on your mind?
+              </motion.button>
             </div>
-
-            {/* Floating bar with buttons removed */}
-
           </div>
         </div>
 

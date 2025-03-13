@@ -120,6 +120,17 @@
   .diary-content {
     scrollbar-width: none;
     -ms-overflow-style: none;
+
+/* Custom scroll behavior for the main content area */
+.diary-content {
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+/* When scrolled, the header section will naturally scroll out of view */
+
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
     width: 100%;

@@ -95,11 +95,6 @@ export default function Home() {
       <div 
         ref={containerRef}
         className="min-h-screen bg-background overflow-auto diary-content"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'none',
-          touchAction: 'pan-y pinch-zoom',
-        }}
       >
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
           <div className="container px-4 py-4 mx-auto">
@@ -109,7 +104,7 @@ export default function Home() {
               </h1>
             </div>
 
-            <div className="sticky top-0 z-10 bg-background pt-2 pb-0">
+            <div className="relative">
               <motion.div 
                 className="flex items-start gap-4 group"
                 onClick={() => navigate('/new')}

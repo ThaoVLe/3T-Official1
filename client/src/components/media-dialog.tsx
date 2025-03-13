@@ -47,10 +47,7 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
             src={url}
             alt={`Media ${index + 1}`}
             className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
-            onError={handleImageError} // Add error handler
-            previewSize="medium" 
-            maxSize={500} 
-            priority={index === 0} 
+            // Remove unsupported props
           />
         )}
         {imageErrors.includes(url) && <p>Error loading image</p>} {/* Display error message */}

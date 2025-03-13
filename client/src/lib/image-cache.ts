@@ -1,33 +1,54 @@
-import { useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
-// Simple in-memory cache
-const imageCache: Map<string, HTMLImageElement> = new Map();
+// In-memory cache for images
+const imageCache = new Map<string, HTMLImageElement>();
 
 export function useImageCache() {
+  // Add a new image to the cache
+  const addToCache = useCallback((src: string, img: HTMLImageElement) => {
+    if (!imageCache.has(src)) {
+      imageCache.set(src, img);
+    }
+  }, []);
+
+  // Get an image from the cache
   const getFromCache = useCallback((src: string) => {
     return imageCache.get(src);
   }, []);
 
-  const addToCache = useCallback((src: string, img: HTMLImageElement) => {
-    if (!imageCache.has(src)) {
-      imageCache.set(src, img);
-
-      // Optional: Limit cache size
-      if (imageCache.size > 100) {
-        const firstKey = imageCache.keys().next().value;
-        imageCache.delete(firstKey);
-      }
-    }
+  // Clear the cache
+  const clearCache = useCallback(() => {
+    imageCache.clear();
   }, []);
 
-  return { getFromCache, addToCache };
+  // Handle cache cleanup on component unmount
+  useEffect(() => {
+    // Limit cache size to prevent memory issues
+    const cleanupCache = () => {
+      if (imageCache.size > 100) {
+        // Remove oldest entries when cache gets too large
+        const keysToDelete = Array.from(imageCache.keys()).slice(0, 20);
+        keysToDelete.forEach(key => imageCache.delete(key));
+      }
+    };
+
+    // Run cleanup every 5 minutes
+    const interval = setInterval(cleanupCache, 5 * 60 * 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  return { addToCache, getFromCache, clearCache };
 }
 
 // Helper to preload images
 export function preloadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    if (imageCache.has(src)) {
-      resolve(imageCache.get(src)!);
+    const cachedImage = imageCache.get(src);
+    if (cachedImage) {
+      resolve(cachedImage);
       return;
     }
 

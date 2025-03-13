@@ -28,7 +28,8 @@ export function ProgressiveImage({
 
   // Check if it's a blob URL and make a direct image source
   const isBlob = src?.startsWith('blob:');
-  const finalSrc = isBlob ? src : (src + (src.includes('?') ? '&' : '?') + 'q=80&maxSize=500');
+  // Don't add query parameters to blob URLs as they can cause issues
+  const finalSrc = isBlob ? src : (src ? (src + (src.includes('?') ? '&' : '?') + 'q=80&maxSize=500') : '');
 
   useEffect(() => {
     if (cachedImage) {
@@ -41,13 +42,20 @@ export function ProgressiveImage({
       return;
     }
 
+    // For blob URLs, try to load directly without modifications
     const img = new Image();
+    
+    // Set crossOrigin to anonymous for blob URLs to help with CORS issues
+    if (isBlob) {
+      img.crossOrigin = "anonymous";
+    }
+    
     img.src = finalSrc;
 
     img.onload = () => {
       setIsLoaded(true);
       setError(false);
-      if (src) addToCache(src, img);
+      if (src && !isBlob) addToCache(src, img); // Only cache non-blob images
     };
 
     img.onerror = () => {
@@ -60,7 +68,7 @@ export function ProgressiveImage({
       img.onload = null;
       img.onerror = null;
     };
-  }, [src, addToCache, finalSrc, cachedImage]);
+  }, [src, addToCache, finalSrc, cachedImage, isBlob]);
 
   // If there's an error loading the image
   if (error) {

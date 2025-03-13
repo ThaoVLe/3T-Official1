@@ -12,6 +12,9 @@ import {
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { FacebookHeader } from "./facebook-header"; // Added import
+import { ScrollToTop } from "./scroll-to-top";
+
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +24,7 @@ export function Layout({ children }: LayoutProps) {
   const [isMobile, setIsMobile] = React.useState(false);
   const [location] = useLocation();
   const settings = useSettings();
+  const isHomePage = location === "/";
 
   React.useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -40,10 +44,12 @@ export function Layout({ children }: LayoutProps) {
 
   return isMobile ? (
     <div className={rootClasses}>
-      <main className={`flex-1 ${showBottomNav ? 'pb-16' : ''}`}>
+      {isHomePage && <FacebookHeader />} {/*Added FacebookHeader*/}
+      <main className={`flex-1 ${showBottomNav ? 'pb-16' : ''} ${isHomePage ? 'pt-[56px]' : ''}`}>
         {children}
       </main>
       {showBottomNav && <BottomNavigation />}
+      <ScrollToTop /> {/*Added ScrollToTop*/}
     </div>
   ) : (
     <SidebarProvider defaultOpen={true}>

@@ -98,6 +98,19 @@
     -webkit-user-select: none;
   }
 
+/* Facebook header styles */
+.text-primary {
+  color: #1877f2;
+}
+
+/* Mobile adjustments for Facebook-style header */
+@media (max-width: 640px) {
+  .facebook-header-mobile .search-container {
+    display: none;
+  }
+}
+
+
   .mobile-vh {
     height: 100vh;
     height: -webkit-fill-available;

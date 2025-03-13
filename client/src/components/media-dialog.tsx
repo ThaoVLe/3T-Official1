@@ -25,13 +25,10 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
   }, [emblaApi, initialIndex]);
 
   const renderMedia = useCallback((url: string, index: number) => {
-    if (!url) return null;
-
-    // Better detection for videos
     const isVideo = url.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i) || 
                     url.includes('video') || 
                     url.toLowerCase().includes('.mov');
-    
+
     // For blob URLs, don't process them further
     const isBlob = url.startsWith('blob:');
 
@@ -46,22 +43,13 @@ export default function MediaDialog({ urls, initialIndex = 0, open, onOpenChange
           />
         ) : (
           <div className="flex items-center justify-center w-full h-full">
-            {isBlob ? (
-              // Direct image display for blob URLs
-              <img 
-                src={url}
-                alt={`Media ${index + 1}`}
-                className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
-                onError={(e) => console.error(`Failed to load blob image: ${url}`)}
-              />
-            ) : (
-              // Use ProgressiveImage for non-blob URLs
-              <ProgressiveImage
-                src={url}
-                alt={`Media ${index + 1}`}
-                className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
-              />
-            )}
+            {/* Use a simple img tag for all cases to avoid complexity */}
+            <img 
+              src={url}
+              alt={`Media ${index + 1}`}
+              className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
+              onError={(e) => console.error(`Failed to load image: ${url}`)}
+            />
           </div>
         )}
       </div>

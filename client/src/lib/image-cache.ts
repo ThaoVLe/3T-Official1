@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 
 // In-memory cache for images
@@ -43,9 +44,16 @@ export function useImageCache() {
   return { addToCache, getFromCache, clearCache };
 }
 
-// Helper to preload images
+// Helper to preload images - simplified
 export function preloadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
+    // Don't preload blob URLs
+    if (src.startsWith('blob:')) {
+      const mockImg = new Image();
+      resolve(mockImg);
+      return;
+    }
+    
     const cachedImage = imageCache.get(src);
     if (cachedImage) {
       resolve(cachedImage);
@@ -70,20 +78,29 @@ export function preloadImages(srcs: string[]): Promise<HTMLImageElement[]> {
   return Promise.all(srcs.map(src => preloadImage(src)));
 }
 
+// Simplified prefetch function
 export function prefetchGalleryImages(srcs: string[]): void {
-  requestIdleCallback(() => {
-    // Use a lower quality for prefetching to save bandwidth
-    srcs.forEach(src => {
-      if (!imageCache.has(src)) {
-        const img = new Image();
-        img.src = src;
-      }
+  // Only prefetch non-blob URLs
+  const nonBlobSrcs = srcs.filter(src => !src.startsWith('blob:'));
+  
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(() => {
+      nonBlobSrcs.forEach(src => {
+        if (!imageCache.has(src)) {
+          const img = new Image();
+          img.src = src;
+        }
+      });
     });
-  });
+  } else {
+    // Fallback for browsers that don't support requestIdleCallback
+    setTimeout(() => {
+      nonBlobSrcs.forEach(src => {
+        if (!imageCache.has(src)) {
+          const img = new Image();
+          img.src = src;
+        }
+      });
+    }, 1000);
+  }
 }
-
-// Helper function for requestIdleCallback with fallback
-const requestIdleCallback =
-  (typeof window !== 'undefined' && 'requestIdleCallback' in window)
-    ? window.requestIdleCallback
-    : (callback: IdleRequestCallback) => setTimeout(callback, 1);

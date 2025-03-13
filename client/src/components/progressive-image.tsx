@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useImageCache } from '@/lib/image-cache';
 
@@ -27,7 +27,8 @@ export function ProgressiveImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
   const { getFromCache, addToCache } = useImageCache();
-
+  const imgRef = useRef<HTMLImageElement>(null);
+  
   // Determine if it's a blob URL
   const isBlob = src?.startsWith('blob:');
   
@@ -49,6 +50,12 @@ export function ProgressiveImage({
       return;
     }
 
+    // Don't create a new Image() if we're already using an img element
+    if (imgRef.current) {
+      // Let the img element handle loading directly
+      return;
+    }
+
     const img = new Image();
     
     img.onload = () => {
@@ -64,8 +71,7 @@ export function ProgressiveImage({
       setError(true);
     };
 
-    // For blob URLs, use the source directly without modifications
-    // For regular URLs, add quality parameter
+    // Simple URL handling - don't modify blob URLs at all
     img.src = isBlob ? src : `${src}${src.includes('?') ? '&' : '?'}q=85`;
 
     return () => {
@@ -102,7 +108,8 @@ export function ProgressiveImage({
         />
       )}
       <img
-        src={isBlob ? src : `${src}${src.includes('?') ? '&' : '?'}q=85`}
+        ref={imgRef}
+        src={src} // Use the original src without modification
         alt={alt}
         sizes={sizes}
         className={cn(
@@ -111,6 +118,7 @@ export function ProgressiveImage({
           className
         )}
         style={{width, height}}
+        onLoad={() => setIsLoaded(true)}
         onError={() => setError(true)}
       />
     </div>

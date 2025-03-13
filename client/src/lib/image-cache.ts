@@ -46,10 +46,15 @@ export function preloadImage(src: string, maxSize: number = 500): Promise<void> 
     }
 
     const img = new Image();
-
-    // Optimize the image if it's not a video
+    
+    // Check if it's a blob URL
+    const isBlob = src.startsWith('blob:');
+    
+    // Check if it's a video
     const isVideo = src.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
-    const optimizedSrc = !isVideo ? `${src}?w=1200&maxSize=${maxSize}` : src;
+    
+    // For blob URLs or videos, don't optimize
+    const optimizedSrc = (!isVideo && !isBlob) ? `${src}?w=1200&maxSize=${maxSize}` : src;
 
     img.onload = () => {
       ImageCache.set(src, optimizedSrc);
@@ -69,10 +74,16 @@ export function prefetchGalleryImages(srcs: string[]): void {
     // Use a lower quality for prefetching to save bandwidth
     srcs.forEach(src => {
       const isVideo = src.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
-      if (!isVideo && !ImageCache.get(src)) {
+      const isBlob = src.startsWith('blob:');
+      
+      if (!isVideo && !isBlob && !ImageCache.get(src)) {
         const prefetchSrc = `${src}?w=800&q=70`;
         const img = new Image();
         img.src = prefetchSrc;
+      } else if (isBlob && !ImageCache.get(src)) {
+        // For blob URLs, use the direct URL
+        const img = new Image();
+        img.src = src;
       }
     });
   });

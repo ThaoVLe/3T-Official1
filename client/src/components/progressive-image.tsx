@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { useImageCache, isBlobUrl, safeImageUrl } from '@/lib/image-cache';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProgressiveImageProps {
@@ -21,7 +20,6 @@ export function ProgressiveImage({
 }: ProgressiveImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const { getFromCache, addToCache } = useImageCache();
 
   // Early return if no src
   if (!src) {
@@ -32,19 +30,14 @@ export function ProgressiveImage({
     );
   }
 
-  // Get from cache if available
-  const cachedImage = !isBlobUrl(src) ? getFromCache(src) : null;
+  // Check if it's a blob URL
+  const isBlob = src.startsWith('blob:');
 
   useEffect(() => {
     // Reset states when src changes
     setIsLoaded(false);
     setError(false);
     
-    if (cachedImage) {
-      setIsLoaded(true);
-      return;
-    }
-
     // Create a new image element
     const img = new Image();
     
@@ -52,10 +45,6 @@ export function ProgressiveImage({
     img.onload = () => {
       setIsLoaded(true);
       setError(false);
-      // Only cache non-blob images
-      if (src && !isBlobUrl(src)) {
-        addToCache(src, img);
-      }
     };
 
     img.onerror = () => {
@@ -65,14 +54,14 @@ export function ProgressiveImage({
     };
 
     // Set the src - for blob URLs use directly, for others add quality
-    img.src = safeImageUrl(src);
+    img.src = isBlob ? src : `${src}${src.includes('?') ? '&' : '?'}q=85`;
 
     // Cleanup
     return () => {
       img.onload = null;
       img.onerror = null;
     };
-  }, [src, addToCache, cachedImage]);
+  }, [src, isBlob]);
 
   // If there's an error loading the image
   if (error) {
@@ -94,7 +83,7 @@ export function ProgressiveImage({
         <Skeleton className="w-full h-full absolute inset-0" />
       )}
       <img
-        src={safeImageUrl(src)}
+        src={isBlob ? src : `${src}${src.includes('?') ? '&' : '?'}q=85`}
         alt={alt}
         sizes={sizes}
         className={cn(
@@ -103,6 +92,10 @@ export function ProgressiveImage({
           className
         )}
         loading={priority ? "eager" : "lazy"}
+        onError={(e) => {
+          console.error(`Error loading image: ${src}`);
+          setError(true);
+        }}
       />
     </div>
   );

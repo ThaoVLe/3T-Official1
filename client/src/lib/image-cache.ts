@@ -1,18 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
 
-// Create a singleton cache that persists across component renders
 const imageCache = new Map<string, HTMLImageElement>();
 
 export function useImageCache() {
-  const getFromCache = useCallback((src: string) => {
+  const getFromCache = (src: string) => {
     return imageCache.get(src);
-  }, []);
+  };
 
-  const addToCache = useCallback((src: string, img: HTMLImageElement) => {
+  const addToCache = (src: string, img: HTMLImageElement) => {
     if (!imageCache.has(src)) {
       imageCache.set(src, img);
     }
-  }, []);
+  };
 
   return { getFromCache, addToCache };
 }
@@ -35,7 +33,6 @@ export const safeImageUrl = (url: string | undefined): string => {
 export function preloadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
     img.src = safeImageUrl(src);
 
     img.onload = () => {

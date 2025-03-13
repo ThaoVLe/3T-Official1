@@ -1,87 +1,59 @@
-// Simple in-memory cache for image URLs
-class ImageCacheManager {
-  private cache: Map<string, string> = new Map();
-  private readonly maxSize: number = 100;
+import { useCallback } from 'react';
 
-  constructor() {
-    // Initialize the cache
-    this.cache = new Map();
-  }
+// Simple in-memory cache
+const imageCache: Map<string, HTMLImageElement> = new Map();
 
-  public get(key: string): string | undefined {
-    return this.cache.get(key);
-  }
+export function useImageCache() {
+  const getFromCache = useCallback((src: string) => {
+    return imageCache.get(src);
+  }, []);
 
-  public set(key: string, value: string): void {
-    // If cache is full, remove oldest entry
-    if (this.cache.size >= this.maxSize) {
-      const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+  const addToCache = useCallback((src: string, img: HTMLImageElement) => {
+    if (!imageCache.has(src)) {
+      imageCache.set(src, img);
+
+      // Optional: Limit cache size
+      if (imageCache.size > 100) {
+        const firstKey = imageCache.keys().next().value;
+        imageCache.delete(firstKey);
+      }
     }
+  }, []);
 
-    this.cache.set(key, value);
-  }
-
-  public clear(): void {
-    this.cache.clear();
-  }
+  return { getFromCache, addToCache };
 }
 
-export const ImageCache = new ImageCacheManager();
-
-export function getCachedImage(src: string): string | undefined {
-  return ImageCache.get(src);
-}
-
-export function setCachedImage(src: string, loadedSrc: string): void {
-  ImageCache.set(src, loadedSrc);
-}
-
-export function preloadImage(src: string, maxSize: number = 500): Promise<void> {
+// Helper to preload images
+export function preloadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    // Check if already cached
-    if (ImageCache.get(src)) {
-      resolve();
+    if (imageCache.has(src)) {
+      resolve(imageCache.get(src)!);
       return;
     }
 
     const img = new Image();
-    
-    // Check if it's a blob URL
-    const isBlob = src.startsWith('blob:');
-    
-    // Check if it's a video
-    const isVideo = src.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
-    
-    // For blob URLs or videos, don't optimize
-    const optimizedSrc = (!isVideo && !isBlob) ? `${src}?w=1200&maxSize=${maxSize}` : src;
+    img.src = src;
 
     img.onload = () => {
-      ImageCache.set(src, optimizedSrc);
-      resolve();
+      imageCache.set(src, img);
+      resolve(img);
     };
-    img.onerror = reject;
-    img.src = optimizedSrc;
+
+    img.onerror = () => {
+      reject(new Error(`Failed to load image: ${src}`));
+    };
   });
 }
 
-export function preloadImages(srcs: string[], maxSize: number = 500): Promise<void[]> {
-  return Promise.all(srcs.map(src => preloadImage(src, maxSize)));
+export function preloadImages(srcs: string[]): Promise<HTMLImageElement[]> {
+  return Promise.all(srcs.map(src => preloadImage(src)));
 }
 
 export function prefetchGalleryImages(srcs: string[]): void {
   requestIdleCallback(() => {
     // Use a lower quality for prefetching to save bandwidth
     srcs.forEach(src => {
-      const isVideo = src.match(/\.(mp4|webm|mov|m4v|3gp|mkv)$/i);
-      const isBlob = src.startsWith('blob:');
-      
-      if (!isVideo && !isBlob && !ImageCache.get(src)) {
-        const prefetchSrc = `${src}?w=800&q=70`;
-        const img = new Image();
-        img.src = prefetchSrc;
-      } else if (isBlob && !ImageCache.get(src)) {
-        // For blob URLs, use the direct URL
+      if (!imageCache.has(src)) {
         const img = new Image();
         img.src = src;
       }

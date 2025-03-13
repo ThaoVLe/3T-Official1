@@ -65,17 +65,7 @@
   position: relative;
 }
 
-/* Hide the "What's on your mind" section when scrolled */
-.diary-content.scrolled .what-on-your-mind {
-  opacity: 0;
-  transform: translateY(-100%);
-  pointer-events: none;
-}
-
-/* Transition for the section */
-.what-on-your-mind {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
+/* "What's on your mind" section CSS removed */
 
     height: 100%;
     transition: height 0.3s ease-out;

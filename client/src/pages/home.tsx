@@ -131,42 +131,6 @@ export default function Home() {
               </h1>
             </div>
 
-            <div className="pb-2 border-b-0 border-transparent what-on-your-mind">
-              <motion.div 
-                className="flex items-start gap-4 group"
-                onClick={() => navigate('/new')}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                onHoverStart={() => setIsHovering(true)}
-                onHoverEnd={() => setIsHovering(false)}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Avatar className="w-12 h-12 border-0 border-transparent group-hover:border-primary/20 transition-all duration-300">
-                    <AvatarImage src="/placeholder-avatar.jpg" className="object-cover" />
-                    <AvatarFallback>ME</AvatarFallback>
-                  </Avatar>
-                </motion.div>
-                <div className="flex-1">
-                  <motion.button 
-                    className="w-full text-left px-5 py-3.5 rounded-full bg-muted/50 hover:bg-muted/70 text-muted-foreground/80 transition-all duration-300 relative overflow-hidden group"
-                    onClick={() => navigate('/new')}
-                    whileHover={{ scale: 1.005 }}
-                    whileTap={{ scale: 0.995 }}
-                  >
-                    <span className="relative z-10">What's on your mind?</span>
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 transition-opacity duration-300"
-                      initial={false}
-                      animate={{ opacity: isHovering ? 1 : 0 }}
-                    />
-                  </motion.button>
-                </div>
-              </motion.div>
-            </div>
-            
             {/* Floating bar with buttons removed */}
 
           </div>

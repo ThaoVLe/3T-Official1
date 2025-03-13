@@ -138,7 +138,6 @@ export default function Home() {
                   </motion.button>
                 </div>
               </motion.div>
-              <div className="border-t border-0 border-muted/30 mt-2"></div>
             </div>
 
             {/* Floating bar with buttons removed */}

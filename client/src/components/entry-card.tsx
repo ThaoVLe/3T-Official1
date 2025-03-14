@@ -189,9 +189,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       setSelectedEntryId(entry.id.toString());
     }
 
-    sessionStorage.setItem('selectedMediaIndex', mediaIndex.toString());
-    const cleanUrl = `/entry/${entry.id}?media=${mediaIndex}`;
-    navigate(cleanUrl);
+    navigate(`/entry/${entry.id}?media=${mediaIndex}`, { replace: true });
   };
 
   return (

@@ -126,17 +126,22 @@ export default function EntryView() {
   }, [id, navigate]);
 
   useEffect(() => {
-    const mediaParam = new URLSearchParams(window.location.search).get('media');
-    if (mediaParam !== null && entry?.mediaUrls) {
-      const mediaIndex = parseInt(mediaParam);
-      setTimeout(() => {
+    const scrollToSelectedMedia = () => {
+      const mediaParam = new URLSearchParams(window.location.search).get('media');
+      if (mediaParam !== null && entry?.mediaUrls) {
+        const mediaIndex = parseInt(mediaParam);
         const mediaElement = mediaRefs.current[mediaIndex];
         if (mediaElement) {
-          mediaElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+          mediaElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 100);
-    }
+      }
+    };
+
+    // Call immediately and after a short delay to ensure content is loaded
+    scrollToSelectedMedia();
+    setTimeout(scrollToSelectedMedia, 100);
   }, [entry?.mediaUrls]);
+
 
   useEffect(() => {
     // Check if entry is sensitive and password protection is enabled
@@ -272,7 +277,7 @@ export default function EntryView() {
                 />
 
                 {entry.mediaUrls && entry.mediaUrls.length > 0 && (
-                  <div className="space-y-2 my-4">
+                  <div className="space-y-2 my-4 media-scroll"> {/* Added media-scroll class */}
                     {entry.mediaUrls.map((url, index) => {
                       const isVideo = url.match(/\.(mp4|webm|MOV|mov)$/i);
                       return (

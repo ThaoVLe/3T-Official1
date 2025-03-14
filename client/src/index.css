@@ -171,10 +171,22 @@
 
   /* Apply the 30-40-30 layout for larger screens */
   @media (min-width: 1024px) {
+    .desktop-layout {
+      display: flex;
+      width: 100%;
+    }
+    
     .desktop-content-wrapper {
-      width: 40%;
-      margin: 0 auto;
-      max-width: 1200px;
+      width: 40vw;
+      margin: 0;
+      flex: 0 0 40%;
+    }
+    
+    .desktop-layout:before,
+    .desktop-layout:after {
+      content: "";
+      flex: 0 0 30%;
+      width: 30vw;
     }
     
     .content-centered {

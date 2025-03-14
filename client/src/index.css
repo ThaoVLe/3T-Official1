@@ -169,10 +169,10 @@
     padding: 1rem;
   }
 
-  /* Apply the 20-60-20 layout for larger screens */
+  /* Apply the 30-40-30 layout for larger screens */
   @media (min-width: 1024px) {
     .desktop-content-wrapper {
-      width: 60%;
+      width: 40%;
       margin: 0 auto;
       max-width: 1200px;
     }

@@ -242,7 +242,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
       <CardContent className="px-4 pt-0 pb-3">
         <div 
           onClick={() => needsExpansion(entry.content) && setIsExpanded(!isExpanded)}
-          className={`prose max-w-none text-foreground ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-3' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
+          className={`prose max-w-none text-foreground ${!isExpanded && needsExpansion(entry.content) ? 'line-clamp-6' : ''} ${needsExpansion(entry.content) ? 'cursor-pointer' : ''}`}
           dangerouslySetInnerHTML={{ __html: entry.content }}
         />
         {needsExpansion(entry.content) && (

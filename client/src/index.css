@@ -203,6 +203,12 @@
   max-width: 500px;
 }
 
+.entry-card .prose {
+  @apply break-words whitespace-pre-wrap;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
 .text-md {
   font-size: 15px;
   line-height: 1.6;

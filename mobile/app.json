@@ -1,4 +1,3 @@
-
 {
   "expo": {
     "name": "Personal Journal",
@@ -6,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -24,6 +24,16 @@
         "WRITE_EXTERNAL_STORAGE",
         "ACCESS_FINE_LOCATION"
       ]
+    },
+    "plugins": [
+      "expo-camera",
+      "expo-media-library",
+      "expo-location"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "54f55e00-8718-46b1-8e72-36719458d438"
+      }
     }
   }
 }

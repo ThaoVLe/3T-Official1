@@ -1,0 +1,75 @@
+  srcFilePath: '/home/runner/workspace/mobile_backup',
+  relativePath: 'mobile_backup'
+}
+skipping {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile_backup/node_modules',
+  relativePath: 'mobile_backup/node_modules'
+}
+copying {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile',
+  relativePath: 'mobile'
+}
+skipping {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile/node_modules',
+  relativePath: 'mobile/node_modules'
+}
+copying {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile/.expo',
+  relativePath: 'mobile/.expo'
+}
+copying {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile/.expo/metro',
+  relativePath: 'mobile/.expo/metro'
+}
+copying {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile/.expo/metro/shims',
+  relativePath: 'mobile/.expo/metro/shims'
+}
+copying {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile/.expo/metro/shims/react-native-web',
+  relativePath: 'mobile/.expo/metro/shims/react-native-web'
+}
+skipping {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile/.expo/metro/shims/react-native-web/dist',
+  relativePath: 'mobile/.expo/metro/shims/react-native-web/dist'
+}
+copying {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile/.env',
+  relativePath: 'mobile/.env'
+}
+copying {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/mobile/app.json',
+  relativePath: 'mobile/app.json'
+}
+copying {
+  src: '/home/runner/workspace',
+  srcFilePath: '/home/runner/workspace/package-lock.json',
+  relativePath: 'package-lock.json'
+}
+Failed to upload the project tarball to EAS Build
+
+Reason: Unknown system error -122: Unknown system error -122, copyfile '/home/runner/workspace/package-lock.json' -> '/tmp/runner/eas-cli-nodejs/621fbf29-812a-4469-845f-0945f7eccb04-shallow-clone/package-lock.json'
+EasBuildProjectArchiveUploadError: Failed to upload the project tarball to EAS Build
+
+Reason: Unknown system error -122: Unknown system error -122, copyfile '/home/runner/workspace/package-lock.json' -> '/tmp/runner/eas-cli-nodejs/621fbf29-812a-4469-845f-0945f7eccb04-shallow-clone/package-lock.json'
+    at uploadProjectAsync (/home/runner/workspace/node_modules/eas-cli/build/build/build.js:195:15)
+    at async prepareBuildRequestForPlatformAsync (/home/runner/workspace/node_modules/eas-cli/build/build/build.js:82:17)
+    at async prepareAndroidBuildAsync (/home/runner/workspace/node_modules/eas-cli/build/build/android/build.js:58:12)
+    at async startBuildAsync (/home/runner/workspace/node_modules/eas-cli/build/build/runBuildAndSubmit.js:304:33)
+    at async prepareAndStartBuildAsync (/home/runner/workspace/node_modules/eas-cli/build/build/runBuildAndSubmit.js:295:19)
+    at async runBuildAndSubmitAsync (/home/runner/workspace/node_modules/eas-cli/build/build/runBuildAndSubmit.js:111:49)
+    at async Build.runAsync (/home/runner/workspace/node_modules/eas-cli/build/commands/build/index.js:123:35)
+    at async Build.run (/home/runner/workspace/node_modules/eas-cli/build/commandUtils/EasCommand.js:168:16)
+    at async Build._run (/home/runner/workspace/node_modules/@oclif/core/lib/command.js:80:22)
+    at async Config.runCommand (/home/runner/workspace/node_modules/@oclif/core/lib/config/config.js:301:25)
+    Error: build command failed.

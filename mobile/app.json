@@ -1,8 +1,8 @@
 
 {
   "expo": {
-    "name": "Your App Name",
-    "slug": "your-app-slug",
+    "name": "Personal Journal",
+    "slug": "personal-journal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,12 +12,18 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "package": "com.yourcompany.yourapp",
+      "package": "com.personaljournal.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION"
+      ]
     }
   }
 }

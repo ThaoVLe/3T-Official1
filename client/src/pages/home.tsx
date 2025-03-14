@@ -149,7 +149,7 @@ export default function Home() {
                 <motion.div
                   key={entry.id}
                   id={`entry-${entry.id}`}
-                  className="bg-card"
+                  className="bg-card w-full"
                   variants={cardVariants}
                   initial="initial"
                   animate="animate"

@@ -195,7 +195,7 @@ export default function EntryCard({ entry, setSelectedEntryId }: EntryCardProps)
   };
 
   return (
-    <Card className="group bg-card border-border shadow-none w-full mb-4">
+    <Card className="group entry-card bg-card border-border shadow-none w-full mb-4">
       <CardHeader className="space-y-0 pb-2 pt-3 px-0">
         <div className="flex justify-between items-start px-4">
           <div className="flex flex-col space-y-1.5">

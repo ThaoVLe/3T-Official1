@@ -64,15 +64,12 @@
 
 /* Desktop Threads-style layout (1000px and above) */
 @media (min-width: 1000px) {
-
-  body,
-  #root {
-    /* overflow: hidden; */
+  body {
+    /*overflow: hidden;*/
   }
 
-  .diary-content {
-    height: 100vh;
-    overflow-y: auto;
+  #root {
+    /*overflow: hidden;*/
   }
 
   /* Fixed column layout */
@@ -86,6 +83,7 @@
     @apply fixed left-0 top-0 bottom-0 w-[244px] border-r border-border bg-background;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
   /* Main content area */

@@ -124,7 +124,7 @@ export default function Home() {
         className="min-h-screen bg-background overflow-auto diary-content"
       >
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
-          <div className="container px-4 py-4 mx-auto">
+          <div className="w-full px-4 py-4"> {/* Updated container class */}
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10">
                 <AvatarImage src="/placeholder-avatar.jpg" className="object-cover" />
@@ -142,7 +142,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="container px-4 py-4 mx-auto">
+        <div className="w-full px-4 py-4"> {/* Updated container class */}
           <AnimatePresence>
             <div className="space-y-4">
               {entries?.map((entry, index) => (

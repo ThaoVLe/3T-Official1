@@ -1,0 +1,387 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    --keyboard-height: 0px;
+    --vh: 1vh;
+  }
+
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  html, body {
+    @apply bg-background text-foreground antialiased;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
+    touch-action: pan-y pinch-zoom;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    width: 100%;
+    height: 100%;
+    height: calc(var(--vh, 1vh) * 100);
+  }
+
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .editor-container {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    min-height: calc(var(--vh, 1vh) * 100);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    @apply bg-background;
+    overflow: hidden;
+  }
+
+  .keyboard-adjustable-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    height: 100%;
+    transition: height 0.3s ease-out;
+  }
+
+  .keyboard-visible .keyboard-adjustable-content {
+    height: calc(100% - var(--keyboard-height));
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .container-page {
+    @apply px-3 py-6;
+    height: var(--viewport-height, 100vh);
+    max-height: var(--viewport-height, 100vh);
+  }
+
+  /* Prevent zoom on inputs on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Better touch targets */
+  button, 
+  [role="button"],
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve scrolling experience */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-padding-bottom: var(--keyboard-height, 0);
+  }
+
+  /* Handle keyboard visibility */
+  .keyboard-visible .tiptap-container .ProseMirror {
+    min-height: 120px;
+  }
+
+  .keyboard-adjustable-content {
+    transition: padding-bottom 0.2s ease;
+  }
+}
+
+/* Fix for notched devices */
+@supports (padding: max(0px)) {
+  .container-page {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Desktop thread-like styles */
+@media (min-width: 1024px) {
+  .desktop-thread {
+    display: grid;
+    grid-template-columns: 1fr 600px 1fr;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .feed-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .card {
+    @apply border-x border-t first:rounded-t-md last:rounded-b-md last:border-b;
+    width: 100%;
+  }
+
+  /* Desktop layout for screens larger than double phone size (roughly 768px*2 = 1536px) */
+  .desktop-layout {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+  }
+
+  .desktop-content-wrapper {
+    width: 600px;
+    margin: 0 auto;
+    border-left: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border));
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .desktop-content-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Opera */
+  }
+
+  /* Standard container styles */
+  .desktop-container {
+    max-width: 800px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin: 0 auto;
+  }
+
+  .content-centered {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .container-page {
+    width: 100%;
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+
+  /* Apply the fixed middle column layout for larger screens */
+  @media (min-width: 1024px) {
+    .desktop-layout {
+      display: flex;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .desktop-content-wrapper {
+      width: 800px;
+      flex: 0 0 800px;
+    }
+
+    .desktop-layout:before,
+    .desktop-layout:after {
+      content: "";
+      flex: 1;
+    }
+
+    .content-centered {
+      max-width: 100%;
+    }
+  }
+}
+
+/* Thread-like post styling */
+.thread-post {
+  @apply border-b border-border py-4;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Centered layout for threads-like presentation */
+.centered-thread-layout {
+  @apply mx-auto;
+  max-width: 600px;
+  width: 100%;
+}
+
+/* Ensure content width stays consistent across all screen sizes */
+@media (min-width: 1024px) {
+  .thread-post,
+  .centered-thread-layout {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* Thread-specific entry card styles for desktop */
+  .entry-card, 
+  .card {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Ensure the layout maintains the ratio during resize */
+  @media (min-width: 1024px) and (max-width: 1600px) {
+    .desktop-content-wrapper {
+      width: 40%;
+    }
+  }
+
+  @media (min-width: 1601px) {
+    .desktop-content-wrapper {
+      width: 40%;
+      max-width: 900px;
+    }
+  }
+}
+
+/* Make modal dialogs look better on desktop */
+@media (min-width: 768px) {
+  [data-dialog="DialogContent"],
+  [data-dialog="SheetContent"] {
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+
+.container-page {
+    @apply w-full mx-auto py-6 px-4 sm:px-6 box-border overflow-x-hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+    touch-action: pan-y pinch-zoom;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .not-scrollable {
+    position: fixed;
+    touch-action: none;
+    transform: none;
+    transform-style: flat;
+    will-change: bottom;
+  }
+
+  .tiptap-container {
+    @apply flex flex-col bg-card dark:bg-card border border-border;
+    transition: height 0.2s ease;
+    overflow: hidden;
+  }
+
+  .tiptap-container .ProseMirror {
+    @apply min-h-[300px] bg-background dark:bg-background text-foreground;
+    transition: min-height 0.2s ease;
+    height: auto;
+    overflow-y: hidden;
+  }
+
+  .ProseMirror p.is-editor-empty:first-child::before {
+    @apply text-muted-foreground;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .heading-1 { font-size: 24px; font-weight: 700; letter-spacing: -0.025em; color: hsl(var(--foreground)); margin-bottom: 1rem; }
+  .heading-2 { font-size: 18px; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 0.75rem; }
+  .text-default { font-size: 11px; color: hsl(var(--foreground)); }
+  .subtitle { font-size: 11px; color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem; }
+
+  .form-container { @apply flex flex-col space-y-4 mb-6; }
+  .button-primary { @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors; }
+  .button-secondary { @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors; }
+  .button-outline { @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-md; }
+
+  .drop-zone { @apply border-2 border-dashed border-border bg-muted/50 rounded-lg p-4 sm:p-8 md:p-12 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted; }
+  .mobile-friendly-button { @apply w-full sm:w-auto; }
+  .responsive-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4; }
+  .full-width { @apply w-full min-w-0; }
+
+  .swipe-active {
+    overflow: hidden;
+  }
+
+  /* Add new utility classes for text size */
+  .large-text {
+    font-size: 1.125rem; 
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
+
+  .large-text .heading-1 { font-size: 33px; }
+  .large-text .heading-2 { font-size: 27px; }
+  .large-text .text-default { font-size: 16px; }
+  .large-text .subtitle { font-size: 16px; }
+
+  /* Enhanced text size adjustments for various UI elements */
+  .large-text .prose { font-size: 1.25rem; }
+  .large-text button { font-size: 1.125rem; }
+  .large-text input { font-size: 1.125rem; }
+  .large-text textarea { font-size: 1.125rem; }
+  .large-text nav { font-size: 1.125rem; }
+  .large-text [data-sidebar="menu-button"] { font-size: 1.125rem; }
+  .large-text .card-title { font-size: 1.5rem; }
+  .large-text .card-description { font-size: 1.125rem; }
+  .large-text dialog { font-size: 1.125rem; }
+  .large-text .modal-title { font-size: 1.625rem; }
+  .large-text [role="dialog"] .text-lg { font-size: 1.625rem; }
+  .large-text [data-dialog="DialogTitle"] { font-size: 1.8rem; }
+  .large-text [data-dialog="SheetTitle"] { font-size: 1.8rem; }
+  .large-text [data-dialog="AlertTitle"] { font-size: 1.625rem; }
+  .large-text h1, .large-text .text-2xl { font-size: 1.75rem; }
+  .large-text h2, .large-text .text-xl { font-size: 1.5rem; }
+  .large-text h3, .large-text .text-lg { font-size: 1.375rem; }
+  .large-text .title { font-size: 1.625rem; }
+
+  /* Facebook-style 'What's on your mind' section styling */
+  .whats-on-your-mind {
+    margin-top: 2rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+
+  .whats-on-your-mind textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: none;
+    resize: vertical;
+    font-size: 1rem;
+    min-height: 80px;
+  }
+
+  .whats-on-your-mind .buttons {
+    margin-top: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+  }

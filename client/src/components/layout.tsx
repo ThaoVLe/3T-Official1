@@ -25,7 +25,6 @@ export function Layout({ children }: LayoutProps) {
 
   const showBottomNav = isMobile && location === '/';
 
-  // Create class names based on settings
   const rootClasses = React.useMemo(() => {
     const classes = ['min-h-screen bg-background'];
     if (settings.isLargeText) classes.push('large-text');
@@ -41,12 +40,29 @@ export function Layout({ children }: LayoutProps) {
     </div>
   ) : (
     <div className={rootClasses}>
-      <div className="desktop-layout w-full">
-        <div className="desktop-content-wrapper">
-          <div className="content-centered w-full">
-            <div className="flex-1 overflow-auto pb-8 pt-4 relative">
-              {children}
-            </div>
+      <div className="fixed left-0 top-0 bottom-0 w-[300px] border-r border-border">
+        <div className="p-4">
+          <h1 className="text-xl font-bold">Logo</h1>
+        </div>
+        <nav className="flex flex-col gap-2 p-2">
+          <button className="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
+            <HomeIcon className="h-6 w-6" />
+            <span>Home</span>
+          </button>
+          <button className="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
+            <SearchIcon className="h-6 w-6" />
+            <span>Search</span>
+          </button>
+          <button className="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
+            <PlusIcon className="h-6 w-6" />
+            <span>Create</span>
+          </button>
+        </nav>
+      </div>
+      <div className="ml-[300px] flex justify-center min-h-screen">
+        <div className="w-[600px] max-w-[600px] border-x border-border">
+          <div className="py-4">
+            {children}
           </div>
         </div>
       </div>

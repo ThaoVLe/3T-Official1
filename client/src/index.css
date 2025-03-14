@@ -139,15 +139,21 @@
   /* Desktop layout for screens larger than double phone size (roughly 768px*2 = 1536px) */
   .desktop-layout {
     width: 100%;
-    max-width: 100%;
+    height: 100vh;
     display: flex;
-    justify-content: center;
   }
 
   .desktop-content-wrapper {
-    width: 100%;
-    max-width: 100%;
+    width: 600px;
     margin: 0 auto;
+    border-left: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border));
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .desktop-content-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Opera */
   }
 
   /* Standard container styles */
@@ -162,12 +168,13 @@
     max-width: 600px;
     margin: 0 auto;
   }
-  
+
   .container-page {
     width: 100%;
     max-width: 100%;
     padding: 1rem;
   }
+
 
   /* Apply the fixed middle column layout for larger screens */
   @media (min-width: 1024px) {
@@ -176,18 +183,18 @@
       width: 100%;
       justify-content: center;
     }
-    
+
     .desktop-content-wrapper {
       width: 800px;
       flex: 0 0 800px;
     }
-    
+
     .desktop-layout:before,
     .desktop-layout:after {
       content: "";
       flex: 1;
     }
-    
+
     .content-centered {
       max-width: 100%;
     }
@@ -217,7 +224,7 @@
     max-width: 600px;
     margin: 0 auto;
   }
-  
+
   /* Thread-specific entry card styles for desktop */
   .entry-card, 
   .card {
@@ -226,14 +233,14 @@
     margin-left: auto;
     margin-right: auto;
   }
-  
+
   /* Ensure the layout maintains the ratio during resize */
   @media (min-width: 1024px) and (max-width: 1600px) {
     .desktop-content-wrapper {
       width: 40%;
     }
   }
-  
+
   @media (min-width: 1601px) {
     .desktop-content-wrapper {
       width: 40%;
@@ -378,3 +385,4 @@
     display: flex;
     justify-content: space-between;
   }
+}

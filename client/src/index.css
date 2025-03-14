@@ -65,11 +65,11 @@
 /* Desktop Threads-style layout (1000px and above) */
 @media (min-width: 1000px) {
   body {
-    /*overflow: hidden;*/
+    height: 100vh;
   }
 
   #root {
-    /*overflow: hidden;*/
+    height: 100%;
   }
 
   /* Fixed column layout */

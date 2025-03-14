@@ -17,7 +17,10 @@ export function Layout({ children }: LayoutProps) {
   const settings = useSettings();
 
   React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1000);
+    const checkMobile = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 1000);
+    };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -45,9 +48,9 @@ export function Layout({ children }: LayoutProps) {
 
   // Desktop layout (Threads-style)
   return (
-    <div className={`${rootClasses} flex justify-center`}>
+    <div className={`${rootClasses} flex justify-center fixed inset-0 overflow-hidden`}>
       {/* Left sidebar */}
-      <div className="fixed left-0 top-0 bottom-0 w-[244px] border-r border-border bg-background">
+      <div className="fixed left-0 top-0 bottom-0 w-[244px] border-r border-border bg-background overflow-y-auto">
         <div className="flex flex-col h-full p-4">
           <div className="mb-8">
             <Link href="/">
@@ -85,12 +88,14 @@ export function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Main content */}
-      <main className="w-[600px] min-h-screen border-x border-border">
-        {children}
+      <main className="w-[600px] min-h-screen border-x border-border overflow-y-auto bg-background ml-[244px]">
+        <div className="max-w-[600px]">
+          {children}
+        </div>
       </main>
 
       {/* Right sidebar */}
-      <div className="fixed right-0 top-0 bottom-0 w-[320px] p-6 border-l border-border">
+      <div className="fixed right-0 top-0 bottom-0 w-[320px] p-6 border-l border-border bg-background overflow-y-auto">
         <div className="rounded-xl bg-card p-6 border border-border">
           <h2 className="text-xl font-semibold mb-2">Log in or sign up</h2>
           <p className="text-muted-foreground text-sm mb-4">

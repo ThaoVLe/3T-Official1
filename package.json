@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
+    "@expo/webpack-config": "^19.0.1",
     "@firebase/auth": "^1.9.1",
     "@hookform/resolvers": "^3.9.1",
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -66,7 +67,8 @@
     "embla-carousel-react": "^8.5.2",
     "expo": "~50.0.0",
     "expo-camera": "^16.0.18",
-    "expo-location": "^18.0.7",
+    "expo-cli": "^6.3.10",
+    "expo-location": "^18.0.8",
     "expo-media-library": "^17.0.6",
     "expo-status-bar": "~1.11.1",
     "express": "^4.21.2",

@@ -68,7 +68,7 @@ const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunct
     await Promise.race([
       new Promise<void>((resolve, reject) => {
         server.listen({
-          port,
+          port: 5000,
           host: "0.0.0.0",
         })
         .once('listening', () => {

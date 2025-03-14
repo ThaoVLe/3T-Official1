@@ -247,7 +247,7 @@
 
   .desktop-content-wrapper {
     width: 100%;
-    max-width: 800px;
+    max-width: none;
     margin-left: 244px;
     padding-left: 0;
     -ms-overflow-style: none;

@@ -136,6 +136,21 @@
     width: 100%;
   }
 
+  /* Desktop layout for screens larger than double phone size (roughly 768px*2 = 1536px) */
+  .desktop-layout {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .desktop-content-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Standard container styles */
   .desktop-container {
     max-width: 800px;
     padding-left: 1rem;
@@ -153,6 +168,14 @@
     max-width: 100%;
     padding: 1rem;
   }
+
+  /* Apply the 20-60-20 layout for larger screens */
+  @media (min-width: 1536px) {
+    .desktop-content-wrapper {
+      width: 60%;
+      margin: 0 auto;
+    }
+  }
 }
 
 /* Thread-like post styling */
@@ -160,6 +183,7 @@
   @apply border-b border-border py-4;
   max-width: 600px;
   margin: 0 auto;
+  width: 100%;
 }
 
 /* Centered layout for threads-like presentation */
@@ -167,6 +191,15 @@
   @apply mx-auto;
   max-width: 600px;
   width: 100%;
+}
+
+/* Ensure content width stays consistent across all screen sizes */
+@media (min-width: 1536px) {
+  .thread-post,
+  .centered-thread-layout {
+    width: 100%;
+    max-width: 600px;
+  }
 }
 
 /* Make modal dialogs look better on desktop */

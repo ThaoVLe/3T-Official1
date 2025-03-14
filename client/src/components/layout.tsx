@@ -41,8 +41,8 @@ export function Layout({ children }: LayoutProps) {
     </div>
   ) : (
     <div className={`flex justify-center ${rootClasses}`}>
-      <div className="max-w-[1200px] w-full"> {/* Removed grid and sidebar related classes */}
-        <div className="h-screen flex flex-col overflow-hidden">
+      <div className="desktop-layout w-full">
+        <div className="desktop-content-wrapper">
           <div className="content-centered w-full">
             <div className="flex-1 overflow-auto pb-8 pt-4 relative">
               {children}

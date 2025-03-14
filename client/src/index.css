@@ -170,10 +170,15 @@
   }
 
   /* Apply the 20-60-20 layout for larger screens */
-  @media (min-width: 1536px) {
+  @media (min-width: 1024px) {
     .desktop-content-wrapper {
       width: 60%;
       margin: 0 auto;
+      max-width: 1200px;
+    }
+    
+    .content-centered {
+      max-width: 100%;
     }
   }
 }
@@ -194,11 +199,19 @@
 }
 
 /* Ensure content width stays consistent across all screen sizes */
-@media (min-width: 1536px) {
+@media (min-width: 1024px) {
   .thread-post,
   .centered-thread-layout {
     width: 100%;
     max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  /* Thread-specific entry card styles for desktop */
+  .entry-card {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 

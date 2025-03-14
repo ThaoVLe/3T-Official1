@@ -68,9 +68,8 @@ const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunct
     await Promise.race([
       new Promise<void>((resolve, reject) => {
         server.listen({
-          port: process.env.PORT || 5000,
+          port: 5000,
           host: "0.0.0.0",
-          ipv6Only: false
         })
         .once('listening', () => {
           log(`Server successfully listening on port ${port}`);

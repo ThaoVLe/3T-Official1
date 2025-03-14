@@ -84,7 +84,6 @@ export default function Home() {
         </div>
       </AnimatePresence>
     </div>;
-    
     window.addEventListener("visibilitychange", storeScrollPosition);
     window.addEventListener("beforeunload", storeScrollPosition);
 

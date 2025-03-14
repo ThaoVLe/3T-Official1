@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "54f55e00-8718-46b1-8e72-36719458d438"
+      }
+    },
+    "android": {
+      "package": "com.thayeuroichet.restexpress"
+    }
+  }
+}

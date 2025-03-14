@@ -84,7 +84,7 @@
   }
 
   /* Better touch targets */
-  button, 
+  button,
   [role="button"],
   a {
     min-height: 44px;
@@ -229,7 +229,7 @@
   }
 
   /* Thread-specific entry card styles for desktop */
-  .entry-card, 
+  .entry-card,
   .card {
     width: 100%;
     max-width: 100%;
@@ -388,3 +388,94 @@
     display: flex;
     justify-content: space-between;
   }
+
+/* Add after the existing .desktop-layout styles around line 140 */
+
+/* Threads-style layout for screens wider than 1000px */
+@media (min-width: 1000px) {
+  .desktop-layout {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    position: relative;
+  }
+
+  .desktop-content-wrapper {
+    width: 600px;
+    margin: 0;
+    border-left: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border));
+    background-color: hsl(var(--background));
+  }
+
+  /* Thread-like post styling */
+  .thread-post {
+    @apply border-b border-border py-4 px-4;
+    width: 100%;
+  }
+
+  /* Ensure content width stays consistent */
+  .centered-thread-layout {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* Sidebar styling */
+  .threads-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 244px;
+    border-right: 1px solid hsl(var(--border));
+    background-color: hsl(var(--background));
+    padding: 1rem;
+  }
+
+  .threads-sidebar-right {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 320px;
+    border-left: 1px solid hsl(var(--border));
+    background-color: hsl(var(--background));
+    padding: 1.5rem;
+  }
+
+  /* Navigation button styling */
+  .nav-button {
+    @apply w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-colors duration-200;
+    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
+  .nav-button.active {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  /* Content area styling */
+  .main-content {
+    width: 600px;
+    margin: 0 auto;
+    border-left: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border));
+    min-height: 100vh;
+    background-color: hsl(var(--background));
+  }
+}
+
+/* Ensure proper spacing and alignment */
+.content-container {
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+}
+
+/* Add smooth transitions */
+.nav-button, .thread-post {
+  transition: all 0.2s ease-in-out;
+}

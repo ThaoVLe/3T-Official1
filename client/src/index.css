@@ -186,7 +186,7 @@
 
 @media (min-width: 1000px) {
   .entry-card {
-    @apply border border-white;
+    @apply border border-gray-700;
   }
 }
 

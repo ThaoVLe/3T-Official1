@@ -123,56 +123,9 @@
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .container-page {
-    @apply px-3 py-6;
-    height: var(--viewport-height, 100vh);
-    max-height: var(--viewport-height, 100vh);
-  }
-  
-  /* Prevent zoom on inputs on iOS */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="number"],
-  input[type="search"],
-  input[type="tel"],
-  textarea {
-    font-size: 16px;
-  }
-  
-  /* Better touch targets */
-  button, 
-  [role="button"],
-  a {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  /* Improve scrolling experience */
-  .mobile-scroll {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    scroll-padding-bottom: var(--keyboard-height, 0);
-  }
-  
-  /* Handle keyboard visibility */
-  .keyboard-visible .tiptap-container .ProseMirror {
-    min-height: 120px;
-  }
-  
-  .keyboard-adjustable-content {
-    transition: padding-bottom 0.2s ease;
+    /* Mobile-specific styles */
   }
 }
-
-/* Fix for notched devices */
-@supports (padding: max(0px)) {
-  .container-page {
-    padding-left: max(1rem, env(safe-area-inset-left));
-    padding-right: max(1rem, env(safe-area-inset-right));
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  }
-}
-
 
 /* Desktop thread-like styles */
 @media (min-width: 1024px) {
@@ -181,17 +134,17 @@
     margin-left: auto;
     margin-right: auto;
   }
-  
+
   .feed-container {
     max-width: 600px;
     margin: 0 auto;
   }
-  
+
   .card {
     @apply border-x border-t first:rounded-t-md last:rounded-b-md last:border-b;
     width: 100%;
   }
-  
+
   .desktop-container {
     max-width: 1200px;
     padding-left: 2rem;

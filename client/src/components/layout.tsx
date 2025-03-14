@@ -58,43 +58,48 @@ export function Layout({ children }: LayoutProps) {
               </Link>
             </SidebarHeader>
 
-          <SidebarContent>
-            <div className="space-y-4 py-4">
-              <div className="px-3 py-2">
-                <Link href="/new">
-                  <Button className="w-full justify-start bg-primary hover:bg-primary/90">
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Entry
-                  </Button>
-                </Link>
+            <SidebarContent>
+              <div className="space-y-4 py-4">
+                <div className="px-3 py-2">
+                  <Link href="/new">
+                    <Button className="w-full justify-start bg-primary hover:bg-primary/90">
+                      <Plus className="mr-2 h-4 w-4" />
+                      New Entry
+                    </Button>
+                  </Link>
+                </div>
+                <div className="px-3 py-2">
+                  <form className="w-full">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search entries..."
+                        className="pl-8"
+                      />
+                    </div>
+                  </form>
+                </div>
               </div>
-              <div className="px-3 py-2">
-                <form className="w-full">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search entries..."
-                      className="pl-8"
-                    />
-                  </div>
-                </form>
-              </div>
-            </div>
-          </SidebarContent>
-
-          <SidebarFooter className="border-t p-4">
-            <Link href="/settings">
-              <Button variant="ghost" className="w-full justify-start">
+            </SidebarContent>
+            <SidebarFooter className="p-4 border-t">
+              <Button
+                onClick={() => navigate("/settings")}
+                variant="ghost"
+                className="w-full justify-start"
+              >
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </Button>
-            </Link>
-          </SidebarFooter>
-        </Sidebar>
-
-        <main className="p-4 pt-0">
-          {children}
-        </main>
+            </SidebarFooter>
+          </Sidebar>
+          <div className="h-screen flex flex-col overflow-hidden">
+            <div className="content-centered w-full">
+              <div className="flex-1 overflow-auto pb-8 pt-4 relative">
+                {children}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </SidebarProvider>
   );

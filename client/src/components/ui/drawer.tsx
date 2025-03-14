@@ -37,7 +37,17 @@ const DrawerThreadContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
-  const isDesktop = typeof window !== 'undefined' ? window.innerWidth >= 1024 : false;
+  const [isDesktop, setIsDesktop] = React.useState(false);
+  
+  React.useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
   
   return (
     <DrawerPrimitive.Content
@@ -54,6 +64,9 @@ const DrawerThreadContent = React.forwardRef<
   );
 });
 DrawerThreadContent.displayName = "DrawerThreadContent";
+
+// Export DrawerThreadContent for use in other components
+export { DrawerThreadContent };
 
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,

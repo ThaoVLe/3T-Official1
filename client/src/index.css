@@ -15,13 +15,12 @@
     -webkit-touch-callout: none;
   }
 
-  html,
-  body {
+  html, body {
     @apply bg-background text-foreground antialiased;
     scroll-behavior: smooth;
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y pinch-zoom;
+    touch-action: manipulation;
     height: 100%;
     width: 100%;
   }
@@ -94,6 +93,16 @@
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
+    margin: 0 auto;
+  }
+
+  /* Content wrapper */
+  .threads-content {
+    width: 100%;
+    max-width: 600px;
+    padding: 0;
+    margin: 0 auto;
+    box-sizing: border-box;
   }
 
   /* Right sidebar */
@@ -103,17 +112,11 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Content wrapper */
-  .threads-content {
-    @apply max-w-none w-full;
-    margin-left: 244px;
-    padding: 0 16px;
-  }
-
   /* Thread post styling */
   .thread-post {
     @apply border-b border-border py-6 px-4;
     width: 100%;
+    box-sizing: border-box;
   }
 
   /* Navigation button styling */
@@ -147,75 +150,44 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
-  /* Enhanced touch interaction */
-  .touch-scroll {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    touch-action: pan-y;
-  }
-
-  /* Modern text styles */
-  .text-threads {
-    font-size: 15px;
-    line-height: 1.6;
-    letter-spacing: -0.011em;
-  }
-
-  /* Button styling */
-  .button-threads {
-    @apply rounded-lg font-medium transition-all duration-200;
-    @apply hover:bg-accent/10 active:bg-accent/20;
-    height: 44px;
-    padding: 0 16px;
-    font-size: 15px;
-  }
 }
 
-/* Common styles */
-.heading-1 {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.011em;
+/* Common text styles */
+.heading-1 { 
+  font-size: 20px; 
+  font-weight: 600; 
+  letter-spacing: -0.011em; 
+  color: hsl(var(--foreground)); 
+}
+
+.heading-2 { 
+  font-size: 17px; 
+  font-weight: 600; 
   color: hsl(var(--foreground));
 }
 
-.heading-2 {
-  font-size: 17px;
-  font-weight: 600;
-  color: hsl(var(--foreground));
-}
-
-.text-default {
-  font-size: 15px;
+.text-default { 
+  font-size: 15px; 
   color: hsl(var(--foreground));
   line-height: 1.5;
 }
 
-.subtitle {
-  font-size: 14px;
+.subtitle { 
+  font-size: 14px; 
   color: hsl(var(--muted-foreground));
   line-height: 1.4;
 }
 
+/* Entry card styling */
 .entry-card {
-  @apply bg-card border-border shadow-none w-full mb-4;
+  @apply bg-card border-border shadow-none;
+  width: 100%;
+  max-width: 600px;
   margin: 0 auto;
-  max-width: 800px;
+  box-sizing: border-box;
 }
 
-.entry-card .prose {
-  @apply break-words whitespace-pre-wrap;
-  max-width: 100%;
-  overflow-wrap: break-word;
-}
-
-.text-md {
-  font-size: 15px;
-  line-height: 1.6;
-  letter-spacing: -0.011em;
-}
-
+/* Touch and interaction styles */
 .touch-scroll {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -233,39 +205,4 @@
   height: 44px;
   padding: 0 16px;
   font-size: 15px;
-}
-
-@media (min-width: 1024px) {
-  body {
-    min-height: 100vh;
-    width: 100%;
-    background-color: hsl(var(--background));
-    overflow-y: auto;
-  }
-
-  #root {
-    min-height: 100vh;
-    width: 100%;
-  }
-
-  .desktop-layout {
-    width: 100%;
-    min-height: 100vh;
-    position: relative;
-  }
-
-  .desktop-content-wrapper {
-    width: 100%;
-    max-width: none;
-    margin-left: 0;
-    padding-left: 244px;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    position: relative;
-    background-color: hsl(var(--background));
-  }
-}
-
-.desktop-content-wrapper::-webkit-scrollbar {
-  display: none;
 }

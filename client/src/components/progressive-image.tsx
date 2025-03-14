@@ -78,7 +78,7 @@ export function ProgressiveImage({
   }
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div className={cn("relative overflow-hidden rounded-md", className)}>
       {!isLoaded && !priority && (
         <Skeleton className="w-full h-full absolute inset-0" />
       )}
@@ -89,6 +89,7 @@ export function ProgressiveImage({
         className={cn(
           "w-full h-full object-cover transition-opacity duration-300",
           isLoaded ? "opacity-100" : "opacity-0",
+          "max-h-[600px] mx-auto", // Limit height for desktop view
           className
         )}
         loading={priority ? "eager" : "lazy"}

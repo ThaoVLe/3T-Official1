@@ -47,15 +47,16 @@ export function Layout({ children }: LayoutProps) {
     </div>
   ) : (
     <SidebarProvider defaultOpen={true}>
-      <div className={`grid lg:grid-cols-[280px_1fr] ${rootClasses}`}>
-        <Sidebar className="border-r">
-          <SidebarHeader className="border-b px-2 py-4">
-            <Link href="/">
-              <h1 className="font-semibold text-xl cursor-pointer bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                My Diary
-              </h1>
-            </Link>
-          </SidebarHeader>
+      <div className={`flex justify-center ${rootClasses}`}>
+        <div className="max-w-[1200px] w-full grid lg:grid-cols-[280px_1fr]">
+          <Sidebar className="border-r">
+            <SidebarHeader className="border-b px-2 py-4">
+              <Link href="/">
+                <h1 className="font-semibold text-xl cursor-pointer bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  My Diary
+                </h1>
+              </Link>
+            </SidebarHeader>
 
           <SidebarContent>
             <div className="space-y-4 py-4">

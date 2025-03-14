@@ -32,6 +32,29 @@ const DrawerOverlay = React.forwardRef<
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
+// Custom content wrapper for desktop thread-like style
+const DrawerThreadContent = React.forwardRef<
+  React.ElementRef<typeof DrawerPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
+>(({ className, children, ...props }, ref) => {
+  const isDesktop = typeof window !== 'undefined' ? window.innerWidth >= 1024 : false;
+  
+  return (
+    <DrawerPrimitive.Content
+      ref={ref}
+      className={cn(
+        "bg-background flex flex-col rounded-t-[10px] h-full w-full",
+        isDesktop ? "max-w-[600px] mx-auto rounded-[10px] h-auto max-h-[90vh]" : "",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </DrawerPrimitive.Content>
+  );
+});
+DrawerThreadContent.displayName = "DrawerThreadContent";
+
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>

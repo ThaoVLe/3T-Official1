@@ -113,6 +113,13 @@
     height: 100%;
     touch-action: pan-y pinch-zoom;
 
+/* Thread-like post styling */
+.thread-post {
+  @apply border-b border-border py-4;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .container-page {
@@ -166,6 +173,51 @@
   }
 }
 
+
+/* Desktop thread-like styles */
+@media (min-width: 1024px) {
+  .content-centered {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .feed-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .card {
+    @apply border-x border-t first:rounded-t-md last:rounded-b-md last:border-b;
+    width: 100%;
+  }
+  
+  .desktop-container {
+    max-width: 1200px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+/* Centered layout for threads-like presentation */
+.centered-thread-layout {
+  @apply mx-auto;
+  max-width: 600px;
+  width: 100%;
+}
+
+/* Make modal dialogs look better on desktop */
+@media (min-width: 768px) {
+  [data-dialog="DialogContent"],
+  [data-dialog="SheetContent"] {
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
   }
 
   .diary-content::-webkit-scrollbar,
@@ -183,11 +235,14 @@
   }
 
   .container-page {
-    @apply w-screen max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
+    @apply w-full max-w-[100vw] mx-auto py-8 px-4 sm:px-6 box-border overflow-x-hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    max-width: 600px; /* Threads-like center column width */
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .mobile-scroll {

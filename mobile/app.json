@@ -11,6 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "com.thayeuroichet.personaljournal",
       "versionCode": 1,
@@ -32,7 +35,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "54f55e00-8718-46b1-8e72-36719458d438"
+        "projectId": "be3b2ee8-3e5f-48dc-8468-8f08e738665d"
       }
     }
   }

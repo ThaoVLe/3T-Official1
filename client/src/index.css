@@ -64,20 +64,21 @@
 /* Desktop Threads-style layout (1000px and above) */
 @media (min-width: 1000px) {
   body {
+    height: 100vh;
     overflow: hidden;
   }
 
   #root {
+    height: 100%;
     overflow: hidden;
   }
 
-  /* Fixed column layout */
   .threads-layout {
-    @apply fixed inset-0 flex;
-    background-color: hsl(var(--background));
+    height: 100vh;
+    overflow: auto;
   }
 
-  /* Left sidebar */
+  /* Fixed column layout */
   .threads-sidebar {
     @apply fixed left-0 top-0 bottom-0 w-[244px] border-r border-border bg-background;
     overscroll-behavior-y: contain;
@@ -110,7 +111,7 @@
     @apply fixed right-0 top-0 bottom-0 w-[320px] border-l border-border bg-background;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
-    
+
   }
 
   /* Thread post styling */

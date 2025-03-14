@@ -39,14 +39,7 @@ export const PageTransition = ({
       variants={pageTransitionVariants}
       transition={pageTransition}
       custom={direction}
-      style={{
-        width: '100%',
-        height: '100%',
-        background: 'hsl(var(--background))',
-        zIndex: 10,
-        overflowY: 'auto',
-        WebkitOverflowScrolling: 'touch'
-      }}
+      className="w-full h-full bg-background"
     >
       {children}
     </motion.div>

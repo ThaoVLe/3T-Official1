@@ -48,9 +48,9 @@ export function Layout({ children }: LayoutProps) {
 
   // Desktop layout (Threads-style)
   return (
-    <div className={`${rootClasses} flex justify-center fixed inset-0 touch-none`}>
+    <div className="threads-layout">
       {/* Left sidebar */}
-      <div className="fixed left-0 top-0 bottom-0 w-[244px] border-r border-border bg-background overflow-y-auto touch-pan-y">
+      <div className="threads-sidebar touch-scroll">
         <div className="flex flex-col h-full p-4">
           <div className="mb-8">
             <Link href="/">
@@ -62,24 +62,24 @@ export function Layout({ children }: LayoutProps) {
 
           <nav className="flex flex-col gap-2">
             <Link href="/">
-              <Button variant="ghost" className="w-full justify-start gap-4 p-4 h-auto text-lg hover:bg-accent/10">
-                <Home className="w-6 h-6" />
+              <Button variant="ghost" className="nav-button">
+                <Home className="h-6 w-6" />
                 <span>Home</span>
               </Button>
             </Link>
-            <Button variant="ghost" className="w-full justify-start gap-4 p-4 h-auto text-lg hover:bg-accent/10">
-              <Search className="w-6 h-6" />
+            <Button variant="ghost" className="nav-button">
+              <Search className="h-6 w-6" />
               <span>Search</span>
             </Button>
             <Link href="/new">
-              <Button variant="ghost" className="w-full justify-start gap-4 p-4 h-auto text-lg hover:bg-accent/10">
-                <Plus className="w-6 h-6" />
+              <Button variant="ghost" className="nav-button">
+                <Plus className="h-6 w-6" />
                 <span>Create</span>
               </Button>
             </Link>
             <Link href="/settings">
-              <Button variant="ghost" className="w-full justify-start gap-4 p-4 h-auto text-lg hover:bg-accent/10 mt-auto">
-                <Settings className="w-6 h-6" />
+              <Button variant="ghost" className="nav-button mt-auto">
+                <Settings className="h-6 w-6" />
                 <span>Settings</span>
               </Button>
             </Link>
@@ -88,26 +88,28 @@ export function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Main content */}
-      <main className="w-[600px] min-h-screen border-x border-border overflow-y-auto bg-background ml-[244px] touch-pan-y">
-        <div className="max-w-[600px]">
+      <main className="threads-main touch-scroll">
+        <div className="threads-content">
           {children}
         </div>
       </main>
 
       {/* Right sidebar */}
-      <div className="fixed right-0 top-0 bottom-0 w-[320px] p-6 border-l border-border bg-background overflow-y-auto touch-pan-y">
-        <div className="rounded-xl bg-card p-6 border border-border">
-          <h2 className="text-xl font-semibold mb-2">Log in or sign up</h2>
-          <p className="text-muted-foreground text-sm mb-4">
-            Sign in to see and manage your diary entries.
-          </p>
-          <div className="space-y-2">
-            <Button className="w-full font-medium h-11 text-base" variant="default">
-              Log in
-            </Button>
-            <Button className="w-full font-medium h-11 text-base" variant="outline">
-              Sign up
-            </Button>
+      <div className="threads-sidebar-right touch-scroll">
+        <div className="p-6">
+          <div className="rounded-xl bg-card p-6 border border-border">
+            <h2 className="text-xl font-semibold mb-2">Log in or sign up</h2>
+            <p className="text-muted-foreground text-sm mb-4">
+              Sign in to see and manage your diary entries.
+            </p>
+            <div className="space-y-2">
+              <Button className="button-threads w-full" variant="default">
+                Log in
+              </Button>
+              <Button className="button-threads w-full" variant="outline">
+                Sign up
+              </Button>
+            </div>
           </div>
         </div>
       </div>

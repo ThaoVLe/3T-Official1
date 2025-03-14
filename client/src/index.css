@@ -110,6 +110,7 @@
     @apply fixed right-0 top-0 bottom-0 w-[320px] border-l border-border bg-background;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
+    
   }
 
   /* Thread post styling */

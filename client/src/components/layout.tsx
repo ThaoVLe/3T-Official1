@@ -41,7 +41,7 @@ export function Layout({ children }: LayoutProps) {
     </div>
   ) : (
     <div className={rootClasses}>
-      <div className="desktop-layout">
+      <div className="desktop-layout w-full">
         <div className="desktop-content-wrapper">
           <div className="content-centered w-full">
             <div className="flex-1 overflow-auto pb-8 pt-4 relative">

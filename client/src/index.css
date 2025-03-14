@@ -240,20 +240,32 @@
       width: 100%;
       min-height: 100vh;
       display: flex;
-      justify-content: flex-start;
-      padding-left: 200px;
+      justify-content: space-between;
       position: relative;
     }
 
+    .left-sidebar {
+      width: 20%;
+      max-width: 290px;
+      min-width: 240px;
+    }
+
     .desktop-content-wrapper {
-      width: 600px;
-      flex: 0 0 600px;
+      width: 50%;
+      max-width: 600px;
+      min-width: 500px;
       border-left: 1px solid hsl(var(--border));
       border-right: 1px solid hsl(var(--border));
       -ms-overflow-style: none;
       scrollbar-width: none;
       position: relative;
       background-color: hsl(var(--background));
+    }
+
+    .right-sidebar {
+      width: 30%;
+      max-width: 350px;
+      min-width: 290px;
     }
 }
 

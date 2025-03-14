@@ -15,7 +15,8 @@
     -webkit-touch-callout: none;
   }
 
-  html, body {
+  html,
+  body {
     @apply bg-background text-foreground antialiased;
     scroll-behavior: smooth;
     overscroll-behavior-y: none;
@@ -63,12 +64,15 @@
 
 /* Desktop Threads-style layout (1000px and above) */
 @media (min-width: 1000px) {
-  body {
-    overflow: hidden;
+
+  body,
+  #root {
+    /* overflow: hidden; */
   }
 
-  #root {
-    overflow: hidden;
+  .diary-content {
+    height: 100vh;
+    overflow-y: auto;
   }
 
   /* Fixed column layout */
@@ -87,8 +91,8 @@
   /* Main content area */
   .threads-main {
     @apply relative w-[600px] ml-[244px];
-    border-left: 1px solid hsl(var(--border));
-    border-right: 1px solid hsl(var(--border));
+    border-left: 0px solid hsl(var(--border));
+    border-right: 0px solid hsl(var(--border));
     overflow-y: auto;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
@@ -148,27 +152,27 @@
 }
 
 /* Modern text styles */
-.heading-1 { 
-  font-size: 20px; 
-  font-weight: 600; 
-  letter-spacing: -0.011em; 
-  color: hsl(var(--foreground)); 
-}
-
-.heading-2 { 
-  font-size: 17px; 
-  font-weight: 600; 
+.heading-1 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.011em;
   color: hsl(var(--foreground));
 }
 
-.text-default { 
-  font-size: 15px; 
+.heading-2 {
+  font-size: 17px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.text-default {
+  font-size: 15px;
   color: hsl(var(--foreground));
   line-height: 1.5;
 }
 
-.subtitle { 
-  font-size: 14px; 
+.subtitle {
+  font-size: 14px;
   color: hsl(var(--muted-foreground));
   line-height: 1.4;
 }

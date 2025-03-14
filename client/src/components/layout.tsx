@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Settings } from "lucide-react";
+import { Plus, Search, Settings, HomeIcon } from "lucide-react"; // Added HomeIcon import
 import { Input } from "@/components/ui/input";
 import { BottomNavigation } from "./bottom-navigation";
 import { useSettings } from "@/lib/settings";
@@ -50,11 +50,11 @@ export function Layout({ children }: LayoutProps) {
             <span>Home</span>
           </button>
           <button className="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
-            <SearchIcon className="h-6 w-6" />
+            <Search className="h-6 w-6" /> {/*Corrected to use Search from lucide-react*/}
             <span>Search</span>
           </button>
           <button className="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
-            <PlusIcon className="h-6 w-6" />
+            <Plus className="h-6 w-6" /> {/*Corrected to use Plus from lucide-react*/}
             <span>Create</span>
           </button>
         </nav>

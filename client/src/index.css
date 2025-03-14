@@ -272,3 +272,9 @@
 .desktop-content-wrapper::-webkit-scrollbar {
   display: none;
 }
+
+.entry-card {
+  @apply bg-card border-border shadow-none w-full mb-4 ml-0;
+  margin-right: auto;
+  max-width: 500px;
+}

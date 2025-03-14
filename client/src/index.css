@@ -249,11 +249,11 @@
 
   .left-sidebar {
     width: 15%;
-    min-width: 180px;
+    min-width: 200px;
   }
 
   .desktop-content-wrapper {
-    width: 70%;
+    width: 45%;
     min-width: 400px;
     border-left: 1px solid hsl(var(--border));
     border-right: 1px solid hsl(var(--border));
@@ -261,12 +261,11 @@
     scrollbar-width: none;
     position: relative;
     background-color: hsl(var(--background));
-    padding-left: 20px; /* Added padding-left */
   }
 
   .right-sidebar {
-    width: 15%;
-    min-width: 180px;
+    width: 40%;
+    min-width: 300px;
   }
 }
 

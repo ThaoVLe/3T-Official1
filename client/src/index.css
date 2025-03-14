@@ -248,15 +248,13 @@
   }
 
   .left-sidebar {
-    width: 20%;
-    max-width: 290px;
-    min-width: 240px;
+    width: 15%;
+    min-width: 200px;
   }
 
   .desktop-content-wrapper {
-    width: 50%;
-    max-width: 600px;
-    min-width: 500px;
+    width: 45%;
+    min-width: 400px;
     border-left: 1px solid hsl(var(--border));
     border-right: 1px solid hsl(var(--border));
     -ms-overflow-style: none;
@@ -266,9 +264,8 @@
   }
 
   .right-sidebar {
-    width: 30%;
-    max-width: 350px;
-    min-width: 290px;
+    width: 40%;
+    min-width: 300px;
   }
 }
 

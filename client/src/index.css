@@ -169,24 +169,23 @@
     padding: 1rem;
   }
 
-  /* Apply the 30-40-30 layout for larger screens */
+  /* Apply the fixed middle column layout for larger screens */
   @media (min-width: 1024px) {
     .desktop-layout {
       display: flex;
       width: 100%;
-      justify-content: space-between;
+      justify-content: center;
     }
     
     .desktop-content-wrapper {
-      width: 40%;
-      flex: 0 0 auto;
-      max-width: 800px;
+      width: 800px;
+      flex: 0 0 800px;
     }
     
     .desktop-layout:before,
     .desktop-layout:after {
       content: "";
-      flex: 0 0 30%;
+      flex: 1;
     }
     
     .content-centered {

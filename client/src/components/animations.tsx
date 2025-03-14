@@ -40,14 +40,9 @@ export const PageTransition = ({
       transition={pageTransition}
       custom={direction}
       style={{
-        position: 'fixed',
         width: '100%',
         height: '100%',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'white',
+        background: 'hsl(var(--background))',
         zIndex: 10,
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch'

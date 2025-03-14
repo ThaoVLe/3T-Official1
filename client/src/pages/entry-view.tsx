@@ -202,10 +202,10 @@ export default function EntryView() {
 
   return (
     <PageTransition direction={1}>
-      <div className={`min-h-screen flex flex-col bg-background w-full ${isExiting ? 'pointer-events-none' : ''}`}>
+      <div className={`flex flex-col bg-background w-full max-w-[600px] ${isExiting ? 'pointer-events-none' : ''}`}>
         {/* Header */}
         <div className="sticky top-0 z-10 bg-card border-b border-border">
-          <div className="container px-4 py-2 flex items-center">
+          <div className="flex h-14 items-center px-4">
             <Button
               variant="ghost"
               size="icon"
@@ -220,18 +220,17 @@ export default function EntryView() {
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <div className="flex items-center gap-2 w-full">
-              <h1 className="text-lg font-semibold text-foreground flex-grow">
-                {entry.title || "Untitled Entry"}
+            <div className="flex items-center justify-between flex-1">
+              <h1 className="text-lg font-semibold text-foreground">
+                {entry?.title || "Untitled Entry"}
               </h1>
-
             </div>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col overflow-auto w-full bg-background">
-          <div className="flex-1 p-4 sm:p-6 w-full max-w-full">
+        <div className="flex-1 overflow-auto">
+          <div className="p-4 sm:p-6">
             <AnimatePresence mode="wait">
               <motion.div 
                 className="space-y-4"

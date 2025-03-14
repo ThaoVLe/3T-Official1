@@ -242,30 +242,17 @@
   .desktop-layout {
     width: 100%;
     min-height: 100vh;
-    display: flex;
-    justify-content: space-between;
     position: relative;
   }
 
-  .left-sidebar {
-    width: 15%;
-    min-width: 200px;
-  }
-
   .desktop-content-wrapper {
-    width: 45%;
-    min-width: 400px;
-    border-left: 1px solid hsl(var(--border));
-    border-right: 1px solid hsl(var(--border));
+    width: 100%;
+    max-width: 800px;
+    margin-left: 0;
     -ms-overflow-style: none;
     scrollbar-width: none;
     position: relative;
     background-color: hsl(var(--background));
-  }
-
-  .right-sidebar {
-    width: 40%;
-    min-width: 300px;
   }
 }
 

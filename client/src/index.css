@@ -248,7 +248,8 @@
   .desktop-content-wrapper {
     width: 100%;
     max-width: 800px;
-    margin-left: 0;
+    margin-left: 244px;
+    padding-left: 0;
     -ms-overflow-style: none;
     scrollbar-width: none;
     position: relative;

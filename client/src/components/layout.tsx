@@ -34,7 +34,6 @@ export function Layout({ children }: LayoutProps) {
     return classes.join(' ');
   }, [settings.isLargeText]);
 
-
   // Mobile layout
   if (isMobile) {
     return (

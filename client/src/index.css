@@ -33,7 +33,7 @@
 /* Mobile styles */
 @media (max-width: 999px) {
   .container-page {
-    @apply px-3 py-6;
+    @apply px-4 py-6;
     height: 100%;
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
@@ -132,11 +132,6 @@
     @apply bg-accent/10 text-foreground;
   }
 
-  /* Smooth transitions */
-  .threads-transition {
-    @apply transition-all duration-200;
-  }
-
   /* Hide scrollbars but keep functionality */
   .threads-main::-webkit-scrollbar,
   .threads-sidebar::-webkit-scrollbar,
@@ -152,7 +147,7 @@
   }
 }
 
-/* Common text styles */
+/* Modern text styles */
 .heading-1 { 
   font-size: 20px; 
   font-weight: 600; 
@@ -194,6 +189,7 @@
   touch-action: pan-y;
 }
 
+/* Modern interactions */
 .threads-hover {
   @apply transition-all duration-200;
   @apply hover:bg-accent/5 active:bg-accent/10;
@@ -205,4 +201,27 @@
   height: 44px;
   padding: 0 16px;
   font-size: 15px;
+}
+
+/* Animations */
+.fade-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+}
+
+.fade-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 200ms ease-in, transform 200ms ease-in;
 }

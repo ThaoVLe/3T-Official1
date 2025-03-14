@@ -107,6 +107,7 @@
   .threads-content {
     @apply max-w-none w-full;
     margin-left: 244px;
+    padding: 0 16px;
   }
 
   /* Thread post styling */
@@ -198,9 +199,9 @@
 }
 
 .entry-card {
-  @apply bg-card border-border shadow-none w-full mb-4 ml-0;
-  margin-right: auto;
-  max-width: 500px;
+  @apply bg-card border-border shadow-none w-full mb-4;
+  margin: 0 auto;
+  max-width: 800px;
 }
 
 .entry-card .prose {

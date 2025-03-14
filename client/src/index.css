@@ -73,7 +73,7 @@
 
   /* Fixed column layout */
   .threads-layout {
-    @apply fixed inset-0 flex justify-center;
+    @apply fixed inset-0 flex;
     background-color: hsl(var(--background));
   }
 
@@ -104,7 +104,8 @@
 
   /* Content wrapper */
   .threads-content {
-    @apply max-w-[600px] mx-auto;
+    @apply max-w-none w-full;
+    margin-left: 244px;
   }
 
   /* Thread post styling */

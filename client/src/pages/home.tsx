@@ -179,9 +179,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="w-full px-4 py-4">
-          {" "}
-          {/* Updated container class */}
+        <div className="w-full py-4">
           <AnimatePresence>
             <div className="space-y-4">
               {entries?.map((entry, index) => (

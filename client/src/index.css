@@ -88,8 +88,8 @@
   /* Main content area */
   .threads-main {
     @apply relative w-[600px] ml-[244px];
-    border-left: 1px solid hsl(var(--border));
-    border-right: 1px solid hsl(var(--border));
+    border-left: 0px solid hsl(var(--border));
+    border-right: 0px solid hsl(var(--border));
     overflow-y: auto;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;

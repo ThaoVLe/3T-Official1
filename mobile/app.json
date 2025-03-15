@@ -1,4 +1,3 @@
-
 {
   "expo": {
     "name": "Personal Journal",
@@ -21,7 +20,15 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "MEDIA_LIBRARY"
+      ]
     },
     "plugins": [
       [
@@ -31,7 +38,8 @@
         }
       ],
       "expo-media-library",
-      "expo-location"
+      "expo-location",
+      "expo-system-ui"
     ],
     "extra": {
       "eas": {

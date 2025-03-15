@@ -1,0 +1,362 @@
+› Building app...
+Configuration on demand is an incubating feature.
+> Task :gradle-plugin:compileKotlin UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:processResources UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:classes UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:jar UP-TO-DATE
+> Task :expo-dev-launcher-gradle-plugin:inspectClassesForKotlinIC UP-TO-DATE
+> Task :gradle-plugin:inspectClassesForKotlinIC UP-TO-DATE
+
+> Configure project :app
+ ℹ️  [33mApplying gradle plugin[0m '[32mexpo-dev-launcher-gradle-plugin[0m' (expo-dev-launcher@3.6.10)
+
+> Configure project :expo
+
+Using expo modules
+  - [32mexpo-camera[0m (14.1.3)
+  - [32mexpo-constants[0m (15.4.6)
+  - [32mexpo-dev-client[0m (3.3.12)
+  - [32mexpo-dev-launcher[0m (3.6.10)
+  - [32mexpo-dev-menu[0m (4.5.8)
+  - [32mexpo-file-system[0m (16.0.9)
+  - [32mexpo-font[0m (11.10.3)
+  - [32mexpo-json-utils[0m (0.12.3)
+  - [32mexpo-keep-awake[0m (12.8.2)
+  - [32mexpo-location[0m (16.5.5)
+  - [32mexpo-manifests[0m (0.13.2)
+  - [32mexpo-media-library[0m (15.9.2)
+  - [32mexpo-modules-core[0m (1.11.14)
+  - [32mexpo-modules-core$android-annotation[0m (1.11.14)
+  - [32mexpo-modules-core$android-annotation-processor[0m (1.11.14)
+  - [32mexpo-system-ui[0m (2.9.4)
+
+package.xml parsing problem. unexpected element (uri:"", local:"abis"). Expected elements are <{}vendor>,<{}codename>,<{}base-extension>,<{}abi>,<{}api-level>,<{}extension-level>,<{}tag>
+Errors during XML parse:
+Additionally, the fallback loader failed to parse the XML.
+Checking the license for package Android SDK Build-Tools 33.0.1 in /Users/nhien/Library/Android/sdk/licenses
+License for package Android SDK Build-Tools 33.0.1 accepted.
+Preparing "Install Android SDK Build-Tools 33.0.1 v.33.0.1".
+"Install Android SDK Build-Tools 33.0.1 v.33.0.1" ready.
+Installing Android SDK Build-Tools 33.0.1 in /Users/nhien/Library/Android/sdk/build-tools/33.0.1
+"Install Android SDK Build-Tools 33.0.1 v.33.0.1" complete.
+"Install Android SDK Build-Tools 33.0.1 v.33.0.1" finished.
+package.xml parsing problem. unexpected element (uri:"", local:"abis"). Expected elements are <{}vendor>,<{}codename>,<{}base-extension>,<{}abi>,<{}api-level>,<{}extension-level>,<{}tag>
+
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:generatePackageList
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :expo-modules-core$android-annotation:processResources NO-SOURCE
+> Task :expo-modules-core$android-annotation-processor:processResources
+> Task :app:generateDebugBuildConfig
+> Task :expo:generateExpoModulesPackageList
+> Task :expo:preBuild
+> Task :expo:preDebugBuild
+> Task :expo:writeDebugAarMetadata
+> Task :expo-camera:preBuild UP-TO-DATE
+> Task :expo-camera:preDebugBuild UP-TO-DATE
+> Task :expo-camera:writeDebugAarMetadata
+> Task :expo-constants:createExpoConfig
+> Task :expo-constants:preBuild
+> Task :expo-constants:preDebugBuild
+> Task :expo-constants:writeDebugAarMetadata
+> Task :expo-dev-client:preBuild UP-TO-DATE
+> Task :expo-dev-client:preDebugBuild UP-TO-DATE
+> Task :expo-dev-launcher:preBuild UP-TO-DATE
+> Task :expo-dev-launcher:preDebugBuild UP-TO-DATE
+> Task :expo-dev-client:writeDebugAarMetadata
+> Task :expo-dev-menu:preBuild UP-TO-DATE
+> Task :expo-dev-menu:preDebugBuild UP-TO-DATE
+> Task :expo-dev-launcher:writeDebugAarMetadata
+> Task :expo-dev-menu:writeDebugAarMetadata
+> Task :expo-dev-menu-interface:preBuild UP-TO-DATE
+> Task :expo-dev-menu-interface:preDebugBuild UP-TO-DATE
+> Task :expo-file-system:preBuild UP-TO-DATE
+> Task :expo-file-system:preDebugBuild UP-TO-DATE
+> Task :expo-dev-menu-interface:writeDebugAarMetadata
+> Task :expo-font:preBuild UP-TO-DATE
+> Task :expo-font:preDebugBuild UP-TO-DATE
+> Task :expo-file-system:writeDebugAarMetadata
+> Task :expo-font:writeDebugAarMetadata
+> Task :expo-json-utils:preBuild UP-TO-DATE
+> Task :expo-json-utils:preDebugBuild UP-TO-DATE
+> Task :expo-keep-awake:preBuild UP-TO-DATE
+> Task :expo-keep-awake:preDebugBuild UP-TO-DATE
+> Task :expo-json-utils:writeDebugAarMetadata
+> Task :expo-location:preBuild UP-TO-DATE
+> Task :expo-location:preDebugBuild UP-TO-DATE
+> Task :expo-keep-awake:writeDebugAarMetadata
+> Task :expo-modules-core$android-annotation:compileKotlin
+> Task :expo-location:writeDebugAarMetadata
+> Task :expo-manifests:preBuild UP-TO-DATE
+> Task :expo-modules-core$android-annotation:compileJava NO-SOURCE
+> Task :expo-modules-core$android-annotation:classes UP-TO-DATE
+> Task :expo-modules-core$android-annotation:jar
+> Task :expo-modules-core$android-annotation:inspectClassesForKotlinIC
+> Task :expo-manifests:preDebugBuild UP-TO-DATE
+> Task :expo-media-library:preBuild UP-TO-DATE
+> Task :expo-media-library:preDebugBuild UP-TO-DATE
+> Task :expo-manifests:writeDebugAarMetadata
+> Task :expo-modules-core:preBuild UP-TO-DATE
+> Task :expo-modules-core:preDebugBuild UP-TO-DATE
+> Task :expo-media-library:writeDebugAarMetadata
+> Task :expo-system-ui:preBuild UP-TO-DATE
+> Task :expo-system-ui:preDebugBuild UP-TO-DATE
+> Task :expo-modules-core:writeDebugAarMetadata
+> Task :expo-updates-interface:preBuild UP-TO-DATE
+> Task :expo-updates-interface:preDebugBuild UP-TO-DATE
+> Task :expo-system-ui:writeDebugAarMetadata
+> Task :expo-updates-interface:writeDebugAarMetadata
+> Task :app:generateDebugResValues
+> Task :expo-modules-core$android-annotation-processor:compileKotlin
+> Task :app:checkDebugAarMetadata
+> Task :expo-modules-core$android-annotation-processor:compileJava NO-SOURCE
+> Task :expo-modules-core$android-annotation-processor:classes
+> Task :expo-modules-core$android-annotation-processor:jar
+> Task :expo-modules-core$android-annotation-processor:inspectClassesForKotlinIC
+> Task :expo:generateDebugResValues
+> Task :expo:generateDebugResources
+> Task :expo:packageDebugResources
+> Task :expo-camera:generateDebugResValues FROM-CACHE
+> Task :expo-camera:generateDebugResources UP-TO-DATE
+> Task :expo-camera:packageDebugResources
+> Task :expo-constants:generateDebugResValues FROM-CACHE
+> Task :expo-constants:generateDebugResources UP-TO-DATE
+> Task :expo-constants:packageDebugResources
+> Task :expo-dev-client:generateDebugResValues FROM-CACHE
+> Task :expo-dev-client:generateDebugResources UP-TO-DATE
+> Task :expo-dev-client:packageDebugResources
+> Task :expo-dev-launcher:generateDebugResValues FROM-CACHE
+> Task :expo-dev-launcher:generateDebugResources UP-TO-DATE
+> Task :expo-dev-launcher:packageDebugResources
+> Task :expo-dev-menu:generateDebugResValues FROM-CACHE
+> Task :expo-dev-menu:generateDebugResources UP-TO-DATE
+> Task :expo-dev-menu:packageDebugResources
+> Task :expo-dev-menu-interface:generateDebugResValues FROM-CACHE
+> Task :expo-dev-menu-interface:generateDebugResources UP-TO-DATE
+> Task :expo-dev-menu-interface:packageDebugResources
+> Task :expo-file-system:generateDebugResValues FROM-CACHE
+> Task :expo-file-system:generateDebugResources UP-TO-DATE
+> Task :expo-file-system:packageDebugResources
+> Task :expo-font:generateDebugResValues FROM-CACHE
+> Task :expo-font:generateDebugResources UP-TO-DATE
+> Task :expo-font:packageDebugResources
+> Task :expo-json-utils:generateDebugResValues FROM-CACHE
+> Task :expo-json-utils:generateDebugResources UP-TO-DATE
+> Task :expo-json-utils:packageDebugResources
+> Task :expo-keep-awake:generateDebugResValues FROM-CACHE
+> Task :expo-keep-awake:generateDebugResources UP-TO-DATE
+> Task :expo-keep-awake:packageDebugResources
+> Task :expo-location:generateDebugResValues FROM-CACHE
+> Task :expo-location:generateDebugResources UP-TO-DATE
+> Task :expo-location:packageDebugResources
+> Task :expo-manifests:generateDebugResValues FROM-CACHE
+> Task :expo-manifests:generateDebugResources UP-TO-DATE
+> Task :expo-manifests:packageDebugResources
+> Task :expo-media-library:generateDebugResValues FROM-CACHE
+> Task :expo-media-library:generateDebugResources UP-TO-DATE
+> Task :expo-media-library:packageDebugResources
+> Task :expo-modules-core:generateDebugResValues FROM-CACHE
+> Task :expo-modules-core:generateDebugResources UP-TO-DATE
+> Task :expo-modules-core:packageDebugResources
+> Task :expo-system-ui:generateDebugResValues FROM-CACHE
+> Task :expo-system-ui:generateDebugResources UP-TO-DATE
+> Task :expo-system-ui:packageDebugResources
+> Task :expo-updates-interface:generateDebugResValues FROM-CACHE
+> Task :expo-updates-interface:generateDebugResources UP-TO-DATE
+> Task :expo-updates-interface:packageDebugResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :expo:extractDeepLinksDebug FROM-CACHE
+> Task :expo-camera:extractDeepLinksDebug FROM-CACHE
+> Task :expo-constants:extractDeepLinksDebug FROM-CACHE
+> Task :app:mergeDebugResources
+> Task :expo-dev-client:extractDeepLinksDebug FROM-CACHE
+> Task :expo-dev-launcher:extractDeepLinksDebug FROM-CACHE
+> Task :expo-dev-menu:extractDeepLinksDebug FROM-CACHE
+> Task :expo-dev-menu-interface:extractDeepLinksDebug FROM-CACHE
+> Task :expo-file-system:extractDeepLinksDebug FROM-CACHE
+> Task :app:parseDebugLocalResources
+> Task :expo-font:extractDeepLinksDebug FROM-CACHE
+> Task :expo-json-utils:extractDeepLinksDebug FROM-CACHE
+> Task :expo-dev-client:processDebugManifest
+> Task :expo-camera:processDebugManifest
+> Task :expo:processDebugManifest
+> Task :expo-font:processDebugManifest
+> Task :expo-dev-menu-interface:processDebugManifest
+> Task :expo-dev-launcher:processDebugManifest
+> Task :expo-dev-menu:processDebugManifest
+
+> Task :expo-file-system:processDebugManifest
+/Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-file-system/android/src/main/AndroidManifest.xml:6:9-8:20 Warning:
+	provider#expo.modules.filesystem.FileSystemFileProvider@android:authorities was tagged at AndroidManifest.xml:6 to replace other declarations but no other declaration present
+
+> Task :expo-json-utils:processDebugManifest
+> Task :expo-constants:processDebugManifest
+> Task :expo-keep-awake:extractDeepLinksDebug FROM-CACHE
+> Task :expo-location:extractDeepLinksDebug FROM-CACHE
+> Task :expo-keep-awake:processDebugManifest
+> Task :expo-manifests:extractDeepLinksDebug FROM-CACHE
+> Task :expo-location:processDebugManifest
+> Task :expo-media-library:extractDeepLinksDebug FROM-CACHE
+> Task :expo-manifests:processDebugManifest
+> Task :expo-modules-core:extractDeepLinksDebug FROM-CACHE
+> Task :expo-media-library:processDebugManifest
+> Task :expo-system-ui:extractDeepLinksDebug FROM-CACHE
+
+> Task :expo-modules-core:processDebugManifest
+/Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/AndroidManifest.xml:8:9-11:45 Warning:
+	meta-data#com.facebook.soloader.enabled@android:value was tagged at AndroidManifest.xml:8 to replace other declarations but no other declaration present
+
+> Task :expo-updates-interface:extractDeepLinksDebug FROM-CACHE
+> Task :expo-system-ui:processDebugManifest
+> Task :expo-updates-interface:processDebugManifest
+> Task :expo:compileDebugLibraryResources
+
+> Task :app:processDebugMainManifest
+/Users/nhien/Documents/0-Diary/3T-Official1/android/app/src/debug/AndroidManifest.xml:6:5-162 Warning:
+	application@android:usesCleartextTraffic was tagged at AndroidManifest.xml:6 to replace other declarations but no other declaration present
+/Users/nhien/Documents/0-Diary/3T-Official1/android/app/src/debug/AndroidManifest.xml Warning:
+	provider#expo.modules.filesystem.FileSystemFileProvider@android:authorities was tagged at AndroidManifest.xml:0 to replace other declarations but no other declaration present
+
+> Task :app:processDebugManifest
+> Task :expo-camera:compileDebugLibraryResources FROM-CACHE
+> Task :expo:parseDebugLocalResources
+> Task :expo-constants:compileDebugLibraryResources FROM-CACHE
+> Task :expo-camera:parseDebugLocalResources
+> Task :expo-constants:parseDebugLocalResources FROM-CACHE
+> Task :app:processDebugManifestForPackage
+> Task :expo-dev-client:compileDebugLibraryResources FROM-CACHE
+> Task :expo-dev-client:parseDebugLocalResources FROM-CACHE
+> Task :expo-camera:generateDebugRFile
+> Task :expo-dev-client:generateDebugRFile
+> Task :expo:generateDebugRFile
+> Task :expo-constants:generateDebugRFile
+> Task :expo-dev-launcher:parseDebugLocalResources
+> Task :expo-dev-menu-interface:compileDebugLibraryResources FROM-CACHE
+> Task :expo-dev-menu-interface:parseDebugLocalResources FROM-CACHE
+> Task :expo-dev-launcher:generateDebugRFile
+> Task :expo-dev-menu-interface:generateDebugRFile
+> Task :expo-file-system:compileDebugLibraryResources
+> Task :expo-font:compileDebugLibraryResources FROM-CACHE
+> Task :expo-font:parseDebugLocalResources FROM-CACHE
+> Task :expo-file-system:parseDebugLocalResources
+> Task :expo-dev-menu:parseDebugLocalResources
+> Task :expo-font:generateDebugRFile
+> Task :expo-json-utils:compileDebugLibraryResources FROM-CACHE
+> Task :expo-json-utils:parseDebugLocalResources FROM-CACHE
+> Task :expo-dev-menu:generateDebugRFile
+> Task :expo-file-system:generateDebugRFile
+> Task :expo-dev-menu:compileDebugLibraryResources
+> Task :expo-dev-launcher:compileDebugLibraryResources
+> Task :expo-keep-awake:compileDebugLibraryResources FROM-CACHE
+> Task :expo-keep-awake:parseDebugLocalResources FROM-CACHE
+> Task :expo-json-utils:generateDebugRFile
+> Task :expo-location:compileDebugLibraryResources FROM-CACHE
+> Task :expo-location:parseDebugLocalResources FROM-CACHE
+> Task :expo-keep-awake:generateDebugRFile
+> Task :expo-manifests:compileDebugLibraryResources FROM-CACHE
+> Task :expo-manifests:parseDebugLocalResources FROM-CACHE
+> Task :expo-location:generateDebugRFile
+> Task :expo-media-library:compileDebugLibraryResources FROM-CACHE
+> Task :expo-media-library:parseDebugLocalResources FROM-CACHE
+> Task :expo-manifests:generateDebugRFile
+> Task :expo-modules-core:compileDebugLibraryResources FROM-CACHE
+> Task :expo-modules-core:parseDebugLocalResources FROM-CACHE
+> Task :expo-media-library:generateDebugRFile
+> Task :expo-system-ui:compileDebugLibraryResources
+> Task :expo-modules-core:generateDebugRFile
+> Task :expo-updates-interface:compileDebugLibraryResources FROM-CACHE
+> Task :expo-updates-interface:parseDebugLocalResources FROM-CACHE
+> Task :expo-system-ui:parseDebugLocalResources
+> Task :expo:generateDebugBuildConfig
+> Task :expo-updates-interface:generateDebugRFile
+> Task :expo-system-ui:generateDebugRFile
+> Task :expo-camera:generateDebugBuildConfig
+> Task :expo-modules-core:generateDebugBuildConfig
+> Task :app:processDebugResources FAILED
+
+> Task :expo-modules-core:compileDebugKotlin
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/core/utilities/EmulatorUtilities.kt:30:13 'SERIAL: String!' is deprecated. Deprecated in Java
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:151:13 Variable 'catalystInstance' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/ExpoModulesHelper.kt:11:21 'newInstance(): T!' is deprecated. Deprecated in Java
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/Promise.kt:72:18 This declaration overrides deprecated member but not marked as deprecated itself. This deprecation won't be inherited in future releases. Please add @Deprecated annotation or suppress. See https://youtrack.jetbrains.com/issue/KT-47902 for details
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/Utils.kt:8:3 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/activityresult/ActivityResultsManager.kt:51:24 Parameter 'activity' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/activityresult/AppContextActivityResultRegistry.kt:119:51 'getParcelableExtra(String!): T?' is deprecated. Deprecated in Java
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/activityresult/AppContextActivityResultRegistry.kt:186:26 'getParcelable(String?): T?' is deprecated. Deprecated in Java
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/activityresult/AppContextActivityResultRegistry.kt:277:83 'getParcelable(String?): T?' is deprecated. Deprecated in Java
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/activityresult/DataPersistor.kt:67:20 'getSerializable(String?): Serializable?' is deprecated. Deprecated in Java
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/activityresult/DataPersistor.kt:85:26 'getSerializable(String?): Serializable?' is deprecated. Deprecated in Java
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/devtools/cdp/CdpNetworkTypes.kt:186:54 Parameter 'request' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/devtools/cdp/CdpNetworkTypes.kt:210:54 Parameter 'request' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/devtools/cdp/CdpNetworkTypes.kt:230:15 Parameter 'now' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/devtools/cdp/CdpNetworkTypes.kt:230:54 Parameter 'request' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/events/KModuleEventEmitterWrapper.kt:90:7 'constructor Event<T : Event<(raw) Event<*>>!>(Int)' is deprecated. Deprecated in Java
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/jni/JavaScriptObject.kt:90:33 Parameter 'null' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/jni/JavaScriptObject.kt:91:34 Parameter 'null' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/jni/JavaScriptObject.kt:132:5 Parameter 'null' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/sharedobjects/SharedObjectRegistry.kt:54:35 Destructured parameter 'js' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/tracing/ExpoTrace.kt:33:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/tracing/ExpoTrace.kt:40:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/tracing/ExpoTrace.kt:50:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/tracing/ExpoTrace.kt:56:1 Expected performance impact from inlining is insignificant. Inlining works best for functions with parameters of functional types
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/Either.kt:76:12 Parameter 'type' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/Either.kt:79:12 Parameter 'type' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/Either.kt:82:11 Parameter 'type' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/Either.kt:85:11 Parameter 'type' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/Either.kt:99:12 Parameter 'type' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/Either.kt:102:11 Parameter 'type' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/Either.kt:114:12 Parameter 'type' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/Either.kt:117:11 Parameter 'type' is never used
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/JSTypeConverterHelper.kt:44:17 'get(String!): Any?' is deprecated. Deprecated in Java
+w: file:///Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/types/TypeConverterProvider.kt:175:46 'newInstance(): T!' is deprecated. Deprecated in Java
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:processDebugResources'.
+> A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
+   > Android resource linking failed
+     ERROR: /Users/nhien/Documents/0-Diary/3T-Official1/android/app/src/main/res/drawable/splashscreen.xml:3: AAPT: error: resource color/splashscreen_background (aka com.thayeuroichet.restexpress:color/splashscreen_background) not found.
+         
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 2m 38s
+173 actionable tasks: 107 executed, 56 from cache, 10 up-to-date
+Error: /Users/nhien/Documents/0-Diary/3T-Official1/android/gradlew exited with non-zero code: 1
+Error: /Users/nhien/Documents/0-Diary/3T-Official1/android/gradlew exited with non-zero code: 1
+    at ChildProcess.completionListener (/Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo/node_modules/@expo/cli/node_modules/@expo/spawn-async/build/spawnAsync.js:52:23)
+    at Object.onceWrapper (node:events:622:26)
+    at ChildProcess.emit (node:events:507:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:305:5)
+    ...
+    at Object.spawnAsync [as default] (/Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo/node_modules/@expo/cli/node_modules/@expo/spawn-async/build/spawnAsync.js:17:21)
+    at spawnGradleAsync (/Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo/node_modules/@expo/cli/build/src/start/platforms/android/gradle.js:72:46)
+    at Object.assembleAsync (/Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo/node_modules/@expo/cli/build/src/start/platforms/android/gradle.js:52:18)
+    at runAndroidAsync (/Users/nhien/Documents/0-Diary/3T-Official1/node_modules/expo/node_modules/@expo/cli/build/src/run/android/runAndroidAsync.js:36:24)

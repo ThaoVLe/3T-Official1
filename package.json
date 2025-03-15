@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
+    "@expo/cli": "^0.22.20",
     "@expo/webpack-config": "^19.0.1",
     "@firebase/auth": "^1.9.1",
     "@hookform/resolvers": "^3.9.1",
@@ -68,6 +69,7 @@
     "expo": "~50.0.0",
     "expo-camera": "^16.0.18",
     "expo-cli": "^6.3.12",
+    "expo-dev-client": "^5.0.14",
     "expo-location": "^18.0.8",
     "expo-media-library": "^17.0.6",
     "expo-status-bar": "~1.11.1",

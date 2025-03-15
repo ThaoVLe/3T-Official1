@@ -63,25 +63,18 @@ export function ProgressiveImage({
     };
   }, [src, isBlob]);
 
-  useEffect(() => {
-    if (!src?.startsWith('blob:')) return;
-
-    const validateAndCleanup = () => {
-      const img = new Image();
-      img.src = src;
-      
-      if (img.complete && (img.naturalWidth === 0 || error)) {
-        URL.revokeObjectURL(src);
-        setError(true);
-      }
-    };
-
-    validateAndCleanup();
-    return () => URL.revokeObjectURL(src);
-  }, [src, error]);
-
-  if (error || !src || (src.startsWith('blob:') && !isLoaded)) {
-    return null;
+  // If there's an error loading the image
+  if (error) {
+    return (
+      <div
+        className={cn(
+          "relative bg-muted/50 flex items-center justify-center",
+          className
+        )}
+      >
+        <span className="text-muted-foreground text-sm">Image failed to load</span>
+      </div>
+    );
   }
 
   return (

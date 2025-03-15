@@ -120,25 +120,9 @@ function MediaSlide({ url, index }: { url: string; index: number }) {
             src={url}
             alt={`Media ${index + 1}`}
             className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
-            onLoad={() => {
-              if (url?.startsWith('blob:')) {
-                const img = new Image();
-                img.src = url;
-                if (img.complete && img.naturalWidth === 0) {
-                  URL.revokeObjectURL(url);
-                }
-              }
-            }}
             onError={(e) => {
-              if (url?.startsWith('blob:')) {
-                URL.revokeObjectURL(url);
-                const parent = e.currentTarget.parentElement;
-                if (parent?.parentElement) {
-                  parent.parentElement.remove();
-                }
-              }
               console.error(`Failed to load image: ${url}`);
-              e.currentTarget.style.display = 'none';
+              (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
         </div>

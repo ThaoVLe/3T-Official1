@@ -64,17 +64,8 @@ export function ProgressiveImage({
   }, [src, isBlob]);
 
   // If there's an error loading the image
-  if (error) {
-    return (
-      <div
-        className={cn(
-          "relative bg-muted/50 flex items-center justify-center",
-          className
-        )}
-      >
-        <span className="text-muted-foreground text-sm">Image failed to load</span>
-      </div>
-    );
+  if (error || (src && src.startsWith('blob:') && !isLoaded)) {
+    return null;
   }
 
   return (

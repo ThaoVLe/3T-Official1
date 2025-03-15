@@ -121,8 +121,12 @@ function MediaSlide({ url, index }: { url: string; index: number }) {
             alt={`Media ${index + 1}`}
             className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
             onError={(e) => {
-              console.error(`Failed to load image: ${url}`);
-              (e.target as HTMLImageElement).style.display = 'none';
+              if (url.startsWith('blob:')) {
+                e.currentTarget.remove();
+              } else {
+                console.error(`Failed to load image: ${url}`);
+                (e.target as HTMLImageElement).style.display = 'none';
+              }
             }}
           />
         </div>

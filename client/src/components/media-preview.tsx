@@ -16,7 +16,18 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
   const [selectedIndex, setSelectedIndex] = useState<number>();
   const videoRefs = useRef<{[key: number]: HTMLVideoElement}>({});
   const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
-  const mediaUrls = urls || [];
+  const mediaUrls = (urls || []).filter(url => {
+    if (url?.startsWith('blob:')) {
+      try {
+        const urlObj = new URL(url);
+        return urlObj.protocol === 'blob:';
+      } catch {
+        URL.revokeObjectURL(url);
+        return false;
+      }
+    }
+    return true;
+  });
 
   // Cleanup blob URLs when component unmounts or URLs change
   useEffect(() => {

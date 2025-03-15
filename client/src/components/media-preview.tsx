@@ -18,6 +18,17 @@ export default function MediaPreview({ urls, onRemove, loading, uploadProgress =
   const [frameIndices, setFrameIndices] = useState<{[key: number]: number}>({});
   const mediaUrls = urls || [];
 
+  // Cleanup blob URLs when component unmounts or URLs change
+  useEffect(() => {
+    return () => {
+      mediaUrls.forEach(url => {
+        if (url?.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [mediaUrls]);
+
   // Load video thumbnails and set up for frame rotation
   useEffect(() => {
     mediaUrls.forEach((url, index) => {

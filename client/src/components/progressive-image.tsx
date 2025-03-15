@@ -64,12 +64,18 @@ export function ProgressiveImage({
   }, [src, isBlob]);
 
   useEffect(() => {
-    return () => {
+    const cleanupBlobUrl = () => {
       if (src?.startsWith('blob:')) {
         URL.revokeObjectURL(src);
       }
     };
-  }, [src]);
+
+    if (error && src?.startsWith('blob:')) {
+      cleanupBlobUrl();
+    }
+
+    return cleanupBlobUrl;
+  }, [src, error]);
 
   if (error || !src || (src.startsWith('blob:') && !isLoaded)) {
     return null;

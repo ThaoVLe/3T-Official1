@@ -15,9 +15,15 @@ export function useImageCache() {
   return { getFromCache, addToCache };
 }
 
-// Helper function to check if a URL is a blob URL
+// Helper function to check if a URL is a blob URL and valid
 export const isBlobUrl = (url: string | undefined): boolean => {
-  return !!url && url.startsWith('blob:');
+  if (!url || !url.startsWith('blob:')) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 // Helper function to safely handle image URLs

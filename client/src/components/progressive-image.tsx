@@ -63,8 +63,9 @@ export function ProgressiveImage({
     };
   }, [src, isBlob]);
 
-  // If there's an error loading the image
-  if (error || (src && src.startsWith('blob:') && !isLoaded)) {
+  // If there's an error loading the image or invalid blob URL
+  if (error || (src?.startsWith('blob:') && (!isLoaded || !isBlobUrl(src)))) {
+    URL.revokeObjectURL(src);
     return null;
   }
 

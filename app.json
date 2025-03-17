@@ -1,13 +1,29 @@
 {
-  "name": "personal-journal",
-  "slug": "personal-journal",
-  "version": "1.0.0",
-  "android": {
-    "package": "com.thayeuroichet.restexpress"
-  },
-  "extra": {
-    "eas": {
-      "projectId": "be3b2ee8-3e5f-48dc-8468-8f08e738665d"
+  "expo": {
+    "name": "Personal Journal",
+    "slug": "personal-journal",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.thayeuroichet.personaljournal",
+      "buildNumber": "1.0.0"
+    },
+    "android": {
+      "package": "com.thayeuroichet.restexpress"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "be3b2ee8-3e5f-48dc-8468-8f08e738665d"
+      },
+      "developmentClient": false
     }
   }
 }
